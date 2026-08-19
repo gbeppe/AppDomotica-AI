@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Tesla Powerwall 2 Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6,2 L18,2 C18.55,2 19,2.45 19,3 L19,22 L5,22 L5,3 C5,2.45 5.45,2 6,2 Z" />
+    <!-- Top Glass Panel -->
+    <path
+        android:fillColor="#F5F5F5"
+        android:pathData="M6,2 L18,2 L18,5 L6,5 Z" />
+    <!-- Side Status LED Line -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M18.2,6 L18.8,6 L18.8,20 L18.2,20 Z" />
+</vector>

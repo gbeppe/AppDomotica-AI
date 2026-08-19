@@ -215,8 +215,10 @@ fun DomainCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
+            if (page != 0) {
+                Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(12.dp))
+            }
             
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 when(page) {
