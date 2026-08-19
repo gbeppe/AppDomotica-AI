@@ -4,9 +4,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,9 +24,11 @@ import com.domopi.app.ui.theme.SolarGreen
 
 @Composable
 fun EnergyFlowComponent(
-    solarPower: Float, // Watts
-    homeConsumption: Float, // Watts
-    gridPower: Float, // Watts (positive = import, negative = export)
+    solarPower: Float,
+    homeConsumption: Float,
+    gridPower: Float, // positive = import, negative = export
+    batteryPower: Float = 0f, // positive = discharging, negative = charging
+    batterySoc: Float = 0f,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "flow")
@@ -43,23 +42,44 @@ fun EnergyFlowComponent(
         label = "phase"
     )
 
-    Box(modifier = modifier.fillMaxWidth().height(300.dp)) {
+    Box(modifier = modifier.fillMaxWidth().height(260.dp)) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2, size.height / 2)
-            val solarPos = Offset(size.width / 2, 50.dp.toPx())
-            val homePos = Offset(size.width / 2, size.height - 50.dp.toPx())
-            val gridPos = Offset(50.dp.toPx(), size.height / 2)
+            val solarPos = Offset(size.width / 2, 40.dp.toPx())
+            val homePos = Offset(size.width / 2, size.height - 40.dp.toPx())
+            val gridPos = Offset(60.dp.toPx(), size.height / 2)
+            val batteryPos = Offset(size.width - 60.dp.toPx(), size.height / 2)
 
             // Draw Lines
-            drawFlowLine(solarPos, center, SolarGreen, phase, solarPower > 0)
-            drawFlowLine(center, homePos, ConsumptionYellow, phase, homeConsumption > 0)
-            drawFlowLine(gridPos, center, GridBlue, phase, gridPower != 0f, gridPower < 0)
+            drawFlowLine(solarPos, center, SolarGreen, phase, solarPower > 10)
+            drawFlowLine(center, homePos, ConsumptionYellow, phase, homeConsumption > 10)
+            
+            // Grid: center to grid is export (negative gridPower), grid to center is import (positive gridPower)
+            drawFlowLine(gridPos, center, GridBlue, phase, Math.abs(gridPower) > 20, gridPower < 0)
+            
+            // Battery: battery to center is discharging (positive batteryPower), center to battery is charging (negative batteryPower)
+            drawFlowLine(batteryPos, center, Color(0xFF00E676), phase, Math.abs(batteryPower) > 10, batteryPower < 0)
         }
 
         // Icons and Labels
-        EnergyNode(solarPos = Alignment.TopCenter, icon = Icons.Default.WbSunny, label = "${solarPower.toInt()} W", color = SolarGreen)
-        EnergyNode(solarPos = Alignment.BottomCenter, icon = Icons.Default.Home, label = "${homeConsumption.toInt()} W", color = ConsumptionYellow)
-        EnergyNode(solarPos = Alignment.CenterStart, icon = Icons.Default.Notifications, label = "${gridPower.toInt()} W", color = GridBlue)
+        EnergyNode(pos = Alignment.TopCenter, icon = Icons.Default.WbSunny, label = "${solarPower.toInt()} W", color = SolarGreen)
+        EnergyNode(pos = Alignment.BottomCenter, icon = Icons.Default.Home, label = "${homeConsumption.toInt()} W", color = ConsumptionYellow)
+        EnergyNode(pos = Alignment.CenterStart, icon = Icons.Default.Notifications, label = "${gridPower.toInt()} W", color = GridBlue)
+        
+        // Battery Node
+        val batteryColor = when {
+            batterySoc > 50f -> Color(0xFF00E676) // Green
+            batterySoc > 20f -> Color(0xFFFFAB40) // Orange
+            else -> Color(0xFFFF5252) // Red
+        }
+        
+        EnergyNode(
+            pos = Alignment.CenterEnd, 
+            icon = if (batteryPower < -10) Icons.Default.BatteryChargingFull else Icons.Default.BatteryFull, 
+            label = "${batterySoc.toInt()}%", 
+            subLabel = "${batteryPower.toInt()} W",
+            color = batteryColor
+        )
     }
 }
 
@@ -72,10 +92,10 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawFlowLine(
     reverse: Boolean = false
 ) {
     drawLine(
-        color = color.copy(alpha = 0.3f),
+        color = color.copy(alpha = 0.2f),
         start = start,
         end = end,
-        strokeWidth = 4.dp.toPx()
+        strokeWidth = 3.dp.toPx()
     )
 
     if (active) {
@@ -84,7 +104,7 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawFlowLine(
             color = color,
             start = start,
             end = end,
-            strokeWidth = 4.dp.toPx(),
+            strokeWidth = 3.dp.toPx(),
             pathEffect = pathEffect
         )
     }
@@ -92,16 +112,20 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawFlowLine(
 
 @Composable
 fun BoxScope.EnergyNode(
-    solarPos: Alignment,
+    pos: Alignment,
     icon: ImageVector,
     label: String,
+    subLabel: String? = null,
     color: Color
 ) {
     Column(
-        modifier = Modifier.align(solarPos).padding(16.dp),
+        modifier = Modifier.align(pos).padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(32.dp))
-        Text(label, color = color, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
+        Text(label, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        if (subLabel != null) {
+            Text(subLabel, color = color.copy(alpha = 0.7f), fontSize = 10.sp)
+        }
     }
 }

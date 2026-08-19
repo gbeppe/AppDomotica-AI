@@ -4,16 +4,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.domopi.app.data.MqttManager
 import com.domopi.app.ui.components.EnergyFlowComponent
 import com.domopi.app.ui.components.GlimmerGauge
 import com.domopi.app.ui.theme.SolarGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(mqttManager: MqttManager, onDomainClick: (String) -> Unit) {
+    // Osserviamo i dati energetici live
+    val energyData by mqttManager.energyData.collectAsState()
+    // Osserviamo i dati dei sensori live
+    val sensorData by mqttManager.sensorData.collectAsState()
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -32,22 +38,33 @@ fun DashboardScreen() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Sezione Energia
-            Text("Energia & Flussi", style = MaterialTheme.typography.titleLarge)
+            // Sezione Energia Live
+            Text("Energia & Flussi Live", style = MaterialTheme.typography.titleLarge)
             EnergyFlowComponent(
-                solarPower = 2500f,
-                homeConsumption = 1200f,
-                gridPower = -1300f // Export
+                solarPower = energyData.solarPower,
+                homeConsumption = energyData.homeConsumption,
+                gridPower = energyData.gridPower,
+                batteryPower = energyData.batteryPower,
+                batterySoc = energyData.batterySoc
             )
 
-            // Sezione Sensori
-            Text("Ambiente", style = MaterialTheme.typography.titleLarge)
+            // Sezione Sensori Live
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text("Ambiente", style = MaterialTheme.typography.titleLarge)
+                TextButton(onClick = { onDomainClick("Ambienti") }) {
+                    Text("Vedi Tutto")
+                }
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 GlimmerGauge(
-                    value = 22.5f,
+                    value = sensorData.temperature,
                     min = 10f,
                     max = 40f,
                     label = "Soggiorno",
@@ -55,7 +72,7 @@ fun DashboardScreen() {
                     color = SolarGreen
                 )
                 GlimmerGauge(
-                    value = 45f,
+                    value = sensorData.humidity,
                     min = 0f,
                     max = 100f,
                     label = "Umidità",
@@ -66,14 +83,14 @@ fun DashboardScreen() {
             
             // Pulsanti di navigazione rapida (Domini)
             Text("Domini", style = MaterialTheme.typography.titleLarge)
-            DomainGrid()
+            DomainGrid(onDomainClick)
         }
     }
 }
 
 @Composable
-fun DomainGrid() {
-    val domains = listOf("Luci", "Clima", "Sicurezza", "Irrigazione")
+fun DomainGrid(onDomainClick: (String) -> Unit) {
+    val domains = listOf("Luci", "Clima", "Ambienti", "Sicurezza", "Irrigazione")
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         domains.chunked(2).forEach { row ->
             Row(
@@ -82,7 +99,7 @@ fun DomainGrid() {
             ) {
                 row.forEach { domain ->
                     Button(
-                        onClick = { /* TODO */ },
+                        onClick = { onDomainClick(domain) },
                         modifier = Modifier.weight(1f),
                         shape = MaterialTheme.shapes.medium
                     ) {

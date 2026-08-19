@@ -11,12 +11,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.domopi.app.data.DomoPiConnectivityManager
+import com.domopi.app.data.SettingsManager
+import kotlinx.coroutines.delay
 
 data class LogEntry(val timestamp: String, val type: String, val message: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TechnicalMenuScreen() {
+fun TechnicalMenuScreen(
+    settingsManager: SettingsManager, 
+    connectivityManager: DomoPiConnectivityManager
+) {
+    val nrLocalIp by settingsManager.nodeRedLocalIp.collectAsState("192.168.1.20")
+    val nrPort by settingsManager.nodeRedPort.collectAsState("1880")
+    
+    val mqttLocalIp by settingsManager.mqttLocalIp.collectAsState("192.168.1.20")
+    val mqttPort by settingsManager.mqttPort.collectAsState("1883")
+    
+    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
+    val tcPort by settingsManager.tinycamPort.collectAsState("8083")
+
+    var nrOnline by remember { mutableStateOf(false) }
+    var mqttOnline by remember { mutableStateOf(false) }
+    var tcOnline by remember { mutableStateOf(false) }
+
+    LaunchedEffect(nrLocalIp, nrPort, mqttLocalIp, mqttPort, tcLocalIp, tcPort) {
+        while(true) {
+            nrOnline = connectivityManager.checkServiceReachable(nrLocalIp, nrPort.toIntOrNull() ?: 1880)
+            mqttOnline = connectivityManager.checkServiceReachable(mqttLocalIp, mqttPort.toIntOrNull() ?: 1883)
+            tcOnline = connectivityManager.checkServiceReachable(tcLocalIp, tcPort.toIntOrNull() ?: 8083)
+            delay(5000)
+        }
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Menu Tecnico & Diagnostica") }) }
     ) { padding ->
@@ -24,19 +52,17 @@ fun TechnicalMenuScreen() {
             modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Service Status
             Card {
                 Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
-                    Text("Stato Servizi", style = MaterialTheme.typography.titleMedium)
+                    Text("Stato Servizi (Locale)", style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(8.dp))
-                    ServiceStatusRow("Node-RED", true, "192.168.1.20:1880")
-                    ServiceStatusRow("MQTT Broker", true, "192.168.1.20:1883")
-                    ServiceStatusRow("Tinycam Pro", false, "Offline")
+                    ServiceStatusRow("Node-RED", nrOnline, "$nrLocalIp:$nrPort")
+                    ServiceStatusRow("MQTT Broker", mqttOnline, "$mqttLocalIp:$mqttPort")
+                    ServiceStatusRow("Tinycam Pro", tcOnline, "$tcLocalIp:$tcPort")
                 }
             }
 
-            // Log Viewer
-            Text("Live Logs", style = MaterialTheme.typography.titleMedium)
+            Text("Live Logs (Mock)", style = MaterialTheme.typography.titleMedium)
             LogViewer()
         }
     }

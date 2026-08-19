@@ -68,8 +68,9 @@ fun GlimmerGauge(
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            val formattedValue = "%.1f".format(java.util.Locale.US, value)
             Text(
-                text = "${value.toInt()}",
+                text = formattedValue,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface

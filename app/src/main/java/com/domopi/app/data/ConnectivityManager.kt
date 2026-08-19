@@ -5,9 +5,10 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.net.InetAddress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.net.InetSocketAddress
+import java.net.Socket
 
 enum class ConnectionMode {
     LOCAL, REMOTE, OFFLINE
@@ -15,24 +16,21 @@ enum class ConnectionMode {
 
 class DomoPiConnectivityManager(private val context: Context) {
 
-    private val _connectionMode = MutableStateFlow(ConnectionMode.OFFLINE)
+    private val _connectionMode = MutableStateFlow(ConnectionMode.LOCAL)
     val connectionMode: StateFlow<ConnectionMode> = _connectionMode
 
-    suspend fun checkConnectivity(localIp: String) {
-        val isReachable = withContext(Dispatchers.IO) {
-            try {
-                val address = InetAddress.getByName(localIp)
-                address.isReachable(1000) // 1 second timeout
-            } catch (e: Exception) {
-                false
-            }
-        }
+    fun updateConnectionMode(mode: ConnectionMode) {
+        _connectionMode.value = mode
+    }
 
-        _connectionMode.value = if (isReachable) {
-            ConnectionMode.LOCAL
-        } else {
-            // Qui potremmo aggiungere un check per Tailscale se necessario
-            ConnectionMode.REMOTE
+    suspend fun checkServiceReachable(ip: String, port: Int): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val socket = Socket()
+            socket.connect(InetSocketAddress(ip, port), 1000)
+            socket.close()
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 
