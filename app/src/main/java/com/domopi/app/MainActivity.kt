@@ -27,7 +27,8 @@ class MainActivity : ComponentActivity() {
         val connectivityManager = DomoPiConnectivityManager(this)
         mqttManager = MqttManager(this)
 
-        // Monitor settings and connect/reconnect MQTT
+        // --- Gateway Centrale .20 (DomoPi) ---
+        // Monitora i parametri e gestisce l'unica connessione necessaria.
         lifecycleScope.launch {
             combine(
                 settingsManager.domopiIp,
@@ -35,34 +36,16 @@ class MainActivity : ComponentActivity() {
                 settingsManager.domopiUser,
                 settingsManager.domopiPass
             ) { ip, port, user, pass ->
-                Triple(ip, port, user to pass)
-            }.collect { (ip, port, auth) ->
-                mqttManager.connect("tcp://$ip:$port", auth.first, auth.second, "domopi")
-            }
-        }
-
-        lifecycleScope.launch {
-            combine(
-                settingsManager.emonpiIp,
-                settingsManager.emonpiPort,
-                settingsManager.emonpiUser,
-                settingsManager.emonpiPass
-            ) { ip, port, user, pass ->
-                Triple(ip, port, user to pass)
-            }.collect { (ip, port, auth) ->
-                mqttManager.connect("tcp://$ip:$port", auth.first, auth.second, "emonpi")
-            }
-        }
-
-        // Dummy connection mode detection (Should be replaced with real reachability logic)
-        lifecycleScope.launch {
-            settingsManager.domopiIp.collect { ip ->
+                // Determina la modalità di connessione basandosi sull'IP
                 if (ip.startsWith("192.168.")) {
                     connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
                 } else {
                     connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
                 }
-            }
+                
+                // Connette al broker centrale che fa da gateway per tutto (anche per EmonPi)
+                mqttManager.connect("tcp://$ip:$port", user, pass)
+            }.collect {}
         }
 
         setContent {
@@ -92,6 +75,8 @@ class MainActivity : ComponentActivity() {
                             onBack = { currentScreen = "home" }
                         )
                         "energy_detail" -> {
+                            // Anche qui puntiamo al .20, poiché i dati EmonCMS sono bridgeati o comunque
+                            // seguiamo la logica del repository che usa l'IP configurato.
                             val epIp by settingsManager.emonpiIp.collectAsState("192.168.1.15")
                             EnergyDetailScreen(emoncmsIp = epIp, onBack = { currentScreen = "home" })
                         }
@@ -105,8 +90,13 @@ class MainActivity : ComponentActivity() {
                             settingsManager = settingsManager,
                             onBack = { currentScreen = "home" }
                         )
+                        "pool" -> PoolScreen(
+                            mqttManager = mqttManager,
+                            onBack = { currentScreen = "home" }
+                        )
                         "cameras" -> CamerasScreen(
                             settingsManager = settingsManager,
+                            connectivityManager = connectivityManager,
                             onBack = { currentScreen = "home" }
                         )
                     }

@@ -25,6 +25,8 @@ class SettingsManager(private val context: Context) {
         val TINYCAM_LOCAL_IP = stringPreferencesKey("tinycam_local_ip")
         val TINYCAM_REMOTE_IP = stringPreferencesKey("tinycam_remote_ip")
         val TINYCAM_PORT = stringPreferencesKey("tinycam_port")
+        val TINYCAM_USER = stringPreferencesKey("tinycam_user")
+        val TINYCAM_PASS = stringPreferencesKey("tinycam_pass")
         val DARK_MODE = booleanPreferencesKey("dark_mode")
 
         val DOMOPI_BROKER_IP = stringPreferencesKey("domopi_broker_ip")
@@ -83,6 +85,8 @@ class SettingsManager(private val context: Context) {
     val tinycamLocalIp: Flow<String> = context.dataStore.data.map { it[TINYCAM_LOCAL_IP] ?: "192.168.1.20" }.distinctUntilChanged()
     val tinycamRemoteIp: Flow<String> = context.dataStore.data.map { it[TINYCAM_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
     val tinycamPort: Flow<String> = context.dataStore.data.map { it[TINYCAM_PORT] ?: "8083" }.distinctUntilChanged()
+    val tinycamUser: Flow<String> = context.dataStore.data.map { it[TINYCAM_USER] ?: "admin" }.distinctUntilChanged()
+    val tinycamPass: Flow<String> = context.dataStore.data.map { it[TINYCAM_PASS] ?: "password" }.distinctUntilChanged()
 
     val darkMode: Flow<Boolean?> = context.dataStore.data.map { it[DARK_MODE] }.distinctUntilChanged()
 
@@ -96,11 +100,13 @@ class SettingsManager(private val context: Context) {
     val emonpiUser: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_USER] ?: "emonpi" }.distinctUntilChanged()
     val emonpiPass: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_PASS] ?: "emonpimqtt2016" }.distinctUntilChanged()
 
-    suspend fun saveTinycam(localIp: String, remoteIp: String, port: String) {
+    suspend fun saveTinycam(localIp: String, remoteIp: String, port: String, user: String, pass: String) {
         context.dataStore.edit {
             it[TINYCAM_LOCAL_IP] = localIp
             it[TINYCAM_REMOTE_IP] = remoteIp
             it[TINYCAM_PORT] = port
+            it[TINYCAM_USER] = user
+            it[TINYCAM_PASS] = pass
         }
     }
 

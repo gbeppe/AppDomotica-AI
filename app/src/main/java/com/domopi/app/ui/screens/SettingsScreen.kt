@@ -27,6 +27,8 @@ fun SettingsScreen(settingsManager: SettingsManager) {
     val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState(initial = "192.168.1.20")
     val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState(initial = "100.x.x.x")
     val tcPort by settingsManager.tinycamPort.collectAsState(initial = "8083")
+    val tcUserVal by settingsManager.tinycamUser.collectAsState(initial = "admin")
+    val tcPassVal by settingsManager.tinycamPass.collectAsState(initial = "password")
 
     // State for fields
     var nrLocal by remember(nrLocalIp) { mutableStateOf(nrLocalIp) }
@@ -40,6 +42,8 @@ fun SettingsScreen(settingsManager: SettingsManager) {
     var tcLocal by remember(tcLocalIp) { mutableStateOf(tcLocalIp) }
     var tcRemote by remember(tcRemoteIp) { mutableStateOf(tcRemoteIp) }
     var tcP by remember(tcPort) { mutableStateOf(tcPort) }
+    var tcUser by remember(tcUserVal) { mutableStateOf(tcUserVal) }
+    var tcPass by remember(tcPassVal) { mutableStateOf(tcPassVal) }
 
     val isDarkMode by settingsManager.darkMode.collectAsState(initial = null)
 
@@ -74,14 +78,24 @@ fun SettingsScreen(settingsManager: SettingsManager) {
 
             SettingsSection("Node-RED", nrLocal, { nrLocal = it }, nrRemote, { nrRemote = it }, nrP, { nrP = it })
             SettingsSection("Broker MQTT", mqttLocal, { mqttLocal = it }, mqttRemote, { mqttRemote = it }, mqttP, { mqttP = it })
-            SettingsSection("Tinycam Pro", tcLocal, { tcLocal = it }, tcRemote, { tcRemote = it }, tcP, { tcP = it })
+            
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Tinycam Pro", style = MaterialTheme.typography.titleMedium)
+                    OutlinedTextField(value = tcLocal, onValueChange = { tcLocal = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = tcRemote, onValueChange = { tcRemote = it }, label = { Text("IP Remoto") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = tcP, onValueChange = { tcP = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = tcUser, onValueChange = { tcUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = tcPass, onValueChange = { tcPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
+                }
+            }
 
             Button(
                 onClick = {
                     scope.launch {
                         settingsManager.saveNodeRed(nrLocal, nrRemote, nrP)
                         settingsManager.saveMqtt(mqttLocal, mqttRemote, mqttP)
-                        settingsManager.saveTinycam(tcLocal, tcRemote, tcP)
+                        settingsManager.saveTinycam(tcLocal, tcRemote, tcP, tcUser, tcPass)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

@@ -51,7 +51,7 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 ControlCard(
                     title = "Sistema Abilitato",
                     onEnabledChange = { enabled ->
-                        mqttManager.publish("domopi", "casa/clima/cmnd/AI_climate_enabling", if (enabled) "true" else "false", retained = true)
+                        mqttManager.publish("zara/interface/climate/ai_enabling/cmd", if (enabled) "true" else "false", retained = false)
                     },
                     isEnabled = aiSettings.systemEnabled
                 )
@@ -61,7 +61,7 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 ControlCard(
                     title = "Gestione Mattino (Solar Only)",
                     onEnabledChange = { enabled ->
-                        mqttManager.publish("domopi", "casa/clima/cmnd/grace_mode_solar", if (enabled) "true" else "false", retained = true)
+                        mqttManager.publish("casa/clima/cmnd/grace_mode_solar", if (enabled) "true" else "false", retained = false)
                     },
                     isEnabled = aiSettings.graceModeSolar
                 )
@@ -77,7 +77,7 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                         SettingItem("Soglia Emergenza Humidex", aiSettings.emergencyHumidex, "emergency_humidex_away")
                     ),
                     onValueChange = { topic, value ->
-                        mqttManager.publish("domopi", "casa/clima/cmnd/$topic", value, retained = true)
+                        mqttManager.publish("casa/clima/cmnd/$topic", value, retained = false)
                     }
                 )
             }
@@ -87,8 +87,8 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     title = "Soglie Comfort",
                     humidexTarget = aiSettings.targetHumidex,
                     vmcMaxNight = aiSettings.vmcMaxNight.toFloat(),
-                    onHumidexChange = { mqttManager.publish("domopi", "casa/clima/cmnd/target_humidex", it.toString(), retained = true) },
-                    onVmcChange = { mqttManager.publish("domopi", "casa/clima/cmnd/vmc_max_notte", it.toInt().toString(), retained = true) }
+                    onHumidexChange = { mqttManager.publish("casa/clima/cmnd/target_humidex", it.toString(), retained = false) },
+                    onVmcChange = { mqttManager.publish("casa/clima/cmnd/vmc_max_notte", it.toInt().toString(), retained = false) }
                 )
             }
 

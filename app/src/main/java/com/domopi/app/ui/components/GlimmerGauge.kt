@@ -26,7 +26,8 @@ fun GlimmerGauge(
     label: String,
     unit: String,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 100.dp
 ) {
     val animatedValue by animateFloatAsState(
         targetValue = value,
@@ -35,11 +36,11 @@ fun GlimmerGauge(
     )
 
     Box(
-        modifier = modifier.size(150.dp),
+        modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 12.dp.toPx()
+            val strokeWidth = (size.toPx() * 0.08f) // Spessore proporzionale alla dimensione
             val sweepAngle = 240f
             val startAngle = 150f
 
@@ -71,18 +72,18 @@ fun GlimmerGauge(
             val formattedValue = "%.1f".format(java.util.Locale.US, value)
             Text(
                 text = formattedValue,
-                fontSize = 24.sp,
+                fontSize = (size.value * 0.18f).sp, // Font proporzionale
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = unit,
-                fontSize = 12.sp,
+                fontSize = (size.value * 0.1f).sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = label,
-                fontSize = 10.sp,
+                fontSize = (size.value * 0.08f).sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }

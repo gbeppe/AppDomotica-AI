@@ -29,6 +29,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     var emonpiPass by remember { mutableStateOf("") }
     
     var tinycamIp by remember { mutableStateOf("") }
+    var tinycamRemoteIp by remember { mutableStateOf("") }
     var tinycamPort by remember { mutableStateOf("") }
     var tinycamUser by remember { mutableStateOf("") }
     var tinycamPass by remember { mutableStateOf("") }
@@ -45,6 +46,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         emonpiUser != initialValues!!["epUser"] ||
         emonpiPass != initialValues!!["epPass"] ||
         tinycamIp != initialValues!!["tcIp"] ||
+        tinycamRemoteIp != initialValues!!["tcRemoteIp"] ||
         tinycamPort != initialValues!!["tcPort"] ||
         tinycamUser != initialValues!!["tcUser"] ||
         tinycamPass != initialValues!!["tcPass"]
@@ -62,10 +64,10 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         val epPass = settingsManager.emonpiPass.first()
         
         val tcIp = settingsManager.tinycamLocalIp.first()
+        val tcRemoteIp = settingsManager.tinycamRemoteIp.first()
         val tcPort = settingsManager.tinycamPort.first()
-        // Assume I added these to SettingsManager or will use dummy for now
-        val tcUser = "admin" 
-        val tcPass = "password"
+        val tcUser = settingsManager.tinycamUser.first()
+        val tcPass = settingsManager.tinycamPass.first()
         
         domopiIp = dpIp
         domopiPort = dpPort
@@ -78,6 +80,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         emonpiPass = epPass
         
         tinycamIp = tcIp
+        tinycamRemoteIp = tcRemoteIp
         tinycamPort = tcPort
         tinycamUser = tcUser
         tinycamPass = tcPass
@@ -85,7 +88,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         initialValues = mapOf(
             "dpIp" to dpIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
             "epIp" to epIp, "epPort" to epPort, "epUser" to epUser, "epPass" to epPass,
-            "tcIp" to tcIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass
+            "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass
         )
     }
 
@@ -99,6 +102,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                     scope.launch {
                         settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
                         settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
+                        settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
                         onBack()
                     }
                 }) { Text("Salva") }
@@ -126,9 +130,11 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                             scope.launch {
                                 settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
                                 settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
+                                settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
                                 initialValues = mapOf(
                                     "dpIp" to domopiIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
-                                    "epIp" to emonpiIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass
+                                    "epIp" to emonpiIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass,
+                                    "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass
                                 )
                             }
                         }) {
@@ -163,7 +169,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text("TinyCam Pro", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(value = tinycamIp, onValueChange = { tinycamIp = it }, label = { Text("IP / Host") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = tinycamIp, onValueChange = { tinycamIp = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = tinycamRemoteIp, onValueChange = { tinycamRemoteIp = it }, label = { Text("IP Remoto / Cloud") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = tinycamPort, onValueChange = { tinycamPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = tinycamUser, onValueChange = { tinycamUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = tinycamPass, onValueChange = { tinycamPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())

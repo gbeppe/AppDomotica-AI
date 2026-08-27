@@ -25,7 +25,7 @@ fun DiagnosisScreen(
     connectivityManager: DomoPiConnectivityManager,
     onBack: () -> Unit
 ) {
-    val isConnectedMap by mqttManager.isConnected.collectAsState()
+    val isConnected by mqttManager.isConnected.collectAsState()
     val trafficLog by mqttManager.trafficLog.collectAsState()
     
     val tcIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
@@ -56,8 +56,7 @@ fun DiagnosisScreen(
                 Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
                     Text("Connettività", style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(8.dp))
-                    BrokerStatusRow("DomoPi MQTT", isConnectedMap["domopi"] ?: false)
-                    BrokerStatusRow("EmonPi MQTT", isConnectedMap["emonpi"] ?: false)
+                    BrokerStatusRow("Gateway DomoPi (.20)", isConnected)
                     BrokerStatusRow("TinyCam Pro Server", tcOnline)
                 }
             }

@@ -27,19 +27,19 @@ fun LightsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
             LightDevice("sala", "Soggiorno Main", "sala"),
             LightDevice("libreria", "Libreria", "libreria"),
             LightDevice("televisione", "Televisione", "televisione"),
-            LightDevice("tavolinoLettura", "Tavolino Lettura", "tavolinoLettura"),
-            LightDevice("lampadaHifi", "Lampada HiFi", "lampadaHifi"),
+            LightDevice("tavolinolettura", "Tavolino Lettura", "tavolinolettura"),
+            LightDevice("lucecamera", "Luce Camera", "lucecamera"),
+            LightDevice("lampadahifi", "Lampada HiFi", "lampadahifi"),
             LightDevice("lavanderia", "Lavanderia", "lavanderia"),
-            LightDevice("ingressoServizio", "Ingresso Servizio", "ingressoServizio"),
             LightDevice("portico", "Portico Ingresso", "portico"),
             LightDevice("cucina", "Cucina Piano", "cucina"),
-            LightDevice("esterno", "Esterno", "esterno")
+            LightDevice("esterno", "Esterno", "esterno"),
+            LightDevice("prolunga", "Prolunga / Allarme", "prolunga")
         )
     }
 
     val liveStates by mqttManager.lightStates.collectAsState()
-    val isConnectedMap by mqttManager.isConnected.collectAsState()
-    val isConnected = isConnectedMap["domopi"] ?: false
+    val isConnected by mqttManager.isConnected.collectAsState()
 
     Scaffold(
         topBar = {

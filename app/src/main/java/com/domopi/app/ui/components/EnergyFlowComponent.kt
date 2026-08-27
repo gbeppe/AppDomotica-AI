@@ -4,7 +4,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -33,7 +31,6 @@ fun EnergyFlowComponent(
     batterySoc: Float = 0f,
     modifier: Modifier = Modifier
 ) {
-    // Check if we have received any meaningful data yet
     val hasData = solarPower != 0f || homeConsumption != 0f || gridPower != 0f || batteryPower != 0f
 
     if (!hasData) {
@@ -48,12 +45,7 @@ fun EnergyFlowComponent(
                     color = Color.Gray.copy(alpha = 0.5f)
                 )
                 Spacer(Modifier.height(16.dp))
-                Text(
-                    "In connessione...", 
-                    color = Color.Gray, 
-                    fontSize = 14.sp,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text("In connessione...", color = Color.Gray, fontSize = 14.sp)
             }
         }
         return
@@ -70,87 +62,99 @@ fun EnergyFlowComponent(
         label = "phase"
     )
 
-    Box(modifier = modifier.fillMaxWidth().height(460.dp), contentAlignment = Alignment.TopCenter) {
+    Box(modifier = modifier.fillMaxWidth().height(420.dp), contentAlignment = Alignment.TopCenter) {
         
-        val hubY = 160.dp
+        // HUB is the geometric center for alignments
+        val hubY = 180.dp
         val sidePadding = 40.dp
         val iconSize = 48.dp
+        
+        // Offset to align ICON center with hubY
+        // Header Text height (~20dp) + Spacer (8dp) + half icon (24dp) = 52dp
         val nodeYOffset = hubY - 52.dp
 
         Canvas(modifier = Modifier.fillMaxSize()) {
             val hubPx = Offset(size.width / 2, hubY.toPx())
             
+            // Solar (Top)
             val solarTopPx = Offset(size.width / 2, 70.dp.toPx())
+            // Grid (Left)
             val gridLeftPx = Offset(sidePadding.toPx() + (iconSize.toPx() / 2), hubY.toPx())
+            // House (Right)
             val homeRightPx = Offset(size.width - sidePadding.toPx() - (iconSize.toPx() / 2), hubY.toPx())
-            val batteryTopPx = Offset(size.width / 2, hubY.toPx() + 100.dp.toPx())
+            // Battery (Bottom)
+            val batteryBottomPx = Offset(size.width / 2, hubY.toPx() + 60.dp.toPx())
 
+            // Paths
             drawEnergyPathTesla(solarTopPx, hubPx, Color(0xFFFFEA00), phase, solarPower > 15, false)
             drawEnergyPathTesla(gridLeftPx, hubPx, Color.White, phase, Math.abs(gridPower) > 20, gridPower < 0)
             drawEnergyPathTesla(hubPx, homeRightPx, Color(0xFF00E5FF), phase, homeConsumption > 15, false)
-            drawEnergyPathTesla(batteryTopPx, hubPx, Color(0xFF00FF00), phase, Math.abs(batteryPower) > 15, batteryPower < 0)
+            drawEnergyPathTesla(batteryBottomPx, hubPx, Color(0xFF00FF00), phase, Math.abs(batteryPower) > 15, batteryPower < 0)
         }
 
-        TeslaNodeSimpleV4(
+        // 1. Solar (Top Center)
+        TeslaNodeMinimal(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp),
-            imageRes = R.drawable.solar_icon,
+            imageRes = R.drawable.ic_solar_tesla,
             powerValue = "${(solarPower/1000f).let { "%.1f".format(it) }} kW",
             color = Color(0xFFFFEA00)
         )
 
-        TeslaNodeSimpleV4(
+        // 2. Grid (Left - Centered vertically with House)
+        TeslaNodeMinimal(
             modifier = Modifier.align(Alignment.TopStart).padding(start = sidePadding, top = nodeYOffset),
-            imageRes = R.drawable.grid_icon,
+            imageRes = R.drawable.ic_grid_tesla,
             powerValue = "${(gridPower/1000f).let { "%.1f".format(kotlin.math.abs(it)) }} kW",
             color = Color.White
         )
 
-        TeslaNodeSimpleV4(
+        // 3. House (Right - Centered vertically with Grid)
+        TeslaNodeMinimal(
             modifier = Modifier.align(Alignment.TopEnd).padding(end = sidePadding, top = nodeYOffset),
-            imageRes = R.drawable.house_icon,
+            imageRes = R.drawable.ic_house_tesla,
             powerValue = "${(homeConsumption/1000f).let { "%.1f".format(it) }} kW",
             color = Color(0xFF00E5FF)
         )
 
-        BatteryNodeTeslaFinalV2(
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = hubY + 70.dp),
+        // 4. Battery (Bottom Center - Aligned and Minimal)
+        BatteryNodeMinimal(
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = hubY + 25.dp),
             soc = batterySoc
         )
     }
 }
 
 @Composable
-fun BatteryNodeTeslaFinalV2(
+fun BatteryNodeMinimal(
     modifier: Modifier = Modifier,
     soc: Float
 ) {
-    val batteryHeight = 100.dp
+    val batteryHeight = 110.dp
     val batteryWidth = 65.dp
     
     Box(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.BottomCenter
     ) {
+        // Battery Image (Transparent background)
         Image(
             painter = painterResource(id = R.drawable.tesla_powerwall),
             contentDescription = null,
-            modifier = Modifier
-                .size(width = batteryWidth, height = batteryHeight)
-                .background(Color.White, RoundedCornerShape(2.dp))
-                .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(2.dp)),
-            contentScale = ContentScale.FillBounds
+            modifier = Modifier.size(width = batteryWidth, height = batteryHeight),
+            contentScale = ContentScale.Fit
         )
 
+        // Aligned indicator on the right
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = batteryWidth + 24.dp) 
+                .padding(start = batteryWidth + 30.dp) 
                 .height(batteryHeight),
             verticalAlignment = Alignment.Bottom
         ) {
             Box(
                 modifier = Modifier
-                    .width(6.dp)
+                    .width(8.dp)
                     .fillMaxHeight()
                     .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(1.dp))
             ) {
@@ -163,7 +167,7 @@ fun BatteryNodeTeslaFinalV2(
                 )
             }
             
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(6.dp))
             
             Text(
                 text = "${soc.toInt()}%", 
@@ -177,7 +181,7 @@ fun BatteryNodeTeslaFinalV2(
 }
 
 @Composable
-fun TeslaNodeSimpleV4(
+fun TeslaNodeMinimal(
     modifier: Modifier = Modifier,
     imageRes: Int,
     powerValue: String,

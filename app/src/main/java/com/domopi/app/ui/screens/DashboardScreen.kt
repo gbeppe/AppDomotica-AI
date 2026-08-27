@@ -17,8 +17,8 @@ import com.domopi.app.ui.theme.SolarGreen
 fun DashboardScreen(mqttManager: MqttManager, onDomainClick: (String) -> Unit) {
     // Osserviamo i dati energetici live
     val energyData by mqttManager.energyData.collectAsState()
-    // Osserviamo i dati dei sensori live
-    val sensorData by mqttManager.sensorData.collectAsState()
+    // Osserviamo lo stato ambientale live
+    val envState by mqttManager.environmentState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -64,7 +64,7 @@ fun DashboardScreen(mqttManager: MqttManager, onDomainClick: (String) -> Unit) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 GlimmerGauge(
-                    value = sensorData.temperature,
+                    value = envState.living.temperature,
                     min = 10f,
                     max = 40f,
                     label = "Soggiorno",
@@ -72,7 +72,7 @@ fun DashboardScreen(mqttManager: MqttManager, onDomainClick: (String) -> Unit) {
                     color = SolarGreen
                 )
                 GlimmerGauge(
-                    value = sensorData.humidity,
+                    value = envState.living.humidity,
                     min = 0f,
                     max = 100f,
                     label = "Umidità",
