@@ -33,13 +33,13 @@ data class EnvironmentState(
 
 data class AiSettings(
     val systemEnabled: Boolean = true,
-    val minOnTime: String = "15",
-    val minOffTime: String = "15",
-    val targetHumidex: Float = 29f,
-    val vmcMaxNight: Int = 2,
-    val deficitTolerance: String = "10",
-    val graceModeSolar: Boolean = false,
-    val emergencyHumidex: String = "33"
+    val compressorOnMin: Int = 15,
+    val compressorOffMin: Int = 15,
+    val nightHumidexThreshold: Int = 30,
+    val nightVmcMaxSpeed: Int = 2,
+    val deficitToleranceMin: Int = 10,
+    val morningAcManagement: Boolean = false,
+    val morningHumidexEmergency: Int = 33
 )
 
 class MqttManager(private val context: Context) {
@@ -112,7 +112,7 @@ class MqttManager(private val context: Context) {
     }
 
     private fun subscribeToUnifiedTopics() {
-        val topics = arrayOf("zara/interface/#", "zara/android/domotica/#", "TeslaPowerwall/#", "emon/#")
+        val topics = arrayOf("zara/interface/#")
         mqttClient?.subscribe(topics, IntArray(topics.size) { 1 })
     }
 
@@ -151,7 +151,7 @@ class MqttManager(private val context: Context) {
                             updateLightState(internalId, isStatusOn)
                         }
                         "env" -> {
-                            // Sincronizzazione rigorosa sui 9 topic ufficiali Digital Twin Env
+                            // Sincronizzazione rigorosa sui topic ufficiali Digital Twin Env
                             _environmentState.value = when (deviceName) {
                                 "living" -> _environmentState.value.copy(
                                     living = when(property) {
@@ -188,48 +188,38 @@ class MqttManager(private val context: Context) {
                                 else -> _energyData.value
                             }
                         }
-                        "climate" -> {
-                            if (deviceName == "ai_enabling") {
-                                _aiSettings.value = _aiSettings.value.copy(systemEnabled = isStatusOn)
+                        "ai" -> {
+                            val intVal = payload.toIntOrNull() ?: 0
+                            val floatVal = payload.toFloatOrNull() ?: 0f
+                            
+                            // 1. Aggiornamento Impostazioni (aiSettings)
+                            _aiSettings.value = when (deviceName) {
+                                "system_enabled" -> _aiSettings.value.copy(systemEnabled = isStatusOn)
+                                "compressor_on_min" -> _aiSettings.value.copy(compressorOnMin = intVal)
+                                "compressor_off_min" -> _aiSettings.value.copy(compressorOffMin = intVal)
+                                "night_humidex_threshold" -> _aiSettings.value.copy(nightHumidexThreshold = intVal)
+                                "night_vmc_max_speed" -> _aiSettings.value.copy(nightVmcMaxSpeed = intVal)
+                                "deficit_tolerance_min" -> _aiSettings.value.copy(deficitToleranceMin = intVal)
+                                "morning_ac_management" -> _aiSettings.value.copy(morningAcManagement = isStatusOn)
+                                "morning_humidex_emergency" -> _aiSettings.value.copy(morningHumidexEmergency = intVal)
+                                else -> _aiSettings.value
+                            }
+                            
+                            // 2. Aggiornamento Stato Operativo (aiManagedData)
+                            // Mappiamo i singoli topic di stato puliti verso la struttura dati della UI
+                            _aiManagedData.value = when (deviceName) {
+                                "op_state" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(stato_attuale = payload))
+                                "op_reason" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(motivo_logica = payload))
+                                "op_mode" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(modalita_aria = payload))
+                                "vmc_speed" -> _aiManagedData.value.copy(stato_vmc = _aiManagedData.value.stato_vmc.copy(velocita_attuale = intVal))
+                                "solar_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_solare_domani_kwh = floatVal))
+                                "battery_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal))
+                                "battery_kwh" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = floatVal))
+                                "active_season" -> _aiManagedData.value.copy(stagione_attiva = payload)
+                                else -> _aiManagedData.value
                             }
                         }
                     }
-                }
-            }
-
-            // 2. Clima AI (Fornisce Humidex e stati aggregati di backup)
-            topic == "zara/android/domotica/casa/clima/stato_completo" -> {
-                try {
-                    val data: AiManagedData = json.decodeFromString(payload)
-                    _aiManagedData.value = data
-                    
-                    // Usiamo lo stato completo per sincronizzare i valori se i topic /env/ non sono ancora arrivati
-                    _environmentState.value = _environmentState.value.copy(
-                        living = _environmentState.value.living.copy(
-                            temperature = data.metriche_ambientali.temperatura_c,
-                            humidex = data.metriche_ambientali.humidex_living
-                        ),
-                        bedroom = _environmentState.value.bedroom.copy(
-                            temperature = data.metriche_ambientali.temp_cameraMatrimoniale,
-                            humidex = data.metriche_ambientali.humidex_bedroom
-                        ),
-                        outdoor = _environmentState.value.outdoor.copy(
-                            temperature = data.stato_vmc.temperatura_esterna_c
-                        )
-                    )
-                } catch (e: Exception) {
-                    Log.e("MQTT", "JSON Parse Error", e)
-                }
-            }
-
-            // 3. Mirroring Bridge (Fallback per sensori non ancora in DT)
-            topic.startsWith("zara/android/domotica/env/") -> {
-                val sensor = topic.substringAfterLast("/")
-                _environmentState.value = when(sensor) {
-                    "humLiving" -> _environmentState.value.copy(living = _environmentState.value.living.copy(humidity = roundedValue))
-                    "humBedroom" -> _environmentState.value.copy(bedroom = _environmentState.value.bedroom.copy(humidity = roundedValue))
-                    "humOutdoor" -> _environmentState.value.copy(outdoor = _environmentState.value.outdoor.copy(humidity = roundedValue))
-                    else -> _environmentState.value
                 }
             }
         }
@@ -246,10 +236,7 @@ class MqttManager(private val context: Context) {
     fun toggleLight(lightId: String, currentState: Boolean) {
         val nextState = !currentState
         val stringState = if (nextState) "true" else "false"
-        val bridgeState = if (nextState) "ON" else "OFF"
         val cleanId = lightId.lowercase()
-        
-        publish("zara/android/domotica/light/$lightId/set", bridgeState)
         
         val (domain, device) = when (cleanId) {
             "sala" -> "lights" to "living"
@@ -270,7 +257,7 @@ class MqttManager(private val context: Context) {
 
     fun sendLightScene(scene: String) {
         val payload = if (scene == "TV Mode" || scene == "Sleep Mode") "on" else scene
-        publish("zara/android/domotica/scene/set", payload)
+        publish("zara/interface/lights/scene/cmd", payload)
     }
 
     fun publish(topic: String, payload: String, retained: Boolean = false) {

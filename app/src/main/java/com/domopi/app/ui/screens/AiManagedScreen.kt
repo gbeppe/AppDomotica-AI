@@ -1,18 +1,22 @@
 package com.domopi.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.domopi.app.data.MqttManager
-import com.domopi.app.ui.theme.SolarGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +27,7 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("AI Climate Control") },
+                title = { Text("AI Managed Control") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -39,57 +43,106 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // operativo
             item {
                 StatusCard(aiData)
             }
 
-            item {
-                ForecastCard(aiData)
-            }
-
+            // 1. Sistema Abilitato
             item {
                 ControlCard(
-                    title = "Sistema Abilitato",
+                    title = "Sistema AI Abilitato",
+                    subtitle = "Attiva/Disattiva logica climatica intelligente",
+                    isEnabled = aiSettings.systemEnabled,
                     onEnabledChange = { enabled ->
-                        mqttManager.publish("zara/interface/climate/ai_enabling/cmd", if (enabled) "true" else "false", retained = false)
-                    },
-                    isEnabled = aiSettings.systemEnabled
-                )
-            }
-
-            item {
-                ControlCard(
-                    title = "Gestione Mattino (Solar Only)",
-                    onEnabledChange = { enabled ->
-                        mqttManager.publish("casa/clima/cmnd/grace_mode_solar", if (enabled) "true" else "false", retained = false)
-                    },
-                    isEnabled = aiSettings.graceModeSolar
-                )
-            }
-
-            item {
-                SettingsSection(
-                    title = "Parametri AI",
-                    settings = listOf(
-                        SettingItem("Minuti ON", aiSettings.minOnTime, "min_run_time"),
-                        SettingItem("Minuti OFF", aiSettings.minOffTime, "min_off_time"),
-                        SettingItem("Tolleranza Deficit", aiSettings.deficitTolerance, "deficit_tolerance_time"),
-                        SettingItem("Soglia Emergenza Humidex", aiSettings.emergencyHumidex, "emergency_humidex_away")
-                    ),
-                    onValueChange = { topic, value ->
-                        mqttManager.publish("casa/clima/cmnd/$topic", value, retained = false)
+                        mqttManager.publish("zara/interface/ai/system_enabled/cmd", if (enabled) "true" else "false")
                     }
                 )
             }
 
+            // 2 & 3. Tempi Compressore
             item {
-                ThresholdSection(
-                    title = "Soglie Comfort",
-                    humidexTarget = aiSettings.targetHumidex,
-                    vmcMaxNight = aiSettings.vmcMaxNight.toFloat(),
-                    onHumidexChange = { mqttManager.publish("casa/clima/cmnd/target_humidex", it.toString(), retained = false) },
-                    onVmcChange = { mqttManager.publish("casa/clima/cmnd/vmc_max_notte", it.toInt().toString(), retained = false) }
-                )
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Gestione Cicli Compressore", style = MaterialTheme.typography.titleMedium)
+                        
+                        NumericStepper(
+                            label = "Minuti ON (min)",
+                            value = aiSettings.compressorOnMin,
+                            onValueChange = { mqttManager.publish("zara/interface/ai/compressor_on_min/cmd", it.toString()) }
+                        )
+                        
+                        NumericStepper(
+                            label = "Minuti OFF (min)",
+                            value = aiSettings.compressorOffMin,
+                            onValueChange = { mqttManager.publish("zara/interface/ai/compressor_off_min/cmd", it.toString()) }
+                        )
+                    }
+                }
+            }
+
+            // 4 & 5. Parametri Notturni
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Comfort Notturno", style = MaterialTheme.typography.titleMedium)
+                        
+                        NumericStepper(
+                            label = "Soglia Humidex Notte",
+                            value = aiSettings.nightHumidexThreshold,
+                            onValueChange = { mqttManager.publish("zara/interface/ai/night_humidex_threshold/cmd", it.toString()) }
+                        )
+                        
+                        Column {
+                            Text("Velocità Max VMC Notte: ${aiSettings.nightVmcMaxSpeed}", style = MaterialTheme.typography.bodySmall)
+                            Slider(
+                                value = aiSettings.nightVmcMaxSpeed.toFloat(),
+                                onValueChange = { mqttManager.publish("zara/interface/ai/night_vmc_max_speed/cmd", it.toInt().toString()) },
+                                valueRange = 1f..4f,
+                                steps = 2
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 6. Tolleranza Deficit
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    NumericStepper(
+                        label = "Tolleranza Deficit (min)",
+                        value = aiSettings.deficitToleranceMin,
+                        onValueChange = { mqttManager.publish("zara/interface/ai/deficit_tolerance_min/cmd", it.toString()) },
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
+            // 7 & 8. Gestione Mattino
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Gestione Mattutina (08:00 - 12:00)", style = MaterialTheme.typography.titleMedium)
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Abilita Gestione AC", style = MaterialTheme.typography.bodyMedium)
+                            Switch(
+                                checked = aiSettings.morningAcManagement,
+                                onCheckedChange = { mqttManager.publish("zara/interface/ai/morning_ac_management/cmd", if (it) "true" else "false") }
+                            )
+                        }
+                        
+                        NumericStepper(
+                            label = "Soglia Emergenza Humidex",
+                            value = aiSettings.morningHumidexEmergency,
+                            onValueChange = { mqttManager.publish("zara/interface/ai/morning_humidex_emergency/cmd", it.toString()) }
+                        )
+                    }
+                }
             }
 
             item {
@@ -100,41 +153,57 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
 }
 
 @Composable
-fun ForecastCard(data: com.domopi.app.data.AiManagedData) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
+fun NumericStepper(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Previsioni & Backup", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricItem("Solare Domani", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.previsione_solare_domani_kwh))
-                MetricItem("Ricarica Batt.", "${data.logica_controllo.previsione_ricarica_battery_percent}%")
-                MetricItem("In Batteria", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.kwh_stimati_in_batteria))
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = { onValueChange(value - 1) },
+                modifier = Modifier.size(32.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+            ) {
+                Icon(Icons.Default.Remove, null, modifier = Modifier.size(18.dp))
+            }
+            
+            Text(
+                text = value.toString(),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            IconButton(
+                onClick = { onValueChange(value + 1) },
+                modifier = Modifier.size(32.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+            ) {
+                Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
             }
         }
     }
 }
 
 @Composable
-fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
+fun ControlCard(title: String, subtitle: String, isEnabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Dettagli Logica", style = MaterialTheme.typography.titleMedium)
-            DetailRow("Stagione Attiva", data.stagione_attiva)
-            DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.US, data.logica_controllo.soc_minimo_applied))
-            DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.US, data.logica_controllo.soglia_attivazione_applicata))
-            DetailRow("Timer Anticiclo", "${data.logica_controllo.tempo_mancante_anticiclo_minuti} min")
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Switch(checked = isEnabled, onCheckedChange = onEnabledChange)
         }
-    }
-}
-
-@Composable
-fun DetailRow(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
     }
 }
 
@@ -183,77 +252,23 @@ fun StatusCard(data: com.domopi.app.data.AiManagedData) {
 }
 
 @Composable
-fun ControlCard(title: String, isEnabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            Switch(checked = isEnabled, onCheckedChange = onEnabledChange)
-        }
-    }
-}
-
-@Composable
-fun SettingsSection(title: String, settings: List<SettingItem>, onValueChange: (String, String) -> Unit) {
+fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            settings.forEach { item ->
-                var textValue by remember(item.value) { mutableStateOf(item.value) }
-                OutlinedTextField(
-                    value = textValue,
-                    onValueChange = { textValue = it },
-                    label = { Text(item.label) },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        TextButton(onClick = { onValueChange(item.topic, textValue) }) {
-                            Text("SET")
-                        }
-                    }
-                )
-            }
+            Text("Dettagli Logica", style = MaterialTheme.typography.titleMedium)
+            DetailRow("Stagione Attiva", data.stagione_attiva)
+            DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.US, data.logica_controllo.soc_minimo_applied))
+            DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.US, data.logica_controllo.soglia_attivazione_applicata))
+            DetailRow("Timer Anticiclo", "${data.logica_controllo.tempo_mancante_anticiclo_minuti} min")
         }
     }
 }
 
 @Composable
-fun ThresholdSection(
-    title: String,
-    humidexTarget: Float,
-    vmcMaxNight: Float,
-    onHumidexChange: (Float) -> Unit,
-    onVmcChange: (Float) -> Unit
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            
-            Column {
-                val formattedHumidex = "%.1f".format(java.util.Locale.US, humidexTarget)
-                Text("Target Humidex: $formattedHumidex", style = MaterialTheme.typography.bodySmall)
-                Slider(
-                    value = humidexTarget,
-                    onValueChange = onHumidexChange,
-                    valueRange = 25f..35f,
-                    steps = 20
-                )
-            }
-
-            Column {
-                Text("Max VMC Notte: ${vmcMaxNight.toInt()}", style = MaterialTheme.typography.bodySmall)
-                Slider(
-                    value = vmcMaxNight,
-                    onValueChange = onVmcChange,
-                    valueRange = 1f..3f,
-                    steps = 1
-                )
-            }
-        }
+fun DetailRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -261,8 +276,6 @@ fun ThresholdSection(
 fun MetricItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
     }
 }
-
-data class SettingItem(val label: String, val value: String, val topic: String)
