@@ -54,7 +54,8 @@ class MainActivity : ComponentActivity() {
             DomoPiTheme(darkTheme = isDarkMode ?: isSystemInDarkTheme()) {
                 var currentScreen by remember { mutableStateOf("home") }
                 // Memorizziamo la pagina del carosello per tornare esattamente dove eravamo
-                var lastDashboardPage by remember { mutableIntStateOf(1000 * 7) } // 7 è il numero attuale di schede
+                // Inizializziamo a un multiplo di 9 (numero attuale di schede) per partire da ENERGIA (indice 0)
+                var lastDashboardPage by remember { mutableIntStateOf(1000 * 9) } 
                 
                 Surface(color = MaterialTheme.colorScheme.background) {
                     when (currentScreen) {

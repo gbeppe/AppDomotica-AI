@@ -42,6 +42,8 @@ fun MainDashboard(
     val aiSettings by mqttManager.aiSettings.collectAsState()
     val lightStates by mqttManager.lightStates.collectAsState()
     val envState by mqttManager.environmentState.collectAsState()
+    val hvacState by mqttManager.hvacState.collectAsState()
+    val energyData by mqttManager.energyData.collectAsState()
 
     // DEBUG: Log all true states
     LaunchedEffect(lightStates) {
@@ -182,14 +184,14 @@ fun MainDashboard(
                         Spacer(Modifier.height(8.dp))
                     }
                     
-                    // Strictly count only the lights from the known room IDs
+                    // 1. Luci
                     val roomLightIds = listOf("sala", "libreria", "cucina", "televisione", "tavolinolettura", "lampadahifi", "lucecamera", "prolunga")
                     val activeLights = lightStates.filter { it.key in roomLightIds && it.value }
                     if (activeLights.isNotEmpty()) {
                         item { 
                             SummaryRow(
                                 Icons.Default.Lightbulb, 
-                                "Luci Accese (${activeLights.size})", 
+                                "Luci", 
                                 activeLights.keys.joinToString(", ") { id ->
                                     when(id) {
                                         "sala" -> "Soggiorno"
@@ -203,16 +205,29 @@ fun MainDashboard(
                         }
                     }
 
-                    // Active Pool Devices
-                    val poolDevices = mapOf(
-                        "pompapiscina" to "Pompa Filtro",
-                        "skimmerpiscina" to "Skimmer",
-                        "lucipiscina" to "Luce Piscina",
-                        "lucipedanapiscina" to "Luce Pedana"
-                    )
-                    poolDevices.forEach { (id, name) ->
-                        if (lightStates[id] == true) {
-                            item { SummaryRow(Icons.Default.Pool, "$name Attivo", "ON") }
+                    // 2. Piscina
+                    val activePool = mutableListOf<String>()
+                    if (lightStates["pompapiscina"] == true) activePool.add("Pompa")
+                    if (lightStates["skimmerpiscina"] == true) activePool.add("Skimmer")
+                    if (lightStates["lucipiscina"] == true) activePool.add("Luci")
+                    if (lightStates["lucipedanapiscina"] == true) activePool.add("Pedana")
+                    if (activePool.isNotEmpty()) {
+                        item {
+                            SummaryRow(Icons.Default.Pool, "Piscina", activePool.joinToString(", "))
+                        }
+                    }
+
+                    // 3. Impianti HVAC
+                    val activeHvac = mutableListOf<String>()
+                    if (hvacState.boiler.active && hvacState.boiler.modulation > 0) activeHvac.add("Caldaia (${hvacState.boiler.modulation}%)")
+                    if (hvacState.palazzetti.active) activeHvac.add("Focolare (L:${hvacState.palazzetti.level})")
+                    if (hvacState.ac.active) activeHvac.add("AC (${hvacState.ac.mode})")
+                    if (hvacState.floorHeating.pumpActive) activeHvac.add("Pavimento")
+                    if (energyData.solarPumpSpeed > 0) activeHvac.add("Solare (${energyData.solarPumpSpeed}%)")
+                    if (hvacState.vmc.speed > 1) activeHvac.add("VMC (V:${hvacState.vmc.speed})")
+                    if (activeHvac.isNotEmpty()) {
+                        item {
+                            SummaryRow(Icons.Default.SettingsSuggest, "Impianti", activeHvac.joinToString(", "))
                         }
                     }
                     
