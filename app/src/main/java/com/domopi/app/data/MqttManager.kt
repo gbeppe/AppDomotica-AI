@@ -189,6 +189,21 @@ class MqttManager(private val context: Context) {
             "outdoor" -> _environmentState.value.copy(outdoor = updateSensor(_environmentState.value.outdoor, prop, valRounded))
             else -> _environmentState.value
         }
+        
+        // Sincronizziamo anche AiManagedData per compatibilità con le schede informative
+        if (device == "living") {
+            _aiManagedData.value = when(prop) {
+                "temperature" -> _aiManagedData.value.copy(metriche_ambientali = _aiManagedData.value.metriche_ambientali.copy(temperatura_c = valRounded))
+                "humidex" -> _aiManagedData.value.copy(metriche_ambientali = _aiManagedData.value.metriche_ambientali.copy(humidex = valRounded, humidex_living = valRounded))
+                else -> _aiManagedData.value
+            }
+        } else if (device == "bedroom") {
+            _aiManagedData.value = when(prop) {
+                "temperature" -> _aiManagedData.value.copy(metriche_ambientali = _aiManagedData.value.metriche_ambientali.copy(temp_cameraMatrimoniale = valRounded))
+                "humidex" -> _aiManagedData.value.copy(metriche_ambientali = _aiManagedData.value.metriche_ambientali.copy(humidex_bedroom = valRounded))
+                else -> _aiManagedData.value
+            }
+        }
     }
 
     private fun updateSensor(current: SensorData, prop: String, value: Float): SensorData = when(prop) {
@@ -268,6 +283,9 @@ class MqttManager(private val context: Context) {
             "battery_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal))
             "battery_kwh" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = floatVal))
             "active_season" -> _aiManagedData.value.copy(stagione_attiva = raw)
+            "soc_minimo_applied", "soc_minimo" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(soc_minimo_applied = floatVal))
+            "soglia_attivazione_applicata", "soglia_humidex" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(soglia_attivazione_applicata = floatVal))
+            "timer_anticiclo", "tempo_mancante_anticiclo_minuti" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(tempo_mancante_anticiclo_minuti = intVal))
             else -> _aiManagedData.value
         }
     }
@@ -300,7 +318,10 @@ class MqttManager(private val context: Context) {
 
     private fun handleVentilationDomain(device: String, prop: String, raw: String) {
         if (device == "vmc" && prop == "speed") {
-            _hvacState.value = _hvacState.value.copy(vmc = _hvacState.value.vmc.copy(speed = raw.toIntOrNull() ?: 1, active = true))
+            val speed = raw.toIntOrNull() ?: 1
+            _hvacState.value = _hvacState.value.copy(vmc = _hvacState.value.vmc.copy(speed = speed, active = true))
+            // Sincronizziamo anche AiManagedData per la scheda operativa
+            _aiManagedData.value = _aiManagedData.value.copy(stato_vmc = _aiManagedData.value.stato_vmc.copy(velocita_attuale = speed))
         }
     }
 

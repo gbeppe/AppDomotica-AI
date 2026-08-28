@@ -24,6 +24,8 @@ import com.domopi.app.ui.components.NumericStepper
 fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val aiData by mqttManager.aiManagedData.collectAsState()
     val aiSettings by mqttManager.aiSettings.collectAsState()
+    val envState by mqttManager.environmentState.collectAsState()
+    val hvacState by mqttManager.hvacState.collectAsState()
 
     androidx.activity.compose.BackHandler { onBack() }
 
@@ -48,7 +50,7 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
         ) {
             // operativo
             item {
-                StatusCard(aiData)
+                StatusCard(aiData, envState, hvacState)
             }
 
             // 1. Sistema Abilitato
@@ -173,7 +175,11 @@ fun ControlCard(title: String, subtitle: String, isEnabled: Boolean, onEnabledCh
 }
 
 @Composable
-fun StatusCard(data: com.domopi.app.data.AiManagedData) {
+fun StatusCard(
+    data: com.domopi.app.data.AiManagedData,
+    envState: com.domopi.app.data.EnvironmentState,
+    hvacState: com.domopi.app.data.HvacState
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -208,9 +214,9 @@ fun StatusCard(data: com.domopi.app.data.AiManagedData) {
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricItem("Temp. Interna", "%.1f°C".format(java.util.Locale.US, data.metriche_ambientali.temperatura_c))
-                MetricItem("Humidex", "%.1f".format(java.util.Locale.US, data.metriche_ambientali.humidex))
-                MetricItem("VMC Speed", "${data.stato_vmc.velocita_attuale}")
+                MetricItem("Temp. Interna", "%.1f°C".format(java.util.Locale.US, envState.living.temperature))
+                MetricItem("Humidex", "%.1f".format(java.util.Locale.US, envState.living.humidex))
+                MetricItem("VMC Speed", "${hvacState.vmc.speed}")
             }
         }
     }
