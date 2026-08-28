@@ -33,8 +33,9 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     var tinycamPort by remember { mutableStateOf("") }
     var tinycamUser by remember { mutableStateOf("") }
     var tinycamPass by remember { mutableStateOf("") }
+    var darkMode by remember { mutableStateOf(true) }
 
-    var initialValues by remember { mutableStateOf<Map<String, String>?>(null) }
+    var initialValues by remember { mutableStateOf<Map<String, Any>?>(null) }
     
     val isDirty = initialValues != null && (
         domopiIp != initialValues!!["dpIp"] ||
@@ -49,7 +50,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         tinycamRemoteIp != initialValues!!["tcRemoteIp"] ||
         tinycamPort != initialValues!!["tcPort"] ||
         tinycamUser != initialValues!!["tcUser"] ||
-        tinycamPass != initialValues!!["tcPass"]
+        tinycamPass != initialValues!!["tcPass"] ||
+        darkMode != initialValues!!["darkMode"]
     )
 
     LaunchedEffect(Unit) {
@@ -68,6 +70,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         val tcPort = settingsManager.tinycamPort.first()
         val tcUser = settingsManager.tinycamUser.first()
         val tcPass = settingsManager.tinycamPass.first()
+        val dm = settingsManager.darkMode.first() ?: true // Default to true if not set
         
         domopiIp = dpIp
         domopiPort = dpPort
@@ -84,11 +87,13 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         tinycamPort = tcPort
         tinycamUser = tcUser
         tinycamPass = tcPass
+        darkMode = dm
         
         initialValues = mapOf(
             "dpIp" to dpIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
             "epIp" to epIp, "epPort" to epPort, "epUser" to epUser, "epPass" to epPass,
-            "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass
+            "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass,
+            "darkMode" to dm
         )
     }
 
@@ -103,6 +108,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                         settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
                         settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
                         settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
+                        settingsManager.saveDarkMode(darkMode)
                         onBack()
                     }
                 }) { Text("Salva") }
@@ -131,10 +137,12 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                                 settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
                                 settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
                                 settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
+                                settingsManager.saveDarkMode(darkMode)
                                 initialValues = mapOf(
                                     "dpIp" to domopiIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
                                     "epIp" to emonpiIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass,
-                                    "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass
+                                    "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass,
+                                    "darkMode" to darkMode
                                 )
                             }
                         }) {
@@ -149,6 +157,18 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Text("Modalità Scura", style = MaterialTheme.typography.titleMedium)
+                    Switch(checked = darkMode, onCheckedChange = { darkMode = it })
+                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+            
             item {
                 Text("Broker DomoPi", style = MaterialTheme.typography.titleMedium)
                 OutlinedTextField(value = domopiIp, onValueChange = { domopiIp = it }, label = { Text("IP / Host") }, modifier = Modifier.fillMaxWidth())

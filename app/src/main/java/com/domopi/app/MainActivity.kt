@@ -3,7 +3,6 @@ package com.domopi.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.domopi.app.ui.theme.DomoPiTheme
@@ -49,9 +48,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val isDarkMode by settingsManager.darkMode.collectAsState(initial = null)
+            val isDarkModeSetting by settingsManager.darkMode.collectAsState(initial = null)
+            val isDarkMode = isDarkModeSetting ?: true // Default a Dark Mode se non impostato
             
-            DomoPiTheme(darkTheme = isDarkMode ?: isSystemInDarkTheme()) {
+            DomoPiTheme(darkTheme = isDarkMode) {
                 var currentScreen by remember { mutableStateOf("home") }
                 // Memorizziamo la pagina del carosello per tornare esattamente dove eravamo
                 // Inizializziamo a un multiplo di 9 (numero attuale di schede) per partire da ENERGIA (indice 0)
