@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.MqttManager
+import com.domopi.app.ui.components.NumericStepper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,44 +148,6 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
 
             item {
                 SystemDetailsCard(aiData)
-            }
-        }
-    }
-}
-
-@Composable
-fun NumericStepper(
-    label: String,
-    value: Int,
-    onValueChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = { onValueChange(value - 1) },
-                modifier = Modifier.size(32.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
-            ) {
-                Icon(Icons.Default.Remove, null, modifier = Modifier.size(18.dp))
-            }
-            
-            Text(
-                text = value.toString(),
-                modifier = Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            
-            IconButton(
-                onClick = { onValueChange(value + 1) },
-                modifier = Modifier.size(32.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
-            ) {
-                Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
             }
         }
     }

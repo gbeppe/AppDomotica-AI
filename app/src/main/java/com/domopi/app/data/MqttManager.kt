@@ -1,6 +1,7 @@
 package com.domopi.app.data
 
 import android.content.Context
+import android.util.Base64
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,12 @@ data class EnergyData(
     val homeConsumption: Float = 0f,
     val gridPower: Float = 0f,
     val batteryPower: Float = 0f,
-    val batterySoc: Float = 0f
+    val batterySoc: Float = 0f,
+    val pufferAcs: Float = 0f,
+    val pufferAlto: Float = 0f,
+    val pufferBasso: Float = 0f,
+    val solarCollectorTemp: Float = 0f,
+    val solarPumpSpeed: Int = 0
 )
 
 data class SensorData(
@@ -40,6 +46,14 @@ data class AiSettings(
     val deficitToleranceMin: Int = 10,
     val morningAcManagement: Boolean = false,
     val morningHumidexEmergency: Int = 33
+)
+
+data class DomoticaSettings(
+    val holidayMode: Boolean = false,
+    val ecoLights: Boolean = false,
+    val poolLightsAuto: Boolean = false,
+    val porchSensor: Boolean = false,
+    val acAuto: Boolean = false
 )
 
 class MqttManager(private val context: Context) {
@@ -67,6 +81,12 @@ class MqttManager(private val context: Context) {
 
     private val _aiSettings = MutableStateFlow(AiSettings())
     val aiSettings: StateFlow<AiSettings> = _aiSettings
+
+    private val _domoticaSettings = MutableStateFlow(DomoticaSettings())
+    val domoticaSettings: StateFlow<DomoticaSettings> = _domoticaSettings
+
+    private val _hvacState = MutableStateFlow(HvacState())
+    val hvacState: StateFlow<HvacState> = _hvacState
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected
@@ -123,103 +143,189 @@ class MqttManager(private val context: Context) {
         val value = payload.toFloatOrNull() ?: 0f
         val roundedValue = (value * 10).roundToInt() / 10f
 
-        when {
-            // 1. Digital Twin Status (Priorità Massima)
-            topic.startsWith("zara/interface/") -> {
-                val parts = topic.split("/")
-                if (parts.size >= 5 && parts.last() == "stat") {
-                    val domain = parts[2]
-                    val deviceName = parts[3]
-                    // Property is the second to last part (e.g. zara/interface/lights/living/power/stat -> power)
-                    // If 5 parts (zara/interface/climate/ai_enabling/stat), property is "ai_enabling" or we use a more direct mapping
-                    val property = parts[parts.size - 2]
+        if (!topic.startsWith("zara/interface/")) return
 
-                    when (domain) {
-                        "lights", "pool" -> {
-                            val internalId = when(deviceName) {
-                                "living" -> "sala"
-                                "reading" -> "tavolinolettura"
-                                "tv" -> "televisione"
-                                "bedroom" -> "lucecamera"
-                                "water" -> "lucipiscina"
-                                "deck" -> "lucipedanapiscina"
-                                "pump" -> "pompapiscina"
-                                "skimmer" -> "skimmerpiscina"
-                                "hifi" -> "lampadahifi"
-                                else -> deviceName.lowercase()
-                            }
-                            updateLightState(internalId, isStatusOn)
+        val parts = topic.split("/")
+        if (parts.size < 4) return
+
+        val domain = parts[2]
+        val deviceName = parts[3]
+        val property = parts.getOrNull(4) ?: ""
+
+        when (domain) {
+            "lights", "pool" -> {
+                val internalId = when(deviceName) {
+                    "living" -> "sala"
+                    "reading" -> "tavolinolettura"
+                    "tv" -> "televisione"
+                    "bedroom" -> "lucecamera"
+                    "water" -> "lucipiscina"
+                    "deck" -> "lucipedanapiscina"
+                    "pump" -> "pompapiscina"
+                    "skimmer" -> "skimmerpiscina"
+                    "hifi" -> "lampadahifi"
+                    else -> deviceName.lowercase()
+                }
+                updateLightState(internalId, isStatusOn)
+            }
+            "env" -> {
+                _environmentState.value = when (deviceName) {
+                    "living" -> _environmentState.value.copy(
+                        living = when(property) {
+                            "temperature" -> _environmentState.value.living.copy(temperature = roundedValue)
+                            "humidity" -> _environmentState.value.living.copy(humidity = roundedValue)
+                            "humidex" -> _environmentState.value.living.copy(humidex = roundedValue)
+                            else -> _environmentState.value.living
                         }
-                        "env" -> {
-                            // Sincronizzazione rigorosa sui topic ufficiali Digital Twin Env
-                            _environmentState.value = when (deviceName) {
-                                "living" -> _environmentState.value.copy(
-                                    living = when(property) {
-                                        "temperature" -> _environmentState.value.living.copy(temperature = roundedValue)
-                                        "humidity" -> _environmentState.value.living.copy(humidity = roundedValue)
-                                        "humidex" -> _environmentState.value.living.copy(humidex = roundedValue)
-                                        else -> _environmentState.value.living
-                                    }
-                                )
-                                "bedroom" -> _environmentState.value.copy(
-                                    bedroom = when(property) {
-                                        "temperature" -> _environmentState.value.bedroom.copy(temperature = roundedValue)
-                                        "humidity" -> _environmentState.value.bedroom.copy(humidity = roundedValue)
-                                        "humidex" -> _environmentState.value.bedroom.copy(humidex = roundedValue)
-                                        else -> _environmentState.value.bedroom
-                                    }
-                                )
-                                "outdoor" -> _environmentState.value.copy(
-                                    outdoor = when(property) {
-                                        "temperature" -> _environmentState.value.outdoor.copy(temperature = roundedValue)
-                                        "humidity" -> _environmentState.value.outdoor.copy(humidity = roundedValue)
-                                        else -> _environmentState.value.outdoor
-                                    }
-                                )
-                                else -> _environmentState.value
-                            }
+                    )
+                    "bedroom" -> _environmentState.value.copy(
+                        bedroom = when(property) {
+                            "temperature" -> _environmentState.value.bedroom.copy(temperature = roundedValue)
+                            "humidity" -> _environmentState.value.bedroom.copy(humidity = roundedValue)
+                            "humidex" -> _environmentState.value.bedroom.copy(humidex = roundedValue)
+                            else -> _environmentState.value.bedroom
                         }
-                        "energy" -> {
-                            _energyData.value = when (deviceName) {
-                                "solar" -> _energyData.value.copy(solarPower = roundedValue)
-                                "home" -> _energyData.value.copy(homeConsumption = roundedValue)
-                                "grid" -> _energyData.value.copy(gridPower = roundedValue)
-                                "battery" -> if (property == "soc") _energyData.value.copy(batterySoc = roundedValue) else _energyData.value.copy(batteryPower = roundedValue)
-                                else -> _energyData.value
-                            }
+                    )
+                    "outdoor" -> _environmentState.value.copy(
+                        outdoor = when(property) {
+                            "temperature" -> _environmentState.value.outdoor.copy(temperature = roundedValue)
+                            "humidity" -> _environmentState.value.outdoor.copy(humidity = roundedValue)
+                            else -> _environmentState.value.outdoor
                         }
-                        "ai" -> {
-                            val intVal = payload.toIntOrNull() ?: 0
-                            val floatVal = payload.toFloatOrNull() ?: 0f
-                            
-                            // 1. Aggiornamento Impostazioni (aiSettings)
-                            _aiSettings.value = when (deviceName) {
-                                "system_enabled" -> _aiSettings.value.copy(systemEnabled = isStatusOn)
-                                "compressor_on_min" -> _aiSettings.value.copy(compressorOnMin = intVal)
-                                "compressor_off_min" -> _aiSettings.value.copy(compressorOffMin = intVal)
-                                "night_humidex_threshold" -> _aiSettings.value.copy(nightHumidexThreshold = intVal)
-                                "night_vmc_max_speed" -> _aiSettings.value.copy(nightVmcMaxSpeed = intVal)
-                                "deficit_tolerance_min" -> _aiSettings.value.copy(deficitToleranceMin = intVal)
-                                "morning_ac_management" -> _aiSettings.value.copy(morningAcManagement = isStatusOn)
-                                "morning_humidex_emergency" -> _aiSettings.value.copy(morningHumidexEmergency = intVal)
-                                else -> _aiSettings.value
-                            }
-                            
-                            // 2. Aggiornamento Stato Operativo (aiManagedData)
-                            // Mappiamo i singoli topic di stato puliti verso la struttura dati della UI
-                            _aiManagedData.value = when (deviceName) {
-                                "op_state" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(stato_attuale = payload))
-                                "op_reason" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(motivo_logica = payload))
-                                "op_mode" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(modalita_aria = payload))
-                                "vmc_speed" -> _aiManagedData.value.copy(stato_vmc = _aiManagedData.value.stato_vmc.copy(velocita_attuale = intVal))
-                                "solar_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_solare_domani_kwh = floatVal))
-                                "battery_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal))
-                                "battery_kwh" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = floatVal))
-                                "active_season" -> _aiManagedData.value.copy(stagione_attiva = payload)
-                                else -> _aiManagedData.value
-                            }
+                    )
+                    else -> _environmentState.value
+                }
+            }
+            "energy" -> {
+                _energyData.value = when (deviceName) {
+                    "solar" -> _energyData.value.copy(solarPower = roundedValue)
+                    "home" -> _energyData.value.copy(homeConsumption = roundedValue)
+                    "grid" -> _energyData.value.copy(gridPower = roundedValue)
+                    "battery" -> if (property == "soc") _energyData.value.copy(batterySoc = roundedValue) else _energyData.value.copy(batteryPower = roundedValue)
+                    "puffer_acs" -> _energyData.value.copy(pufferAcs = roundedValue)
+                    else -> _energyData.value
+                }
+            }
+            "heating" -> {
+                when (deviceName) {
+                    "puffer" -> {
+                        _energyData.value = when (property) {
+                            "top_temperature" -> _energyData.value.copy(pufferAlto = roundedValue)
+                            "bottom_temperature" -> _energyData.value.copy(pufferBasso = roundedValue)
+                            else -> _energyData.value
                         }
                     }
+                    "solar_thermal" -> {
+                        _energyData.value = when (property) {
+                            "collector_temperature" -> _energyData.value.copy(solarCollectorTemp = roundedValue)
+                            "pump_speed" -> _energyData.value.copy(solarPumpSpeed = payload.toIntOrNull() ?: 0)
+                            else -> _energyData.value
+                        }
+                    }
+                    "gas_boiler" -> {
+                        _hvacState.value = when (property) {
+                            "flame" -> _hvacState.value.copy(boiler = _hvacState.value.boiler.copy(active = isStatusOn))
+                            "modulation" -> _hvacState.value.copy(boiler = _hvacState.value.boiler.copy(modulation = payload.toIntOrNull() ?: 0))
+                            else -> _hvacState.value
+                        }
+                    }
+                    "floor_pump" -> {
+                        _hvacState.value = when (property) {
+                            "enabled" -> _hvacState.value.copy(floorHeating = _hvacState.value.floorHeating.copy(enabled = isStatusOn))
+                            "running" -> _hvacState.value.copy(floorHeating = _hvacState.value.floorHeating.copy(pumpActive = isStatusOn))
+                            else -> _hvacState.value
+                        }
+                    }
+                }
+            }
+            "ai" -> {
+                val intVal = payload.toIntOrNull() ?: 0
+                val floatVal = payload.toFloatOrNull() ?: 0f
+                _aiSettings.value = when (deviceName) {
+                    "system_enabled" -> _aiSettings.value.copy(systemEnabled = isStatusOn)
+                    "compressor_on_min" -> _aiSettings.value.copy(compressorOnMin = intVal)
+                    "compressor_off_min" -> _aiSettings.value.copy(compressorOffMin = intVal)
+                    "night_humidex_threshold" -> _aiSettings.value.copy(nightHumidexThreshold = intVal)
+                    "night_vmc_max_speed" -> _aiSettings.value.copy(nightVmcMaxSpeed = intVal)
+                    "deficit_tolerance_min" -> _aiSettings.value.copy(deficitToleranceMin = intVal)
+                    "morning_ac_management" -> _aiSettings.value.copy(morningAcManagement = isStatusOn)
+                    "morning_humidex_emergency" -> _aiSettings.value.copy(morningHumidexEmergency = intVal)
+                    else -> _aiSettings.value
+                }
+                _aiManagedData.value = when (deviceName) {
+                    "op_state" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(stato_attuale = payload))
+                    "op_reason" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(motivo_logica = payload))
+                    "op_mode" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(modalita_aria = payload))
+                    "vmc_speed" -> _aiManagedData.value.copy(stato_vmc = _aiManagedData.value.stato_vmc.copy(velocita_attuale = intVal))
+                    "solar_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_solare_domani_kwh = floatVal))
+                    "battery_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal))
+                    "battery_kwh" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = floatVal))
+                    "active_season" -> _aiManagedData.value.copy(stagione_attiva = payload)
+                    else -> _aiManagedData.value
+                }
+            }
+            "climate" -> {
+                val floatVal = payload.toFloatOrNull() ?: 0f
+                when (deviceName) {
+                    "thermostat_living" -> {
+                        _hvacState.value = _hvacState.value.copy(
+                            thermostatLiving = when (property) {
+                                "current_temperature" -> _hvacState.value.thermostatLiving.copy(currentTemp = roundedValue)
+                                "target_temperature" -> _hvacState.value.thermostatLiving.copy(targetTemp = roundedValue)
+                                "min_temperature" -> _hvacState.value.thermostatLiving.copy(minTemp = roundedValue)
+                                "max_temperature" -> _hvacState.value.thermostatLiving.copy(maxTemp = roundedValue)
+                                "power" -> _hvacState.value.thermostatLiving.copy(power = isStatusOn)
+                                else -> _hvacState.value.thermostatLiving
+                            }
+                        )
+                    }
+                    "thermostat_bath" -> {
+                        _hvacState.value = _hvacState.value.copy(
+                            thermostatBath = when (property) {
+                                "current_temperature" -> _hvacState.value.thermostatBath.copy(currentTemp = roundedValue)
+                                "target_temperature" -> _hvacState.value.thermostatBath.copy(targetTemp = roundedValue)
+                                "min_temperature" -> _hvacState.value.thermostatBath.copy(minTemp = roundedValue)
+                                "max_temperature" -> _hvacState.value.thermostatBath.copy(maxTemp = roundedValue)
+                                "power" -> _hvacState.value.thermostatBath.copy(power = isStatusOn)
+                                else -> _hvacState.value.thermostatBath
+                            }
+                        )
+                    }
+                }
+            }
+            "fireplace" -> {
+                if (deviceName == "main") {
+                    val intVal = payload.toIntOrNull() ?: 0
+                    _hvacState.value = when (property) {
+                        "power" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(active = isStatusOn))
+                        "level" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(level = intVal))
+                        "mode" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(mode = payload))
+                        "start_time" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(startTime = payload))
+                        "stop_time" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(stopTime = payload))
+                        "auto_power" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(autoPower = isStatusOn))
+                        else -> _hvacState.value
+                    }
+                }
+            }
+            "settings" -> {
+                _domoticaSettings.value = when (deviceName) {
+                    "holiday_mode" -> _domoticaSettings.value.copy(holidayMode = isStatusOn)
+                    "eco_lights" -> _domoticaSettings.value.copy(ecoLights = isStatusOn)
+                    "pool_lights_auto" -> _domoticaSettings.value.copy(poolLightsAuto = isStatusOn)
+                    "porch_sensor" -> _domoticaSettings.value.copy(porchSensor = isStatusOn)
+                    "ac_auto" -> _domoticaSettings.value.copy(acAuto = isStatusOn)
+                    else -> _domoticaSettings.value
+                }
+            }
+            "ventilation" -> {
+                val intVal = payload.toIntOrNull() ?: 1
+                if (deviceName == "vmc" && property == "speed") {
+                    _hvacState.value = _hvacState.value.copy(
+                        vmc = _hvacState.value.vmc.copy(
+                            speed = intVal,
+                            active = true
+                        )
+                    )
                 }
             }
         }

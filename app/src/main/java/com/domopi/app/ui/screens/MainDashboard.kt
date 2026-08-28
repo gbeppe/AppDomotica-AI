@@ -32,6 +32,8 @@ fun MainDashboard(
     mqttManager: MqttManager,
     connectivityManager: DomoPiConnectivityManager,
     settingsManager: SettingsManager,
+    initialPage: Int,
+    onPageChanged: (Int) -> Unit,
     onNavigate: (String) -> Unit
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()
@@ -142,13 +144,17 @@ fun MainDashboard(
 
             // Top 2/3: Horizontal Carousel (Circular/Infinite)
             Box(modifier = Modifier.weight(2f)) {
-                val actualPageCount = 6
-                // Start in the middle of a very large range to allow infinite swiping in both directions
-                val initialPage = 1000 * actualPageCount
+                val actualPageCount = 9
                 val pagerState = rememberPagerState(
                     initialPage = initialPage,
                     pageCount = { 10000 * actualPageCount }
                 )
+
+                // Sincronizza la pagina corrente con l'esterno
+                LaunchedEffect(pagerState.currentPage) {
+                    onPageChanged(pagerState.currentPage)
+                }
+
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
@@ -255,6 +261,7 @@ fun DomainCard(
     val energyData by mqttManager.energyData.collectAsState()
     val aiData by mqttManager.aiManagedData.collectAsState()
     val lightStates by mqttManager.lightStates.collectAsState()
+    val hvacState by mqttManager.hvacState.collectAsState()
     
     val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
     val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("100.x.x.x")
@@ -272,6 +279,7 @@ fun DomainCard(
         3 -> "PISCINA"
         4 -> "AMBIENTI"
         5 -> "TELECAMERE"
+        6 -> "IMPIANTI"
         else -> ""
     }
     
@@ -282,6 +290,9 @@ fun DomainCard(
         3 -> "pool"
         4 -> "ambienti"
         5 -> "cameras"
+        6 -> "hvac"
+        7 -> "domotica_settings"
+        8 -> "garage"
         else -> "dashboard"
     }
 
@@ -296,6 +307,18 @@ fun DomainCard(
             verticalArrangement = Arrangement.Center
         ) {
             if (page != 0) {
+                val title = when(page) {
+                    0 -> "ENERGIA"
+                    1 -> "LUCI"
+                    2 -> "CLIMA"
+                    3 -> "PISCINA"
+                    4 -> "AMBIENTI"
+                    5 -> "TELECAMERE"
+                    6 -> "IMPIANTI"
+                    7 -> "GESTIONE CASA"
+                    8 -> "GARAGE"
+                    else -> ""
+                }
                 Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(12.dp))
             }
@@ -344,6 +367,27 @@ fun DomainCard(
                         ) {
                             Icon(Icons.Default.Videocam, null, tint = Color.Gray, modifier = Modifier.size(48.dp))
                         }
+                    }
+                    6 -> com.domopi.app.ui.components.HvacFlowComponent(
+                        state = hvacState,
+                        energyData = energyData
+                    )
+                    7 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val domoticaSettings by mqttManager.domoticaSettings.collectAsState()
+                        Icon(
+                            Icons.Default.HomeRepairService, 
+                            null, 
+                            modifier = Modifier.size(64.dp), 
+                            tint = if (domoticaSettings.holidayMode) Color(0xFFE91E63) else MaterialTheme.colorScheme.primary
+                        )
+                        Text("Gestione Casa", style = MaterialTheme.typography.bodyLarge)
+                        if (domoticaSettings.holidayMode) {
+                            Text("MODALITÀ VACANZA ATTIVA", style = MaterialTheme.typography.labelSmall, color = Color(0xFFE91E63), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    8 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Garage, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                        Text("Controllo Garage", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }

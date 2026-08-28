@@ -53,6 +53,8 @@ class MainActivity : ComponentActivity() {
             
             DomoPiTheme(darkTheme = isDarkMode ?: isSystemInDarkTheme()) {
                 var currentScreen by remember { mutableStateOf("home") }
+                // Memorizziamo la pagina del carosello per tornare esattamente dove eravamo
+                var lastDashboardPage by remember { mutableIntStateOf(1000 * 7) } // 7 è il numero attuale di schede
                 
                 Surface(color = MaterialTheme.colorScheme.background) {
                     when (currentScreen) {
@@ -60,6 +62,8 @@ class MainActivity : ComponentActivity() {
                             mqttManager = mqttManager,
                             connectivityManager = connectivityManager,
                             settingsManager = settingsManager,
+                            initialPage = lastDashboardPage,
+                            onPageChanged = { lastDashboardPage = it },
                             onNavigate = { currentScreen = it }
                         )
                         "lights" -> LightsScreen(
@@ -97,6 +101,18 @@ class MainActivity : ComponentActivity() {
                         "cameras" -> CamerasScreen(
                             settingsManager = settingsManager,
                             connectivityManager = connectivityManager,
+                            onBack = { currentScreen = "home" }
+                        )
+                        "hvac" -> HvacScreen(
+                            mqttManager = mqttManager,
+                            onBack = { currentScreen = "home" }
+                        )
+                        "domotica_settings" -> DomoticaSettingsScreen(
+                            mqttManager = mqttManager,
+                            onBack = { currentScreen = "home" }
+                        )
+                        "garage" -> GarageControlScreen(
+                            mqttManager = mqttManager,
                             onBack = { currentScreen = "home" }
                         )
                     }

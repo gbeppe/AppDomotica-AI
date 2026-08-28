@@ -1,9 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#3DDC84"
-        android:pathData="M0,0h108v108h-108z" />
+    <group
+        android:translateX="18"
+        android:translateY="18">
+        <!-- Stylized House Outline -->
+        <path
+            android:fillColor="#00E676"
+            android:pathData="M36,6.75 L4.5,36 L11.25,36 L11.25,65.25 L60.75,65.25 L60.75,36 L67.5,36 L36,6.75 Z M36,15.75 L56.25,33.75 L56.25,60.75 L15.75,60.75 L15.75,33.75 L36,15.75 Z" />
+
+        <!-- Center Node (AI / Hub) -->
+        <path
+            android:fillColor="#00E676"
+            android:pathData="M36,36m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+
+        <!-- Connection Lines -->
+        <path
+            android:fillColor="#00E676"
+            android:pathData="M36,27 L36,20" />
+        <path
+            android:fillColor="#00E676"
+            android:pathData="M27,36 L20,36" />
+        <path
+            android:fillColor="#00E676"
+            android:pathData="M45,36 L52,36" />
+
+        <!-- AI Text Branding -->
+        <path
+            android:strokeColor="#00E676"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M30,56 L33,48 L36,56 M31,53 L35,53 M41,48 L41,56" />
+    </group>
 </vector>
