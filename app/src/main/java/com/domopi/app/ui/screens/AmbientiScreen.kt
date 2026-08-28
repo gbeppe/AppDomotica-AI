@@ -18,6 +18,8 @@ import com.domopi.app.ui.theme.SolarGreen
 fun AmbientiScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val envState by mqttManager.environmentState.collectAsState()
 
+    androidx.activity.compose.BackHandler { onBack() }
+
     Scaffold(
         topBar = {
             TopAppBar(

@@ -29,6 +29,8 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val hvacState by mqttManager.hvacState.collectAsState()
     val energyData by mqttManager.energyData.collectAsState()
 
+    androidx.activity.compose.BackHandler { onBack() }
+
     Scaffold(
         topBar = {
             TopAppBar(

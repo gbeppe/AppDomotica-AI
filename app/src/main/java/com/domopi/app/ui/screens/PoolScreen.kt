@@ -17,6 +17,8 @@ import com.domopi.app.ui.components.PoolInteractiveComponent
 fun PoolScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val lightStates by mqttManager.lightStates.collectAsState()
 
+    androidx.activity.compose.BackHandler { onBack() }
+
     Scaffold(
         topBar = {
             TopAppBar(

@@ -20,6 +20,7 @@ import com.domopi.app.data.MqttManager
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GarageControlScreen(mqttManager: MqttManager, onBack: () -> Unit) {
+    androidx.activity.compose.BackHandler { onBack() }
     Scaffold(
         topBar = {
             TopAppBar(

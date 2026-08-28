@@ -1,7 +1,6 @@
 package com.domopi.app.data
 
 import android.content.Context
-import android.util.Base64
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,7 +57,6 @@ data class DomoticaSettings(
 
 class MqttManager(private val context: Context) {
     private var mqttClient: MqttAsyncClient? = null
-    private val json = Json { ignoreUnknownKeys = true }
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
 
     private val VALID_LIGHT_IDS = listOf(
@@ -137,199 +135,187 @@ class MqttManager(private val context: Context) {
     }
 
     private fun handleIncomingMessage(topic: String, payload: String) {
-        addTrafficLog("IN: $topic")
-        val cleanPayload = payload.trim().lowercase()
-        val isStatusOn = cleanPayload == "true" || cleanPayload == "on" || cleanPayload == "1" || cleanPayload.contains("\"state\":\"on\"")
-        val value = payload.toFloatOrNull() ?: 0f
-        val roundedValue = (value * 10).roundToInt() / 10f
-
         if (!topic.startsWith("zara/interface/")) return
-
+        addTrafficLog("IN: $topic")
+        
         val parts = topic.split("/")
         if (parts.size < 4) return
 
         val domain = parts[2]
-        val deviceName = parts[3]
+        val device = parts[3]
         val property = parts.getOrNull(4) ?: ""
+        
+        val cleanPayload = payload.trim().lowercase()
+        val isOn = cleanPayload == "true" || cleanPayload == "on" || cleanPayload == "1"
+        val value = payload.toFloatOrNull() ?: 0f
+        val rounded = (value * 10).roundToInt() / 10f
 
         when (domain) {
-            "lights", "pool" -> {
-                val internalId = when(deviceName) {
-                    "living" -> "sala"
-                    "reading" -> "tavolinolettura"
-                    "tv" -> "televisione"
-                    "bedroom" -> "lucecamera"
-                    "water" -> "lucipiscina"
-                    "deck" -> "lucipedanapiscina"
-                    "pump" -> "pompapiscina"
-                    "skimmer" -> "skimmerpiscina"
-                    "hifi" -> "lampadahifi"
-                    else -> deviceName.lowercase()
-                }
-                updateLightState(internalId, isStatusOn)
-            }
-            "env" -> {
-                _environmentState.value = when (deviceName) {
-                    "living" -> _environmentState.value.copy(
-                        living = when(property) {
-                            "temperature" -> _environmentState.value.living.copy(temperature = roundedValue)
-                            "humidity" -> _environmentState.value.living.copy(humidity = roundedValue)
-                            "humidex" -> _environmentState.value.living.copy(humidex = roundedValue)
-                            else -> _environmentState.value.living
-                        }
-                    )
-                    "bedroom" -> _environmentState.value.copy(
-                        bedroom = when(property) {
-                            "temperature" -> _environmentState.value.bedroom.copy(temperature = roundedValue)
-                            "humidity" -> _environmentState.value.bedroom.copy(humidity = roundedValue)
-                            "humidex" -> _environmentState.value.bedroom.copy(humidex = roundedValue)
-                            else -> _environmentState.value.bedroom
-                        }
-                    )
-                    "outdoor" -> _environmentState.value.copy(
-                        outdoor = when(property) {
-                            "temperature" -> _environmentState.value.outdoor.copy(temperature = roundedValue)
-                            "humidity" -> _environmentState.value.outdoor.copy(humidity = roundedValue)
-                            else -> _environmentState.value.outdoor
-                        }
-                    )
-                    else -> _environmentState.value
-                }
-            }
-            "energy" -> {
-                _energyData.value = when (deviceName) {
-                    "solar" -> _energyData.value.copy(solarPower = roundedValue)
-                    "home" -> _energyData.value.copy(homeConsumption = roundedValue)
-                    "grid" -> _energyData.value.copy(gridPower = roundedValue)
-                    "battery" -> if (property == "soc") _energyData.value.copy(batterySoc = roundedValue) else _energyData.value.copy(batteryPower = roundedValue)
-                    "puffer_acs" -> _energyData.value.copy(pufferAcs = roundedValue)
+            "lights", "pool" -> handleLightsDomain(device, isOn)
+            "env" -> handleEnvDomain(device, property, rounded)
+            "energy" -> handleEnergyDomain(device, property, rounded)
+            "heating" -> handleHeatingDomain(device, property, rounded, payload)
+            "climate" -> handleClimateDomain(device, property, rounded, isOn)
+            "ai" -> handleAiDomain(device, property, cleanPayload, payload)
+            "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
+            "ventilation" -> handleVentilationDomain(device, property, payload)
+            "settings" -> handleSettingsDomain(device, isOn)
+            "garage" -> {} // Impulsi in uscita, nessun feedback previsto per ora
+        }
+    }
+
+    // --- DOMAIN HANDLERS (Refactored for maintainability) ---
+
+    private fun handleLightsDomain(device: String, isOn: Boolean) {
+        val internalId = when(device) {
+            "living" -> "sala"
+            "reading" -> "tavolinolettura"
+            "tv" -> "televisione"
+            "bedroom" -> "lucecamera"
+            "water" -> "lucipiscina"
+            "deck" -> "lucipedanapiscina"
+            "pump" -> "pompapiscina"
+            "skimmer" -> "skimmerpiscina"
+            "hifi" -> "lampadahifi"
+            else -> device
+        }
+        updateLightState(internalId, isOn)
+    }
+
+    private fun handleEnvDomain(device: String, prop: String, valRounded: Float) {
+        _environmentState.value = when (device) {
+            "living" -> _environmentState.value.copy(living = updateSensor(_environmentState.value.living, prop, valRounded))
+            "bedroom" -> _environmentState.value.copy(bedroom = updateSensor(_environmentState.value.bedroom, prop, valRounded))
+            "outdoor" -> _environmentState.value.copy(outdoor = updateSensor(_environmentState.value.outdoor, prop, valRounded))
+            else -> _environmentState.value
+        }
+    }
+
+    private fun updateSensor(current: SensorData, prop: String, value: Float): SensorData = when(prop) {
+        "temperature" -> current.copy(temperature = value)
+        "humidity" -> current.copy(humidity = value)
+        "humidex" -> current.copy(humidex = value)
+        else -> current
+    }
+
+    private fun handleEnergyDomain(device: String, prop: String, value: Float) {
+        _energyData.value = when (device) {
+            "solar" -> _energyData.value.copy(solarPower = value)
+            "home" -> _energyData.value.copy(homeConsumption = value)
+            "grid" -> _energyData.value.copy(gridPower = value)
+            "battery" -> if (prop == "soc") _energyData.value.copy(batterySoc = value) else _energyData.value.copy(batteryPower = value)
+            "puffer_acs" -> _energyData.value.copy(pufferAcs = value)
+            else -> _energyData.value
+        }
+    }
+
+    private fun handleHeatingDomain(device: String, prop: String, value: Float, raw: String) {
+        when (device) {
+            "puffer" -> {
+                _energyData.value = when (prop) {
+                    "top_temperature" -> _energyData.value.copy(pufferAlto = value)
+                    "bottom_temperature" -> _energyData.value.copy(pufferBasso = value)
                     else -> _energyData.value
                 }
             }
-            "heating" -> {
-                when (deviceName) {
-                    "puffer" -> {
-                        _energyData.value = when (property) {
-                            "top_temperature" -> _energyData.value.copy(pufferAlto = roundedValue)
-                            "bottom_temperature" -> _energyData.value.copy(pufferBasso = roundedValue)
-                            else -> _energyData.value
-                        }
-                    }
-                    "solar_thermal" -> {
-                        _energyData.value = when (property) {
-                            "collector_temperature" -> _energyData.value.copy(solarCollectorTemp = roundedValue)
-                            "pump_speed" -> _energyData.value.copy(solarPumpSpeed = payload.toIntOrNull() ?: 0)
-                            else -> _energyData.value
-                        }
-                    }
-                    "gas_boiler" -> {
-                        _hvacState.value = when (property) {
-                            "flame" -> _hvacState.value.copy(boiler = _hvacState.value.boiler.copy(active = isStatusOn))
-                            "modulation" -> _hvacState.value.copy(boiler = _hvacState.value.boiler.copy(modulation = payload.toIntOrNull() ?: 0))
-                            else -> _hvacState.value
-                        }
-                    }
-                    "floor_pump" -> {
-                        _hvacState.value = when (property) {
-                            "enabled" -> _hvacState.value.copy(floorHeating = _hvacState.value.floorHeating.copy(enabled = isStatusOn))
-                            "running" -> _hvacState.value.copy(floorHeating = _hvacState.value.floorHeating.copy(pumpActive = isStatusOn))
-                            else -> _hvacState.value
-                        }
-                    }
+            "solar_thermal" -> {
+                _energyData.value = when (prop) {
+                    "collector_temperature" -> _energyData.value.copy(solarCollectorTemp = value)
+                    "pump_speed" -> _energyData.value.copy(solarPumpSpeed = raw.toIntOrNull() ?: 0)
+                    else -> _energyData.value
                 }
             }
-            "ai" -> {
-                val intVal = payload.toIntOrNull() ?: 0
-                val floatVal = payload.toFloatOrNull() ?: 0f
-                _aiSettings.value = when (deviceName) {
-                    "system_enabled" -> _aiSettings.value.copy(systemEnabled = isStatusOn)
-                    "compressor_on_min" -> _aiSettings.value.copy(compressorOnMin = intVal)
-                    "compressor_off_min" -> _aiSettings.value.copy(compressorOffMin = intVal)
-                    "night_humidex_threshold" -> _aiSettings.value.copy(nightHumidexThreshold = intVal)
-                    "night_vmc_max_speed" -> _aiSettings.value.copy(nightVmcMaxSpeed = intVal)
-                    "deficit_tolerance_min" -> _aiSettings.value.copy(deficitToleranceMin = intVal)
-                    "morning_ac_management" -> _aiSettings.value.copy(morningAcManagement = isStatusOn)
-                    "morning_humidex_emergency" -> _aiSettings.value.copy(morningHumidexEmergency = intVal)
-                    else -> _aiSettings.value
-                }
-                _aiManagedData.value = when (deviceName) {
-                    "op_state" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(stato_attuale = payload))
-                    "op_reason" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(motivo_logica = payload))
-                    "op_mode" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(modalita_aria = payload))
-                    "vmc_speed" -> _aiManagedData.value.copy(stato_vmc = _aiManagedData.value.stato_vmc.copy(velocita_attuale = intVal))
-                    "solar_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_solare_domani_kwh = floatVal))
-                    "battery_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal))
-                    "battery_kwh" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = floatVal))
-                    "active_season" -> _aiManagedData.value.copy(stagione_attiva = payload)
-                    else -> _aiManagedData.value
+            "gas_boiler" -> {
+                _hvacState.value = when (prop) {
+                    "flame" -> _hvacState.value.copy(boiler = _hvacState.value.boiler.copy(active = (raw == "true" || raw == "1")))
+                    "modulation" -> _hvacState.value.copy(boiler = _hvacState.value.boiler.copy(modulation = raw.toIntOrNull() ?: 0))
+                    else -> _hvacState.value
                 }
             }
-            "climate" -> {
-                val floatVal = payload.toFloatOrNull() ?: 0f
-                when (deviceName) {
-                    "thermostat_living" -> {
-                        _hvacState.value = _hvacState.value.copy(
-                            thermostatLiving = when (property) {
-                                "current_temperature" -> _hvacState.value.thermostatLiving.copy(currentTemp = roundedValue)
-                                "target_temperature" -> _hvacState.value.thermostatLiving.copy(targetTemp = roundedValue)
-                                "min_temperature" -> _hvacState.value.thermostatLiving.copy(minTemp = roundedValue)
-                                "max_temperature" -> _hvacState.value.thermostatLiving.copy(maxTemp = roundedValue)
-                                "power" -> _hvacState.value.thermostatLiving.copy(power = isStatusOn)
-                                else -> _hvacState.value.thermostatLiving
-                            }
-                        )
-                    }
-                    "thermostat_bath" -> {
-                        _hvacState.value = _hvacState.value.copy(
-                            thermostatBath = when (property) {
-                                "current_temperature" -> _hvacState.value.thermostatBath.copy(currentTemp = roundedValue)
-                                "target_temperature" -> _hvacState.value.thermostatBath.copy(targetTemp = roundedValue)
-                                "min_temperature" -> _hvacState.value.thermostatBath.copy(minTemp = roundedValue)
-                                "max_temperature" -> _hvacState.value.thermostatBath.copy(maxTemp = roundedValue)
-                                "power" -> _hvacState.value.thermostatBath.copy(power = isStatusOn)
-                                else -> _hvacState.value.thermostatBath
-                            }
-                        )
-                    }
-                }
-            }
-            "fireplace" -> {
-                if (deviceName == "main") {
-                    val intVal = payload.toIntOrNull() ?: 0
-                    _hvacState.value = when (property) {
-                        "power" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(active = isStatusOn))
-                        "level" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(level = intVal))
-                        "mode" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(mode = payload))
-                        "start_time" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(startTime = payload))
-                        "stop_time" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(stopTime = payload))
-                        "auto_power" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(autoPower = isStatusOn))
-                        else -> _hvacState.value
-                    }
-                }
-            }
-            "settings" -> {
-                _domoticaSettings.value = when (deviceName) {
-                    "holiday_mode" -> _domoticaSettings.value.copy(holidayMode = isStatusOn)
-                    "eco_lights" -> _domoticaSettings.value.copy(ecoLights = isStatusOn)
-                    "pool_lights_auto" -> _domoticaSettings.value.copy(poolLightsAuto = isStatusOn)
-                    "porch_sensor" -> _domoticaSettings.value.copy(porchSensor = isStatusOn)
-                    "ac_auto" -> _domoticaSettings.value.copy(acAuto = isStatusOn)
-                    else -> _domoticaSettings.value
-                }
-            }
-            "ventilation" -> {
-                val intVal = payload.toIntOrNull() ?: 1
-                if (deviceName == "vmc" && property == "speed") {
-                    _hvacState.value = _hvacState.value.copy(
-                        vmc = _hvacState.value.vmc.copy(
-                            speed = intVal,
-                            active = true
-                        )
-                    )
+            "floor_pump" -> {
+                _hvacState.value = when (prop) {
+                    "enabled" -> _hvacState.value.copy(floorHeating = _hvacState.value.floorHeating.copy(enabled = (raw == "true" || raw == "1")))
+                    "running" -> _hvacState.value.copy(floorHeating = _hvacState.value.floorHeating.copy(pumpActive = (raw == "true" || raw == "1")))
+                    else -> _hvacState.value
                 }
             }
         }
     }
+
+    private fun handleAiDomain(device: String, prop: String, clean: String, raw: String) {
+        val isOn = clean == "true" || clean == "on" || clean == "1"
+        val intVal = raw.toIntOrNull() ?: 0
+        val floatVal = raw.toFloatOrNull() ?: 0f
+
+        _aiSettings.value = when (device) {
+            "system_enabled" -> _aiSettings.value.copy(systemEnabled = isOn)
+            "compressor_on_min" -> _aiSettings.value.copy(compressorOnMin = intVal)
+            "compressor_off_min" -> _aiSettings.value.copy(compressorOffMin = intVal)
+            "night_humidex_threshold" -> _aiSettings.value.copy(nightHumidexThreshold = intVal)
+            "night_vmc_max_speed" -> _aiSettings.value.copy(nightVmcMaxSpeed = intVal)
+            "deficit_tolerance_min" -> _aiSettings.value.copy(deficitToleranceMin = intVal)
+            "morning_ac_management" -> _aiSettings.value.copy(morningAcManagement = isOn)
+            "morning_humidex_emergency" -> _aiSettings.value.copy(morningHumidexEmergency = intVal)
+            else -> _aiSettings.value
+        }
+
+        _aiManagedData.value = when (device) {
+            "op_state" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(stato_attuale = raw))
+            "op_reason" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(motivo_logica = raw))
+            "op_mode" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(modalita_aria = raw))
+            "vmc_speed" -> _aiManagedData.value.copy(stato_vmc = _aiManagedData.value.stato_vmc.copy(velocita_attuale = intVal))
+            "solar_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_solare_domani_kwh = floatVal))
+            "battery_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal))
+            "battery_kwh" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = floatVal))
+            "active_season" -> _aiManagedData.value.copy(stagione_attiva = raw)
+            else -> _aiManagedData.value
+        }
+    }
+
+    private fun handleFireplaceDomain(device: String, prop: String, raw: String, isOn: Boolean) {
+        if (device != "main") return
+        _hvacState.value = when (prop) {
+            "power" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(active = isOn))
+            "level" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(level = raw.toIntOrNull() ?: 1))
+            "mode" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(mode = raw))
+            "start_time" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(startTime = raw))
+            "stop_time" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(stopTime = raw))
+            "auto_power" -> _hvacState.value.copy(palazzetti = _hvacState.value.palazzetti.copy(autoPower = isOn))
+            else -> _hvacState.value
+        }
+    }
+
+    private fun handleClimateDomain(device: String, prop: String, value: Float, isOn: Boolean) {
+        val current = if (device == "thermostat_living") _hvacState.value.thermostatLiving else _hvacState.value.thermostatBath
+        val updated = when (prop) {
+            "current_temperature" -> current.copy(currentTemp = value)
+            "target_temperature" -> current.copy(targetTemp = value)
+            "min_temperature" -> current.copy(minTemp = value)
+            "max_temperature" -> current.copy(maxTemp = value)
+            "power" -> current.copy(power = isOn)
+            else -> current
+        }
+        _hvacState.value = if (device == "thermostat_living") _hvacState.value.copy(thermostatLiving = updated) else _hvacState.value.copy(thermostatBath = updated)
+    }
+
+    private fun handleVentilationDomain(device: String, prop: String, raw: String) {
+        if (device == "vmc" && prop == "speed") {
+            _hvacState.value = _hvacState.value.copy(vmc = _hvacState.value.vmc.copy(speed = raw.toIntOrNull() ?: 1, active = true))
+        }
+    }
+
+    private fun handleSettingsDomain(device: String, isOn: Boolean) {
+        _domoticaSettings.value = when (device) {
+            "holiday_mode" -> _domoticaSettings.value.copy(holidayMode = isOn)
+            "eco_lights" -> _domoticaSettings.value.copy(ecoLights = isOn)
+            "pool_lights_auto" -> _domoticaSettings.value.copy(poolLightsAuto = isOn)
+            "porch_sensor" -> _domoticaSettings.value.copy(porchSensor = isOn)
+            "ac_auto" -> _domoticaSettings.value.copy(acAuto = isOn)
+            else -> _domoticaSettings.value
+        }
+    }
+
+    // --- UTILS ---
 
     private fun updateLightState(id: String, state: Boolean) {
         val cleanId = id.lowercase()
@@ -340,22 +326,18 @@ class MqttManager(private val context: Context) {
     }
 
     fun toggleLight(lightId: String, currentState: Boolean) {
-        val nextState = !currentState
-        val stringState = if (nextState) "true" else "false"
+        val stringState = if (!currentState) "true" else "false"
         val cleanId = lightId.lowercase()
-        
         val (domain, device) = when (cleanId) {
-            "sala" -> "lights" to "living"
-            "libreria" -> "lights" to "libreria"
-            "televisione" -> "lights" to "tv"
-            "tavolinolettura" -> "lights" to "reading"
-            "lucecamera" -> "lights" to "bedroom"
-            "prolunga" -> "lights" to "prolunga"
-            "lampadahifi" -> "lights" to "hifi"
             "pompapiscina" -> "pool" to "pump"
             "skimmerpiscina" -> "pool" to "skimmer"
             "lucipiscina" -> "pool" to "water"
             "lucipedanapiscina" -> "pool" to "deck"
+            "lucecamera" -> "lights" to "bedroom"
+            "lampadahifi" -> "lights" to "hifi"
+            "televisione" -> "lights" to "tv"
+            "sala" -> "lights" to "living"
+            "tavolinolettura" -> "lights" to "reading"
             else -> "lights" to cleanId
         }
         publish("zara/interface/$domain/$device/power/cmd", stringState)

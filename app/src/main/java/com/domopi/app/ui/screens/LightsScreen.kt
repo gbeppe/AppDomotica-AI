@@ -22,6 +22,7 @@ data class LightDevice(val id: String, val name: String, val topic: String)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LightsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
+    androidx.activity.compose.BackHandler { onBack() }
     val knownDevices = remember {
         listOf(
             LightDevice("sala", "Soggiorno Main", "sala"),

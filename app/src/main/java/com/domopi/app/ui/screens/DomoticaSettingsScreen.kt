@@ -19,6 +19,8 @@ import com.domopi.app.data.MqttManager
 fun DomoticaSettingsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val settings by mqttManager.domoticaSettings.collectAsState()
 
+    androidx.activity.compose.BackHandler { onBack() }
+
     Scaffold(
         topBar = {
             TopAppBar(

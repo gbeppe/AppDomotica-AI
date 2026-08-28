@@ -25,6 +25,8 @@ fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val aiData by mqttManager.aiManagedData.collectAsState()
     val aiSettings by mqttManager.aiSettings.collectAsState()
 
+    androidx.activity.compose.BackHandler { onBack() }
+
     Scaffold(
         topBar = {
             TopAppBar(
