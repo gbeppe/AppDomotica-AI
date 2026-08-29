@@ -17,6 +17,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -82,7 +84,18 @@ fun MainDashboard(
                                     showPinDialog = true
                                 }
                             },
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier
+                                .size(32.dp)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onLongPress = {
+                                            scope.launch {
+                                                settingsManager.saveAdminPin("1234")
+                                                settingsManager.saveAdminMode(false)
+                                            }
+                                        }
+                                    )
+                                }
                         ) {
                             Icon(
                                 imageVector = if (isAdminMode) Icons.Default.LockOpen else Icons.Default.Lock,

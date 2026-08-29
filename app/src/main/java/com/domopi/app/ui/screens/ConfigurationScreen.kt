@@ -2,11 +2,13 @@ package com.domopi.app.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.SettingsManager
 import kotlinx.coroutines.flow.first
@@ -34,6 +36,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     var tinycamUser by remember { mutableStateOf("") }
     var tinycamPass by remember { mutableStateOf("") }
     var darkMode by remember { mutableStateOf(true) }
+    var adminPin by remember { mutableStateOf("") }
 
     var initialValues by remember { mutableStateOf<Map<String, Any>?>(null) }
     
@@ -51,7 +54,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         tinycamPort != initialValues!!["tcPort"] ||
         tinycamUser != initialValues!!["tcUser"] ||
         tinycamPass != initialValues!!["tcPass"] ||
-        darkMode != initialValues!!["darkMode"]
+        darkMode != initialValues!!["darkMode"] ||
+        adminPin != initialValues!!["adminPin"]
     )
 
     LaunchedEffect(Unit) {
@@ -70,7 +74,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         val tcPort = settingsManager.tinycamPort.first()
         val tcUser = settingsManager.tinycamUser.first()
         val tcPass = settingsManager.tinycamPass.first()
-        val dm = settingsManager.darkMode.first() ?: true // Default to true if not set
+        val dm = settingsManager.darkMode.first() ?: true
+        val pin = settingsManager.adminPin.first()
         
         domopiIp = dpIp
         domopiPort = dpPort
@@ -88,13 +93,30 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         tinycamUser = tcUser
         tinycamPass = tcPass
         darkMode = dm
+        adminPin = pin
         
         initialValues = mapOf(
             "dpIp" to dpIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
             "epIp" to epIp, "epPort" to epPort, "epUser" to epUser, "epPass" to epPass,
             "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass,
-            "darkMode" to dm
+            "darkMode" to dm, "adminPin" to pin
         )
+    }
+
+    fun saveAll() {
+        scope.launch {
+            settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
+            settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
+            settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
+            settingsManager.saveDarkMode(darkMode)
+            settingsManager.saveAdminPin(adminPin)
+            initialValues = mapOf(
+                "dpIp" to domopiIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
+                "epIp" to emonpiIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass,
+                "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass,
+                "darkMode" to darkMode, "adminPin" to adminPin
+            )
+        }
     }
 
     if (showDiscardDialog) {
@@ -104,13 +126,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             text = { Text("Hai apportato delle modifiche. Vuoi salvarle o scartarle?") },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch {
-                        settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
-                        settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
-                        settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
-                        settingsManager.saveDarkMode(darkMode)
-                        onBack()
-                    }
+                    saveAll()
+                    onBack()
                 }) { Text("Salva") }
             },
             dismissButton = {
@@ -132,20 +149,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                 },
                 actions = {
                     if (isDirty) {
-                        TextButton(onClick = {
-                            scope.launch {
-                                settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
-                                settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
-                                settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
-                                settingsManager.saveDarkMode(darkMode)
-                                initialValues = mapOf(
-                                    "dpIp" to domopiIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
-                                    "epIp" to emonpiIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass,
-                                    "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass,
-                                    "darkMode" to darkMode
-                                )
-                            }
-                        }) {
+                        TextButton(onClick = { saveAll() }) {
                             Text("SALVA", color = MaterialTheme.colorScheme.primary)
                         }
                     }
@@ -166,6 +170,18 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                     Text("Modalità Scura", style = MaterialTheme.typography.titleMedium)
                     Switch(checked = darkMode, onCheckedChange = { darkMode = it })
                 }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            item {
+                Text("Sicurezza", style = MaterialTheme.typography.titleMedium)
+                OutlinedTextField(
+                    value = adminPin,
+                    onValueChange = { if (it.length <= 4) adminPin = it },
+                    label = { Text("PIN Modalità Esperto (4 cifre)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }
             
