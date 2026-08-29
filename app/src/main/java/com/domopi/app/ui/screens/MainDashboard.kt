@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,6 +18,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.ConnectionMode
@@ -25,6 +30,7 @@ import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.components.EnergyFlowComponent
 import com.domopi.app.ui.components.PoolInteractiveComponent
 import com.domopi.app.ui.theme.SolarGreen
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +44,11 @@ fun MainDashboard(
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()
     val connectionMode by connectivityManager.connectionMode.collectAsState()
+    val isAdminMode by settingsManager.isAdminMode.collectAsState(initial = false)
+    val adminPin by settingsManager.adminPin.collectAsState(initial = "1234")
+    
+    var showPinDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     
     val aiSettings by mqttManager.aiSettings.collectAsState()
     val lightStates by mqttManager.lightStates.collectAsState()
@@ -45,16 +56,43 @@ fun MainDashboard(
     val hvacState by mqttManager.hvacState.collectAsState()
     val energyData by mqttManager.energyData.collectAsState()
 
-    // DEBUG: Log all true states
-    LaunchedEffect(lightStates) {
-        val allOn = lightStates.filter { it.value }.keys
-        android.util.Log.d("LIGHT_DEBUG", "All ON keys in map: $allOn")
+    if (showPinDialog) {
+        AdminPinDialog(
+            correctPin = adminPin,
+            onConfirm = {
+                scope.launch { settingsManager.saveAdminMode(true) }
+                showPinDialog = false
+            },
+            onDismiss = { showPinDialog = false }
+        )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("DomoPi", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("DomoPi", fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(12.dp))
+                        IconButton(
+                            onClick = { 
+                                if (isAdminMode) {
+                                    scope.launch { settingsManager.saveAdminMode(false) }
+                                } else {
+                                    showPinDialog = true
+                                }
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isAdminMode) Icons.Default.LockOpen else Icons.Default.Lock,
+                                contentDescription = "Modo Admin",
+                                tint = if (isAdminMode) SolarGreen else Color.Gray.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                },
                 actions = {
                     Row(
                         modifier = Modifier
@@ -109,7 +147,7 @@ fun MainDashboard(
                 ) {
                     Row(
                         modifier = Modifier
-                            .clickable { onNavigate("clima") }
+                            .clickable { if (isAdminMode) onNavigate("clima") }
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -132,13 +170,18 @@ fun MainDashboard(
                             shape = CircleShape,
                             border = BorderStroke(1.dp, if (aiSettings.systemEnabled) SolarGreen else Color.Gray)
                         ) {
-                            Text(
-                                text = if (aiSettings.systemEnabled) "ATTIVATO" else "DISATTIVATO",
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (aiSettings.systemEnabled) SolarGreen else Color.Gray,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                                if (!isAdminMode) {
+                                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = if (aiSettings.systemEnabled) SolarGreen else Color.Gray)
+                                    Spacer(Modifier.width(6.dp))
+                                }
+                                Text(
+                                    text = if (aiSettings.systemEnabled) "ATTIVATO" else "DISATTIVATO",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = if (aiSettings.systemEnabled) SolarGreen else Color.Gray,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -166,7 +209,7 @@ fun MainDashboard(
                     val actualPage = page % actualPageCount
                     // Passiamo l'informazione se la pagina è quella corrente per attivare lo stream solo quando serve
                     val isVisible = pagerState.currentPage == page
-                    DomainCard(actualPage, mqttManager, settingsManager, connectivityManager, isVisible, onNavigate)
+                    DomainCard(actualPage, mqttManager, settingsManager, connectivityManager, isVisible, isAdminMode, onNavigate)
                 }
             }
 
@@ -185,7 +228,14 @@ fun MainDashboard(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     item {
-                        Text("STATO CASA", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("STATO CASA", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            if (!isAdminMode) {
+                                Spacer(Modifier.width(8.dp))
+                                Icon(Icons.Default.Lock, null, modifier = Modifier.size(12.dp), tint = Color.Gray.copy(alpha = 0.5f))
+                                Text("SOLA LETTURA", style = MaterialTheme.typography.labelSmall, color = Color.Gray.copy(alpha = 0.5f), fontSize = 8.sp)
+                            }
+                        }
                         Spacer(Modifier.height(8.dp))
                     }
                     
@@ -276,6 +326,7 @@ fun DomainCard(
     settingsManager: SettingsManager,
     connectivityManager: DomoPiConnectivityManager,
     isVisible: Boolean,
+    isAdminMode: Boolean,
     onNavigate: (String) -> Unit
 ) {
     val energyData by mqttManager.energyData.collectAsState()
@@ -317,9 +368,10 @@ fun DomainCard(
     }
 
     Card(
-        onClick = { onNavigate(target) },
+        onClick = { if (isAdminMode) onNavigate(target) },
         modifier = Modifier.fillMaxSize().padding(vertical = 12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        enabled = isAdminMode || target == "energy_detail" // Possiamo lasciare energia sempre apribile o bloccare tutto
     ) {
         Column(
             modifier = Modifier.padding(12.dp).fillMaxSize(),
@@ -366,7 +418,7 @@ fun DomainCard(
                     3 -> PoolInteractiveComponent(
                         lightStates = lightStates,
                         onToggle = { id -> 
-                            mqttManager.toggleLight(id, lightStates[id] ?: false)
+                            if (isAdminMode) mqttManager.toggleLight(id, lightStates[id] ?: false)
                         }
                     )
                     4 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -413,7 +465,71 @@ fun DomainCard(
             }
             
             Spacer(Modifier.height(8.dp))
-            Text("Tocca per dettagli", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+            if (isAdminMode) {
+                Text("Tocca per dettagli", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(10.dp), tint = Color.Gray.copy(alpha = 0.4f))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Sola Lettura", style = MaterialTheme.typography.labelSmall, color = Color.Gray.copy(alpha = 0.4f))
+                }
+            }
         }
     }
 }
+
+@Composable
+fun AdminPinDialog(
+    correctPin: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    var enteredPin by remember { mutableStateOf("") }
+    var isError by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Modalità Esperto", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Inserisci il PIN per abilitare le modifiche", style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = enteredPin,
+                    onValueChange = { 
+                        if (it.length <= 4) {
+                            enteredPin = it
+                            isError = false
+                        }
+                    },
+                    label = { Text("PIN") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = isError,
+                    supportingText = { if (isError) Text("PIN Errato", color = MaterialTheme.colorScheme.error) },
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (enteredPin == correctPin) {
+                        onConfirm()
+                    } else {
+                        isError = true
+                    }
+                }
+            ) {
+                Text("SBLOCCA")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("ANNULLA")
+            }
+        }
+    )
+}
+

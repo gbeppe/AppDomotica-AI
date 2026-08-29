@@ -28,6 +28,8 @@ class SettingsManager(private val context: Context) {
         val TINYCAM_USER = stringPreferencesKey("tinycam_user")
         val TINYCAM_PASS = stringPreferencesKey("tinycam_pass")
         val DARK_MODE = booleanPreferencesKey("dark_mode")
+        val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
+        val ADMIN_PIN = stringPreferencesKey("admin_pin")
 
         val DOMOPI_BROKER_IP = stringPreferencesKey("domopi_broker_ip")
         val DOMOPI_BROKER_PORT = stringPreferencesKey("domopi_broker_port")
@@ -89,6 +91,8 @@ class SettingsManager(private val context: Context) {
     val tinycamPass: Flow<String> = context.dataStore.data.map { it[TINYCAM_PASS] ?: "password" }.distinctUntilChanged()
 
     val darkMode: Flow<Boolean?> = context.dataStore.data.map { it[DARK_MODE] }.distinctUntilChanged()
+    val isAdminMode: Flow<Boolean> = context.dataStore.data.map { it[IS_ADMIN_MODE] ?: false }.distinctUntilChanged()
+    val adminPin: Flow<String> = context.dataStore.data.map { it[ADMIN_PIN] ?: "1234" }.distinctUntilChanged()
 
     val domopiIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_IP] ?: "192.168.1.20" }.distinctUntilChanged()
     val domopiPort: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_PORT] ?: "1883" }.distinctUntilChanged()
@@ -113,6 +117,18 @@ class SettingsManager(private val context: Context) {
     suspend fun saveDarkMode(enabled: Boolean) {
         context.dataStore.edit {
             it[DARK_MODE] = enabled
+        }
+    }
+
+    suspend fun saveAdminMode(enabled: Boolean) {
+        context.dataStore.edit {
+            it[IS_ADMIN_MODE] = enabled
+        }
+    }
+
+    suspend fun saveAdminPin(pin: String) {
+        context.dataStore.edit {
+            it[ADMIN_PIN] = pin
         }
     }
 }
