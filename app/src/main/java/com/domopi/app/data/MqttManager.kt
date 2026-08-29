@@ -61,7 +61,11 @@ data class DomoticaSettings(
 class MqttManager(private val context: Context, val settingsManager: SettingsManager) {
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    
+    // Dispatcher a thread singolo per garantire il processamento sequenziale ed evitare race conditions
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val mqttDispatcher = Dispatchers.Default.limitedParallelism(1)
+    private val scope = CoroutineScope(mqttDispatcher + SupervisorJob())
 
     private val VALID_LIGHT_IDS = listOf(
         "sala", "libreria", "cucina", "televisione", "tavolinolettura", 
@@ -233,19 +237,21 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
     }
 
     private fun handleLogicControlDomain(prop: String, value: Float, raw: String, isOn: Boolean) {
+        val floatVal = raw.toFloatOrNull() ?: 0f
+        val intVal = floatVal.toInt()
         _aiManagedData.update { current ->
             val updatedLogic = when(prop) {
                 "soc_minimo_applied" -> current.logica_controllo.copy(soc_minimo_applied = value)
                 "soglia_attivazione_applicata" -> current.logica_controllo.copy(soglia_attivazione_applicata = value)
-                "tempo_mancante_anticiclo_minuti" -> current.logica_controllo.copy(tempo_mancante_anticiclo_minuti = raw.toIntOrNull() ?: 0)
+                "tempo_mancante_anticiclo_minuti" -> current.logica_controllo.copy(tempo_mancante_anticiclo_minuti = intVal)
                 "kwh_stimati_in_batteria" -> current.logica_controllo.copy(kwh_stimati_in_batteria = value)
-                "previsione_ricarica_batteria_percent" -> current.logica_controllo.copy(previsione_ricarica_battery_percent = raw.toIntOrNull() ?: 0)
+                "previsione_ricarica_batteria_percent" -> current.logica_controllo.copy(previsione_ricarica_battery_percent = intVal)
                 "previsione_solare_domani_kwh" -> current.logica_controllo.copy(previsione_solare_domani_kwh = value)
                 "blocco_emergenza_attivo" -> current.logica_controllo.copy(blocco_emergenza_attivo = isOn)
                 "cuscinetto_sicurezza_kwh" -> current.logica_controllo.copy(cuscinetto_sicurezza_kwh = value)
                 "cuscinetto_richiesto_kwh" -> current.logica_controllo.copy(cuscinetto_richiesto_kwh = value)
                 "stanza_rilevamento_vmc" -> current.logica_controllo.copy(stanza_rilevamento_vmc = raw)
-                "vmc_portata_stimata_m3h" -> current.logica_controllo.copy(vmc_portata_stimata_m3h = raw.toIntOrNull() ?: 0)
+                "vmc_portata_stimata_m3h" -> current.logica_controllo.copy(vmc_portata_stimata_m3h = intVal)
                 else -> current.logica_controllo
             }
             current.copy(logica_controllo = updatedLogic)
@@ -351,9 +357,6 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                 "morning_humidex_emergency" -> current.copy(morningHumidexEmergency = intVal)
                 else -> current
             }
-        }
-        if (device == "active_season") {
-            _aiManagedData.update { it.copy(stagione_attiva = raw) }
         }
     }
 
