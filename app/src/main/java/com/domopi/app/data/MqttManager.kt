@@ -130,13 +130,36 @@ class MqttManager(private val context: Context) {
     }
 
     private fun subscribeToUnifiedTopics() {
-        val topics = arrayOf("zara/interface/#")
+        val topics = arrayOf(
+            "zara/interface/lights/#",
+            "zara/interface/pool/#",
+            "zara/interface/env/#",
+            "zara/interface/energy/#",
+            "zara/interface/heating/#",
+            "zara/interface/climate/#",
+            "zara/interface/ai/#",
+            "zara/interface/fireplace/#",
+            "zara/interface/ventilation/#",
+            "zara/interface/settings/#",
+            "zara/interface/garage/#",
+            // Sottoscrizioni CHIRURGICHE per la logica di controllo (Soluzione 2)
+            "zara/interface/logica_controllo/soc_minimo_applied/stat",
+            "zara/interface/logica_controllo/soglia_attivazione_applicata/stat",
+            "zara/interface/logica_controllo/tempo_mancante_anticiclo_minuti/stat",
+            "zara/interface/logica_controllo/kwh_stimati_in_batteria/stat",
+            "zara/interface/logica_controllo/previsione_ricarica_batteria_percent/stat",
+            "zara/interface/logica_controllo/previsione_solare_domani_kwh/stat",
+            "zara/interface/logica_controllo/cuscinetto_sicurezza_kwh/stat",
+            "zara/interface/logica_controllo/blocco_emergenza_attivo/stat",
+            "zara/interface/logica_controllo/stanza_rilevamento_vmc/stat"
+        )
         mqttClient?.subscribe(topics, IntArray(topics.size) { 1 })
     }
 
+    private var lastLogicUpdateTime = 0L
+
     private fun handleIncomingMessage(topic: String, payload: String) {
         if (!topic.startsWith("zara/interface/")) return
-        addTrafficLog("IN: $topic")
         
         val parts = topic.split("/")
         if (parts.size < 4) return
@@ -144,6 +167,19 @@ class MqttManager(private val context: Context) {
         val domain = parts[2]
         val device = parts[3]
         val property = parts.getOrNull(4) ?: ""
+        
+        // --- SOLUZIONE 1: THROTTLING LATO APP ---
+        // Se arrivano messaggi di logica troppo frequenti, processiamo solo se è passato almeno 1 secondo
+        if (domain == "logica_controllo") {
+            val now = System.currentTimeMillis()
+            if (now - lastLogicUpdateTime < 1000) return 
+            lastLogicUpdateTime = now
+        }
+
+        // Filtro logging per non saturare la UI
+        if (domain != "logica_controllo" && domain != "energy") {
+            addTrafficLog("IN: $topic")
+        }
         
         val cleanPayload = payload.trim().lowercase()
         val isOn = cleanPayload == "true" || cleanPayload == "on" || cleanPayload == "1"
@@ -157,10 +193,11 @@ class MqttManager(private val context: Context) {
             "heating" -> handleHeatingDomain(device, property, rounded, payload)
             "climate" -> handleClimateDomain(device, property, rounded, isOn)
             "ai" -> handleAiDomain(device, property, cleanPayload, payload)
+            "logica_controllo" -> handleLogicControlDomain(property, rounded, payload, isOn)
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
             "ventilation" -> handleVentilationDomain(device, property, payload)
             "settings" -> handleSettingsDomain(device, isOn)
-            "garage" -> {} // Impulsi in uscita, nessun feedback previsto per ora
+            "garage" -> {} 
         }
     }
 
@@ -279,15 +316,30 @@ class MqttManager(private val context: Context) {
             "op_reason" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(motivo_logica = raw))
             "op_mode" -> _aiManagedData.value.copy(stato_condizionatore = _aiManagedData.value.stato_condizionatore.copy(modalita_aria = raw))
             "vmc_speed" -> _aiManagedData.value.copy(stato_vmc = _aiManagedData.value.stato_vmc.copy(velocita_attuale = intVal))
-            "solar_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_solare_domani_kwh = floatVal))
-            "battery_forecast" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal))
-            "battery_kwh" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = floatVal))
             "active_season" -> _aiManagedData.value.copy(stagione_attiva = raw)
-            "soc_minimo_applied", "soc_minimo" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(soc_minimo_applied = floatVal))
-            "soglia_attivazione_applicata", "soglia_humidex" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(soglia_attivazione_applicata = floatVal))
-            "timer_anticiclo", "tempo_mancante_anticiclo_minuti" -> _aiManagedData.value.copy(logica_controllo = _aiManagedData.value.logica_controllo.copy(tempo_mancante_anticiclo_minuti = intVal))
             else -> _aiManagedData.value
         }
+    }
+
+    private fun handleLogicControlDomain(prop: String, value: Float, raw: String, isOn: Boolean) {
+        val intVal = raw.toIntOrNull() ?: 0
+        _aiManagedData.value = _aiManagedData.value.copy(
+            logica_controllo = when(prop) {
+                "blocco_emergenza_attivo" -> _aiManagedData.value.logica_controllo.copy(blocco_emergenza_attivo = isOn)
+                "cuscinetto_richiesto_kwh" -> _aiManagedData.value.logica_controllo.copy(cuscinetto_richiesto_kwh = value)
+                "cuscinetto_sicurezza_kwh" -> _aiManagedData.value.logica_controllo.copy(cuscinetto_sicurezza_kwh = value)
+                "kwh_stimati_in_batteria" -> _aiManagedData.value.logica_controllo.copy(kwh_stimati_in_batteria = value)
+                "previsione_ricarica_batteria_percent" -> _aiManagedData.value.logica_controllo.copy(previsione_ricarica_battery_percent = intVal)
+                "previsione_solare_data" -> _aiManagedData.value.logica_controllo.copy(previsione_solare_data = raw)
+                "previsione_solare_domani_kwh" -> _aiManagedData.value.logica_controllo.copy(previsione_solare_domani_kwh = value)
+                "soc_minimo_applied" -> _aiManagedData.value.logica_controllo.copy(soc_minimo_applied = value)
+                "soglia_attivazione_applicata" -> _aiManagedData.value.logica_controllo.copy(soglia_attivazione_applicata = value)
+                "stanza_rilevamento_vmc" -> _aiManagedData.value.logica_controllo.copy(stanza_rilevamento_vmc = raw)
+                "tempo_mancante_anticiclo_minuti" -> _aiManagedData.value.logica_controllo.copy(tempo_mancante_anticiclo_minuti = intVal)
+                "vmc_portata_stimata_m3h" -> _aiManagedData.value.logica_controllo.copy(vmc_portata_stimata_m3h = intVal)
+                else -> _aiManagedData.value.logica_controllo
+            }
+        )
     }
 
     private fun handleFireplaceDomain(device: String, prop: String, raw: String, isOn: Boolean) {

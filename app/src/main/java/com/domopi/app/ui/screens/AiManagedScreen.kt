@@ -231,6 +231,21 @@ fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
             DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.US, data.logica_controllo.soc_minimo_applied))
             DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.US, data.logica_controllo.soglia_attivazione_applicata))
             DetailRow("Timer Anticiclo", "${data.logica_controllo.tempo_mancante_anticiclo_minuti} min")
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
+            
+            DetailRow("Batteria Stimata", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.kwh_stimati_in_batteria))
+            DetailRow("Previsione Ricarica", "${data.logica_controllo.previsione_ricarica_battery_percent}%")
+            DetailRow("Previsione Solare", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.previsione_solare_domani_kwh))
+            DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.cuscinetto_sicurezza_kwh))
+            
+            if (data.logica_controllo.blocco_emergenza_attivo) {
+                DetailRow("Blocco Emergenza", "ATTIVO")
+            }
+            
+            if (data.logica_controllo.stanza_rilevamento_vmc.isNotEmpty()) {
+                DetailRow("Rilevamento VMC", data.logica_controllo.stanza_rilevamento_vmc)
+            }
         }
     }
 }
