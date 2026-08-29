@@ -69,7 +69,7 @@ fun GlimmerGauge(
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            val formattedValue = "%.1f".format(java.util.Locale.US, value)
+            val formattedValue = "%.1f".format(java.util.Locale.getDefault(), value)
             Text(
                 text = formattedValue,
                 fontSize = (size.value * 0.18f).sp, // Font proporzionale

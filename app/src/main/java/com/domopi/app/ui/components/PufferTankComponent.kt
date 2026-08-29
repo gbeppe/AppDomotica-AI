@@ -87,7 +87,7 @@ fun PufferLayer(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "${"%.1f".format(java.util.Locale.US, temp)}°C",
+                text = "${"%.1f".format(java.util.Locale.getDefault(), temp)}°C",
                 color = Color.White,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold

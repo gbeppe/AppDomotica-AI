@@ -100,7 +100,7 @@ fun MainDashboard(
                             Icon(
                                 imageVector = if (isAdminMode) Icons.Default.LockOpen else Icons.Default.Lock,
                                 contentDescription = "Modo Admin",
-                                tint = if (isAdminMode) SolarGreen else Color.Gray.copy(alpha = 0.6f),
+                                tint = if (isAdminMode) SolarGreen else Color.Red,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -185,7 +185,7 @@ fun MainDashboard(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                                 if (!isAdminMode) {
-                                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = if (aiSettings.systemEnabled) SolarGreen else Color.Gray)
+                                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = Color.Red.copy(alpha = 0.8f))
                                     Spacer(Modifier.width(6.dp))
                                 }
                                 Text(
@@ -245,8 +245,8 @@ fun MainDashboard(
                             Text("STATO CASA", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                             if (!isAdminMode) {
                                 Spacer(Modifier.width(8.dp))
-                                Icon(Icons.Default.Lock, null, modifier = Modifier.size(12.dp), tint = Color.Gray.copy(alpha = 0.5f))
-                                Text("SOLA LETTURA", style = MaterialTheme.typography.labelSmall, color = Color.Gray.copy(alpha = 0.5f), fontSize = 8.sp)
+                                Icon(Icons.Default.Lock, null, modifier = Modifier.size(12.dp), tint = Color.Red.copy(alpha = 0.7f))
+                                Text("SOLA LETTURA", style = MaterialTheme.typography.labelSmall, color = Color.Red.copy(alpha = 0.7f), fontSize = 8.sp)
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -298,19 +298,28 @@ fun MainDashboard(
                             SummaryRow(Icons.Default.SettingsSuggest, "Impianti", activeHvac.joinToString(", "))
                         }
                     }
+
+                    // 4. Puffer
+                    item {
+                        SummaryRow(
+                            Icons.Default.Waves, 
+                            "Puffer", 
+                            "${"%.1f".format(java.util.Locale.getDefault(), energyData.pufferAcs)}° - ${"%.1f".format(java.util.Locale.getDefault(), energyData.pufferAlto)}° - ${"%.1f".format(java.util.Locale.getDefault(), energyData.pufferBasso)}°"
+                        )
+                    }
                     
                     item {
                         SummaryRow(
                             Icons.Default.Thermostat, 
                             "Soggiorno", 
-                            "%.1f°C".format(java.util.Locale.US, envState.living.temperature)
+                            "%.1f°C".format(java.util.Locale.getDefault(), envState.living.temperature)
                         )
                     }
                     item {
                         SummaryRow(
                             Icons.Default.Bed, 
                             "Camera", 
-                            "%.1f°C".format(java.util.Locale.US, envState.bedroom.temperature)
+                            "%.1f°C".format(java.util.Locale.getDefault(), envState.bedroom.temperature)
                         )
                     }
                 }
@@ -482,9 +491,9 @@ fun DomainCard(
                 Text("Tocca per dettagli", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(10.dp), tint = Color.Gray.copy(alpha = 0.4f))
+                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(10.dp), tint = Color.Red.copy(alpha = 0.6f))
                     Spacer(Modifier.width(4.dp))
-                    Text("Sola Lettura", style = MaterialTheme.typography.labelSmall, color = Color.Gray.copy(alpha = 0.4f))
+                    Text("Sola Lettura", style = MaterialTheme.typography.labelSmall, color = Color.Red.copy(alpha = 0.6f))
                 }
             }
         }

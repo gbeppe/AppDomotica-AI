@@ -135,7 +135,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                         ) {
                             Column {
                                 Text("Temperatura Collettore", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("${"%.1f".format(java.util.Locale.US, energyData.solarCollectorTemp)}°C", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                                Text("${"%.1f".format(java.util.Locale.getDefault(), energyData.solarCollectorTemp)}°C", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                             }
                             
                             Column(horizontalAlignment = Alignment.End) {
@@ -367,7 +367,7 @@ fun ThermostatCard(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("ATTUALE", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     Text(
-                        text = "${"%.1f".format(java.util.Locale.US, state.currentTemp)}°",
+                        text = "${"%.1f".format(java.util.Locale.getDefault(), state.currentTemp)}°",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = if (state.power) Color.Red else MaterialTheme.colorScheme.onSurface
@@ -383,7 +383,7 @@ fun ThermostatCard(
                     ) {
                         Text("SETPOINT", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(
-                            "${"%.1f".format(java.util.Locale.US, state.targetTemp)}°C",
+                            "${"%.1f".format(java.util.Locale.getDefault(), state.targetTemp)}°C",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -391,7 +391,7 @@ fun ThermostatCard(
                     }
                     Slider(
                         value = state.targetTemp,
-                        onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(java.util.Locale.US, it)) },
+                        onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(java.util.Locale.getDefault(), it)) },
                         valueRange = state.minTemp..state.maxTemp,
                         colors = SliderDefaults.colors(
                             thumbColor = MaterialTheme.colorScheme.primary,
@@ -412,12 +412,12 @@ fun ThermostatCard(
                 LimitAdjustment(
                     label = "Min",
                     value = state.minTemp,
-                    onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/min_temperature/cmd", "%.1f".format(java.util.Locale.US, it)) }
+                    onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/min_temperature/cmd", "%.1f".format(java.util.Locale.getDefault(), it)) }
                 )
                 LimitAdjustment(
                     label = "Max",
                     value = state.maxTemp,
-                    onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/max_temperature/cmd", "%.1f".format(java.util.Locale.US, it)) }
+                    onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/max_temperature/cmd", "%.1f".format(java.util.Locale.getDefault(), it)) }
                 )
             }
         }
@@ -433,7 +433,7 @@ fun LimitAdjustment(label: String, value: Float, onValueChange: (Float) -> Unit)
                 Icon(Icons.Default.Remove, null, modifier = Modifier.size(16.dp))
             }
             Text(
-                text = "${"%.1f".format(java.util.Locale.US, value)}°",
+                text = "${"%.1f".format(java.util.Locale.getDefault(), value)}°",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold
             )

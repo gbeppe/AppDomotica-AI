@@ -214,8 +214,8 @@ fun StatusCard(
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricItem("Temp. Interna", "%.1f°C".format(java.util.Locale.US, envState.living.temperature))
-                MetricItem("Humidex", "%.1f".format(java.util.Locale.US, envState.living.humidex))
+                MetricItem("Temp. Interna", "%.1f°C".format(java.util.Locale.getDefault(), envState.living.temperature))
+                MetricItem("Humidex", "%.1f".format(java.util.Locale.getDefault(), envState.living.humidex))
                 MetricItem("VMC Speed", "${hvacState.vmc.speed}")
             }
         }
@@ -228,16 +228,16 @@ fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Dettagli Logica", style = MaterialTheme.typography.titleMedium)
             DetailRow("Stagione Attiva", data.stagione_attiva)
-            DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.US, data.logica_controllo.soc_minimo_applied))
-            DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.US, data.logica_controllo.soglia_attivazione_applicata))
+            DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.getDefault(), data.logica_controllo.soc_minimo_applied))
+            DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.getDefault(), data.logica_controllo.soglia_attivazione_applicata))
             DetailRow("Timer Anticiclo", "${data.logica_controllo.tempo_mancante_anticiclo_minuti} min")
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
             
-            DetailRow("Batteria Stimata", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.kwh_stimati_in_batteria))
+            DetailRow("Batteria Stimata", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.kwh_stimati_in_batteria))
             DetailRow("Previsione Ricarica", "${data.logica_controllo.previsione_ricarica_battery_percent}%")
-            DetailRow("Previsione Solare", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.previsione_solare_domani_kwh))
-            DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(java.util.Locale.US, data.logica_controllo.cuscinetto_sicurezza_kwh))
+            DetailRow("Previsione Solare", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.previsione_solare_domani_kwh))
+            DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.cuscinetto_sicurezza_kwh))
             
             if (data.logica_controllo.blocco_emergenza_attivo) {
                 DetailRow("Blocco Emergenza", "ATTIVO")
