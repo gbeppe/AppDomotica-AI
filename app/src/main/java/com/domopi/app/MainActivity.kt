@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         
         settingsManager = SettingsManager(this)
         val connectivityManager = DomoPiConnectivityManager(this)
-        mqttManager = MqttManager(this)
+        mqttManager = MqttManager(this, settingsManager)
 
         // --- Gateway Centrale .20 (DomoPi) ---
         // Monitora i parametri e gestisce l'unica connessione necessaria.
@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
                         )
                         "clima" -> AiManagedScreen(
                             mqttManager = mqttManager,
+                            settingsManager = settingsManager,
                             onBack = { currentScreen = "home" }
                         )
                         "ambienti" -> AmbientiScreen(

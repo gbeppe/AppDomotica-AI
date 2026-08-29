@@ -21,11 +21,16 @@ import com.domopi.app.ui.components.NumericStepper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AiManagedScreen(mqttManager: MqttManager, onBack: () -> Unit) {
+fun AiManagedScreen(
+    mqttManager: MqttManager,
+    settingsManager: com.domopi.app.data.SettingsManager,
+    onBack: () -> Unit
+) {
     val aiData by mqttManager.aiManagedData.collectAsState()
     val aiSettings by mqttManager.aiSettings.collectAsState()
     val envState by mqttManager.environmentState.collectAsState()
     val hvacState by mqttManager.hvacState.collectAsState()
+    val isAdminMode by settingsManager.isAdminMode.collectAsState(initial = false)
 
     androidx.activity.compose.BackHandler { onBack() }
 
@@ -214,9 +219,10 @@ fun StatusCard(
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricItem("Temp. Interna", "%.1f°C".format(java.util.Locale.getDefault(), envState.living.temperature))
+                MetricItem("Temp. Int.", "%.1f°C".format(java.util.Locale.getDefault(), envState.living.temperature))
                 MetricItem("Humidex", "%.1f".format(java.util.Locale.getDefault(), envState.living.humidex))
-                MetricItem("VMC Speed", "${hvacState.vmc.speed}")
+                MetricItem("Setpoint", "%.1f°C".format(java.util.Locale.getDefault(), data.stato_condizionatore.temperatura_impostata_c))
+                MetricItem("VMC", "${hvacState.vmc.speed}")
             }
         }
     }

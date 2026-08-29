@@ -1,5 +1,6 @@
 package com.domopi.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,7 @@ fun DiagnosisScreen(
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()
     val trafficLog by mqttManager.trafficLog.collectAsState()
+    val messageRate by mqttManager.messageRate.collectAsState()
     
     val tcIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
@@ -54,7 +56,27 @@ fun DiagnosisScreen(
         ) {
             Card {
                 Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
-                    Text("Connettività", style = MaterialTheme.typography.titleMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Connettività", style = MaterialTheme.typography.titleMedium)
+                        
+                        // Badge Frequenza Messaggi
+                        Surface(
+                            color = if (messageRate > 50) Color.Red.copy(alpha = 0.1f) else Color.Green.copy(alpha = 0.1f),
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            border = BorderStroke(1.dp, if (messageRate > 50) Color.Red else Color.Green)
+                        ) {
+                            Text(
+                                text = "$messageRate msg/s",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (messageRate > 50) Color.Red else Color.Green
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
                     BrokerStatusRow("Gateway DomoPi (.20)", isConnected)
                     BrokerStatusRow("TinyCam Pro Server", tcOnline)
