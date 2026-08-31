@@ -74,7 +74,10 @@ fun MainDashboard(
         topBar = {
             TopAppBar(
                 title = { 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { onNavigate("configuration") }
+                    ) {
                         Text("DomoPi", fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(12.dp))
                         IconButton(
@@ -128,18 +131,6 @@ fun MainDashboard(
                     }
                 }
             )
-        },
-        bottomBar = {
-            BottomAppBar {
-                TextButton(
-                    onClick = { onNavigate("configuration") },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Settings, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("CONFIGURAZIONE")
-                }
-            }
         }
     ) { padding ->
         Column(

@@ -38,15 +38,19 @@ fun HvacFlowComponent(
         label = "phase"
     )
 
-    Box(modifier = modifier.fillMaxWidth().height(480.dp), contentAlignment = Alignment.Center) {
-        
-        val center = Offset(240.dp.value, 240.dp.value) // Centro logico stimato per la Canvas
-        val radius = 160.dp
+    BoxWithConstraints(
+        modifier = modifier.fillMaxWidth().aspectRatio(1f),
+        contentAlignment = Alignment.Center
+    ) {
+        val size = minOf(maxWidth, maxHeight)
+        val radius = size * 0.35f
+        val villaSize = size * 0.3f
+        val nodeBoxSize = size * 0.18f
 
-        // --- 1. DISEGNO FLUSSI (DISPOSIZIONE CIRCOLARE PERFETTA) ---
+        // --- 1. DISEGNO FLUSSI ---
         androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-            val canvasCenter = Offset(size.width / 2, size.height / 2)
-            val canvasRadius = 165.dp.toPx()
+            val canvasCenter = Offset(this.size.width / 2, this.size.height / 2)
+            val canvasRadius = radius.toPx()
 
             fun getPos(angleDeg: Double): Offset {
                 val angleRad = Math.toRadians(angleDeg)
@@ -74,46 +78,45 @@ fun HvacFlowComponent(
 
         // --- 2. VILLA REALE (CENTRO) ---
         ModernVillaGraphic(
-            modifier = Modifier.size(130.dp),
+            modifier = Modifier.size(villaSize),
             floorEnabled = state.floorHeating.enabled,
             pumpActive = state.floorHeating.pumpActive
         )
 
         // --- 3. DISPOSITIVI (NODI CIRCOLARI) ---
-        Box(modifier = Modifier.size(330.dp), contentAlignment = Alignment.Center) {
-            val nodeDist = 165.dp
+        Box(modifier = Modifier.size(size), contentAlignment = Alignment.Center) {
             
             // Boiler (-90°)
-            HvacCircularNode(angle = -90.0, dist = nodeDist, name = "Caldaia", status = if (state.boiler.active) "${state.boiler.modulation}%" else "OFF", color = if (state.boiler.active) Color.Red else Color.Gray, painter = painterResource(id = R.drawable.hvac_boiler))
+            HvacCircularNode(angle = -90.0, dist = radius, nodeSize = nodeBoxSize, name = "Caldaia", status = if (state.boiler.active) "${state.boiler.modulation}%" else "OFF", color = if (state.boiler.active) Color.Red else Color.Gray, painter = painterResource(id = R.drawable.hvac_boiler))
             
             // AC (-18°)
-            HvacCircularNode(angle = -18.0, dist = nodeDist, name = "AC", status = if (state.ac.active) "${state.ac.tempSet.toInt()}°" else "OFF", color = if (state.ac.active) (if (state.ac.mode == "Heating") Color.Red else Color.Cyan) else Color.Gray, painter = painterResource(id = R.drawable.hvac_ac))
+            HvacCircularNode(angle = -18.0, dist = radius, nodeSize = nodeBoxSize, name = "AC", status = if (state.ac.active) "${state.ac.tempSet.toInt()}°" else "OFF", color = if (state.ac.active) (if (state.ac.mode == "Heating") Color.Red else Color.Cyan) else Color.Gray, painter = painterResource(id = R.drawable.hvac_ac))
             
             // Palazzetti (54°)
-            HvacCircularNode(angle = 54.0, dist = nodeDist, name = "Focolare", status = if (state.palazzetti.active) "Liv: ${state.palazzetti.level}" else "OFF", color = if (state.palazzetti.active) Color.Red else Color.Gray, painter = painterResource(id = R.drawable.hvac_palazzetti))
+            HvacCircularNode(angle = 54.0, dist = radius, nodeSize = nodeBoxSize, name = "Focolare", status = if (state.palazzetti.active) "Liv: ${state.palazzetti.level}" else "OFF", color = if (state.palazzetti.active) Color.Red else Color.Gray, painter = painterResource(id = R.drawable.hvac_palazzetti))
             
             // VMC (126°)
-            HvacCircularNode(angle = 126.0, dist = nodeDist, name = "VMC", status = "VEL: ${state.vmc.speed}", color = Color(0xFF00E5FF), painter = painterResource(id = R.drawable.hvac_vmc))
+            HvacCircularNode(angle = 126.0, dist = radius, nodeSize = nodeBoxSize, name = "VMC", status = "VEL: ${state.vmc.speed}", color = Color(0xFF00E5FF), painter = painterResource(id = R.drawable.hvac_vmc))
             
             // Solare (198°)
-            HvacCircularNode(angle = 198.0, dist = nodeDist, name = "Solare", status = "${"%.0f".format(energyData.solarCollectorTemp)}°", color = if (energyData.solarPumpSpeed > 0) Color(0xFFFFEA00) else Color.Gray, painter = painterResource(id = R.drawable.hvac_solar_thermal))
+            HvacCircularNode(angle = 198.0, dist = radius, nodeSize = nodeBoxSize, name = "Solare", status = "${"%.0f".format(energyData.solarCollectorTemp)}°", color = if (energyData.solarPumpSpeed > 0) Color(0xFFFFEA00) else Color.Gray, painter = painterResource(id = R.drawable.hvac_solar_thermal))
         }
     }
 }
 
 @Composable
-fun HvacCircularNode(angle: Double, dist: androidx.compose.ui.unit.Dp, name: String, status: String, color: Color, painter: Painter) {
+fun HvacCircularNode(angle: Double, dist: androidx.compose.ui.unit.Dp, nodeSize: androidx.compose.ui.unit.Dp, name: String, status: String, color: Color, painter: Painter) {
     val angleRad = Math.toRadians(angle)
     val offsetX = (dist.value * Math.cos(angleRad)).dp
     val offsetY = (dist.value * Math.sin(angleRad)).dp
     
     Column(
-        modifier = Modifier.offset(x = offsetX, y = offsetY).width(80.dp),
+        modifier = Modifier.offset(x = offsetX, y = offsetY).width(nodeSize * 1.2f),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(status, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = color)
+        Text(status, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
         Box(
-            modifier = Modifier.size(64.dp).background(color.copy(alpha = 0.05f), CircleShape).padding(4.dp),
+            modifier = Modifier.size(nodeSize).background(color.copy(alpha = 0.05f), CircleShape).padding(4.dp),
             contentAlignment = Alignment.Center
         ) {
             Image(painter = painter, contentDescription = name, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
