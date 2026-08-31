@@ -62,7 +62,6 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
     
-    // Dispatcher a thread singolo per garantire il processamento sequenziale ed evitare race conditions
     @OptIn(ExperimentalCoroutinesApi::class)
     private val mqttDispatcher = Dispatchers.Default.limitedParallelism(1)
     private val scope = CoroutineScope(mqttDispatcher + SupervisorJob())
@@ -190,15 +189,11 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
 
         val domain = parts[2]
         
-        // Estrazione Proprietà basata sul dominio
-        val property = when(domain) {
-            "logica_controllo" -> topic.substringAfter("logica_controllo/").substringBefore("/")
-            "stato_condizionatore" -> topic.substringAfter("stato_condizionatore/").substringBefore("/")
-            else -> if (parts.size > 4 && parts[4] != "stat") parts[4] else parts[3]
-        }
-        
+        // --- NUOVO PARSER UNIFICATO ---
         val device = parts[3]
-        
+        val property = if (parts.size >= 5) parts[4] else parts[3]
+
+        // Filtro Log
         if (domain != "logica_controllo" && domain != "energy" && domain != "env" && domain != "stato_condizionatore") {
             addTrafficLog("IN: $topic")
         }
@@ -231,6 +226,12 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                 "grid" -> current.copy(gridPower = value)
                 "battery" -> if (prop == "soc") current.copy(batterySoc = value) else current.copy(batteryPower = value)
                 "puffer_acs" -> current.copy(pufferAcs = value)
+                "puffer" -> when(prop) {
+                    "acs" -> current.copy(pufferAcs = value)
+                    "top_temperature" -> current.copy(pufferAlto = value)
+                    "bottom_temperature" -> current.copy(pufferBasso = value)
+                    else -> current
+                }
                 else -> current
             }
         }
