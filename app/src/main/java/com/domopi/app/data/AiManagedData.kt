@@ -53,7 +53,8 @@ data class LogicaControllo(
     val kwh_stimati_in_batteria: Float = 0f,
     val blocco_emergenza_attivo: Boolean = false,
     val cuscinetto_sicurezza_kwh: Float = 0f,
-    val cuscinetto_richiesto_kwh: Float = 0f
+    val cuscinetto_richiesto_kwh: Float = 0f,
+    val stagione_attuale: String = ""
 )
 
 @Serializable

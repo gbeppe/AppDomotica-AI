@@ -190,8 +190,9 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
         val domain = parts[2]
         
         // --- NUOVO PARSER UNIFICATO ---
-        val device = parts[3]
-        val property = if (parts.size >= 5) parts[4] else parts[3]
+        val cleanParts = if (parts.last() == "stat" || parts.last() == "cmd") parts.dropLast(1) else parts
+        val device = if (cleanParts.size >= 4) cleanParts[3] else ""
+        val property = if (cleanParts.size >= 5) cleanParts[4] else device
 
         // Filtro Log
         if (domain != "logica_controllo" && domain != "energy" && domain != "env" && domain != "stato_condizionatore") {
@@ -247,10 +248,12 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                 "tempo_mancante_anticiclo_minuti" -> current.logica_controllo.copy(tempo_mancante_anticiclo_minuti = intVal)
                 "kwh_stimati_in_batteria" -> current.logica_controllo.copy(kwh_stimati_in_batteria = value)
                 "previsione_ricarica_batteria_percent" -> current.logica_controllo.copy(previsione_ricarica_battery_percent = intVal)
+                "previsione_solare_data" -> current.logica_controllo.copy(previsione_solare_data = raw)
                 "previsione_solare_domani_kwh" -> current.logica_controllo.copy(previsione_solare_domani_kwh = value)
                 "blocco_emergenza_attivo" -> current.logica_controllo.copy(blocco_emergenza_attivo = isOn)
                 "cuscinetto_sicurezza_kwh" -> current.logica_controllo.copy(cuscinetto_sicurezza_kwh = value)
                 "cuscinetto_richiesto_kwh" -> current.logica_controllo.copy(cuscinetto_richiesto_kwh = value)
+                "stagione_attuale" -> current.logica_controllo.copy(stagione_attuale = raw)
                 "stanza_rilevamento_vmc" -> current.logica_controllo.copy(stanza_rilevamento_vmc = raw)
                 "vmc_portata_stimata_m3h" -> current.logica_controllo.copy(vmc_portata_stimata_m3h = intVal)
                 else -> current.logica_controllo

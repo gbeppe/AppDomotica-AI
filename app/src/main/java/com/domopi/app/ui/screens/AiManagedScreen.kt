@@ -233,25 +233,26 @@ fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Dettagli Logica", style = MaterialTheme.typography.titleMedium)
-            DetailRow("Stagione Attiva", data.stagione_attiva)
-            DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.getDefault(), data.logica_controllo.soc_minimo_applied))
-            DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.getDefault(), data.logica_controllo.soglia_attivazione_applicata))
-            DetailRow("Timer Anticiclo", "${data.logica_controllo.tempo_mancante_anticiclo_minuti} min")
+            DetailRow("Stagione Attiva", data.logica_controllo.stagione_attuale)
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
             
+            DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.getDefault(), data.logica_controllo.soc_minimo_applied))
+            DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.getDefault(), data.logica_controllo.soglia_attivazione_applicata))
+            DetailRow("Timer Anticiclo", "${data.logica_controllo.tempo_mancante_anticiclo_minuti} min")
             DetailRow("Batteria Stimata", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.kwh_stimati_in_batteria))
             DetailRow("Previsione Ricarica", "${data.logica_controllo.previsione_ricarica_battery_percent}%")
-            DetailRow("Previsione Solare", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.previsione_solare_domani_kwh))
+            
+            DetailRow("Prev. Solare Domani", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.previsione_solare_domani_kwh))
+            DetailRow("Data Prev. Solare", data.logica_controllo.previsione_solare_data)
+            
             DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.cuscinetto_sicurezza_kwh))
+            DetailRow("Cuscinetto Richiesto", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.cuscinetto_richiesto_kwh))
             
-            if (data.logica_controllo.blocco_emergenza_attivo) {
-                DetailRow("Blocco Emergenza", "ATTIVO")
-            }
+            DetailRow("Portata VMC Stimata", "${data.logica_controllo.vmc_portata_stimata_m3h} m³/h")
+            DetailRow("Stanza Rilevamento VMC", data.logica_controllo.stanza_rilevamento_vmc.ifEmpty { "N/D" })
             
-            if (data.logica_controllo.stanza_rilevamento_vmc.isNotEmpty()) {
-                DetailRow("Rilevamento VMC", data.logica_controllo.stanza_rilevamento_vmc)
-            }
+            DetailRow("Blocco Emergenza", if (data.logica_controllo.blocco_emergenza_attivo) "ATTIVO" else "Disattivo")
         }
     }
 }
