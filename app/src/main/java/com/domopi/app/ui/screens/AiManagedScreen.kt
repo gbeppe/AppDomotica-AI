@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import com.domopi.app.data.MqttManager
 import com.domopi.app.ui.components.NumericStepper
 
+import com.domopi.app.ui.theme.SolarGreen
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiManagedScreen(
@@ -142,7 +144,11 @@ fun AiManagedScreen(
                             Text("Abilita Gestione AC", style = MaterialTheme.typography.bodyMedium)
                             Switch(
                                 checked = aiSettings.morningAcManagement,
-                                onCheckedChange = { mqttManager.publish("zara/interface/ai/morning_ac_management/cmd", if (it) "true" else "false") }
+                                onCheckedChange = { mqttManager.publish("zara/interface/ai/morning_ac_management/cmd", if (it) "true" else "false") },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = SolarGreen,
+                                    checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                                )
                             )
                         }
                         
@@ -174,7 +180,14 @@ fun ControlCard(title: String, subtitle: String, isEnabled: Boolean, onEnabledCh
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Switch(checked = isEnabled, onCheckedChange = onEnabledChange)
+            Switch(
+                checked = isEnabled,
+                onCheckedChange = onEnabledChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = SolarGreen,
+                    checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                )
+            )
         }
     }
 }

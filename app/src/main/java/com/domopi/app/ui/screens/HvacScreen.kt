@@ -241,7 +241,11 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                             
                             Switch(
                                 checked = hvacState.floorHeating.enabled,
-                                onCheckedChange = { mqttManager.publish("zara/interface/heating/floor_pump/enabled/cmd", if (it) "true" else "false") }
+                                onCheckedChange = { mqttManager.publish("zara/interface/heating/floor_pump/enabled/cmd", if (it) "true" else "false") },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = SolarGreen,
+                                    checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                                )
                             )
                         }
                         
@@ -589,7 +593,11 @@ fun FireplaceCard(state: com.domopi.app.data.PalazzettiStatus, mqttManager: Mqtt
                     }
                     Switch(
                         checked = state.autoPower,
-                        onCheckedChange = { mqttManager.publish("zara/interface/fireplace/main/auto_power/cmd", it.toString()) }
+                        onCheckedChange = { mqttManager.publish("zara/interface/fireplace/main/auto_power/cmd", it.toString()) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = SolarGreen,
+                            checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                        )
                     )
                 }
             }

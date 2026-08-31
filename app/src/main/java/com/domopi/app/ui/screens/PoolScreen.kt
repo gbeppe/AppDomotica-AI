@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.MqttManager
 import com.domopi.app.ui.components.PoolInteractiveComponent
+import com.domopi.app.ui.theme.SolarGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +85,13 @@ fun PoolControlRow(label: String, isOn: Boolean, onToggle: (Boolean) -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label)
-        Switch(checked = isOn, onCheckedChange = { onToggle(isOn) })
+        Switch(
+            checked = isOn,
+            onCheckedChange = { onToggle(isOn) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = SolarGreen,
+                checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+            )
+        )
     }
 }

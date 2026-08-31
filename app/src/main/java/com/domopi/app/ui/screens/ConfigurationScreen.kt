@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.SettingsManager
+import com.domopi.app.ui.theme.SolarGreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -168,7 +169,14 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                     androidx.compose.ui.Alignment.CenterVertically
                 ) {
                     Text("Modalità Scura", style = MaterialTheme.typography.titleMedium)
-                    Switch(checked = darkMode, onCheckedChange = { darkMode = it })
+                    Switch(
+                        checked = darkMode,
+                        onCheckedChange = { darkMode = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = SolarGreen,
+                            checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                        )
+                    )
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             }

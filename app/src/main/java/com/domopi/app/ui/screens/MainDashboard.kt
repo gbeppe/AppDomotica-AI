@@ -52,6 +52,7 @@ fun MainDashboard(
     var showPinDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
+    val aiData by mqttManager.aiManagedData.collectAsState()
     val aiSettings by mqttManager.aiSettings.collectAsState()
     val lightStates by mqttManager.lightStates.collectAsState()
     val envState by mqttManager.environmentState.collectAsState()
@@ -250,6 +251,26 @@ fun MainDashboard(
                             }
                         }
                         Spacer(Modifier.height(8.dp))
+                    }
+
+                    // Stato e Logica AC
+                    if (aiData.stato_condizionatore.stato_attuale.isNotEmpty()) {
+                        item {
+                            SummaryRow(
+                                icon = Icons.Default.AcUnit,
+                                label = "Stato AC",
+                                value = aiData.stato_condizionatore.stato_attuale
+                            )
+                        }
+                    }
+                    if (aiData.stato_condizionatore.motivo_logica.isNotEmpty()) {
+                        item {
+                            SummaryRow(
+                                icon = Icons.Default.Info,
+                                label = "Logica AC",
+                                value = aiData.stato_condizionatore.motivo_logica
+                            )
+                        }
                     }
                     
                     // 1. Luci

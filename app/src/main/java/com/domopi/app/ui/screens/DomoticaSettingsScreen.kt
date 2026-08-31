@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.MqttManager
+import com.domopi.app.ui.theme.SolarGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +56,6 @@ fun DomoticaSettingsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     description = "Ottimizza i consumi e simula presenza quando sei fuori",
                     icon = Icons.Default.FlightTakeoff,
                     checked = settings.holidayMode,
-                    color = Color(0xFFE91E63),
                     onCheckedChange = { mqttManager.publish("zara/interface/settings/holiday_mode/cmd", it.toString()) }
                 )
             }
@@ -66,7 +66,6 @@ fun DomoticaSettingsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     description = "Limita la potenza e il numero di luci attive per risparmio",
                     icon = Icons.Default.Eco,
                     checked = settings.ecoLights,
-                    color = Color(0xFF4CAF50),
                     onCheckedChange = { mqttManager.publish("zara/interface/settings/eco_lights/cmd", it.toString()) }
                 )
             }
@@ -77,7 +76,6 @@ fun DomoticaSettingsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     description = "Gestione crepuscolare automatica delle luci piscina",
                     icon = Icons.Default.Pool,
                     checked = settings.poolLightsAuto,
-                    color = Color(0xFF2196F3),
                     onCheckedChange = { mqttManager.publish("zara/interface/settings/pool_lights_auto/cmd", it.toString()) }
                 )
             }
@@ -88,7 +86,6 @@ fun DomoticaSettingsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     description = "Abilita l'automazione luci basata sul sensore di movimento",
                     icon = Icons.Default.SensorWindow,
                     checked = settings.porchSensor,
-                    color = Color(0xFFFF9800),
                     onCheckedChange = { mqttManager.publish("zara/interface/settings/porch_sensor/cmd", it.toString()) }
                 )
             }
@@ -99,7 +96,6 @@ fun DomoticaSettingsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     description = "Permette all'AI di gestire autonomamente gli split AC",
                     icon = Icons.Default.AcUnit,
                     checked = settings.acAuto,
-                    color = Color(0xFF00E5FF),
                     onCheckedChange = { mqttManager.publish("zara/interface/settings/ac_auto/cmd", it.toString()) }
                 )
             }
@@ -113,13 +109,13 @@ fun SettingToggleCard(
     description: String,
     icon: ImageVector,
     checked: Boolean,
-    color: Color,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val activeColor = SolarGreen
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (checked) color.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
+            containerColor = if (checked) activeColor.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -131,10 +127,10 @@ fun SettingToggleCard(
             Surface(
                 modifier = Modifier.size(44.dp),
                 shape = MaterialTheme.shapes.medium,
-                color = if (checked) color.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                color = if (checked) activeColor.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, null, tint = if (checked) color else Color.Gray)
+                    Icon(icon, null, tint = if (checked) activeColor else Color.Gray)
                 }
             }
 
@@ -149,8 +145,8 @@ fun SettingToggleCard(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = color,
-                    checkedTrackColor = color.copy(alpha = 0.3f)
+                    checkedThumbColor = activeColor,
+                    checkedTrackColor = activeColor.copy(alpha = 0.3f)
                 )
             )
         }

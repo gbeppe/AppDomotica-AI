@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.SettingsManager
+import com.domopi.app.ui.theme.SolarGreen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +72,11 @@ fun SettingsScreen(settingsManager: SettingsManager) {
                     Text("Tema Scuro", style = MaterialTheme.typography.titleMedium)
                     Switch(
                         checked = isDarkMode ?: isSystemInDarkTheme(),
-                        onCheckedChange = { scope.launch { settingsManager.saveDarkMode(it) } }
+                        onCheckedChange = { scope.launch { settingsManager.saveDarkMode(it) } },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = SolarGreen,
+                            checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                        )
                     )
                 }
             }
