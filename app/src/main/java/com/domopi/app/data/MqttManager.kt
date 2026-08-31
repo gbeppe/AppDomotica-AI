@@ -201,7 +201,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
         
         val cleanPayload = payload.trim().lowercase()
         val isOn = cleanPayload == "true" || cleanPayload == "on" || cleanPayload == "1"
-        val valueRaw = payload.toFloatOrNull()
+        val valueRaw = payload.replace(",", ".").toFloatOrNull()
         val rounded = if (valueRaw != null && valueRaw.isFinite()) (valueRaw * 10).roundToInt() / 10f else 0f
 
         when (domain) {

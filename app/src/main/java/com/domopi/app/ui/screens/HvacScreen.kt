@@ -395,7 +395,7 @@ fun ThermostatCard(
                     }
                     Slider(
                         value = state.targetTemp.coerceIn(16f, 22f),
-                        onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(java.util.Locale.getDefault(), it)) },
+                        onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(java.util.Locale.US, it)) },
                         valueRange = 16f..22f,
                         steps = 11,
                         colors = SliderDefaults.colors(
@@ -419,7 +419,7 @@ fun ThermostatCard(
                     value = state.minTemp,
                     onValueChange = { 
                         val newValue = it.coerceIn(16f, 22f)
-                        mqttManager.publish("zara/interface/climate/$deviceId/min_temperature/cmd", "%.1f".format(java.util.Locale.getDefault(), newValue)) 
+                        mqttManager.publish("zara/interface/climate/$deviceId/min_temperature/cmd", "%.1f".format(java.util.Locale.US, newValue)) 
                     }
                 )
                 LimitAdjustment(
@@ -427,7 +427,7 @@ fun ThermostatCard(
                     value = state.maxTemp,
                     onValueChange = { 
                         val newValue = it.coerceIn(16f, 22f)
-                        mqttManager.publish("zara/interface/climate/$deviceId/max_temperature/cmd", "%.1f".format(java.util.Locale.getDefault(), newValue)) 
+                        mqttManager.publish("zara/interface/climate/$deviceId/max_temperature/cmd", "%.1f".format(java.util.Locale.US, newValue)) 
                     }
                 )
             }
