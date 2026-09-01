@@ -64,6 +64,7 @@ class DomoPiConnectivityManager(private val context: Context) {
 
     fun isOnLocalSubnet(): Boolean {
         val ip = getLocalIpAddress() ?: return false
-        return ip.startsWith("192.168.1.")
+        // Rileva subnet classica casa O subnet virtuale emulatore (10.0.2.x)
+        return ip.startsWith("192.168.1.") || ip.startsWith("10.0.2.")
     }
 }

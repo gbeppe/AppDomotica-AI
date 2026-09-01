@@ -255,7 +255,14 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                 "cuscinetto_richiesto_kwh" -> current.logica_controllo.copy(cuscinetto_richiesto_kwh = value)
                 "stagione_attuale" -> current.logica_controllo.copy(stagione_attuale = raw)
                 "stanza_rilevamento_vmc" -> current.logica_controllo.copy(stanza_rilevamento_vmc = raw)
-                "vmc_portata_stimata_m3h" -> current.logica_controllo.copy(vmc_portata_stimata_m3h = intVal)
+                "vmc_portata_stimata_m3h" -> {
+                    val updated = current.logica_controllo.copy(vmc_portata_stimata_m3h = intVal)
+                    // Sincronizziamo lo stato VMC per l'animazione
+                    _hvacState.update { hvac ->
+                        hvac.copy(vmc = hvac.vmc.copy(active = intVal > 0))
+                    }
+                    updated
+                }
                 else -> current.logica_controllo
             }
             current.copy(logica_controllo = updatedLogic)
@@ -263,6 +270,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
     }
 
     private fun handleAcStateDomain(prop: String, raw: String, value: Float) {
+        var updatedStato: StatoCondizionatore? = null
         _aiManagedData.update { current ->
             val updatedAc = when(prop) {
                 "modalita_aria" -> current.stato_condizionatore.copy(modalita_aria = raw)
@@ -271,7 +279,24 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                 "stato_attuale" -> current.stato_condizionatore.copy(stato_attuale = raw)
                 else -> current.stato_condizionatore
             }
+            updatedStato = updatedAc
             current.copy(stato_condizionatore = updatedAc)
+        }
+
+        // Sincronizziamo hvacState per l'animazione degli impianti
+        updatedStato?.let { acData ->
+            _hvacState.update { hvac ->
+                val statusUpper = acData.stato_attuale.uppercase()
+                val isActive = acData.stato_attuale.isNotEmpty() &&
+                        statusUpper != "OFF" &&
+                        statusUpper != "DISATTIVATO" &&
+                        statusUpper != "SPENTO"
+                hvac.copy(ac = hvac.ac.copy(
+                    active = isActive,
+                    mode = acData.modalita_aria,
+                    tempSet = acData.temperatura_impostata_c
+                ))
+            }
         }
     }
 

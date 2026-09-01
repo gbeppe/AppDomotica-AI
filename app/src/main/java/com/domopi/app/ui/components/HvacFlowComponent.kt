@@ -66,13 +66,13 @@ fun HvacFlowComponent(
             val posVmc = getPos(126.0)
             val posSolar = getPos(198.0)
 
-            drawHvacCurvePath(posBoiler, canvasCenter, if (state.boiler.active && state.boiler.modulation > 0) Color.Red else Color.Gray, phase, state.boiler.active && state.boiler.modulation > 0)
+            drawHvacCurvePath(posBoiler, canvasCenter, if (state.boiler.active) Color.Red else Color.Gray, phase, state.boiler.active)
             
             val acActive = state.ac.active && state.ac.mode != "OFF"
             drawHvacCurvePath(posAC, canvasCenter, if (acActive) (if (state.ac.mode == "Heating") Color.Red else Color.Blue) else Color.Gray, phase, acActive)
             
             drawHvacCurvePath(posPalazzetti, canvasCenter, if (state.palazzetti.active) Color.Red else Color.Gray, phase, state.palazzetti.active)
-            drawHvacCurvePath(posVmc, canvasCenter, if (state.vmc.active) Color(0xFF00E5FF) else Color.Gray, phase, state.vmc.active)
+            drawHvacCurvePath(posVmc, canvasCenter, Color(0xFF00E5FF), phase, true) // Sempre accesa
             drawHvacCurvePath(posSolar, canvasCenter, if (energyData.solarPumpSpeed > 0) Color(0xFFFFEA00) else Color.Gray, phase, energyData.solarPumpSpeed > 0)
         }
 
@@ -99,7 +99,7 @@ fun HvacFlowComponent(
             HvacCircularNode(angle = 126.0, dist = radius, nodeSize = nodeBoxSize, name = "VMC", status = "VEL: ${state.vmc.speed}", color = Color(0xFF00E5FF), painter = painterResource(id = R.drawable.hvac_vmc))
             
             // Solare (198°)
-            HvacCircularNode(angle = 198.0, dist = radius, nodeSize = nodeBoxSize, name = "Solare", status = "${"%.0f".format(energyData.solarCollectorTemp)}°", color = if (energyData.solarPumpSpeed > 0) Color(0xFFFFEA00) else Color.Gray, painter = painterResource(id = R.drawable.hvac_solar_thermal))
+            HvacCircularNode(angle = 198.0, dist = radius, nodeSize = nodeBoxSize, name = "Solare", status = if (energyData.solarPumpSpeed > 0) "${energyData.solarPumpSpeed}%" else "OFF", color = if (energyData.solarPumpSpeed > 0) Color(0xFFFFEA00) else Color.Gray, painter = painterResource(id = R.drawable.hvac_solar_thermal))
         }
     }
 }

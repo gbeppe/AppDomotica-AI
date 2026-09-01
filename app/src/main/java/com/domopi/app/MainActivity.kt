@@ -52,12 +52,25 @@ class MainActivity : ComponentActivity() {
                         connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
                         localIp
                     } else {
-                        connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
-                        remoteIp
+                        // Se locale fallisce ma abbiamo un remoto, usiamo quello.
+                        // Se remoto è vuoto, restiamo su locale (magari è solo un timeout)
+                        if (remoteIp.isNotEmpty()) {
+                            connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
+                            remoteIp
+                        } else {
+                            connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
+                            localIp
+                        }
                     }
                 } else {
-                    connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
-                    remoteIp
+                    // Fuori casa: usa remoto se presente, altrimenti locale (come fallback disperato)
+                    if (remoteIp.isNotEmpty()) {
+                        connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
+                        remoteIp
+                    } else {
+                        connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
+                        localIp
+                    }
                 }
                 
                 mqttManager.connect("tcp://$ipToUse:$port", user, pass)
