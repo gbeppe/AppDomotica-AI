@@ -78,7 +78,7 @@ fun MainDashboard(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.clickable { onNavigate("configuration") }
                     ) {
-                        Text("DomoPi", fontWeight = FontWeight.Bold)
+                        Text("Z-AI", fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(12.dp))
                         IconButton(
                             onClick = { 

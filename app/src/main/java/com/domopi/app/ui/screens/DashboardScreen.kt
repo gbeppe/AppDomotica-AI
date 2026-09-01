@@ -23,7 +23,7 @@ fun DashboardScreen(mqttManager: MqttManager, onDomainClick: (String) -> Unit) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("DomoPi Dashboard") },
+                title = { Text("Z-AI Dashboard") },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )

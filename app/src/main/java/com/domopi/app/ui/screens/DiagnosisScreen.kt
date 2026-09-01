@@ -78,7 +78,7 @@ fun DiagnosisScreen(
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    BrokerStatusRow("Gateway DomoPi (.20)", isConnected)
+                    BrokerStatusRow("Gateway Z-AI (.20)", isConnected)
                     BrokerStatusRow("TinyCam Pro Server", tcOnline)
                 }
             }

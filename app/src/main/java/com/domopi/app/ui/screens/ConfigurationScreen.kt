@@ -194,7 +194,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             }
             
             item {
-                Text("Broker DomoPi", style = MaterialTheme.typography.titleMedium)
+                Text("Broker Z-AI", style = MaterialTheme.typography.titleMedium)
                 OutlinedTextField(value = domopiIp, onValueChange = { domopiIp = it }, label = { Text("IP / Host") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiPort, onValueChange = { domopiPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiUser, onValueChange = { domopiUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
