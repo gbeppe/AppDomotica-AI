@@ -6,8 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -63,8 +62,8 @@ fun AiManagedScreen(
             // 1. Sistema Abilitato
             item {
                 ControlCard(
-                    title = "Sistema AI Abilitato",
-                    subtitle = "Attiva/Disattiva logica climatica intelligente",
+                    title = "AI abilitato",
+                    icon = Icons.Default.AutoAwesome,
                     isEnabled = aiSettings.systemEnabled,
                     onEnabledChange = { enabled ->
                         mqttManager.publish("zara/interface/ai/system_enabled/cmd", if (enabled) "true" else "false")
@@ -169,23 +168,49 @@ fun AiManagedScreen(
 }
 
 @Composable
-fun ControlCard(title: String, subtitle: String, isEnabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+fun ControlCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isEnabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit
+) {
+    val activeColor = SolarGreen
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isEnabled) activeColor.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
+        )
+    ) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Surface(
+                modifier = Modifier.size(44.dp),
+                shape = MaterialTheme.shapes.medium,
+                color = if (isEnabled) activeColor.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, null, tint = if (isEnabled) activeColor else Color.Gray)
+                }
             }
+
+            Spacer(Modifier.width(16.dp))
+
+            Text(
+                title, 
+                style = MaterialTheme.typography.bodyLarge, 
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            
             Switch(
                 checked = isEnabled,
                 onCheckedChange = onEnabledChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = SolarGreen,
-                    checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                    checkedThumbColor = activeColor,
+                    checkedTrackColor = activeColor.copy(alpha = 0.3f)
                 )
             )
         }

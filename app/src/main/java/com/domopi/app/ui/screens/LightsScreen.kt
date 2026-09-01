@@ -40,22 +40,11 @@ fun LightsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     }
 
     val liveStates by mqttManager.lightStates.collectAsState()
-    val isConnected by mqttManager.isConnected.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Illuminazione")
-                        Spacer(Modifier.width(8.dp))
-                        Surface(
-                            shape = androidx.compose.foundation.shape.CircleShape,
-                            color = if (isConnected) Color.Green else Color.Red,
-                            modifier = Modifier.size(8.dp)
-                        ) {}
-                    }
-                },
+                title = { Text("Illuminazione") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
@@ -70,20 +59,9 @@ fun LightsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Sezione Scene / Modalità
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Text("Scene & Modalità", style = MaterialTheme.typography.titleMedium)
-            }
-            
-            item { SceneButton("TV Mode", "tv") { mqttManager.sendLightScene("TV Mode") } }
-            item { SceneButton("Sleep Mode", "sleep") { mqttManager.sendLightScene("Sleep Mode") } }
-            item { SceneButton("Tutte ON", "all_on") { mqttManager.sendLightScene("on") } }
-            item { SceneButton("Tutte OFF", "all_off") { mqttManager.sendLightScene("off") } }
-
             // Sezione Luci
             item(span = { GridItemSpan(maxLineSpan) }) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("Luci Individuali", style = MaterialTheme.typography.titleMedium)
+                Text("Punti luce", style = MaterialTheme.typography.titleMedium)
             }
             
             items(knownDevices) { device ->
@@ -94,6 +72,17 @@ fun LightsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     onToggle = { mqttManager.toggleLight(device.topic, isOn) }
                 )
             }
+
+            // Sezione Scenari
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Text("Scenari", style = MaterialTheme.typography.titleMedium)
+            }
+            
+            item { SceneButton("TV Mode", "tv") { mqttManager.sendLightScene("TV Mode") } }
+            item { SceneButton("Sleep Mode", "sleep") { mqttManager.sendLightScene("Sleep Mode") } }
+            item { SceneButton("Tutte ON", "all_on") { mqttManager.sendLightScene("on") } }
+            item { SceneButton("Tutte OFF", "all_off") { mqttManager.sendLightScene("off") } }
         }
     }
 }

@@ -367,6 +367,8 @@ fun DomainCard(
     val aiData by mqttManager.aiManagedData.collectAsState()
     val lightStates by mqttManager.lightStates.collectAsState()
     val hvacState by mqttManager.hvacState.collectAsState()
+    val envState by mqttManager.environmentState.collectAsState()
+    val domoticaSettings by mqttManager.domoticaSettings.collectAsState()
     
     val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
     val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("100.x.x.x")
@@ -421,7 +423,7 @@ fun DomainCard(
                     4 -> "AMBIENTI"
                     5 -> "TELECAMERE"
                     6 -> "IMPIANTI"
-                    7 -> "GESTIONE CASA"
+                    7 -> "SETTAGGI CASA"
                     8 -> "GARAGE"
                     else -> ""
                 }
@@ -444,10 +446,43 @@ fun DomainCard(
                         Icon(Icons.Default.Lightbulb, null, modifier = Modifier.size(64.dp), tint = if (onCount > 0) Color(0xFFFFD600) else Color.Gray)
                         Text("$onCount Luci Accese", style = MaterialTheme.typography.bodyLarge)
                     }
-                    2 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(aiData.stato_condizionatore.stato_attuale, style = MaterialTheme.typography.headlineMedium)
+                    2 -> Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Text(aiData.stato_condizionatore.stato_attuale, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                         Text("Set: ${aiData.stato_condizionatore.temperatura_impostata_c}°C", style = MaterialTheme.typography.bodyMedium)
                         Text(aiData.stato_condizionatore.modalita_aria, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        
+                        Spacer(Modifier.height(12.dp))
+                        
+                        // Griglia Dettagli Logica (Tutti i 12 parametri)
+                        val logica = aiData.logica_controllo
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                CompactDetail("SOC", "${logica.soc_minimo_applied.toInt()}%")
+                                CompactDetail("Humidex", "%.1f".format(logica.soglia_attivazione_applicata))
+                                CompactDetail("Timer", "${logica.tempo_mancante_anticiclo_minuti}m")
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                CompactDetail("Batteria", "%.1f".format(logica.kwh_stimati_in_batteria))
+                                CompactDetail("Carica", "${logica.previsione_ricarica_battery_percent}%")
+                                CompactDetail("Solare", "%.1f".format(logica.previsione_solare_domani_kwh))
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                CompactDetail("Data Sol.", logica.previsione_solare_data.ifEmpty { "N/D" })
+                                CompactDetail("Cusc. Sic.", "%.1f".format(logica.cuscinetto_sicurezza_kwh))
+                                CompactDetail("Cusc. Ric.", "%.1f".format(logica.cuscinetto_richiesto_kwh))
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                CompactDetail("VMC", "${logica.vmc_portata_stimata_m3h}")
+                                CompactDetail("Stanza", logica.stanza_rilevamento_vmc.ifEmpty { "N/D" })
+                                CompactDetail("Blocco", if (logica.blocco_emergenza_attivo) "ON" else "OFF")
+                            }
+                        }
                     }
                     3 -> PoolInteractiveComponent(
                         lightStates = lightStates,
@@ -455,9 +490,19 @@ fun DomainCard(
                             if (isAdminMode) mqttManager.toggleLight(id, lightStates[id] ?: false)
                         }
                     )
-                    4 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.HomeWork, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.secondary)
-                        Text("Monitoraggio Stanze", style = MaterialTheme.typography.bodyMedium)
+                    4 -> Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            ThermometerItem("LIVING", envState.living.temperature, color = SolarGreen)
+                            ThermometerItem("CAMERA", envState.bedroom.temperature, color = Color(0xFF2196F3))
+                            ThermometerItem("ESTERNO", envState.outdoor.temperature, color = Color(0xFFFF9800))
+                        }
                     }
                     5 -> if (isVisible) {
                         com.domopi.app.ui.components.CameraStreamComponent(
@@ -478,17 +523,32 @@ fun DomainCard(
                         state = hvacState,
                         energyData = energyData
                     )
-                    7 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        val domoticaSettings by mqttManager.domoticaSettings.collectAsState()
-                        Icon(
-                            Icons.Default.HomeRepairService, 
-                            null, 
-                            modifier = Modifier.size(64.dp), 
-                            tint = if (domoticaSettings.holidayMode) Color(0xFFE91E63) else MaterialTheme.colorScheme.primary
-                        )
-                        Text("Gestione Casa", style = MaterialTheme.typography.bodyLarge)
-                        if (domoticaSettings.holidayMode) {
-                            Text("MODALITÀ VACANZA ATTIVA", style = MaterialTheme.typography.labelSmall, color = Color(0xFFE91E63), fontWeight = FontWeight.Bold)
+                    7 -> Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    ) {
+                        val activeItems = mutableListOf<Pair<ImageVector, String>>()
+                        if (domoticaSettings.holidayMode) activeItems.add(Icons.Default.FlightTakeoff to "VACANZA")
+                        if (domoticaSettings.ecoLights) activeItems.add(Icons.Default.Eco to "LUCI ECO")
+                        if (domoticaSettings.poolLightsAuto) activeItems.add(Icons.Default.Pool to "PISCINA AUTO")
+                        if (domoticaSettings.porchSensor) activeItems.add(Icons.Default.SensorWindow to "SENSORE PORTICO")
+                        if (domoticaSettings.acAuto) activeItems.add(Icons.Default.AcUnit to "CLIMA AUTO")
+
+                        if (activeItems.isEmpty()) {
+                            Icon(Icons.Default.HomeRepairService, null, modifier = Modifier.size(56.dp), tint = Color.Gray)
+                            Text("Tutto Standard", style = MaterialTheme.typography.titleMedium, color = Color.Gray)
+                        } else {
+                            activeItems.forEach { (icon, text) ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    Icon(icon, null, modifier = Modifier.size(24.dp), tint = SolarGreen)
+                                    Spacer(Modifier.width(16.dp))
+                                    Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                                }
+                            }
                         }
                     }
                     8 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -565,5 +625,53 @@ fun AdminPinDialog(
             }
         }
     )
+}
+
+@Composable
+fun ThermometerItem(label: String, temp: Float, color: Color) {
+    val min = -10f
+    val max = 45f
+    val progress = ((temp - min) / (max - min)).coerceIn(0f, 1f)
+    
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .height(100.dp)
+                .width(24.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                .padding(4.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            // Sfondo traccia
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.1f))
+            )
+            // Livello temperatura
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(progress)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontSize = 10.sp)
+        Text("${"%.1f".format(temp)}°", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+    }
+}
+
+@Composable
+fun CompactDetail(label: String, value: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(90.dp)
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray, fontSize = 11.sp)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+    }
 }
 
