@@ -129,43 +129,74 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
         }
     }
 
+    private var currentBrokerUrl: String? = null
+    private var isConnecting = false
+
     fun connect(brokerUrl: String, user: String? = null, pass: String? = null) {
-        if (mqttClient?.isConnected == true) return
+        if (mqttClient?.isConnected == true && currentBrokerUrl == brokerUrl) return
+        
+        if (isConnecting && currentBrokerUrl == brokerUrl) {
+            Log.d("MQTT", "Connessione già in corso per $brokerUrl")
+            return
+        }
+
+        Log.d("MQTT", "Tentativo di connessione a $brokerUrl")
+        currentBrokerUrl = brokerUrl
+        isConnecting = true
         
         try {
             mqttClient?.setCallback(null)
-            mqttClient?.disconnectForcibly()
+            if (mqttClient?.isConnected == true) {
+                mqttClient?.disconnectForcibly()
+            }
             mqttClient?.close(true)
         } catch (e: Exception) {}
 
         try {
-            val clientId = "ZaraDashV2_" + UUID.randomUUID().toString().substring(0, 8)
+            val deviceId = android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ANDROID_ID) ?: "Unknown"
+            val clientId = "ZAI_${deviceId.take(8)}"
             mqttClient = MqttAsyncClient(brokerUrl, clientId, MemoryPersistence())
             val options = MqttConnectOptions().apply {
                 isAutomaticReconnect = true
-                isCleanSession = true
-                connectionTimeout = 10
+                isCleanSession = false // Mantieni sessione per evitare riconnessioni costose
+                connectionTimeout = 15
                 keepAliveInterval = 60
-                user?.let { userName = it }
-                pass?.let { password = it.toCharArray() }
+                if (!user.isNullOrEmpty()) userName = user
+                if (!pass.isNullOrEmpty()) password = pass.toCharArray()
             }
             mqttClient?.setCallback(object : MqttCallbackExtended {
                 override fun connectComplete(reconnect: Boolean, serverURI: String?) {
+                    Log.i("MQTT", "Connesso a $serverURI")
+                    addTrafficLog("CONNESSO: $serverURI")
+                    isConnecting = false
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     processMessageQueue()
                 }
                 override fun connectionLost(cause: Throwable?) { 
+                    isConnecting = false
                     _isConnected.value = false 
-                    Log.e("MQTT", "Lost: ${cause?.message}")
+                    Log.e("MQTT", "Connessione perduta: ${cause?.message}")
+                    addTrafficLog("DISCONNESSO: ${cause?.message}")
                 }
                 override fun messageArrived(topic: String?, message: MqttMessage?) {
                     scope.launch { handleIncomingMessage(topic ?: "", message?.toString() ?: "") }
                 }
                 override fun deliveryComplete(token: IMqttDeliveryToken?) {}
             })
-            mqttClient?.connect(options)
-        } catch (e: Exception) { Log.e("MQTT", "Error", e) }
+            mqttClient?.connect(options, null, object : IMqttActionListener {
+                override fun onSuccess(asyncActionToken: IMqttToken?) {}
+                override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                    isConnecting = false
+                    _isConnected.value = false
+                    Log.e("MQTT", "Errore connessione: ${exception?.message}", exception)
+                    addTrafficLog("ERRORE: ${exception?.message}")
+                }
+            })
+        } catch (e: Exception) { 
+            isConnecting = false
+            Log.e("MQTT", "Eccezione in connect", e) 
+        }
     }
 
     private fun subscribeToUnifiedTopics() {

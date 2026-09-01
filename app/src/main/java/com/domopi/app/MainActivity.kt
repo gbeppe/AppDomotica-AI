@@ -1,6 +1,7 @@
 package com.domopi.app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.*
@@ -13,6 +14,9 @@ import com.domopi.app.data.MqttManager
 import com.domopi.app.data.ConnectionMode
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -34,47 +38,53 @@ class MainActivity : ComponentActivity() {
                 settingsManager.domopiPort,
                 settingsManager.domopiUser,
                 settingsManager.domopiPass
-            ) { args -> args }.collect { params ->
-                val localIp = params[0]
-                val remoteIp = params[1]
-                val port = params[2]
-                val user = params[3]
-                val pass = params[4]
-                val portInt = port.toIntOrNull() ?: 1883
-                
-                // Logica ottimizzata: 
-                // 1. Se siamo sulla subnet locale (192.168.1.x), proviamo l'IP locale.
-                // 2. Altrimenti, andiamo dritti sull'IP remoto.
-                
-                val ipToUse = if (connectivityManager.isOnLocalSubnet()) {
-                    val isLocalAvailable = connectivityManager.checkServiceReachable(localIp, portInt)
-                    if (isLocalAvailable) {
-                        connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
-                        localIp
-                    } else {
-                        // Se locale fallisce ma abbiamo un remoto, usiamo quello.
-                        // Se remoto è vuoto, restiamo su locale (magari è solo un timeout)
-                        if (remoteIp.isNotEmpty()) {
-                            connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
-                            remoteIp
-                        } else {
-                            connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
-                            localIp
+            ) { args -> args.copyOf() }
+                .distinctUntilChanged { old, new -> old.contentEquals(new) }
+                .collectLatest { params ->
+                    val localIp = params[0] as String
+                    val remoteIp = params[1] as String
+                    val port = params[2] as String
+                    val user = params[3] as String
+                    val pass = params[4] as String
+                    val portInt = port.toIntOrNull() ?: 1883
+
+                    // Ciclo di riconnessione se fallisce
+                    while (true) {
+                        if (mqttManager.isConnected.value) {
+                            delay(15000)
+                            continue
                         }
-                    }
-                } else {
-                    // Fuori casa: usa remoto se presente, altrimenti locale (come fallback disperato)
-                    if (remoteIp.isNotEmpty()) {
-                        connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
-                        remoteIp
-                    } else {
-                        connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
-                        localIp
+
+                        val isSubnetLocal = connectivityManager.isOnLocalSubnet()
+                        val isLocalAvailable = connectivityManager.checkServiceReachable(localIp, portInt)
+                        
+                        Log.d("MQTT_DEBUG", "Subnet: ${if(isSubnetLocal) "LOCAL" else "OTHER"}, Available: $isLocalAvailable")
+
+                        val ipToUse = if (isSubnetLocal) {
+                            if (isLocalAvailable) {
+                                connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
+                                localIp
+                            } else if (remoteIp.isNotEmpty() && remoteIp != "100.x.x.x") {
+                                connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
+                                remoteIp
+                            } else {
+                                connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
+                                localIp
+                            }
+                        } else {
+                            if (remoteIp.isNotEmpty() && remoteIp != "100.x.x.x") {
+                                connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
+                                remoteIp
+                            } else {
+                                connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
+                                localIp
+                            }
+                        }
+
+                        mqttManager.connect("tcp://$ipToUse:$port", user, pass)
+                        delay(8000)
                     }
                 }
-                
-                mqttManager.connect("tcp://$ipToUse:$port", user, pass)
-            }
         }
 
         setContent {

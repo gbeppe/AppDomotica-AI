@@ -1,6 +1,7 @@
 package com.domopi.app.data
 
 import android.content.Context
+import android.util.Log
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,12 +25,16 @@ class DomoPiConnectivityManager(private val context: Context) {
     }
 
     suspend fun checkServiceReachable(ip: String, port: Int): Boolean = withContext(Dispatchers.IO) {
+        if (ip.isEmpty() || ip == "100.x.x.x") return@withContext false
         try {
+            Log.d("CONN_CHECK", "Verifica raggiungibilità $ip:$port...")
             val socket = Socket()
-            socket.connect(InetSocketAddress(ip, port), 1000)
+            socket.connect(InetSocketAddress(ip, port), 2000)
             socket.close()
+            Log.d("CONN_CHECK", "$ip:$port raggiungibile!")
             true
         } catch (e: Exception) {
+            Log.w("CONN_CHECK", "$ip:$port NON raggiungibile: ${e.message}")
             false
         }
     }
