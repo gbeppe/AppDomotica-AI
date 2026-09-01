@@ -75,37 +75,44 @@ fun EnergyFlowComponent(
 
         Canvas(modifier = Modifier.fillMaxSize()) {
             val hubPx = Offset(size.width / 2, hubY.toPx())
+            val iconSizePx = iconSize.toPx()
+            val halfIconPx = iconSizePx / 2
             
-            // Solar (Top)
-            val solarTopPx = Offset(size.width / 2, 70.dp.toPx())
-            // Grid (Left)
-            val gridLeftPx = Offset(sidePadding.toPx() + (iconSize.toPx() / 2), hubY.toPx())
-            // House (Right)
-            val homeRightPx = Offset(size.width - sidePadding.toPx() - (iconSize.toPx() / 2), hubY.toPx())
-            // Battery (Bottom)
-            val batteryBottomPx = Offset(size.width / 2, hubY.toPx() + 60.dp.toPx())
+            // Solar (Top) - Start from bottom border
+            val solarPoint = Offset(size.width / 2, 70.dp.toPx() + halfIconPx)
+            
+            // Grid (Left) - Start from right border
+            val gridPoint = Offset(sidePadding.toPx() + iconSizePx, hubY.toPx())
+            
+            // House (Right) - Start from left border
+            val homePoint = Offset(size.width - sidePadding.toPx() - iconSizePx, hubY.toPx())
+            
+            // Battery (Bottom) - Start from top border
+            val batteryPoint = Offset(size.width / 2, (hubY + 25.dp).toPx())
 
             // Paths
-            drawEnergyPathTesla(solarTopPx, hubPx, Color(0xFFFFEA00), phase, solarPower > 15, false)
-            drawEnergyPathTesla(gridLeftPx, hubPx, Color.White, phase, Math.abs(gridPower) > 20, gridPower < 0)
-            drawEnergyPathTesla(hubPx, homeRightPx, Color(0xFF00E5FF), phase, homeConsumption > 15, false)
-            drawEnergyPathTesla(batteryBottomPx, hubPx, Color(0xFF00FF00), phase, Math.abs(batteryPower) > 15, batteryPower < 0)
+            drawEnergyPathTesla(solarPoint, hubPx, Color(0xFFFF9800), phase, solarPower > 15, false)
+            drawEnergyPathTesla(gridPoint, hubPx, Color(0xFF4CAF50), phase, Math.abs(gridPower) > 20, gridPower < 0)
+            drawEnergyPathTesla(hubPx, homePoint, Color(0xFF00E5FF), phase, homeConsumption > 15, false)
+            drawEnergyPathTesla(batteryPoint, hubPx, Color(0xFF00FF00), phase, Math.abs(batteryPower) > 15, batteryPower < 0)
         }
 
         // 1. Solar (Top Center)
         TeslaNodeMinimal(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp),
-            imageRes = R.drawable.ic_solar_tesla,
+            imageRes = R.drawable.solar_icon,
             powerValue = "${(solarPower/1000f).let { "%.1f".format(it) }} kW",
-            color = Color(0xFFFFEA00)
+            color = Color(0xFFFF9800),
+            tintColor = Color(0xFFFF9800)
         )
 
         // 2. Grid (Left - Centered vertically with House)
         TeslaNodeMinimal(
             modifier = Modifier.align(Alignment.TopStart).padding(start = sidePadding, top = nodeYOffset),
-            imageRes = R.drawable.ic_grid_tesla,
+            imageRes = R.drawable.grid_icon,
             powerValue = "${(gridPower/1000f).let { "%.1f".format(kotlin.math.abs(it)) }} kW",
-            color = Color.White
+            color = Color(0xFF4CAF50),
+            tintColor = Color(0xFF4CAF50)
         )
 
         // 3. House (Right - Centered vertically with Grid)
@@ -185,7 +192,8 @@ fun TeslaNodeMinimal(
     modifier: Modifier = Modifier,
     imageRes: Int,
     powerValue: String,
-    color: Color
+    color: Color,
+    tintColor: Color? = null
 ) {
     Column(
         modifier = modifier,
@@ -201,7 +209,8 @@ fun TeslaNodeMinimal(
                 painter = painterResource(id = imageRes),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
+                contentScale = ContentScale.Fit,
+                colorFilter = tintColor?.let { ColorFilter.tint(it) }
             )
         }
     }
