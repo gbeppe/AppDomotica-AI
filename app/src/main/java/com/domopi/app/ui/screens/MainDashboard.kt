@@ -394,10 +394,10 @@ fun DomainCard(
         0 -> "energy_detail"
         1 -> "lights"
         2 -> "clima"
-        3 -> "pool"
-        4 -> "ambienti"
-        5 -> "cameras"
-        6 -> "hvac"
+        3 -> "hvac"
+        4 -> "pool"
+        5 -> "ambienti"
+        6 -> "cameras"
         7 -> "domotica_settings"
         8 -> "garage"
         else -> "dashboard"
@@ -419,10 +419,10 @@ fun DomainCard(
                     0 -> "ENERGIA"
                     1 -> "LUCI"
                     2 -> "CLIMA"
-                    3 -> "PISCINA"
-                    4 -> "AMBIENTI"
-                    5 -> "TELECAMERE"
-                    6 -> "IMPIANTI"
+                    3 -> "IMPIANTI"
+                    4 -> "PISCINA"
+                    5 -> "AMBIENTI"
+                    6 -> "TELECAMERE"
                     7 -> "SETTAGGI CASA"
                     8 -> "GARAGE"
                     else -> ""
@@ -484,13 +484,17 @@ fun DomainCard(
                             }
                         }
                     }
-                    3 -> PoolInteractiveComponent(
+                    3 -> com.domopi.app.ui.components.HvacFlowComponent(
+                        state = hvacState,
+                        energyData = energyData
+                    )
+                    4 -> PoolInteractiveComponent(
                         lightStates = lightStates,
                         onToggle = { id -> 
                             if (isAdminMode) mqttManager.toggleLight(id, lightStates[id] ?: false)
                         }
                     )
-                    4 -> Column(
+                    5 -> Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
                     ) {
@@ -504,7 +508,7 @@ fun DomainCard(
                             ThermometerItem("ESTERNO", envState.outdoor.temperature, color = Color(0xFFFF9800))
                         }
                     }
-                    5 -> if (isVisible) {
+                    6 -> if (isVisible) {
                         com.domopi.app.ui.components.CameraStreamComponent(
                             url = "http://${tcIp}:${tcPort}/axis-cgi/mjpg/video.cgi?cameraId=936942165",
                             user = tcUser,
@@ -519,10 +523,6 @@ fun DomainCard(
                             Icon(Icons.Default.Videocam, null, tint = Color.Gray, modifier = Modifier.size(48.dp))
                         }
                     }
-                    6 -> com.domopi.app.ui.components.HvacFlowComponent(
-                        state = hvacState,
-                        energyData = energyData
-                    )
                     7 -> Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
