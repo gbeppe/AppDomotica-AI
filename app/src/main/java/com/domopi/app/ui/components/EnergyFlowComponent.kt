@@ -91,8 +91,8 @@ fun EnergyFlowComponent(
             val batteryPoint = Offset(size.width / 2, (hubY + 25.dp).toPx())
 
             // Paths
-            drawEnergyPathTesla(solarPoint, hubPx, Color(0xFFFF9800), phase, solarPower > 15, false)
-            drawEnergyPathTesla(gridPoint, hubPx, Color(0xFF4CAF50), phase, Math.abs(gridPower) > 20, gridPower < 0)
+            drawEnergyPathTesla(solarPoint, hubPx, Color(0xFFFFEB3B), phase, solarPower > 15, false)
+            drawEnergyPathTesla(gridPoint, hubPx, Color(0xFFD939F3), phase, Math.abs(gridPower) > 20, gridPower < 0)
             drawEnergyPathTesla(hubPx, homePoint, Color(0xFF00E5FF), phase, homeConsumption > 15, false)
             drawEnergyPathTesla(batteryPoint, hubPx, Color(0xFF00FF00), phase, Math.abs(batteryPower) > 15, batteryPower < 0)
         }
@@ -102,8 +102,8 @@ fun EnergyFlowComponent(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp),
             imageRes = R.drawable.solar_icon,
             powerValue = "${(solarPower/1000f).let { "%.1f".format(it) }} kW",
-            color = Color(0xFFFF9800),
-            tintColor = Color(0xFFFF9800)
+            color = Color(0xFFFFEB3B),
+            tintColor = Color(0xFFFFEB3B)
         )
 
         // 2. Grid (Left - Centered vertically with House)
@@ -111,8 +111,8 @@ fun EnergyFlowComponent(
             modifier = Modifier.align(Alignment.TopStart).padding(start = sidePadding, top = nodeYOffset),
             imageRes = R.drawable.grid_icon,
             powerValue = "${(gridPower/1000f).let { "%.1f".format(kotlin.math.abs(it)) }} kW",
-            color = Color(0xFF4CAF50),
-            tintColor = Color(0xFF4CAF50)
+            color = Color(0xFFD939F3),
+            tintColor = Color(0xFFD939F3)
         )
 
         // 3. House (Right - Centered vertically with Grid)
