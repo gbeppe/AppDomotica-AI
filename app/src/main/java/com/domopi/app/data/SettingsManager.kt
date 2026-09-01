@@ -45,7 +45,7 @@ class SettingsManager(private val context: Context) {
     }
 
     val nodeRedLocalIp: Flow<String> = context.dataStore.data.map { it[NODE_RED_LOCAL_IP] ?: "192.168.1.20" }.distinctUntilChanged()
-    val nodeRedRemoteIp: Flow<String> = context.dataStore.data.map { it[NODE_RED_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
+    val nodeRedRemoteIp: Flow<String> = context.dataStore.data.map { it[NODE_RED_REMOTE_IP] ?: "" }.distinctUntilChanged()
     val nodeRedPort: Flow<String> = context.dataStore.data.map { it[NODE_RED_PORT] ?: "1880" }.distinctUntilChanged()
 
     suspend fun saveNodeRed(localIp: String, remoteIp: String, port: String) {
@@ -57,7 +57,7 @@ class SettingsManager(private val context: Context) {
     }
 
     val mqttLocalIp: Flow<String> = context.dataStore.data.map { it[MQTT_LOCAL_IP] ?: "192.168.1.20" }.distinctUntilChanged()
-    val mqttRemoteIp: Flow<String> = context.dataStore.data.map { it[MQTT_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
+    val mqttRemoteIp: Flow<String> = context.dataStore.data.map { it[MQTT_REMOTE_IP] ?: "" }.distinctUntilChanged()
     val mqttPort: Flow<String> = context.dataStore.data.map { it[MQTT_PORT] ?: "1883" }.distinctUntilChanged()
 
     suspend fun saveMqtt(localIp: String, remoteIp: String, port: String) {
@@ -89,7 +89,7 @@ class SettingsManager(private val context: Context) {
     }
     
     val tinycamLocalIp: Flow<String> = context.dataStore.data.map { it[TINYCAM_LOCAL_IP] ?: "192.168.1.20" }.distinctUntilChanged()
-    val tinycamRemoteIp: Flow<String> = context.dataStore.data.map { it[TINYCAM_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
+    val tinycamRemoteIp: Flow<String> = context.dataStore.data.map { it[TINYCAM_REMOTE_IP] ?: "" }.distinctUntilChanged()
     val tinycamPort: Flow<String> = context.dataStore.data.map { it[TINYCAM_PORT] ?: "8083" }.distinctUntilChanged()
     val tinycamUser: Flow<String> = context.dataStore.data.map { it[TINYCAM_USER] ?: "admin" }.distinctUntilChanged()
     val tinycamPass: Flow<String> = context.dataStore.data.map { it[TINYCAM_PASS] ?: "password" }.distinctUntilChanged()
@@ -99,13 +99,13 @@ class SettingsManager(private val context: Context) {
     val adminPin: Flow<String> = context.dataStore.data.map { it[ADMIN_PIN] ?: "1234" }.distinctUntilChanged()
 
     val domopiIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_IP] ?: "192.168.1.20" }.distinctUntilChanged()
-    val domopiRemoteIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
+    val domopiRemoteIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_REMOTE_IP] ?: "" }.distinctUntilChanged()
     val domopiPort: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_PORT] ?: "1883" }.distinctUntilChanged()
     val domopiUser: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_USER] ?: "domopi" }.distinctUntilChanged()
     val domopiPass: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_PASS] ?: "domopimqtt" }.distinctUntilChanged()
 
     val emonpiIp: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_IP] ?: "192.168.1.15" }.distinctUntilChanged()
-    val emonpiRemoteIp: Flow<String> = context.dataStore.data.map { it[EMONPI_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
+    val emonpiRemoteIp: Flow<String> = context.dataStore.data.map { it[EMONPI_REMOTE_IP] ?: "" }.distinctUntilChanged()
     val emonpiPort: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_PORT] ?: "1883" }.distinctUntilChanged()
     val emonpiUser: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_USER] ?: "emonpi" }.distinctUntilChanged()
     val emonpiPass: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_PASS] ?: "emonpimqtt2016" }.distinctUntilChanged()

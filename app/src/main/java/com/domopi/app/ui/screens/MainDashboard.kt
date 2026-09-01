@@ -370,8 +370,8 @@ fun DomainCard(
     val envState by mqttManager.environmentState.collectAsState()
     val domoticaSettings by mqttManager.domoticaSettings.collectAsState()
     
-    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
-    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("100.x.x.x")
+    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("")
+    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
     val tcUser by settingsManager.tinycamUser.collectAsState("admin")
     val tcPass by settingsManager.tinycamPass.collectAsState("password")

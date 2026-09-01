@@ -24,8 +24,8 @@ fun CamerasScreen(
 ) {
     val connectionMode by connectivityManager.connectionMode.collectAsState()
     
-    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.50")
-    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("100.x.x.x")
+    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("")
+    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
     val tcUser by settingsManager.tinycamUser.collectAsState("guest")
     val tcPass by settingsManager.tinycamPass.collectAsState("password")

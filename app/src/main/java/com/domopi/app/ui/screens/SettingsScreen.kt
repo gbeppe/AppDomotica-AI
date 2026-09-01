@@ -17,16 +17,16 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(settingsManager: SettingsManager) {
     val scope = rememberCoroutineScope()
     
-    val nrLocalIp by settingsManager.nodeRedLocalIp.collectAsState(initial = "192.168.1.20")
-    val nrRemoteIp by settingsManager.nodeRedRemoteIp.collectAsState(initial = "100.x.x.x")
+    val nrLocalIp by settingsManager.nodeRedLocalIp.collectAsState(initial = "")
+    val nrRemoteIp by settingsManager.nodeRedRemoteIp.collectAsState(initial = "")
     val nrPort by settingsManager.nodeRedPort.collectAsState(initial = "1880")
     
-    val mqttLocalIp by settingsManager.mqttLocalIp.collectAsState(initial = "192.168.1.20")
-    val mqttRemoteIp by settingsManager.mqttRemoteIp.collectAsState(initial = "100.x.x.x")
+    val mqttLocalIp by settingsManager.mqttLocalIp.collectAsState(initial = "")
+    val mqttRemoteIp by settingsManager.mqttRemoteIp.collectAsState(initial = "")
     val mqttPort by settingsManager.mqttPort.collectAsState(initial = "1883")
     
-    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState(initial = "192.168.1.20")
-    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState(initial = "100.x.x.x")
+    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState(initial = "")
+    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState(initial = "")
     val tcPort by settingsManager.tinycamPort.collectAsState(initial = "8083")
     val tcUserVal by settingsManager.tinycamUser.collectAsState(initial = "admin")
     val tcPassVal by settingsManager.tinycamPass.collectAsState(initial = "password")

@@ -23,13 +23,13 @@ fun TechnicalMenuScreen(
     settingsManager: SettingsManager, 
     connectivityManager: DomoPiConnectivityManager
 ) {
-    val nrLocalIp by settingsManager.nodeRedLocalIp.collectAsState("192.168.1.20")
+    val nrLocalIp by settingsManager.nodeRedLocalIp.collectAsState("")
     val nrPort by settingsManager.nodeRedPort.collectAsState("1880")
     
-    val mqttLocalIp by settingsManager.mqttLocalIp.collectAsState("192.168.1.20")
+    val mqttLocalIp by settingsManager.mqttLocalIp.collectAsState("")
     val mqttPort by settingsManager.mqttPort.collectAsState("1883")
     
-    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
+    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
 
     var nrOnline by remember { mutableStateOf(false) }
@@ -92,9 +92,9 @@ fun ServiceStatusRow(name: String, isOnline: Boolean, details: String) {
 fun LogViewer() {
     val logs = remember {
         mutableStateListOf(
-            LogEntry("15:30:01", "MQTT IN", "emon/AC/em: 450W"),
-            LogEntry("15:30:05", "MQTT OUT", "cmnd/light/1: ON"),
-            LogEntry("15:30:10", "ERROR", "Timeout connecting to 192.168.1.20")
+            LogEntry("15:30:01", "MQTT IN", "zara/interface/env/living/temperature: 24.5"),
+            LogEntry("15:30:05", "MQTT OUT", "zara/interface/lights/living/power/cmd: true"),
+            LogEntry("15:30:10", "ERROR", "Connection lost")
         )
     }
 

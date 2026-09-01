@@ -30,7 +30,7 @@ fun DiagnosisScreen(
     val trafficLog by mqttManager.trafficLog.collectAsState()
     val messageRate by mqttManager.messageRate.collectAsState()
     
-    val tcIp by settingsManager.tinycamLocalIp.collectAsState("192.168.1.20")
+    val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
     var tcOnline by remember { mutableStateOf(false) }
 
