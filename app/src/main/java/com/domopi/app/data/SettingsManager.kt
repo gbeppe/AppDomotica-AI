@@ -32,11 +32,13 @@ class SettingsManager(private val context: Context) {
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
 
         val DOMOPI_BROKER_IP = stringPreferencesKey("domopi_broker_ip")
+        val DOMOPI_REMOTE_IP = stringPreferencesKey("domopi_remote_ip")
         val DOMOPI_BROKER_PORT = stringPreferencesKey("domopi_broker_port")
         val DOMOPI_BROKER_USER = stringPreferencesKey("domopi_broker_user")
         val DOMOPI_BROKER_PASS = stringPreferencesKey("domopi_broker_pass")
 
         val EMONPI_BROKER_IP = stringPreferencesKey("emonpi_broker_ip")
+        val EMONPI_REMOTE_IP = stringPreferencesKey("emonpi_remote_ip")
         val EMONPI_BROKER_PORT = stringPreferencesKey("emonpi_broker_port")
         val EMONPI_BROKER_USER = stringPreferencesKey("emonpi_broker_user")
         val EMONPI_BROKER_PASS = stringPreferencesKey("emonpi_broker_pass")
@@ -66,18 +68,20 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    suspend fun saveDomoPiBroker(ip: String, port: String, user: String, pass: String) {
+    suspend fun saveDomoPiBroker(localIp: String, remoteIp: String, port: String, user: String, pass: String) {
         context.dataStore.edit {
-            it[DOMOPI_BROKER_IP] = ip
+            it[DOMOPI_BROKER_IP] = localIp
+            it[DOMOPI_REMOTE_IP] = remoteIp
             it[DOMOPI_BROKER_PORT] = port
             it[DOMOPI_BROKER_USER] = user
             it[DOMOPI_BROKER_PASS] = pass
         }
     }
 
-    suspend fun saveEmonPiBroker(ip: String, port: String, user: String, pass: String) {
+    suspend fun saveEmonPiBroker(localIp: String, remoteIp: String, port: String, user: String, pass: String) {
         context.dataStore.edit {
-            it[EMONPI_BROKER_IP] = ip
+            it[EMONPI_BROKER_IP] = localIp
+            it[EMONPI_REMOTE_IP] = remoteIp
             it[EMONPI_BROKER_PORT] = port
             it[EMONPI_BROKER_USER] = user
             it[EMONPI_BROKER_PASS] = pass
@@ -95,11 +99,13 @@ class SettingsManager(private val context: Context) {
     val adminPin: Flow<String> = context.dataStore.data.map { it[ADMIN_PIN] ?: "1234" }.distinctUntilChanged()
 
     val domopiIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_IP] ?: "192.168.1.20" }.distinctUntilChanged()
+    val domopiRemoteIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
     val domopiPort: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_PORT] ?: "1883" }.distinctUntilChanged()
     val domopiUser: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_USER] ?: "domopi" }.distinctUntilChanged()
     val domopiPass: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_PASS] ?: "domopimqtt" }.distinctUntilChanged()
 
     val emonpiIp: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_IP] ?: "192.168.1.15" }.distinctUntilChanged()
+    val emonpiRemoteIp: Flow<String> = context.dataStore.data.map { it[EMONPI_REMOTE_IP] ?: "100.x.x.x" }.distinctUntilChanged()
     val emonpiPort: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_PORT] ?: "1883" }.distinctUntilChanged()
     val emonpiUser: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_USER] ?: "emonpi" }.distinctUntilChanged()
     val emonpiPass: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_PASS] ?: "emonpimqtt2016" }.distinctUntilChanged()

@@ -26,25 +26,42 @@ class MainActivity : ComponentActivity() {
         val connectivityManager = DomoPiConnectivityManager(this)
         mqttManager = MqttManager(this, settingsManager)
 
-        // --- Gateway Centrale .20 (DomoPi) ---
-        // Monitora i parametri e gestisce l'unica connessione necessaria.
+        // --- Gateway Centrale .20 (Z-AI) ---
         lifecycleScope.launch {
             combine(
                 settingsManager.domopiIp,
+                settingsManager.domopiRemoteIp,
                 settingsManager.domopiPort,
                 settingsManager.domopiUser,
                 settingsManager.domopiPass
-            ) { ip, port, user, pass ->
-                // Determina la modalità di connessione basandosi sull'IP
-                if (ip.startsWith("192.168.")) {
-                    connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
+            ) { args -> args }.collect { params ->
+                val localIp = params[0]
+                val remoteIp = params[1]
+                val port = params[2]
+                val user = params[3]
+                val pass = params[4]
+                val portInt = port.toIntOrNull() ?: 1883
+                
+                // Logica ottimizzata: 
+                // 1. Se siamo sulla subnet locale (192.168.1.x), proviamo l'IP locale.
+                // 2. Altrimenti, andiamo dritti sull'IP remoto.
+                
+                val ipToUse = if (connectivityManager.isOnLocalSubnet()) {
+                    val isLocalAvailable = connectivityManager.checkServiceReachable(localIp, portInt)
+                    if (isLocalAvailable) {
+                        connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
+                        localIp
+                    } else {
+                        connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
+                        remoteIp
+                    }
                 } else {
                     connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
+                    remoteIp
                 }
                 
-                // Connette al broker centrale che fa da gateway per tutto (anche per EmonPi)
-                mqttManager.connect("tcp://$ip:$port", user, pass)
-            }.collect {}
+                mqttManager.connect("tcp://$ipToUse:$port", user, pass)
+            }
         }
 
         setContent {
@@ -81,9 +98,10 @@ class MainActivity : ComponentActivity() {
                             onBack = { currentScreen = "home" }
                         )
                         "energy_detail" -> {
-                            // Anche qui puntiamo al .20, poiché i dati EmonCMS sono bridgeati o comunque
-                            // seguiamo la logica del repository che usa l'IP configurato.
-                            val epIp by settingsManager.emonpiIp.collectAsState("192.168.1.15")
+                            val mode by connectivityManager.connectionMode.collectAsState()
+                            val epLocalIp by settingsManager.emonpiIp.collectAsState("192.168.1.15")
+                            val epRemoteIp by settingsManager.emonpiRemoteIp.collectAsState("100.x.x.x")
+                            val epIp = if (mode == ConnectionMode.LOCAL) epLocalIp else epRemoteIp
                             EnergyDetailScreen(emoncmsIp = epIp, onBack = { currentScreen = "home" })
                         }
                         "diagnosis" -> DiagnosisScreen(

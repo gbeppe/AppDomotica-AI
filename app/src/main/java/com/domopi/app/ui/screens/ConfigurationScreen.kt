@@ -23,11 +23,13 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     var showDiscardDialog by remember { mutableStateOf(false) }
     
     var domopiIp by remember { mutableStateOf("") }
+    var domopiRemoteIp by remember { mutableStateOf("") }
     var domopiPort by remember { mutableStateOf("") }
     var domopiUser by remember { mutableStateOf("") }
     var domopiPass by remember { mutableStateOf("") }
     
     var emonpiIp by remember { mutableStateOf("") }
+    var emonpiRemoteIp by remember { mutableStateOf("") }
     var emonpiPort by remember { mutableStateOf("") }
     var emonpiUser by remember { mutableStateOf("") }
     var emonpiPass by remember { mutableStateOf("") }
@@ -44,10 +46,12 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     
     val isDirty = initialValues != null && (
         domopiIp != initialValues!!["dpIp"] ||
+        domopiRemoteIp != initialValues!!["dpRemoteIp"] ||
         domopiPort != initialValues!!["dpPort"] ||
         domopiUser != initialValues!!["dpUser"] ||
         domopiPass != initialValues!!["dpPass"] ||
         emonpiIp != initialValues!!["epIp"] ||
+        emonpiRemoteIp != initialValues!!["epRemoteIp"] ||
         emonpiPort != initialValues!!["epPort"] ||
         emonpiUser != initialValues!!["epUser"] ||
         emonpiPass != initialValues!!["epPass"] ||
@@ -62,11 +66,13 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
 
     LaunchedEffect(Unit) {
         val dpIp = settingsManager.domopiIp.first()
+        val dpRemoteIp = settingsManager.domopiRemoteIp.first()
         val dpPort = settingsManager.domopiPort.first()
         val dpUser = settingsManager.domopiUser.first()
         val dpPass = settingsManager.domopiPass.first()
         
         val epIp = settingsManager.emonpiIp.first()
+        val epRemoteIp = settingsManager.emonpiRemoteIp.first()
         val epPort = settingsManager.emonpiPort.first()
         val epUser = settingsManager.emonpiUser.first()
         val epPass = settingsManager.emonpiPass.first()
@@ -80,11 +86,13 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         val pin = settingsManager.adminPin.first()
         
         domopiIp = dpIp
+        domopiRemoteIp = dpRemoteIp
         domopiPort = dpPort
         domopiUser = dpUser
         domopiPass = dpPass
         
         emonpiIp = epIp
+        emonpiRemoteIp = epRemoteIp
         emonpiPort = epPort
         emonpiUser = epUser
         emonpiPass = epPass
@@ -98,8 +106,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         adminPin = pin
         
         initialValues = mapOf(
-            "dpIp" to dpIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
-            "epIp" to epIp, "epPort" to epPort, "epUser" to epUser, "epPass" to epPass,
+            "dpIp" to dpIp, "dpRemoteIp" to dpRemoteIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
+            "epIp" to epIp, "epRemoteIp" to epRemoteIp, "epPort" to epPort, "epUser" to epUser, "epPass" to epPass,
             "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass,
             "darkMode" to dm, "adminPin" to pin
         )
@@ -107,14 +115,14 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
 
     fun saveAll() {
         scope.launch {
-            settingsManager.saveDomoPiBroker(domopiIp, domopiPort, domopiUser, domopiPass)
-            settingsManager.saveEmonPiBroker(emonpiIp, emonpiPort, emonpiUser, emonpiPass)
+            settingsManager.saveDomoPiBroker(domopiIp, domopiRemoteIp, domopiPort, domopiUser, domopiPass)
+            settingsManager.saveEmonPiBroker(emonpiIp, emonpiRemoteIp, emonpiPort, emonpiUser, emonpiPass)
             settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
             settingsManager.saveDarkMode(darkMode)
             settingsManager.saveAdminPin(adminPin)
             initialValues = mapOf(
-                "dpIp" to domopiIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
-                "epIp" to emonpiIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass,
+                "dpIp" to domopiIp, "dpRemoteIp" to domopiRemoteIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
+                "epIp" to emonpiIp, "epRemoteIp" to emonpiRemoteIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass,
                 "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass,
                 "darkMode" to darkMode, "adminPin" to adminPin
             )
@@ -215,7 +223,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             
             item {
                 Text("Broker Z-AI", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(value = domopiIp, onValueChange = { domopiIp = it }, label = { Text("IP / Host") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = domopiIp, onValueChange = { domopiIp = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = domopiRemoteIp, onValueChange = { domopiRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiPort, onValueChange = { domopiPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiUser, onValueChange = { domopiUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiPass, onValueChange = { domopiPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
@@ -224,7 +233,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text("Broker EmonPi", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(value = emonpiIp, onValueChange = { emonpiIp = it }, label = { Text("IP / Host") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = emonpiIp, onValueChange = { emonpiIp = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = emonpiRemoteIp, onValueChange = { emonpiRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = emonpiPort, onValueChange = { emonpiPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = emonpiUser, onValueChange = { emonpiUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = emonpiPass, onValueChange = { emonpiPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())

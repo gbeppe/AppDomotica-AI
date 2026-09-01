@@ -44,4 +44,26 @@ class DomoPiConnectivityManager(private val context: Context) {
             else -> false
         }
     }
+
+    fun getLocalIpAddress(): String? {
+        try {
+            val interfaces = java.net.NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val iface = interfaces.nextElement()
+                val addresses = iface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val addr = addresses.nextElement()
+                    if (!addr.isLoopbackAddress && addr is java.net.Inet4Address) {
+                        return addr.hostAddress
+                    }
+                }
+            }
+        } catch (e: Exception) {}
+        return null
+    }
+
+    fun isOnLocalSubnet(): Boolean {
+        val ip = getLocalIpAddress() ?: return false
+        return ip.startsWith("192.168.1.")
+    }
 }
