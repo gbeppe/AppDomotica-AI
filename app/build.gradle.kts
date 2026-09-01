@@ -1,8 +1,39 @@
+import java.util.Date
+import java.text.SimpleDateFormat
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
+}
+
+val gitHash: String by lazy {
+    try {
+        val hash = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+            .start().inputStream.bufferedReader().readText().trim()
+        
+        // Verifica se ci sono modifiche non committate (dirty state)
+        val isDirty = ProcessBuilder("git", "status", "--porcelain")
+            .start().inputStream.bufferedReader().readText().isNotEmpty()
+            
+        if (isDirty) "$hash+" else hash
+    } catch (e: Exception) {
+        "unknown"
+    }
+}
+
+val gitBranch: String by lazy {
+    try {
+        ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
+            .start().inputStream.bufferedReader().readText().trim()
+    } catch (e: Exception) {
+        "unknown"
+    }
+}
+
+val buildTime: String by lazy {
+    SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
 }
 
 android {
@@ -13,13 +44,17 @@ android {
         applicationId = "com.domopi.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 6
+        versionName = "5.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
+        buildConfigField("String", "GIT_BRANCH", "\"$gitBranch\"")
+        buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
     }
 
     buildTypes {
@@ -41,6 +76,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {

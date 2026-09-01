@@ -26,20 +26,18 @@ fun PoolInteractiveComponent(
     lightStates: Map<String, Boolean>,
     onToggle: (String) -> Unit
 ) {
-    val grayscaleFilter = remember { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) }
-
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(16 / 9f)
             .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF1A1A1A)) // Sfondo scuro di base
     ) {
-        val scope = this
-        val parentW = scope.maxWidth
-        val parentH = scope.maxHeight
+        val parentW = this.maxWidth
+        val parentH = this.maxHeight
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // 1. Base layer: Full normal color image
+            // 1. Base layer: L'immagine originale della piscina
             Image(
                 painter = painterResource(id = R.drawable.pool_background),
                 contentDescription = "Pool Layout",
@@ -47,57 +45,59 @@ fun PoolInteractiveComponent(
                 contentScale = ContentScale.FillBounds
             )
 
-            // 2. Interactive Layers: Grayscale slices on top when OFF
+            // 2. Overlay Interattivi: Copriamo o coloriamo le aree in base allo stato
             
-            // Water (Internal Lights)
-            PoolElementOverlayFinal(
+            // LUCE ACQUA (Area grande centrale)
+            PoolElementOverlay(
                 id = "lucipiscina",
                 isOn = lightStates["lucipiscina"] ?: false,
                 xPerc = 0.22f, yPerc = 0.13f, wPerc = 0.56f, hPerc = 0.35f,
                 parentW = parentW, parentH = parentH,
                 onToggle = onToggle,
                 shape = CircleShape,
-                grayscaleFilter = grayscaleFilter
+                onColor = Color(0x4000E5FF), // Azzurro semitrasparente quando acceso
+                offColor = Color(0xCC1A1A1A)  // Grigio scuro quasi coprente quando spento
             )
 
-            // Skimmer
-            PoolElementOverlayFinal(
+            // SKIMMER
+            PoolElementOverlay(
                 id = "skimmerpiscina",
                 isOn = lightStates["skimmerpiscina"] ?: false,
                 xPerc = 0.31f, yPerc = 0.35f, wPerc = 0.08f, hPerc = 0.12f,
                 parentW = parentW, parentH = parentH,
                 onToggle = onToggle,
                 shape = RoundedCornerShape(4.dp),
-                grayscaleFilter = grayscaleFilter
+                offColor = Color(0xEE1A1A1A) // "Nasconde" l'elemento se OFF
             )
 
-            // Pump
-            PoolElementOverlayFinal(
+            // POMPA
+            PoolElementOverlay(
                 id = "pompapiscina",
                 isOn = lightStates["pompapiscina"] ?: false,
                 xPerc = 0.73f, yPerc = 0.38f, wPerc = 0.12f, hPerc = 0.18f,
                 parentW = parentW, parentH = parentH,
                 onToggle = onToggle,
                 shape = RoundedCornerShape(4.dp),
-                grayscaleFilter = grayscaleFilter
+                offColor = Color(0xEE1A1A1A) // "Nasconde" la pompa se OFF
             )
 
-            // Deck Lights
-            PoolElementOverlayFinal(
+            // LUCI PAVIMENTO (Pedana)
+            PoolElementOverlay(
                 id = "lucipedanapiscina",
                 isOn = lightStates["lucipedanapiscina"] ?: false,
                 xPerc = 0.15f, yPerc = 0.58f, wPerc = 0.7f, hPerc = 0.35f,
                 parentW = parentW, parentH = parentH,
                 onToggle = onToggle,
                 shape = RoundedCornerShape(8.dp),
-                grayscaleFilter = grayscaleFilter
+                onColor = Color(0x33FFEA00), // Leggero bagliore giallo se ON
+                offColor = Color(0xDD1A1A1A)  // Coprente se OFF
             )
         }
     }
 }
 
 @Composable
-fun PoolElementOverlayFinal(
+fun PoolElementOverlay(
     id: String,
     isOn: Boolean,
     xPerc: Float,
@@ -108,7 +108,8 @@ fun PoolElementOverlayFinal(
     parentH: Dp,
     onToggle: (String) -> Unit,
     shape: Shape,
-    grayscaleFilter: ColorFilter
+    onColor: Color = Color.Transparent,
+    offColor: Color = Color.Transparent
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -117,25 +118,12 @@ fun PoolElementOverlayFinal(
             .size(width = parentW * wPerc, height = parentH * hPerc)
             .offset(x = parentW * xPerc, y = parentH * yPerc)
             .clip(shape)
+            .background(if (isOn) onColor else offColor)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) {
                 onToggle(id)
             }
-    ) {
-        if (!isOn) {
-            Image(
-                painter = painterResource(id = R.drawable.pool_background),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(width = parentW, height = parentH)
-                    .offset(x = -(parentW * xPerc), y = -(parentH * yPerc)),
-                contentScale = ContentScale.FillBounds,
-                colorFilter = grayscaleFilter
-            )
-            // Add a very slight dark overlay to emphasize it's off
-            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.1f)))
-        }
-    }
+    )
 }

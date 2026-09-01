@@ -12,6 +12,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.theme.SolarGreen
+import com.domopi.app.BuildConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -163,6 +164,25 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Informazioni Build",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    BuildInfoRow("Versione", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                    BuildInfoRow("Git Hash", BuildConfig.GIT_HASH)
+                    BuildInfoRow("Git Branch", BuildConfig.GIT_BRANCH)
+                    BuildInfoRow("Data Build", BuildConfig.BUILD_TIME)
+                }
+                HorizontalDivider(modifier = Modifier.padding(top = 16.dp))
+            }
+
+            item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -220,5 +240,16 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                 OutlinedTextField(value = tinycamPass, onValueChange = { tinycamPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
             }
         }
+    }
+}
+
+@Composable
+fun BuildInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
     }
 }
