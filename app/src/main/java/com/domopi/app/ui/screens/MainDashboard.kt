@@ -1,5 +1,6 @@
 package com.domopi.app.ui.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,6 +51,7 @@ fun MainDashboard(
     val adminPin by settingsManager.adminPin.collectAsState(initial = "1234")
     
     var showPinDialog by remember { mutableStateOf(false) }
+    var showAlarmDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
     val aiData by mqttManager.aiManagedData.collectAsState()
@@ -67,6 +69,39 @@ fun MainDashboard(
                 showPinDialog = false
             },
             onDismiss = { showPinDialog = false }
+        )
+    }
+
+    if (showAlarmDialog && aiSettings.alarm != null) {
+        val alarm = aiSettings.alarm!!
+        AlertDialog(
+            onDismissRequest = { showAlarmDialog = false },
+            icon = { Icon(Icons.Default.Warning, null, tint = Color.Red) },
+            title = { Text("Anomalia Sistema AI", color = Color.Red, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Stato: ${alarm.stato}", fontWeight = FontWeight.Bold)
+                    Text(alarm.motivo)
+                    if (alarm.elementi_mancanti.isNotEmpty()) {
+                        Text("Elementi mancanti:", style = MaterialTheme.typography.labelMedium)
+                        alarm.elementi_mancanti.forEach {
+                            Text("• $it", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    val date = java.time.Instant.ofEpochMilli(alarm.timestamp)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))
+                    Text("Rilevato alle: $date", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { 
+                    mqttManager.clearAlarm()
+                    showAlarmDialog = false 
+                }) {
+                    Text("CHIUDI E RESET")
+                }
+            }
         )
     }
 
@@ -168,6 +203,31 @@ fun MainDashboard(
                                 "Climatizzazione AI",
                                 style = MaterialTheme.typography.bodyMedium
                             )
+                            
+                            // Indicatore Allarme
+                            if (aiSettings.alarm != null) {
+                                Spacer(Modifier.width(12.dp))
+                                val infiniteTransition = rememberInfiniteTransition(label = "alarm_blink")
+                                val alpha by infiniteTransition.animateFloat(
+                                    initialValue = 0.2f,
+                                    targetValue = 1f,
+                                    animationSpec = infiniteRepeatable(
+                                        animation = tween(500, easing = LinearEasing),
+                                        repeatMode = RepeatMode.Reverse
+                                    ),
+                                    label = "alpha"
+                                )
+                                IconButton(
+                                    onClick = { showAlarmDialog = true },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = "Dettagli Allarme",
+                                        tint = Color.Red.copy(alpha = alpha)
+                                    )
+                                }
+                            }
                         }
                         
                         Surface(

@@ -6,6 +6,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
@@ -39,6 +41,14 @@ data class EnvironmentState(
     val outdoor: SensorData = SensorData()
 )
 
+@Serializable
+data class AiAlarm(
+    val stato: String = "",
+    val motivo: String = "",
+    val elementi_mancanti: List<String> = emptyList(),
+    val timestamp: Long = 0
+)
+
 data class AiSettings(
     val systemEnabled: Boolean = true,
     val compressorOnMin: Int = 15,
@@ -47,7 +57,8 @@ data class AiSettings(
     val nightVmcMaxSpeed: Int = 2,
     val deficitToleranceMin: Int = 10,
     val morningAcManagement: Boolean = false,
-    val morningHumidexEmergency: Int = 33
+    val morningHumidexEmergency: Int = 33,
+    val alarm: AiAlarm? = null
 )
 
 data class DomoticaSettings(
@@ -132,6 +143,10 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
     private var currentBrokerUrl: String? = null
     private var isConnecting = false
 
+    fun clearAlarm() {
+        _aiSettings.update { it.copy(alarm = null) }
+    }
+
     fun connect(brokerUrl: String, user: String? = null, pass: String? = null) {
         if (mqttClient?.isConnected == true && currentBrokerUrl == brokerUrl) return
         
@@ -203,7 +218,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
         val topics = arrayOf(
             "zara/interface/lights/#", "zara/interface/pool/#", "zara/interface/env/#",
             "zara/interface/energy/#", "zara/interface/heating/#", "zara/interface/climate/#",
-            "zara/interface/ai/#", "zara/interface/fireplace/#", "zara/interface/ventilation/#",
+            "zara/interface/ai/#", "zara/interface/ai_climate/#", "zara/interface/fireplace/#", "zara/interface/ventilation/#",
             "zara/interface/settings/#", "zara/interface/garage/#", 
             "zara/interface/stato_condizionatore/#",
             "zara/interface/logica_controllo/#"
@@ -244,9 +259,27 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
             "heating" -> handleHeatingDomain(device, property, rounded, payload)
             "climate" -> handleClimateDomain(device, property, rounded, isOn)
             "ai" -> handleAiDomain(device, isOn, payload)
+            "ai_climate" -> handleAiClimateDomain(device, property, payload)
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
             "ventilation" -> handleVentilationDomain(device, property, payload)
             "settings" -> handleSettingsDomain(device, isOn)
+        }
+    }
+
+    private fun handleAiClimateDomain(device: String, prop: String, payload: String) {
+        if (prop == "allarme") {
+            val clean = payload.trim()
+            if (clean.isEmpty() || clean.lowercase() == "off" || clean == "0" || clean == "false") {
+                _aiSettings.update { it.copy(alarm = null) }
+            } else {
+                try {
+                    val alarmData = Json.decodeFromString<AiAlarm>(clean)
+                    _aiSettings.update { it.copy(alarm = alarmData) }
+                } catch (e: Exception) {
+                    // Se non è un JSON valido ma non è "OFF", creiamo un allarme generico con il payload come motivo
+                    _aiSettings.update { it.copy(alarm = AiAlarm(stato = "ATTIVO", motivo = clean)) }
+                }
+            }
         }
     }
 

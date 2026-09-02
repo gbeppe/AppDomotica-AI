@@ -54,6 +54,38 @@ fun AiManagedScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Allarme Sistema (se presente)
+            if (aiSettings.alarm != null) {
+                item {
+                    val alarm = aiSettings.alarm!!
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Error, null, tint = Color.Red)
+                                Spacer(Modifier.width(8.dp))
+                                Text("ANOMALIA RILEVATA", color = Color.Red, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text("Stato: ${alarm.stato}", style = MaterialTheme.typography.bodyMedium)
+                            Text(alarm.motivo, style = MaterialTheme.typography.bodySmall)
+                            
+                            if (alarm.elementi_mancanti.isNotEmpty()) {
+                                Spacer(Modifier.height(8.dp))
+                                Text("Elementi coinvolti:", style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    alarm.elementi_mancanti.joinToString(", "),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // operativo
             item {
                 StatusCard(aiData, envState, hvacState)
