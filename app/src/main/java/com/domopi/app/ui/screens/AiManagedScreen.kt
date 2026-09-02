@@ -12,9 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.domopi.app.data.AiManagedData
 import com.domopi.app.data.MqttManager
 import com.domopi.app.ui.components.NumericStepper
 
@@ -289,18 +291,20 @@ fun StatusCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+            val locale = LocalConfiguration.current.locales[0]
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                MetricItem("Temp. Int.", "%.1f°C".format(java.util.Locale.getDefault(), envState.living.temperature))
-                MetricItem("Humidex", "%.1f".format(java.util.Locale.getDefault(), envState.living.humidex))
-                MetricItem("Setpoint", "%.1f°C".format(Locale.getDefault(), data.statoCondizionatore.temperaturaImpostataC))
-                MetricItem("VMC", "${hvacState.vmc.speed}")
+                MetricItem("Temp. Int.", "%.1f°C".format(locale, envState.living.temperature))
+                MetricItem("Humidex", "%.1f".format(locale, envState.living.humidex))
+                MetricItem("Setpoint", "%.1f°C".format(locale, data.statoCondizionatore.temperaturaImpostataC))
+                MetricItem("VMC", hvacState.vmc.speed.toString())
             }
         }
     }
 }
 
 @Composable
-fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
+fun SystemDetailsCard(data: AiManagedData) {
+    val locale = LocalConfiguration.current.locales[0]
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Dettagli Logica", style = MaterialTheme.typography.titleMedium)
@@ -308,17 +312,17 @@ fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
             
-            DetailRow("SOC Minimo Applicato", "%.1f%%".format(Locale.getDefault(), data.logicaControllo.socMinimoApplied))
-            DetailRow("Soglia Humidex Reale", "%.1f".format(Locale.getDefault(), data.logicaControllo.sogliaAttivazioneApplicata))
+            DetailRow("SOC Minimo Applicato", "%.1f%%".format(locale, data.logicaControllo.socMinimoApplied))
+            DetailRow("Soglia Humidex Reale", "%.1f".format(locale, data.logicaControllo.sogliaAttivazioneApplicata))
             DetailRow("Timer Anticiclo", "${data.logicaControllo.tempoMancanteAnticicloMinuti} min")
-            DetailRow("Batteria Stimata", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.kwhStimatiInBatteria))
+            DetailRow("Batteria Stimata", "%.1f kWh".format(locale, data.logicaControllo.kwhStimatiInBatteria))
             DetailRow("Previsione Ricarica", "${data.logicaControllo.previsioneRicaricaBatteryPercent}%")
             
-            DetailRow("Prev. Solare Domani", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.previsioneSolareDomaniKwh))
+            DetailRow("Prev. Solare Domani", "%.1f kWh".format(locale, data.logicaControllo.previsioneSolareDomaniKwh))
             DetailRow("Data Prev. Solare", data.logicaControllo.previsioneSolareData)
             
-            DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.cuscinettoSicurezzaKwh))
-            DetailRow("Cuscinetto Richiesto", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.cuscinettoRichiestoKwh))
+            DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(locale, data.logicaControllo.cuscinettoSicurezzaKwh))
+            DetailRow("Cuscinetto Richiesto", "%.1f kWh".format(locale, data.logicaControllo.cuscinettoRichiestoKwh))
             
             DetailRow("Portata VMC Stimata", "${data.logicaControllo.vmcPortataStimataM3h} m³/h")
             DetailRow("Stanza Rilevamento VMC", data.logicaControllo.stanzaRilevamentoVmc.ifEmpty { "N/D" })

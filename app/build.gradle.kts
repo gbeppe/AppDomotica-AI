@@ -39,12 +39,12 @@ val buildTime: String by lazy {
 
 android {
     namespace = "com.domopi.app"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.domopi.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 37
         versionCode = 8
         versionName = "6.3"
 

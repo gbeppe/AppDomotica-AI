@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -370,25 +371,28 @@ fun MainDashboard(
 
                     // 4. Puffer
                     item {
+                        val locale = LocalConfiguration.current.locales[0]
                         SummaryRow(
                             Icons.Default.Waves, 
                             "Puffer", 
-                            "${"%.1f".format(java.util.Locale.getDefault(), energyData.pufferAcs)}° - ${"%.1f".format(java.util.Locale.getDefault(), energyData.pufferAlto)}° - ${"%.1f".format(java.util.Locale.getDefault(), energyData.pufferBasso)}°"
+                            "${"%.1f".format(locale, energyData.pufferAcs)}° - ${"%.1f".format(locale, energyData.pufferAlto)}° - ${"%.1f".format(locale, energyData.pufferBasso)}°"
                         )
                     }
                     
                     item {
+                        val locale = LocalConfiguration.current.locales[0]
                         SummaryRow(
                             Icons.Default.Thermostat, 
                             "Soggiorno", 
-                            "%.1f°C".format(java.util.Locale.getDefault(), envState.living.temperature)
+                            "%.1f°C".format(locale, envState.living.temperature)
                         )
                     }
                     item {
+                        val locale = LocalConfiguration.current.locales[0]
                         SummaryRow(
                             Icons.Default.Bed, 
                             "Camera", 
-                            "%.1f°C".format(java.util.Locale.getDefault(), envState.bedroom.temperature)
+                            "%.1f°C".format(locale, envState.bedroom.temperature)
                         )
                     }
                 }

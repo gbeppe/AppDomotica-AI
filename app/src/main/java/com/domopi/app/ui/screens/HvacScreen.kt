@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.MqttManager
@@ -137,9 +138,10 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            val locale = LocalConfiguration.current.locales[0]
                             Column {
                                 Text("Temperatura Collettore", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("${"%.1f".format(Locale.getDefault(), energyData.solarCollectorTemp)}°C", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                                Text("${"%.1f".format(locale, energyData.solarCollectorTemp)}°C", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                             }
                             
                             Column(horizontalAlignment = Alignment.End) {
@@ -379,11 +381,12 @@ fun ThermostatCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                val locale = LocalConfiguration.current.locales[0]
                 // Temperatura Attuale
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("ATTUALE", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     Text(
-                        text = "${"%.1f".format(Locale.getDefault(), state.currentTemp)}°",
+                        text = "${"%.1f".format(locale, state.currentTemp)}°",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = if (state.power) Color.Red else MaterialTheme.colorScheme.onSurface
@@ -399,7 +402,7 @@ fun ThermostatCard(
                     ) {
                         Text("SETPOINT", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(
-                            "${"%.1f".format(Locale.getDefault(), state.targetTemp)}°C",
+                            "${"%.1f".format(locale, state.targetTemp)}°C",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -458,7 +461,7 @@ fun LimitAdjustment(label: String, value: Float, onValueChange: (Float) -> Unit)
                 Icon(Icons.Default.Remove, null, modifier = Modifier.size(16.dp))
             }
             Text(
-                text = "${"%.1f".format(Locale.getDefault(), value)}°",
+                text = "${"%.1f".format(LocalConfiguration.current.locales[0], value)}°",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -517,7 +520,7 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
                     readOnly = true,
                     label = { Text("Modalità") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
                 ExposedDropdownMenu(
