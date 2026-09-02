@@ -1,74 +1,122 @@
+@file:OptIn(InternalSerializationApi::class)
 package com.domopi.app.data
 
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class AiManagedData(
     val timestamp: Long = 0,
-    val data_ora_formattata: String = "",
-    val stagione_attiva: String = "",
-    val metriche_elettriche: MetricheElettriche = MetricheElettriche(),
-    val metriche_ambientali: MetricheAmbientali = MetricheAmbientali(),
-    val logica_controllo: LogicaControllo = LogicaControllo(),
-    val stato_condizionatore: StatoCondizionatore = StatoCondizionatore(),
-    val stato_vmc: StatoVmc = StatoVmc()
+    @SerialName("data_ora_formattata")
+    val dataOraFormattata: String = "",
+    @SerialName("stagione_attiva")
+    val stagioneAttiva: String = "",
+    @SerialName("metriche_elettriche")
+    val metricheElettriche: MetricheElettriche = MetricheElettriche(),
+    @SerialName("metriche_ambientali")
+    val metricheAmbientali: MetricheAmbientali = MetricheAmbientali(),
+    @SerialName("logica_controllo")
+    val logicaControllo: LogicaControllo = LogicaControllo(),
+    @SerialName("stato_condizionatore")
+    val statoCondizionatore: StatoCondizionatore = StatoCondizionatore(),
+    @SerialName("stato_vmc")
+    val statoVmc: StatoVmc = StatoVmc(),
 )
 
 @Serializable
 data class MetricheElettriche(
-    val produzione_fv_w: Float = 0f,
-    val consumo_casa_w: Float = 0f,
-    val surplus_w: Float = 0f,
-    val grid_power_w: Float = 0f,
-    val grid_import_w: Float = 0f,
-    val grid_export_w: Float = 0f,
-    val battery_power_w: Float = 0f,
-    val battery_charge_w: Float = 0f,
-    val battery_discharge_w: Float = 0f,
-    val powerwall_soc_percent: Float = 0f,
-    val consumo_ac_w: Float = 0f,
-    val consumo_medio_storico_fascia_w: Float = 0f
+    @SerialName("produzione_fv_w")
+    val produzioneFvW: Float = 0f,
+    @SerialName("consumo_casa_w")
+    val consumoCasaW: Float = 0f,
+    @SerialName("surplus_w")
+    val surplusW: Float = 0f,
+    @SerialName("grid_power_w")
+    val gridPowerW: Float = 0f,
+    @SerialName("grid_import_w")
+    val gridImportW: Float = 0f,
+    @SerialName("grid_export_w")
+    val gridExportW: Float = 0f,
+    @SerialName("battery_power_w")
+    val batteryPowerW: Float = 0f,
+    @SerialName("battery_charge_w")
+    val batteryChargeW: Float = 0f,
+    @SerialName("battery_discharge_w")
+    val batteryDischargeW: Float = 0f,
+    @SerialName("powerwall_soc_percent")
+    val powerwallSocPercent: Float = 0f,
+    @SerialName("consumo_ac_w")
+    val consumoAcW: Float = 0f,
+    @SerialName("consumo_medio_storico_fascia_w")
+    val consumoMedioStoricoFasciaW: Float = 0f,
 )
 
 @Serializable
 data class MetricheAmbientali(
-    val temp_cameraMatrimoniale: Float = 0f,
-    val temperatura_c: Float = 0f,
+    @SerialName("temp_cameraMatrimoniale")
+    val tempCameraMatrimoniale: Float = 0f,
+    @SerialName("temperatura_c")
+    val temperaturaC: Float = 0f,
     val humidex: Float = 0f,
-    val humidex_living: Float = 0f,
-    val humidex_bedroom: Float = 0f,
-    val altitudine_sole: Float = 0f
+    @SerialName("humidex_living")
+    val humidexLiving: Float = 0f,
+    @SerialName("humidex_bedroom")
+    val humidexBedroom: Float = 0f,
+    @SerialName("altitudine_sole")
+    val altitudineSole: Float = 0f,
 )
 
 @Serializable
 data class LogicaControllo(
-    val vmc_portata_stimata_m3h: Int = 0,
-    val stanza_rilevamento_vmc: String = "",
-    val soglia_attivazione_applicata: Float = 0f,
-    val soc_minimo_applied: Float = 0f,
-    val tempo_mancante_anticiclo_minuti: Int = 0,
-    val previsione_solare_domani_kwh: Float = 0f,
-    val previsione_solare_data: String = "",
-    val previsione_ricarica_battery_percent: Int = 0,
-    val kwh_stimati_in_batteria: Float = 0f,
-    val blocco_emergenza_attivo: Boolean = false,
-    val cuscinetto_sicurezza_kwh: Float = 0f,
-    val cuscinetto_richiesto_kwh: Float = 0f,
-    val stagione_attuale: String = ""
+    @SerialName("vmc_portata_stimata_m3h")
+    val vmcPortataStimataM3h: Int = 0,
+    @SerialName("stanza_rilevamento_vmc")
+    val stanzaRilevamentoVmc: String = "",
+    @SerialName("soglia_attivazione_applicata")
+    val sogliaAttivazioneApplicata: Float = 0f,
+    @SerialName("soc_minimo_applied")
+    val socMinimoApplied: Float = 0f,
+    @SerialName("tempo_mancante_anticiclo_minuti")
+    val tempoMancanteAnticicloMinuti: Int = 0,
+    @SerialName("previsione_solare_domani_kwh")
+    val previsioneSolareDomaniKwh: Float = 0f,
+    @SerialName("previsione_solare_data")
+    val previsioneSolareData: String = "",
+    @SerialName("previsione_ricarica_battery_percent")
+    val previsioneRicaricaBatteryPercent: Int = 0,
+    @SerialName("kwh_stimati_in_batteria")
+    val kwhStimatiInBatteria: Float = 0f,
+    @SerialName("blocco_emergenza_attivo")
+    val bloccoEmergenzaAttivo: Boolean = false,
+    @SerialName("cuscinetto_sicurezza_kwh")
+    val cuscinettoSicurezzaKwh: Float = 0f,
+    @SerialName("cuscinetto_richiesto_kwh")
+    val cuscinettoRichiestoKwh: Float = 0f,
+    @SerialName("stagione_attuale")
+    val stagioneAttuale: String = "",
 )
 
 @Serializable
 data class StatoCondizionatore(
-    val stato_attuale: String = "",
-    val motivo_logica: String = "",
-    val temperatura_impostata_c: Float = 0f,
-    val modalita_aria: String = ""
+    @SerialName("stato_attuale")
+    val statoAttuale: String = "",
+    @SerialName("motivo_logica")
+    val motivoLogica: String = "",
+    @SerialName("temperatura_impostata_c")
+    val temperaturaImpostataC: Float = 0f,
+    @SerialName("modalita_aria")
+    val modalitaAria: String = "",
 )
 
 @Serializable
 data class StatoVmc(
-    val velocita_attuale: Int = 0,
-    val motivo_logica: String = "",
-    val humidex_esterno: Float = 0f,
-    val temperatura_esterna_c: Float = 0f
+    @SerialName("velocita_attuale")
+    val velocitaAttuale: Int = 0,
+    @SerialName("motivo_logica")
+    val motivoLogica: String = "",
+    @SerialName("humidex_esterno")
+    val humidexEsterno: Float = 0f,
+    @SerialName("temperatura_esterna_c")
+    val temperaturaEsternaC: Float = 0f,
 )

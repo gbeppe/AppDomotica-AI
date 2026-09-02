@@ -302,21 +302,21 @@ fun MainDashboard(
                     }
 
                     // Stato e Logica AC
-                    if (aiData.stato_condizionatore.stato_attuale.isNotEmpty()) {
+                    if (aiData.statoCondizionatore.statoAttuale.isNotEmpty()) {
                         item {
                             SummaryRow(
                                 icon = Icons.Default.AcUnit,
                                 label = "Stato AC",
-                                value = aiData.stato_condizionatore.stato_attuale
+                                value = aiData.statoCondizionatore.statoAttuale
                             )
                         }
                     }
-                    if (aiData.stato_condizionatore.motivo_logica.isNotEmpty()) {
+                    if (aiData.statoCondizionatore.motivoLogica.isNotEmpty()) {
                         item {
                             SummaryRow(
                                 icon = Icons.Default.Info,
                                 label = "Logica AC",
-                                value = aiData.stato_condizionatore.motivo_logica
+                                value = aiData.statoCondizionatore.motivoLogica
                             )
                         }
                     }
@@ -507,37 +507,37 @@ fun DomainCard(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(8.dp)
                     ) {
-                        Text(aiData.stato_condizionatore.stato_attuale, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                        Text("Set: ${aiData.stato_condizionatore.temperatura_impostata_c}°C", style = MaterialTheme.typography.bodyMedium)
-                        Text(aiData.stato_condizionatore.modalita_aria, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text(aiData.statoCondizionatore.statoAttuale, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                        Text("Set: ${aiData.statoCondizionatore.temperaturaImpostataC}°C", style = MaterialTheme.typography.bodyMedium)
+                        Text(aiData.statoCondizionatore.modalitaAria, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         
                         Spacer(Modifier.height(12.dp))
                         
                         // Griglia Dettagli Logica (Tutti i 12 parametri)
-                        val logica = aiData.logica_controllo
+                        val logica = aiData.logicaControllo
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("SOC", "${logica.soc_minimo_applied.toInt()}%")
-                                CompactDetail("Humidex", "%.1f".format(logica.soglia_attivazione_applicata))
-                                CompactDetail("Timer", "${logica.tempo_mancante_anticiclo_minuti}m")
+                                CompactDetail("SOC", "${logica.socMinimoApplied.toInt()}%")
+                                CompactDetail("Humidex", "%.1f".format(logica.sogliaAttivazioneApplicata))
+                                CompactDetail("Timer", "${logica.tempoMancanteAnticicloMinuti}m")
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("Batteria", "%.1f".format(logica.kwh_stimati_in_batteria))
-                                CompactDetail("Carica", "${logica.previsione_ricarica_battery_percent}%")
-                                CompactDetail("Solare", "%.1f".format(logica.previsione_solare_domani_kwh))
+                                CompactDetail("Batteria", "%.1f".format(logica.kwhStimatiInBatteria))
+                                CompactDetail("Carica", "${logica.previsioneRicaricaBatteryPercent}%")
+                                CompactDetail("Solare", "%.1f".format(logica.previsioneSolareDomaniKwh))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("Data Sol.", logica.previsione_solare_data.ifEmpty { "N/D" })
-                                CompactDetail("Cusc. Sic.", "%.1f".format(logica.cuscinetto_sicurezza_kwh))
-                                CompactDetail("Cusc. Ric.", "%.1f".format(logica.cuscinetto_richiesto_kwh))
+                                CompactDetail("Data Sol.", logica.previsioneSolareData.ifEmpty { "N/D" })
+                                CompactDetail("Cusc. Sic.", "%.1f".format(logica.cuscinettoSicurezzaKwh))
+                                CompactDetail("Cusc. Ric.", "%.1f".format(logica.cuscinettoRichiestoKwh))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("VMC", "${logica.vmc_portata_stimata_m3h}")
-                                CompactDetail("Stanza", logica.stanza_rilevamento_vmc.ifEmpty { "N/D" })
-                                CompactDetail("Blocco", if (logica.blocco_emergenza_attivo) "ON" else "OFF")
+                                CompactDetail("VMC", "${logica.vmcPortataStimataM3h}")
+                                CompactDetail("Stanza", logica.stanzaRilevamentoVmc.ifEmpty { "N/D" })
+                                CompactDetail("Blocco", if (logica.bloccoEmergenzaAttivo) "ON" else "OFF")
                             }
                         }
                     }

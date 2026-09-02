@@ -294,29 +294,29 @@ class MqttManager {
         val intVal = floatVal.toInt()
         _aiManagedData.update { current ->
             val updatedLogic = when(prop) {
-                "soc_minimo_applied" -> current.logica_controllo.copy(soc_minimo_applied = value)
-                "soglia_attivazione_applicata" -> current.logica_controllo.copy(soglia_attivazione_applicata = value)
-                "tempo_mancante_anticiclo_minuti" -> current.logica_controllo.copy(tempo_mancante_anticiclo_minuti = intVal)
-                "kwh_stimati_in_batteria" -> current.logica_controllo.copy(kwh_stimati_in_batteria = value)
-                "previsione_ricarica_batteria_percent" -> current.logica_controllo.copy(previsione_ricarica_battery_percent = intVal)
-                "previsione_solare_data" -> current.logica_controllo.copy(previsione_solare_data = raw)
-                "previsione_solare_domani_kwh" -> current.logica_controllo.copy(previsione_solare_domani_kwh = value)
-                "blocco_emergenza_attivo" -> current.logica_controllo.copy(blocco_emergenza_attivo = isOn)
-                "cuscinetto_sicurezza_kwh" -> current.logica_controllo.copy(cuscinetto_sicurezza_kwh = value)
-                "cuscinetto_richiesto_kwh" -> current.logica_controllo.copy(cuscinetto_richiesto_kwh = value)
-                "stagione_attuale" -> current.logica_controllo.copy(stagione_attuale = raw)
-                "stanza_rilevamento_vmc" -> current.logica_controllo.copy(stanza_rilevamento_vmc = raw)
+                "soc_minimo_applied" -> current.logicaControllo.copy(socMinimoApplied = value)
+                "soglia_attivazione_applicata" -> current.logicaControllo.copy(sogliaAttivazioneApplicata = value)
+                "tempo_mancante_anticiclo_minuti" -> current.logicaControllo.copy(tempoMancanteAnticicloMinuti = intVal)
+                "kwh_stimati_in_batteria" -> current.logicaControllo.copy(kwhStimatiInBatteria = value)
+                "previsione_ricarica_batteria_percent" -> current.logicaControllo.copy(previsioneRicaricaBatteryPercent = intVal)
+                "previsione_solare_data" -> current.logicaControllo.copy(previsioneSolareData = raw)
+                "previsione_solare_domani_kwh" -> current.logicaControllo.copy(previsioneSolareDomaniKwh = value)
+                "blocco_emergenza_attivo" -> current.logicaControllo.copy(bloccoEmergenzaAttivo = isOn)
+                "cuscinetto_sicurezza_kwh" -> current.logicaControllo.copy(cuscinettoSicurezzaKwh = value)
+                "cuscinetto_richiesto_kwh" -> current.logicaControllo.copy(cuscinettoRichiestoKwh = value)
+                "stagione_attuale" -> current.logicaControllo.copy(stagioneAttuale = raw)
+                "stanza_rilevamento_vmc" -> current.logicaControllo.copy(stanzaRilevamentoVmc = raw)
                 "vmc_portata_stimata_m3h" -> {
-                    val updated = current.logica_controllo.copy(vmc_portata_stimata_m3h = intVal)
+                    val updated = current.logicaControllo.copy(vmcPortataStimataM3h = intVal)
                     // Sincronizziamo lo stato VMC per l'animazione
                     _hvacState.update { hvac ->
                         hvac.copy(vmc = hvac.vmc.copy(active = intVal > 0))
                     }
                     updated
                 }
-                else -> current.logica_controllo
+                else -> current.logicaControllo
             }
-            current.copy(logica_controllo = updatedLogic)
+            current.copy(logicaControllo = updatedLogic)
         }
     }
 
@@ -324,28 +324,28 @@ class MqttManager {
         var updatedStato: StatoCondizionatore? = null
         _aiManagedData.update { current ->
             val updatedAc = when(prop) {
-                "modalita_aria" -> current.stato_condizionatore.copy(modalita_aria = raw)
-                "temperatura_impostata_c" -> current.stato_condizionatore.copy(temperatura_impostata_c = value)
-                "motivo_logica" -> current.stato_condizionatore.copy(motivo_logica = raw)
-                "stato_attuale" -> current.stato_condizionatore.copy(stato_attuale = raw)
-                else -> current.stato_condizionatore
+                "modalita_aria" -> current.statoCondizionatore.copy(modalitaAria = raw)
+                "temperatura_impostata_c" -> current.statoCondizionatore.copy(temperaturaImpostataC = value)
+                "motivo_logica" -> current.statoCondizionatore.copy(motivoLogica = raw)
+                "stato_attuale" -> current.statoCondizionatore.copy(statoAttuale = raw)
+                else -> current.statoCondizionatore
             }
             updatedStato = updatedAc
-            current.copy(stato_condizionatore = updatedAc)
+            current.copy(statoCondizionatore = updatedAc)
         }
 
         // Sincronizziamo hvacState per l'animazione degli impianti
         updatedStato?.let { acData ->
             _hvacState.update { hvac ->
-                val statusUpper = acData.stato_attuale.uppercase()
-                val isActive = acData.stato_attuale.isNotEmpty() &&
+                val statusUpper = acData.statoAttuale.uppercase()
+                val isActive = acData.statoAttuale.isNotEmpty() &&
                         statusUpper != "OFF" &&
                         statusUpper != "DISATTIVATO" &&
                         statusUpper != "SPENTO"
                 hvac.copy(ac = hvac.ac.copy(
                     active = isActive,
-                    mode = acData.modalita_aria,
-                    tempSet = acData.temperatura_impostata_c
+                    mode = acData.modalitaAria,
+                    tempSet = acData.temperaturaImpostataC
                 ))
             }
         }
@@ -383,8 +383,8 @@ class MqttManager {
         if (device == "living") {
             _aiManagedData.update { current ->
                 when(prop) {
-                    "temperature" -> current.copy(metriche_ambientali = current.metriche_ambientali.copy(temperatura_c = value))
-                    "humidex" -> current.copy(metriche_ambientali = current.metriche_ambientali.copy(humidex = value, humidex_living = value))
+                    "temperature" -> current.copy(metricheAmbientali = current.metricheAmbientali.copy(temperaturaC = value))
+                    "humidex" -> current.copy(metricheAmbientali = current.metricheAmbientali.copy(humidex = value, humidexLiving = value))
                     else -> current
                 }
             }

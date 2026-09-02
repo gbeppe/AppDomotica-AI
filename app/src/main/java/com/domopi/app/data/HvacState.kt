@@ -1,5 +1,7 @@
+@file:OptIn(InternalSerializationApi::class)
 package com.domopi.app.data
 
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -19,6 +19,7 @@ import com.domopi.app.data.MqttManager
 import com.domopi.app.ui.components.NumericStepper
 
 import com.domopi.app.ui.theme.SolarGreen
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -263,7 +264,7 @@ fun StatusCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Stato Operativo", style = MaterialTheme.typography.titleMedium)
-                val color = when (data.stato_condizionatore.modalita_aria) {
+                val color = when (data.statoCondizionatore.modalitaAria) {
                     "Raffrescamento" -> Color(0xFF2196F3)
                     "Riscaldamento" -> Color(0xFFFF5722)
                     "Deumidificazione" -> Color(0xFF009688)
@@ -274,7 +275,7 @@ fun StatusCard(
                     shape = MaterialTheme.shapes.small
                 ) {
                     Text(
-                        text = data.stato_condizionatore.stato_attuale,
+                        text = data.statoCondizionatore.statoAttuale,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         color = color,
                         style = MaterialTheme.typography.labelLarge
@@ -283,7 +284,7 @@ fun StatusCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = data.stato_condizionatore.motivo_logica,
+                text = data.statoCondizionatore.motivoLogica,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -291,7 +292,7 @@ fun StatusCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 MetricItem("Temp. Int.", "%.1f°C".format(java.util.Locale.getDefault(), envState.living.temperature))
                 MetricItem("Humidex", "%.1f".format(java.util.Locale.getDefault(), envState.living.humidex))
-                MetricItem("Setpoint", "%.1f°C".format(java.util.Locale.getDefault(), data.stato_condizionatore.temperatura_impostata_c))
+                MetricItem("Setpoint", "%.1f°C".format(Locale.getDefault(), data.statoCondizionatore.temperaturaImpostataC))
                 MetricItem("VMC", "${hvacState.vmc.speed}")
             }
         }
@@ -303,26 +304,26 @@ fun SystemDetailsCard(data: com.domopi.app.data.AiManagedData) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Dettagli Logica", style = MaterialTheme.typography.titleMedium)
-            DetailRow("Stagione Attiva", data.logica_controllo.stagione_attuale)
+            DetailRow("Stagione Attiva", data.logicaControllo.stagioneAttuale)
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
             
-            DetailRow("SOC Minimo Applicato", "%.1f%%".format(java.util.Locale.getDefault(), data.logica_controllo.soc_minimo_applied))
-            DetailRow("Soglia Humidex Reale", "%.1f".format(java.util.Locale.getDefault(), data.logica_controllo.soglia_attivazione_applicata))
-            DetailRow("Timer Anticiclo", "${data.logica_controllo.tempo_mancante_anticiclo_minuti} min")
-            DetailRow("Batteria Stimata", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.kwh_stimati_in_batteria))
-            DetailRow("Previsione Ricarica", "${data.logica_controllo.previsione_ricarica_battery_percent}%")
+            DetailRow("SOC Minimo Applicato", "%.1f%%".format(Locale.getDefault(), data.logicaControllo.socMinimoApplied))
+            DetailRow("Soglia Humidex Reale", "%.1f".format(Locale.getDefault(), data.logicaControllo.sogliaAttivazioneApplicata))
+            DetailRow("Timer Anticiclo", "${data.logicaControllo.tempoMancanteAnticicloMinuti} min")
+            DetailRow("Batteria Stimata", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.kwhStimatiInBatteria))
+            DetailRow("Previsione Ricarica", "${data.logicaControllo.previsioneRicaricaBatteryPercent}%")
             
-            DetailRow("Prev. Solare Domani", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.previsione_solare_domani_kwh))
-            DetailRow("Data Prev. Solare", data.logica_controllo.previsione_solare_data)
+            DetailRow("Prev. Solare Domani", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.previsioneSolareDomaniKwh))
+            DetailRow("Data Prev. Solare", data.logicaControllo.previsioneSolareData)
             
-            DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.cuscinetto_sicurezza_kwh))
-            DetailRow("Cuscinetto Richiesto", "%.1f kWh".format(java.util.Locale.getDefault(), data.logica_controllo.cuscinetto_richiesto_kwh))
+            DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.cuscinettoSicurezzaKwh))
+            DetailRow("Cuscinetto Richiesto", "%.1f kWh".format(Locale.getDefault(), data.logicaControllo.cuscinettoRichiestoKwh))
             
-            DetailRow("Portata VMC Stimata", "${data.logica_controllo.vmc_portata_stimata_m3h} m³/h")
-            DetailRow("Stanza Rilevamento VMC", data.logica_controllo.stanza_rilevamento_vmc.ifEmpty { "N/D" })
+            DetailRow("Portata VMC Stimata", "${data.logicaControllo.vmcPortataStimataM3h} m³/h")
+            DetailRow("Stanza Rilevamento VMC", data.logicaControllo.stanzaRilevamentoVmc.ifEmpty { "N/D" })
             
-            DetailRow("Blocco Emergenza", if (data.logica_controllo.blocco_emergenza_attivo) "ATTIVO" else "Disattivo")
+            DetailRow("Blocco Emergenza", if (data.logicaControllo.bloccoEmergenzaAttivo) "ATTIVO" else "Disattivo")
         }
     }
 }
