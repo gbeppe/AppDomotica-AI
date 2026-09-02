@@ -28,7 +28,7 @@ fun AmbientiScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
             )
         }
     ) { padding ->

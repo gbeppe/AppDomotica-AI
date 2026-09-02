@@ -24,7 +24,7 @@ fun DiagnosisScreen(
     mqttManager: MqttManager,
     settingsManager: SettingsManager,
     connectivityManager: ZaiConnectivityManager,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()
     val trafficLog by mqttManager.trafficLog.collectAsState()
@@ -32,7 +32,7 @@ fun DiagnosisScreen(
     
     val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
-    var tcOnline by remember { mutableStateOf(false) }
+    var tcOnline by remember { mutableStateOf(value = false) }
 
     LaunchedEffect(tcIp, tcPort) {
         tcOnline = connectivityManager.checkServiceReachable(tcIp, tcPort.toIntOrNull() ?: 8083)

@@ -43,7 +43,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
             )
         }
     ) { padding ->
@@ -504,7 +504,7 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
             Spacer(Modifier.height(16.dp))
 
             // Modalità Operativa
-            var expanded by remember { mutableStateOf(false) }
+            var expanded by remember { mutableStateOf(value = false) }
             val modes = listOf("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqua Sanitaria", "Manuale")
             
             ExposedDropdownMenuBox(

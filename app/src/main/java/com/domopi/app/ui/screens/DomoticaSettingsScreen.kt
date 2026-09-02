@@ -56,7 +56,9 @@ fun DomoticaSettingsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     description = "Ottimizza i consumi e simula presenza quando sei fuori",
                     icon = Icons.Default.FlightTakeoff,
                     checked = settings.holidayMode,
-                    onCheckedChange = { mqttManager.publish("zara/interface/settings/holiday_mode/cmd", it.toString()) }
+                    onCheckedChange = {
+                        mqttManager.publish("zara/interface/settings/holiday_mode/cmd", it.toString())
+                    }
                 )
             }
 

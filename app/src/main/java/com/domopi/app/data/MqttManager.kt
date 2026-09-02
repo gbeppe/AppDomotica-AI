@@ -29,7 +29,7 @@ data class EnergyData(
 data class SensorData(
     val temperature: Float = 0f,
     val humidity: Float = 0f,
-    val humidex: Float = 0f
+    val humidex: Float = 0f,
 )
 
 data class EnvironmentState(
@@ -87,7 +87,7 @@ class MqttManager {
     private val _hvacState = MutableStateFlow(HvacState())
     val hvacState: StateFlow<HvacState> = _hvacState
 
-    private val _isConnected = MutableStateFlow(false)
+    private val _isConnected = MutableStateFlow(value = false)
     val isConnected: StateFlow<Boolean> = _isConnected
 
     private val _trafficLog = MutableStateFlow<List<String>>(emptyList())
@@ -103,7 +103,7 @@ class MqttManager {
     private fun updateRateCounter() {
         val now = System.currentTimeMillis()
         messageCounter.incrementAndGet()
-        if (now - lastRateCalculationTime >= 1000) {
+        if ((now - lastRateCalculationTime) >= 1000) {
             _messageRate.value = messageCounter.getAndSet(0)
             lastRateCalculationTime = now
         }
@@ -157,7 +157,8 @@ class MqttManager {
                 if (!user.isNullOrEmpty()) userName = user
                 if (!pass.isNullOrEmpty()) password = pass.toCharArray()
             }
-            mqttClient?.setCallback(object : MqttCallbackExtended {
+            mqttClient?.setCallback(
+                object : MqttCallbackExtended {
                 override fun connectComplete(reconnect: Boolean, serverURI: String?) {
                     Log.i("MQTT", "Connesso a $serverURI")
                     addTrafficLog("CONNESSO: $serverURI")

@@ -20,7 +20,7 @@ import com.domopi.app.ui.components.CameraStreamComponent
 fun CamerasScreen(
     settingsManager: SettingsManager,
     connectivityManager: ZaiConnectivityManager,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val connectionMode by connectivityManager.connectionMode.collectAsState()
     
@@ -82,7 +82,7 @@ fun CamerasScreen(
                 )
                 
                 IconButton(
-                    onClick = { if (selectedCamIndex < cams.size - 1) selectedCamIndex++ else selectedCamIndex = 0 }
+                    onClick = { if (selectedCamIndex < (cams.size - 1)) selectedCamIndex++ else selectedCamIndex = 0 }
                 ) {
                     Icon(Icons.Default.ChevronRight, "Successiva", modifier = Modifier.size(32.dp))
                 }
