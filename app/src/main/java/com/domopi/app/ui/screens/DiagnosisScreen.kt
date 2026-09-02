@@ -16,14 +16,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.SettingsManager
-import com.domopi.app.data.DomoPiConnectivityManager
+import com.domopi.app.data.ZaiConnectivityManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosisScreen(
     mqttManager: MqttManager,
     settingsManager: SettingsManager,
-    connectivityManager: DomoPiConnectivityManager,
+    connectivityManager: ZaiConnectivityManager,
     onBack: () -> Unit
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()

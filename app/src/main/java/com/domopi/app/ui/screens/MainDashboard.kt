@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.ConnectionMode
-import com.domopi.app.data.DomoPiConnectivityManager
+import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.components.EnergyFlowComponent
@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainDashboard(
     mqttManager: MqttManager,
-    connectivityManager: DomoPiConnectivityManager,
+    connectivityManager: ZaiConnectivityManager,
     settingsManager: SettingsManager,
     initialPage: Int,
     onPageChanged: (Int) -> Unit,
@@ -415,7 +415,7 @@ fun DomainCard(
     page: Int, 
     mqttManager: MqttManager, 
     settingsManager: SettingsManager,
-    connectivityManager: DomoPiConnectivityManager,
+    connectivityManager: ZaiConnectivityManager,
     isVisible: Boolean,
     isAdminMode: Boolean,
     onNavigate: (String) -> Unit

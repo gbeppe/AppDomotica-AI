@@ -15,7 +15,7 @@ enum class ConnectionMode {
     LOCAL, REMOTE, OFFLINE
 }
 
-class DomoPiConnectivityManager(private val context: Context) {
+class ZaiConnectivityManager(private val context: Context) {
 
     private val _connectionMode = MutableStateFlow(ConnectionMode.LOCAL)
     val connectionMode: StateFlow<ConnectionMode> = _connectionMode

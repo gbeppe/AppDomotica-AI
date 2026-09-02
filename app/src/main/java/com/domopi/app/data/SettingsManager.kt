@@ -66,7 +66,7 @@ class SettingsManager(private val context: Context) {
     val domopiUser: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_USER] ?: "domopi" }.distinctUntilChanged()
     val domopiPass: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_PASS] ?: "domopimqtt" }.distinctUntilChanged()
 
-    val emoncmsIp: Flow<String> = context.dataStore.data.map { it[EMONCMS_LOCAL_IP] ?: "192.168.1.5" }.distinctUntilChanged()
+    val emoncmsIp: Flow<String> = context.dataStore.data.map { it[EMONCMS_LOCAL_IP] ?: "192.168.1.15" }.distinctUntilChanged()
     val emoncmsRemoteIp: Flow<String> = context.dataStore.data.map { it[EMONCMS_REMOTE_IP] ?: "" }.distinctUntilChanged()
 
     suspend fun saveTinycam(localIp: String, remoteIp: String, port: String, user: String, pass: String) {

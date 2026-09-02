@@ -8,7 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.domopi.app.ui.theme.DomoPiTheme
 import com.domopi.app.ui.screens.*
-import com.domopi.app.data.DomoPiConnectivityManager
+import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.ConnectionMode
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         settingsManager = SettingsManager(this)
-        val connectivityManager = DomoPiConnectivityManager(this)
+        val connectivityManager = ZaiConnectivityManager(this)
         mqttManager = MqttManager()
 
         // --- Gateway Centrale .20 (Z-AI) ---

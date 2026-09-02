@@ -1,5 +1,6 @@
 package com.domopi.app.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -20,8 +21,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.MqttManager
+import com.domopi.app.data.PalazzettiStatus
+import com.domopi.app.data.ThermostatStatus
 import com.domopi.app.ui.components.PufferTankComponent
 import com.domopi.app.ui.theme.SolarGreen
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +33,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val hvacState by mqttManager.hvacState.collectAsState()
     val energyData by mqttManager.energyData.collectAsState()
 
-    androidx.activity.compose.BackHandler { onBack() }
+    BackHandler { onBack() }
 
     Scaffold(
         topBar = {
@@ -50,7 +54,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. VMC (Unica scheda mantenuta come da istruzioni)
+            // 1. VMC
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -88,7 +92,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 }
             }
 
-            // 2. Temperature Puffer (Riserva Energia)
+            // 2. Temperature Puffer
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -135,7 +139,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                         ) {
                             Column {
                                 Text("Temperatura Collettore", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("${"%.1f".format(java.util.Locale.getDefault(), energyData.solarCollectorTemp)}°C", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                                Text("${"%.1f".format(Locale.getDefault(), energyData.solarCollectorTemp)}°C", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                             }
                             
                             Column(horizontalAlignment = Alignment.End) {
@@ -145,7 +149,11 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                                         val rotateTransition = rememberInfiniteTransition(label = "pump_rotation")
                                         val angle by rotateTransition.animateFloat(
                                             initialValue = 0f, targetValue = 360f,
-                                            animationSpec = infiniteRepeatable(tween(1000 / (energyData.solarPumpSpeed.coerceAtLeast(1)), easing = LinearEasing))
+                                            animationSpec = infiniteRepeatable(
+                                                animation = tween(1000 / (energyData.solarPumpSpeed.coerceAtLeast(1)), easing = LinearEasing),
+                                                repeatMode = RepeatMode.Restart
+                                            ),
+                                            label = "rotation"
                                         )
                                         Icon(
                                             Icons.Default.Autorenew, 
@@ -224,7 +232,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 }
             }
 
-            // 4. Riscaldamento a Pavimento
+            // 5. Riscaldamento a Pavimento
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -265,7 +273,11 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                             val rotateTransition = rememberInfiniteTransition(label = "pump_anim")
                             val angle by rotateTransition.animateFloat(
                                 initialValue = 0f, targetValue = 360f,
-                                animationSpec = infiniteRepeatable(tween(2000, easing = LinearEasing))
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(2000, easing = LinearEasing),
+                                    repeatMode = RepeatMode.Restart
+                                ),
+                                label = "rotation"
                             )
                             
                             Icon(
@@ -296,12 +308,12 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     }
                 }
             }
-            // 5. Termocamino Palazzetti
+            // 6. Termocamino Palazzetti
             item {
                 FireplaceCard(hvacState.palazzetti, mqttManager)
             }
 
-            // 6. Termostati Ambienti
+            // 7. Termostati Ambienti
             item {
                 Text(
                     "Termostati", 
@@ -335,7 +347,7 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
 @Composable
 fun ThermostatCard(
     title: String,
-    state: com.domopi.app.data.ThermostatStatus,
+    state: ThermostatStatus,
     deviceId: String,
     mqttManager: MqttManager
 ) {
@@ -367,11 +379,11 @@ fun ThermostatCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Temperatura Attuale (Gauge stilizzato)
+                // Temperatura Attuale
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("ATTUALE", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     Text(
-                        text = "${"%.1f".format(java.util.Locale.getDefault(), state.currentTemp)}°",
+                        text = "${"%.1f".format(Locale.getDefault(), state.currentTemp)}°",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = if (state.power) Color.Red else MaterialTheme.colorScheme.onSurface
@@ -387,7 +399,7 @@ fun ThermostatCard(
                     ) {
                         Text("SETPOINT", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(
-                            "${"%.1f".format(java.util.Locale.getDefault(), state.targetTemp)}°C",
+                            "${"%.1f".format(Locale.getDefault(), state.targetTemp)}°C",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -395,7 +407,9 @@ fun ThermostatCard(
                     }
                     Slider(
                         value = state.targetTemp.coerceIn(16f, 22f),
-                        onValueChange = { mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(java.util.Locale.US, it)) },
+                        onValueChange = {
+                            mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(Locale.US, it))
+                        },
                         valueRange = 16f..22f,
                         steps = 11,
                         colors = SliderDefaults.colors(
@@ -419,7 +433,7 @@ fun ThermostatCard(
                     value = state.minTemp,
                     onValueChange = { 
                         val newValue = it.coerceIn(16f, 22f)
-                        mqttManager.publish("zara/interface/climate/$deviceId/min_temperature/cmd", "%.1f".format(java.util.Locale.US, newValue)) 
+                        mqttManager.publish("zara/interface/climate/$deviceId/min_temperature/cmd", "%.1f".format(Locale.US, newValue)) 
                     }
                 )
                 LimitAdjustment(
@@ -427,7 +441,7 @@ fun ThermostatCard(
                     value = state.maxTemp,
                     onValueChange = { 
                         val newValue = it.coerceIn(16f, 22f)
-                        mqttManager.publish("zara/interface/climate/$deviceId/max_temperature/cmd", "%.1f".format(java.util.Locale.US, newValue)) 
+                        mqttManager.publish("zara/interface/climate/$deviceId/max_temperature/cmd", "%.1f".format(Locale.US, newValue)) 
                     }
                 )
             }
@@ -444,7 +458,7 @@ fun LimitAdjustment(label: String, value: Float, onValueChange: (Float) -> Unit)
                 Icon(Icons.Default.Remove, null, modifier = Modifier.size(16.dp))
             }
             Text(
-                text = "${"%.1f".format(java.util.Locale.getDefault(), value)}°",
+                text = "${"%.1f".format(Locale.getDefault(), value)}°",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -458,7 +472,7 @@ fun LimitAdjustment(label: String, value: Float, onValueChange: (Float) -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FireplaceCard(state: com.domopi.app.data.PalazzettiStatus, mqttManager: MqttManager) {
+fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
@@ -489,7 +503,7 @@ fun FireplaceCard(state: com.domopi.app.data.PalazzettiStatus, mqttManager: Mqtt
 
             Spacer(Modifier.height(16.dp))
 
-            // Modalità Operativa (Menu moderno)
+            // Modalità Operativa
             var expanded by remember { mutableStateOf(false) }
             val modes = listOf("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqua Sanitaria", "Manuale")
             
@@ -604,4 +618,3 @@ fun FireplaceCard(state: com.domopi.app.data.PalazzettiStatus, mqttManager: Mqtt
         }
     }
 }
-

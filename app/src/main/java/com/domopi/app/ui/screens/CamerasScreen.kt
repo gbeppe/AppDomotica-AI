@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.ConnectionMode
-import com.domopi.app.data.DomoPiConnectivityManager
+import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.components.CameraStreamComponent
 
@@ -19,7 +19,7 @@ import com.domopi.app.ui.components.CameraStreamComponent
 @Composable
 fun CamerasScreen(
     settingsManager: SettingsManager,
-    connectivityManager: DomoPiConnectivityManager,
+    connectivityManager: ZaiConnectivityManager,
     onBack: () -> Unit
 ) {
     val connectionMode by connectivityManager.connectionMode.collectAsState()
