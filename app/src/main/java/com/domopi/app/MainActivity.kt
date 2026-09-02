@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -28,7 +29,7 @@ class MainActivity : ComponentActivity() {
         
         settingsManager = SettingsManager(this)
         val connectivityManager = DomoPiConnectivityManager(this)
-        mqttManager = MqttManager(this, settingsManager)
+        mqttManager = MqttManager()
 
         // --- Gateway Centrale .20 (Z-AI) ---
         lifecycleScope.launch {
@@ -37,21 +38,21 @@ class MainActivity : ComponentActivity() {
                 settingsManager.domopiRemoteIp,
                 settingsManager.domopiPort,
                 settingsManager.domopiUser,
-                settingsManager.domopiPass
+                settingsManager.domopiPass,
             ) { args -> args.copyOf() }
                 .distinctUntilChanged { old, new -> old.contentEquals(new) }
                 .collectLatest { params ->
-                    val localIp = params[0] as String
-                    val remoteIp = params[1] as String
-                    val port = params[2] as String
-                    val user = params[3] as String
-                    val pass = params[4] as String
+                    val localIp = params[0]
+                    val remoteIp = params[1]
+                    val port = params[2]
+                    val user = params[3]
+                    val pass = params[4]
                     val portInt = port.toIntOrNull() ?: 1883
 
                     // Ciclo di riconnessione se fallisce
                     while (true) {
                         if (mqttManager.isConnected.value) {
-                            delay(15000)
+                            delay(15.seconds)
                             continue
                         }
 
@@ -64,7 +65,7 @@ class MainActivity : ComponentActivity() {
                             if (isLocalAvailable) {
                                 connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
                                 localIp
-                            } else if (remoteIp.isNotEmpty() && remoteIp != "100.x.x.x") {
+                            } else if (remoteIp.isNotEmpty() && (remoteIp != "100.x.x.x")) {
                                 connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
                                 remoteIp
                             } else {
@@ -72,7 +73,7 @@ class MainActivity : ComponentActivity() {
                                 localIp
                             }
                         } else {
-                            if (remoteIp.isNotEmpty() && remoteIp != "100.x.x.x") {
+                            if (remoteIp.isNotEmpty() && (remoteIp != "100.x.x.x")) {
                                 connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
                                 remoteIp
                             } else {
@@ -82,7 +83,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         mqttManager.connect("tcp://$ipToUse:$port", user, pass)
-                        delay(8000)
+                        delay(8.seconds)
                     }
                 }
         }
@@ -122,8 +123,8 @@ class MainActivity : ComponentActivity() {
                         )
                         "energy_detail" -> {
                             val mode by connectivityManager.connectionMode.collectAsState()
-                            val epLocalIp by settingsManager.emonpiIp.collectAsState("")
-                            val epRemoteIp by settingsManager.emonpiRemoteIp.collectAsState("")
+                            val epLocalIp by settingsManager.emoncmsIp.collectAsState("")
+                            val epRemoteIp by settingsManager.emoncmsRemoteIp.collectAsState("")
                             val epIp = if (mode == ConnectionMode.LOCAL) epLocalIp else epRemoteIp
                             EnergyDetailScreen(emoncmsIp = epIp, onBack = { currentScreen = "home" })
                         }

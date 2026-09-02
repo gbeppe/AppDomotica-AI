@@ -37,11 +37,8 @@ class SettingsManager(private val context: Context) {
         val DOMOPI_BROKER_USER = stringPreferencesKey("domopi_broker_user")
         val DOMOPI_BROKER_PASS = stringPreferencesKey("domopi_broker_pass")
 
-        val EMONPI_BROKER_IP = stringPreferencesKey("emonpi_broker_ip")
-        val EMONPI_REMOTE_IP = stringPreferencesKey("emonpi_remote_ip")
-        val EMONPI_BROKER_PORT = stringPreferencesKey("emonpi_broker_port")
-        val EMONPI_BROKER_USER = stringPreferencesKey("emonpi_broker_user")
-        val EMONPI_BROKER_PASS = stringPreferencesKey("emonpi_broker_pass")
+        val EMONCMS_LOCAL_IP = stringPreferencesKey("emonpi_broker_ip")
+        val EMONCMS_REMOTE_IP = stringPreferencesKey("emonpi_remote_ip")
     }
 
     val nodeRedLocalIp: Flow<String> = context.dataStore.data.map { it[NODE_RED_LOCAL_IP] ?: "192.168.1.20" }.distinctUntilChanged()
@@ -78,13 +75,10 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    suspend fun saveEmonPiBroker(localIp: String, remoteIp: String, port: String, user: String, pass: String) {
+    suspend fun saveEmonCms(localIp: String, remoteIp: String) {
         context.dataStore.edit {
-            it[EMONPI_BROKER_IP] = localIp
-            it[EMONPI_REMOTE_IP] = remoteIp
-            it[EMONPI_BROKER_PORT] = port
-            it[EMONPI_BROKER_USER] = user
-            it[EMONPI_BROKER_PASS] = pass
+            it[EMONCMS_LOCAL_IP] = localIp
+            it[EMONCMS_REMOTE_IP] = remoteIp
         }
     }
     
@@ -104,11 +98,8 @@ class SettingsManager(private val context: Context) {
     val domopiUser: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_USER] ?: "domopi" }.distinctUntilChanged()
     val domopiPass: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_PASS] ?: "domopimqtt" }.distinctUntilChanged()
 
-    val emonpiIp: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_IP] ?: "192.168.1.5" }.distinctUntilChanged()
-    val emonpiRemoteIp: Flow<String> = context.dataStore.data.map { it[EMONPI_REMOTE_IP] ?: "" }.distinctUntilChanged()
-    val emonpiPort: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_PORT] ?: "1883" }.distinctUntilChanged()
-    val emonpiUser: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_USER] ?: "emonpi" }.distinctUntilChanged()
-    val emonpiPass: Flow<String> = context.dataStore.data.map { it[EMONPI_BROKER_PASS] ?: "emonpimqtt2016" }.distinctUntilChanged()
+    val emoncmsIp: Flow<String> = context.dataStore.data.map { it[EMONCMS_LOCAL_IP] ?: "192.168.1.5" }.distinctUntilChanged()
+    val emoncmsRemoteIp: Flow<String> = context.dataStore.data.map { it[EMONCMS_REMOTE_IP] ?: "" }.distinctUntilChanged()
 
     suspend fun saveTinycam(localIp: String, remoteIp: String, port: String, user: String, pass: String) {
         context.dataStore.edit {

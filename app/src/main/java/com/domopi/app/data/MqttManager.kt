@@ -1,13 +1,10 @@
 package com.domopi.app.data
 
-import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
@@ -26,7 +23,7 @@ data class EnergyData(
     val pufferAlto: Float = 0f,
     val pufferBasso: Float = 0f,
     val solarCollectorTemp: Float = 0f,
-    val solarPumpSpeed: Int = 0
+    val solarPumpSpeed: Int = 0,
 )
 
 data class SensorData(
@@ -39,14 +36,6 @@ data class EnvironmentState(
     val living: SensorData = SensorData(),
     val bedroom: SensorData = SensorData(),
     val outdoor: SensorData = SensorData()
-)
-
-@Serializable
-data class AiAlarm(
-    val stato: String = "",
-    val motivo: String = "",
-    val elementi_mancanti: List<String> = emptyList(),
-    val timestamp: Long = 0
 )
 
 data class AiSettings(
@@ -69,19 +58,13 @@ data class DomoticaSettings(
     val acAuto: Boolean = false
 )
 
-class MqttManager(private val context: Context, val settingsManager: SettingsManager) {
+class MqttManager {
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
     
     @OptIn(ExperimentalCoroutinesApi::class)
     private val mqttDispatcher = Dispatchers.Default.limitedParallelism(1)
     private val scope = CoroutineScope(mqttDispatcher + SupervisorJob())
-
-    private val VALID_LIGHT_IDS = listOf(
-        "sala", "libreria", "cucina", "televisione", "tavolinolettura", 
-        "lampadahifi", "lavanderia", "ingressoservizio", "portico", "esterno",
-        "lucecamera", "prolunga", "pompapiscina", "skimmerpiscina", "lucipiscina", "lucipedanapiscina"
-    )
 
     private val _lightStates = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val lightStates: StateFlow<Map<String, Boolean>> = _lightStates
@@ -161,11 +144,10 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                 mqttClient?.disconnectForcibly()
             }
             mqttClient?.close(true)
-        } catch (e: Exception) {}
+        } catch (_: Exception) {}
 
         try {
-            val deviceId = android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ANDROID_ID) ?: "Unknown"
-            val clientId = "ZAI_${deviceId.take(8)}"
+            val clientId = "ZAI_" + UUID.randomUUID().toString().substring(0, 8)
             mqttClient = MqttAsyncClient(brokerUrl, clientId, MemoryPersistence())
             val options = MqttConnectOptions().apply {
                 isAutomaticReconnect = true
@@ -204,9 +186,9 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                     addTrafficLog("ERRORE: ${exception?.message}")
                 }
             })
-        } catch (e: Exception) { 
+        } catch (_: Exception) { 
             isConnecting = false
-            Log.e("MQTT", "Eccezione in connect", e) 
+            Log.e("MQTT", "Eccezione in connect") 
         }
     }
 
@@ -255,7 +237,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
             "heating" -> handleHeatingDomain(device, property, rounded, payload)
             "climate" -> handleClimateDomain(device, property, rounded, isOn)
             "ai" -> handleAiDomain(device, isOn, payload)
-            "ai_climate" -> handleAiClimateDomain(device, property, payload)
+            "ai_climate" -> handleAiClimateDomain(property, payload)
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
             "ventilation" -> handleVentilationDomain(device, property, payload)
             "settings" -> handleSettingsDomain(device, isOn)
@@ -267,7 +249,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
         coerceInputValues = true
     }
 
-    private fun handleAiClimateDomain(device: String, prop: String, payload: String) {
+    private fun handleAiClimateDomain(prop: String, payload: String) {
         if (prop == "allarme") {
             val clean = payload.trim()
             if (clean.isEmpty() || clean.lowercase() == "off" || clean == "0" || clean == "false") {
@@ -281,7 +263,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                     } else {
                         _aiSettings.update { it.copy(alarm = alarmData) }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     _aiSettings.update { it.copy(alarm = AiAlarm(stato = "ATTIVO", motivo = clean)) }
                 }
             }
@@ -419,24 +401,32 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
     private fun handleHeatingDomain(device: String, prop: String, value: Float, raw: String) {
         when (device) {
             "puffer" -> _energyData.update { current ->
-                if (prop == "top_temperature") current.copy(pufferAlto = value)
-                else if (prop == "bottom_temperature") current.copy(pufferBasso = value)
-                else current
+                when (prop) {
+                    "top_temperature" -> current.copy(pufferAlto = value)
+                    "bottom_temperature" -> current.copy(pufferBasso = value)
+                    else -> current
+                }
             }
             "solar_thermal" -> _energyData.update { current ->
-                if (prop == "collector_temperature") current.copy(solarCollectorTemp = value)
-                else if (prop == "pump_speed") current.copy(solarPumpSpeed = raw.toIntOrNull() ?: 0)
-                else current
+                when (prop) {
+                    "collector_temperature" -> current.copy(solarCollectorTemp = value)
+                    "pump_speed" -> current.copy(solarPumpSpeed = raw.toIntOrNull() ?: 0)
+                    else -> current
+                }
             }
             "gas_boiler" -> _hvacState.update { current ->
-                if (prop == "flame") current.copy(boiler = current.boiler.copy(active = (raw == "true" || raw == "1")))
-                else if (prop == "modulation") current.copy(boiler = current.boiler.copy(modulation = raw.toIntOrNull() ?: 0))
-                else current
+                when (prop) {
+                    "flame" -> current.copy(boiler = current.boiler.copy(active = (raw == "true" || raw == "1")))
+                    "modulation" -> current.copy(boiler = current.boiler.copy(modulation = raw.toIntOrNull() ?: 0))
+                    else -> current
+                }
             }
             "floor_pump" -> _hvacState.update { current ->
-                if (prop == "enabled") current.copy(floorHeating = current.floorHeating.copy(enabled = (raw == "true" || raw == "1")))
-                else if (prop == "running") current.copy(floorHeating = current.floorHeating.copy(pumpActive = (raw == "true" || raw == "1")))
-                else current
+                when (prop) {
+                    "enabled" -> current.copy(floorHeating = current.floorHeating.copy(enabled = (raw == "true" || raw == "1")))
+                    "running" -> current.copy(floorHeating = current.floorHeating.copy(pumpActive = (raw == "true" || raw == "1")))
+                    else -> current
+                }
             }
         }
     }
@@ -540,7 +530,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
         }
         try {
             client.publish(topic, MqttMessage(payload.toByteArray()).apply { qos = 1; isRetained = retained })
-        } catch (e: Exception) { messageQueue.add(MqttQueuedMessage(topic, payload, retained)) }
+        } catch (_: Exception) { messageQueue.add(MqttQueuedMessage(topic, payload, retained)) }
     }
 
     private fun processMessageQueue() {
@@ -551,7 +541,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
     }
 
     fun disconnect() {
-        try { mqttClient?.disconnect(); mqttClient = null } catch (e: Exception) {}
+        try { mqttClient?.disconnect(); mqttClient = null } catch (_: Exception) {}
     }
 }
 

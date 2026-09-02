@@ -28,11 +28,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     var domopiUser by remember { mutableStateOf("") }
     var domopiPass by remember { mutableStateOf("") }
     
-    var emonpiIp by remember { mutableStateOf("") }
-    var emonpiRemoteIp by remember { mutableStateOf("") }
-    var emonpiPort by remember { mutableStateOf("") }
-    var emonpiUser by remember { mutableStateOf("") }
-    var emonpiPass by remember { mutableStateOf("") }
+    var emoncmsIp by remember { mutableStateOf("") }
+    var emoncmsRemoteIp by remember { mutableStateOf("") }
     
     var tinycamIp by remember { mutableStateOf("") }
     var tinycamRemoteIp by remember { mutableStateOf("") }
@@ -50,11 +47,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         domopiPort != initialValues!!["dpPort"] ||
         domopiUser != initialValues!!["dpUser"] ||
         domopiPass != initialValues!!["dpPass"] ||
-        emonpiIp != initialValues!!["epIp"] ||
-        emonpiRemoteIp != initialValues!!["epRemoteIp"] ||
-        emonpiPort != initialValues!!["epPort"] ||
-        emonpiUser != initialValues!!["epUser"] ||
-        emonpiPass != initialValues!!["epPass"] ||
+        emoncmsIp != initialValues!!["ecIp"] ||
+        emoncmsRemoteIp != initialValues!!["ecRemoteIp"] ||
         tinycamIp != initialValues!!["tcIp"] ||
         tinycamRemoteIp != initialValues!!["tcRemoteIp"] ||
         tinycamPort != initialValues!!["tcPort"] ||
@@ -71,11 +65,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         val dpUser = settingsManager.domopiUser.first()
         val dpPass = settingsManager.domopiPass.first()
         
-        val epIp = settingsManager.emonpiIp.first()
-        val epRemoteIp = settingsManager.emonpiRemoteIp.first()
-        val epPort = settingsManager.emonpiPort.first()
-        val epUser = settingsManager.emonpiUser.first()
-        val epPass = settingsManager.emonpiPass.first()
+        val ecIp = settingsManager.emoncmsIp.first()
+        val ecRemoteIp = settingsManager.emoncmsRemoteIp.first()
         
         val tcIp = settingsManager.tinycamLocalIp.first()
         val tcRemoteIp = settingsManager.tinycamRemoteIp.first()
@@ -91,11 +82,8 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         domopiUser = dpUser
         domopiPass = dpPass
         
-        emonpiIp = epIp
-        emonpiRemoteIp = epRemoteIp
-        emonpiPort = epPort
-        emonpiUser = epUser
-        emonpiPass = epPass
+        emoncmsIp = ecIp
+        emoncmsRemoteIp = ecRemoteIp
         
         tinycamIp = tcIp
         tinycamRemoteIp = tcRemoteIp
@@ -107,7 +95,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
         
         initialValues = mapOf(
             "dpIp" to dpIp, "dpRemoteIp" to dpRemoteIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
-            "epIp" to epIp, "epRemoteIp" to epRemoteIp, "epPort" to epPort, "epUser" to epUser, "epPass" to epPass,
+            "ecIp" to ecIp, "ecRemoteIp" to ecRemoteIp,
             "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass,
             "darkMode" to dm, "adminPin" to pin
         )
@@ -116,13 +104,13 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     fun saveAll() {
         scope.launch {
             settingsManager.saveDomoPiBroker(domopiIp, domopiRemoteIp, domopiPort, domopiUser, domopiPass)
-            settingsManager.saveEmonPiBroker(emonpiIp, emonpiRemoteIp, emonpiPort, emonpiUser, emonpiPass)
+            settingsManager.saveEmonCms(emoncmsIp, emoncmsRemoteIp)
             settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
             settingsManager.saveDarkMode(darkMode)
             settingsManager.saveAdminPin(adminPin)
             initialValues = mapOf(
                 "dpIp" to domopiIp, "dpRemoteIp" to domopiRemoteIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
-                "epIp" to emonpiIp, "epRemoteIp" to emonpiRemoteIp, "epPort" to emonpiPort, "epUser" to emonpiUser, "epPass" to emonpiPass,
+                "ecIp" to emoncmsIp, "ecRemoteIp" to emoncmsRemoteIp,
                 "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass,
                 "darkMode" to darkMode, "adminPin" to adminPin
             )
@@ -232,12 +220,9 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("Broker EmonPi", style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(value = emonpiIp, onValueChange = { emonpiIp = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = emonpiRemoteIp, onValueChange = { emonpiRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = emonpiPort, onValueChange = { emonpiPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = emonpiUser, onValueChange = { emonpiUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = emonpiPass, onValueChange = { emonpiPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
+                Text("EmonCMS", style = MaterialTheme.typography.titleMedium)
+                OutlinedTextField(value = emoncmsIp, onValueChange = { emoncmsIp = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = emoncmsRemoteIp, onValueChange = { emoncmsRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
             }
 
             item {

@@ -82,9 +82,9 @@ fun MainDashboard(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Stato: ${alarm.stato}", fontWeight = FontWeight.Bold)
                     Text(alarm.motivo)
-                    if (alarm.elementi_mancanti.isNotEmpty()) {
+                    if (alarm.elementiMancanti.isNotEmpty()) {
                         Text("Elementi mancanti:", style = MaterialTheme.typography.labelMedium)
-                        alarm.elementi_mancanti.forEach {
+                        alarm.elementiMancanti.forEach {
                             Text("• $it", style = MaterialTheme.typography.bodySmall)
                         }
                     }

@@ -72,11 +72,11 @@ fun AiManagedScreen(
                             Text("Stato: ${alarm.stato}", style = MaterialTheme.typography.bodyMedium)
                             Text(alarm.motivo, style = MaterialTheme.typography.bodySmall)
                             
-                            if (alarm.elementi_mancanti.isNotEmpty()) {
+                            if (alarm.elementiMancanti.isNotEmpty()) {
                                 Spacer(Modifier.height(8.dp))
                                 Text("Elementi coinvolti:", style = MaterialTheme.typography.labelSmall)
                                 Text(
-                                    alarm.elementi_mancanti.joinToString(", "),
+                                    alarm.elementiMancanti.joinToString(", "),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
