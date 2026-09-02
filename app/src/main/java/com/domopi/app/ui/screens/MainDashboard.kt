@@ -345,22 +345,44 @@ fun MainDashboard(
 
                     // Stato e Logica AC
                     val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { "OFF" }
+                    val acStatusColor = when (acStatus.uppercase()) {
+                        "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
+                        "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
+                        "STANDBY_INVERTER" -> Color(0xFFFFB300)
+                        "HEAT_DIURNO", "HEAT_SICUREZZA_NOTTE", "RISCALDAMENTO" -> Color(0xFFFF5722)
+                        else -> Color.Gray
+                    }
                     item {
                         SummaryRow(
                             icon = Icons.Default.AcUnit,
                             label = "Stato Clima",
-                            value = acStatus
+                            value = acStatus,
+                            valueColor = acStatusColor
                         )
                     }
 
                     if (aiData.statoCondizionatore.motivoLogica.isNotEmpty()) {
                         val reasonInfo = AcReasonMapper.getAcReasonInfo(aiData.statoCondizionatore.motivoLogica)
+                        val categoryColor = when (reasonInfo.category) {
+                            AcReasonCategory.CRITICAL -> Color.Red
+                            AcReasonCategory.WARNING -> Color(0xFFFF9800)
+                            AcReasonCategory.NORMAL -> SolarGreen
+                            AcReasonCategory.UNKNOWN -> Color.Gray
+                        }
+
                         item {
                             Column(modifier = Modifier.padding(vertical = 2.dp)) {
                                 SummaryRow(
-                                    icon = Icons.Default.Info,
+                                    icon = when (reasonInfo.category) {
+                                        AcReasonCategory.CRITICAL -> Icons.Default.Error
+                                        AcReasonCategory.WARNING -> Icons.Default.Warning
+                                        AcReasonCategory.NORMAL -> Icons.Default.CheckCircle
+                                        AcReasonCategory.UNKNOWN -> Icons.Default.Info
+                                    },
                                     label = "Motivo Logica",
-                                    value = reasonInfo.code
+                                    value = reasonInfo.code,
+                                    valueColor = categoryColor,
+                                    iconTint = categoryColor
                                 )
                                 Text(
                                     text = reasonInfo.description,
@@ -452,15 +474,21 @@ fun MainDashboard(
 }
 
 @Composable
-fun SummaryRow(icon: ImageVector, label: String, value: String) {
+fun SummaryRow(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+    iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant
+) {
     Row(
         modifier = Modifier.padding(vertical = 4.dp).fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(icon, null, modifier = Modifier.size(16.dp), tint = iconTint)
         Spacer(Modifier.width(8.dp))
         Text(label, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = valueColor)
     }
 }
 

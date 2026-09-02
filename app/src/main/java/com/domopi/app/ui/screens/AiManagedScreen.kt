@@ -95,12 +95,7 @@ fun AiManagedScreen(
                 }
             }
 
-            // operativo
-            item {
-                StatusCard(aiData, envState, hvacState)
-            }
-
-            // 1. Sistema Abilitato
+            // 1. Sistema Abilitato (In alto)
             item {
                 ControlCard(
                     title = "AI abilitato",
@@ -110,6 +105,11 @@ fun AiManagedScreen(
                         mqttManager.publish("zara/interface/ai/system_enabled/cmd", if (enabled) "true" else "false")
                     }
                 )
+            }
+
+            // 2. Stato Operativo
+            item {
+                StatusCard(aiData, envState, hvacState)
             }
 
             // 2 & 3. Tempi Compressore
