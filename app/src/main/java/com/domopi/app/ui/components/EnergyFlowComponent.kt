@@ -5,7 +5,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,20 +17,21 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import kotlin.math.abs
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.R
 
 @Composable
 fun EnergyFlowComponent(
+    modifier: Modifier = Modifier,
     solarPower: Float,
     homeConsumption: Float,
     gridPower: Float, 
     batteryPower: Float = 0f, 
     batterySoc: Float = 0f,
-    modifier: Modifier = Modifier
 ) {
-    val hasData = solarPower != 0f || homeConsumption != 0f || gridPower != 0f || batteryPower != 0f
+    val hasData = (solarPower != 0f) || (homeConsumption != 0f) || (gridPower != 0f) || (batteryPower != 0f)
 
     if (!hasData) {
         Box(
@@ -91,10 +91,10 @@ fun EnergyFlowComponent(
             val batteryPoint = Offset(size.width / 2, (hubY + 25.dp).toPx())
 
             // Paths
-            drawEnergyPathTesla(solarPoint, hubPx, Color(0xFFFFEB3B), phase, solarPower > 15, false)
-            drawEnergyPathTesla(gridPoint, hubPx, Color(0xFFD939F3), phase, Math.abs(gridPower) > 20, gridPower < 0)
-            drawEnergyPathTesla(hubPx, homePoint, Color(0xFF00E5FF), phase, homeConsumption > 15, false)
-            drawEnergyPathTesla(batteryPoint, hubPx, Color(0xFF00FF00), phase, Math.abs(batteryPower) > 15, batteryPower < 0)
+            drawEnergyPathTesla(solarPoint, hubPx, Color(0xFFFFEB3B), phase, active = solarPower > 15, reverse = false)
+            drawEnergyPathTesla(gridPoint, hubPx, Color(0xFFD939F3), phase, active = abs(gridPower) > 20, reverse = gridPower < 0)
+            drawEnergyPathTesla(hubPx, homePoint, Color(0xFF00E5FF), phase, active = homeConsumption > 15, reverse = false)
+            drawEnergyPathTesla(batteryPoint, hubPx, Color(0xFF00FF00), phase, active = abs(batteryPower) > 15, reverse = batteryPower < 0)
         }
 
         // 1. Solar (Top Center)
