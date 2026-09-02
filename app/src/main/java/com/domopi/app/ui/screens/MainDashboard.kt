@@ -95,11 +95,8 @@ fun MainDashboard(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { 
-                    mqttManager.clearAlarm()
-                    showAlarmDialog = false 
-                }) {
-                    Text("CHIUDI E RESET")
+                TextButton(onClick = { showAlarmDialog = false }) {
+                    Text("OK, HO CAPITO")
                 }
             }
         )

@@ -143,10 +143,6 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
     private var currentBrokerUrl: String? = null
     private var isConnecting = false
 
-    fun clearAlarm() {
-        _aiSettings.update { it.copy(alarm = null) }
-    }
-
     fun connect(brokerUrl: String, user: String? = null, pass: String? = null) {
         if (mqttClient?.isConnected == true && currentBrokerUrl == brokerUrl) return
         
@@ -274,9 +270,13 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
             } else {
                 try {
                     val alarmData = Json.decodeFromString<AiAlarm>(clean)
-                    _aiSettings.update { it.copy(alarm = alarmData) }
+                    // Se lo stato è NORMALE, rimuoviamo l'allarme dall'interfaccia
+                    if (alarmData.stato.uppercase() == "NORMALE") {
+                        _aiSettings.update { it.copy(alarm = null) }
+                    } else {
+                        _aiSettings.update { it.copy(alarm = alarmData) }
+                    }
                 } catch (e: Exception) {
-                    // Se non è un JSON valido ma non è "OFF", creiamo un allarme generico con il payload come motivo
                     _aiSettings.update { it.copy(alarm = AiAlarm(stato = "ATTIVO", motivo = clean)) }
                 }
             }
