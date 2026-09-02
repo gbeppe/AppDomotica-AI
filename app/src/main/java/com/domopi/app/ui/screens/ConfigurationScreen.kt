@@ -5,22 +5,35 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.domopi.app.data.GithubStatus
+import com.domopi.app.data.GithubVersionChecker
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.theme.SolarGreen
 import com.domopi.app.BuildConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     var showDiscardDialog by remember { mutableStateOf(false) }
+    val githubStatus by GithubVersionChecker.status.collectAsState()
+    val currentGithubIconStyle by settingsManager.githubIconStyle.collectAsState(initial = "code")
+
+    LaunchedEffect(Unit) {
+        GithubVersionChecker.checkVersion()
+    }
     
     var domopiIp by remember { mutableStateOf("") }
     var domopiRemoteIp by remember { mutableStateOf("") }
@@ -162,18 +175,81 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        "Informazioni Build",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            "Informazioni Build",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        TextButton(
+                            onClick = { scope.launch { GithubVersionChecker.checkVersion() } },
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("Verifica Ora", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
                     BuildInfoRow("Versione", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                     BuildInfoRow("Git Hash", BuildConfig.GIT_HASH)
                     BuildInfoRow("Git Branch", BuildConfig.GIT_BRANCH)
                     BuildInfoRow("Data Build", BuildConfig.BUILD_TIME)
+                    
+                    val (githubText, githubColor) = when (val s = githubStatus) {
+                        is GithubStatus.UpToDate -> "🟢 Allineato a GitHub (${s.latestHash})" to SolarGreen
+                        is GithubStatus.Behind -> "🔴 Indietro di ${s.behindBy} commit da GitHub" to Color.Red
+                        is GithubStatus.LocalDev -> "🟡 Build locale / dev (+)" to Color(0xFFFF9800)
+                        is GithubStatus.Checking -> "⏳ Verifica in corso..." to Color.Gray
+                        is GithubStatus.Error -> "⚠️ ${s.message}" to Color.Gray
+                    }
+                    BuildInfoRow("Stato GitHub", githubText, githubColor)
+
+                    Spacer(Modifier.height(12.dp))
+                    Text("Stile Icona GitHub (Titolo):", style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val styles = listOf(
+                            "code" to (Icons.Default.Code to "< >"),
+                            "branch" to (Icons.Default.AccountTree to "Branch"),
+                            "sync" to (Icons.Default.CloudSync to "Sync"),
+                            "commit" to (Icons.Default.Commit to "Commit")
+                        )
+                        
+                        styles.forEach { (styleKey, pair) ->
+                            val (icon, label) = pair
+                            val isSelected = currentGithubIconStyle == styleKey
+                            
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    scope.launch { settingsManager.saveGithubIconStyle(styleKey) }
+                                },
+                                label = { Text(label, fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = label,
+                                        tint = if (isSelected) SolarGreen else Color.Gray,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = SolarGreen.copy(alpha = 0.15f),
+                                    selectedLabelColor = SolarGreen
+                                )
+                            )
+                        }
+                    }
                 }
                 HorizontalDivider(modifier = Modifier.padding(top = 16.dp))
             }
@@ -239,12 +315,12 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
 }
 
 @Composable
-fun BuildInfoRow(label: String, value: String) {
+fun BuildInfoRow(label: String, value: String, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        Text(value, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = valueColor)
     }
 }

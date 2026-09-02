@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.ConnectionMode
 import com.domopi.app.data.ZaiConnectivityManager
+import com.domopi.app.data.GithubStatus
+import com.domopi.app.data.GithubVersionChecker
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.components.EnergyFlowComponent
@@ -50,6 +52,12 @@ fun MainDashboard(
     val connectionMode by connectivityManager.connectionMode.collectAsState()
     val isAdminMode by settingsManager.isAdminMode.collectAsState(initial = false)
     val adminPin by settingsManager.adminPin.collectAsState(initial = "1234")
+    val githubStatus by GithubVersionChecker.status.collectAsState()
+    val githubIconStyle by settingsManager.githubIconStyle.collectAsState(initial = "code")
+
+    LaunchedEffect(Unit) {
+        GithubVersionChecker.checkVersion()
+    }
     
     var showPinDialog by remember { mutableStateOf(false) }
     var showAlarmDialog by remember { mutableStateOf(false) }
@@ -112,7 +120,38 @@ fun MainDashboard(
                         modifier = Modifier.clickable { onNavigate("configuration") }
                     ) {
                         Text("Z-AI", fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(8.dp))
+                        
+                        // Icona GitHub Allineamento
+                        val (githubColor, githubTooltip) = when (val s = githubStatus) {
+                            is GithubStatus.UpToDate -> SolarGreen to "Allineato a GitHub (${s.latestHash})"
+                            is GithubStatus.Behind -> Color.Red to "Indietro di ${s.behindBy} commit da GitHub"
+                            is GithubStatus.LocalDev -> Color(0xFFFF9800) to "Build Locale / Dev"
+                            is GithubStatus.Checking -> Color.Gray to "Verifica GitHub in corso..."
+                            is GithubStatus.Error -> Color.Gray to "GitHub: ${s.message}"
+                        }
+                        
+                        val githubIcon = when (githubIconStyle) {
+                            "code" -> Icons.Default.Code
+                            "sync" -> Icons.Default.CloudSync
+                            "commit" -> Icons.Default.Commit
+                            else -> Icons.Default.AccountTree
+                        }
+
+                        IconButton(
+                            onClick = { onNavigate("configuration") },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = githubIcon,
+                                contentDescription = githubTooltip,
+                                tint = githubColor,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.width(4.dp))
+                        
                         IconButton(
                             onClick = { 
                                 if (isAdminMode) {

@@ -22,6 +22,7 @@ class SettingsManager(private val context: Context) {
         val DARK_MODE = booleanPreferencesKey("dark_mode")
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
+        val GITHUB_ICON_STYLE = stringPreferencesKey("github_icon_style")
 
         val DOMOPI_BROKER_IP = stringPreferencesKey("domopi_broker_ip")
         val DOMOPI_REMOTE_IP = stringPreferencesKey("domopi_remote_ip")
@@ -59,6 +60,7 @@ class SettingsManager(private val context: Context) {
     val darkMode: Flow<Boolean?> = context.dataStore.data.map { it[DARK_MODE] }.distinctUntilChanged()
     val isAdminMode: Flow<Boolean> = context.dataStore.data.map { it[IS_ADMIN_MODE] ?: false }.distinctUntilChanged()
     val adminPin: Flow<String> = context.dataStore.data.map { it[ADMIN_PIN] ?: "1234" }.distinctUntilChanged()
+    val githubIconStyle: Flow<String> = context.dataStore.data.map { it[GITHUB_ICON_STYLE] ?: "branch" }.distinctUntilChanged()
 
     val domopiIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_IP] ?: "192.168.1.20" }.distinctUntilChanged()
     val domopiRemoteIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_REMOTE_IP] ?: "" }.distinctUntilChanged()
@@ -94,6 +96,12 @@ class SettingsManager(private val context: Context) {
     suspend fun saveAdminPin(pin: String) {
         context.dataStore.edit {
             it[ADMIN_PIN] = pin
+        }
+    }
+
+    suspend fun saveGithubIconStyle(style: String) {
+        context.dataStore.edit {
+            it[GITHUB_ICON_STYLE] = style
         }
     }
 }
