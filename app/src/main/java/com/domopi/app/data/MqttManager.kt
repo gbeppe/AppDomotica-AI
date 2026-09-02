@@ -262,6 +262,11 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
         }
     }
 
+    private val json = Json { 
+        ignoreUnknownKeys = true 
+        coerceInputValues = true
+    }
+
     private fun handleAiClimateDomain(device: String, prop: String, payload: String) {
         if (prop == "allarme") {
             val clean = payload.trim()
@@ -269,7 +274,7 @@ class MqttManager(private val context: Context, val settingsManager: SettingsMan
                 _aiSettings.update { it.copy(alarm = null) }
             } else {
                 try {
-                    val alarmData = Json.decodeFromString<AiAlarm>(clean)
+                    val alarmData = json.decodeFromString<AiAlarm>(clean)
                     // Se lo stato è NORMALE, rimuoviamo l'allarme dall'interfaccia
                     if (alarmData.stato.uppercase() == "NORMALE") {
                         _aiSettings.update { it.copy(alarm = null) }
