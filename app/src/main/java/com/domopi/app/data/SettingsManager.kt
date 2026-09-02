@@ -14,14 +14,6 @@ private val Context.dataStore by preferencesDataStore(name = "settings")
 class SettingsManager(private val context: Context) {
 
     companion object {
-        val NODE_RED_LOCAL_IP = stringPreferencesKey("node_red_local_ip")
-        val NODE_RED_REMOTE_IP = stringPreferencesKey("node_red_remote_ip")
-        val NODE_RED_PORT = stringPreferencesKey("node_red_port")
-        
-        val MQTT_LOCAL_IP = stringPreferencesKey("mqtt_local_ip")
-        val MQTT_REMOTE_IP = stringPreferencesKey("mqtt_remote_ip")
-        val MQTT_PORT = stringPreferencesKey("mqtt_port")
-        
         val TINYCAM_LOCAL_IP = stringPreferencesKey("tinycam_local_ip")
         val TINYCAM_REMOTE_IP = stringPreferencesKey("tinycam_remote_ip")
         val TINYCAM_PORT = stringPreferencesKey("tinycam_port")
@@ -39,30 +31,6 @@ class SettingsManager(private val context: Context) {
 
         val EMONCMS_LOCAL_IP = stringPreferencesKey("emonpi_broker_ip")
         val EMONCMS_REMOTE_IP = stringPreferencesKey("emonpi_remote_ip")
-    }
-
-    val nodeRedLocalIp: Flow<String> = context.dataStore.data.map { it[NODE_RED_LOCAL_IP] ?: "192.168.1.20" }.distinctUntilChanged()
-    val nodeRedRemoteIp: Flow<String> = context.dataStore.data.map { it[NODE_RED_REMOTE_IP] ?: "" }.distinctUntilChanged()
-    val nodeRedPort: Flow<String> = context.dataStore.data.map { it[NODE_RED_PORT] ?: "1880" }.distinctUntilChanged()
-
-    suspend fun saveNodeRed(localIp: String, remoteIp: String, port: String) {
-        context.dataStore.edit {
-            it[NODE_RED_LOCAL_IP] = localIp
-            it[NODE_RED_REMOTE_IP] = remoteIp
-            it[NODE_RED_PORT] = port
-        }
-    }
-
-    val mqttLocalIp: Flow<String> = context.dataStore.data.map { it[MQTT_LOCAL_IP] ?: "192.168.1.20" }.distinctUntilChanged()
-    val mqttRemoteIp: Flow<String> = context.dataStore.data.map { it[MQTT_REMOTE_IP] ?: "" }.distinctUntilChanged()
-    val mqttPort: Flow<String> = context.dataStore.data.map { it[MQTT_PORT] ?: "1883" }.distinctUntilChanged()
-
-    suspend fun saveMqtt(localIp: String, remoteIp: String, port: String) {
-        context.dataStore.edit {
-            it[MQTT_LOCAL_IP] = localIp
-            it[MQTT_REMOTE_IP] = remoteIp
-            it[MQTT_PORT] = port
-        }
     }
 
     suspend fun saveDomoPiBroker(localIp: String, remoteIp: String, port: String, user: String, pass: String) {
