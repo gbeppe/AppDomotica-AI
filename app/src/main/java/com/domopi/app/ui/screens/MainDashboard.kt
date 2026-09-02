@@ -27,6 +27,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.domopi.app.data.AcReasonCategory
+import com.domopi.app.data.AcReasonMapper
 import com.domopi.app.data.ConnectionMode
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.GithubStatus
@@ -342,22 +344,31 @@ fun MainDashboard(
                     }
 
                     // Stato e Logica AC
-                    if (aiData.statoCondizionatore.statoAttuale.isNotEmpty()) {
-                        item {
-                            SummaryRow(
-                                icon = Icons.Default.AcUnit,
-                                label = "Stato AC",
-                                value = aiData.statoCondizionatore.statoAttuale
-                            )
-                        }
+                    val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { "OFF" }
+                    item {
+                        SummaryRow(
+                            icon = Icons.Default.AcUnit,
+                            label = "Stato Clima",
+                            value = acStatus
+                        )
                     }
+
                     if (aiData.statoCondizionatore.motivoLogica.isNotEmpty()) {
+                        val reasonInfo = AcReasonMapper.getAcReasonInfo(aiData.statoCondizionatore.motivoLogica)
                         item {
-                            SummaryRow(
-                                icon = Icons.Default.Info,
-                                label = "Logica AC",
-                                value = aiData.statoCondizionatore.motivoLogica
-                            )
+                            Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                                SummaryRow(
+                                    icon = Icons.Default.Info,
+                                    label = "Motivo Logica",
+                                    value = reasonInfo.code
+                                )
+                                Text(
+                                    text = reasonInfo.description,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                    modifier = Modifier.padding(start = 24.dp, top = 2.dp, bottom = 4.dp)
+                                )
+                            }
                         }
                     }
                     

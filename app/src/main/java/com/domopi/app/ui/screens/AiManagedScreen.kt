@@ -1,5 +1,6 @@
 package com.domopi.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,12 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.AiManagedData
+import com.domopi.app.data.AcReasonCategory
+import com.domopi.app.data.AcReasonMapper
+import com.domopi.app.data.EnvironmentState
+import com.domopi.app.data.HvacState
 import com.domopi.app.data.MqttManager
+import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.NumericStepper
-
 import com.domopi.app.ui.theme.SolarGreen
 import java.util.Locale
 
@@ -260,37 +266,87 @@ fun StatusCard(
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header: Stato Operativo
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Stato Operativo", style = MaterialTheme.typography.titleMedium)
-                val color = when (data.statoCondizionatore.modalitaAria) {
-                    "Raffrescamento" -> Color(0xFF2196F3)
-                    "Riscaldamento" -> Color(0xFFFF5722)
-                    "Deumidificazione" -> Color(0xFF009688)
+                Text("Stato Operativo Sistema", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                
+                val statusText = data.statoCondizionatore.statoAttuale.ifEmpty { "OFF" }
+                val statusColor = when (statusText.uppercase()) {
+                    "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
+                    "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
+                    "STANDBY_INVERTER" -> Color(0xFFFFB300)
+                    "HEAT_DIURNO", "HEAT_SICUREZZA_NOTTE", "RISCALDAMENTO" -> Color(0xFFFF5722)
                     else -> Color.Gray
                 }
+                
                 Surface(
-                    color = color.copy(alpha = 0.2f),
-                    shape = MaterialTheme.shapes.small
+                    color = statusColor.copy(alpha = 0.2f),
+                    shape = MaterialTheme.shapes.small,
+                    border = BorderStroke(1.dp, statusColor.copy(alpha = 0.5f))
                 ) {
                     Text(
-                        text = data.statoCondizionatore.statoAttuale,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = color,
-                        style = MaterialTheme.typography.labelLarge
+                        text = statusText,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        color = statusColor,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = data.statoCondizionatore.motivoLogica,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Sezione Motivo di Logica (motivoAc) + Descrizione Estesa
+            val reasonInfo = AcReasonMapper.getAcReasonInfo(data.statoCondizionatore.motivoLogica)
+            val categoryColor = when (reasonInfo.category) {
+                AcReasonCategory.CRITICAL -> Color.Red
+                AcReasonCategory.WARNING -> Color(0xFFFF9800)
+                AcReasonCategory.NORMAL -> SolarGreen
+                AcReasonCategory.UNKNOWN -> MaterialTheme.colorScheme.onSurfaceVariant
+            }
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = categoryColor.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.3f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val icon = when (reasonInfo.category) {
+                            AcReasonCategory.CRITICAL -> Icons.Default.Error
+                            AcReasonCategory.WARNING -> Icons.Default.Warning
+                            AcReasonCategory.NORMAL -> Icons.Default.CheckCircle
+                            AcReasonCategory.UNKNOWN -> Icons.Default.Info
+                        }
+                        Icon(icon, contentDescription = null, tint = categoryColor, modifier = Modifier.size(18.dp))
+                        Text(
+                            text = reasonInfo.code,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = categoryColor
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(6.dp))
+                    
+                    Text(
+                        text = reasonInfo.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+            
             val locale = LocalConfiguration.current.locales[0]
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 MetricItem("Temp. Int.", "%.1f°C".format(locale, envState.living.temperature))
