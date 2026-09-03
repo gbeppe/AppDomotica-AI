@@ -45,8 +45,8 @@ android {
         applicationId = "com.domopi.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 8
-        versionName = "6.3"
+        versionCode = 9
+        versionName = "7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
