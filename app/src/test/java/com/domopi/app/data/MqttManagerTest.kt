@@ -185,4 +185,45 @@ class MqttManagerTest {
         assertEquals("ESTATE", aiData.stagioneAttiva)
         assertEquals("ESTATE", aiData.logicaControllo.stagioneAttuale)
     }
+
+    @Test
+    fun testLegacyTopicIgnored() {
+        val initialEnergy = mqttManager.energyData.value
+        processMessage("TeslaPowerwall/solar_instant_power", "9999")
+        val currentEnergy = mqttManager.energyData.value
+        assertEquals(initialEnergy, currentEnergy)
+    }
+
+    @Test
+    fun testNonInterfaceTopicIgnored() {
+        val initialEnv = mqttManager.environmentState.value
+        processMessage("zara/domotics/sensors/living", "99")
+        val currentEnv = mqttManager.environmentState.value
+        assertEquals(initialEnv, currentEnv)
+    }
+
+    @Test
+    fun testUnknownPublicDeviceIsolation() {
+        processMessage("zara/interface/climate/thermostat_bath/target_temperature/stat", "20.5")
+        val hvacStateBefore = mqttManager.hvacState.value
+
+        processMessage("zara/interface/climate/unknown_device/target_temperature/stat", "99")
+        val hvacStateAfter = mqttManager.hvacState.value
+
+        assertEquals(hvacStateBefore, hvacStateAfter)
+    }
+
+    @Test
+    fun testObsoleteHeatPumpTopicsIgnored() {
+        val hvacStateBefore = mqttManager.hvacState.value
+
+        processMessage("zara/interface/heating/heat_pump/enabled/stat", "true")
+        processMessage("zara/interface/heating/heat_pump/running/stat", "true")
+        processMessage("zara/interface/heating/heat_pump/solar_divert/stat", "true")
+        processMessage("zara/interface/heating/heat_pump/target_temperature/stat", "55")
+
+        val hvacStateAfter = mqttManager.hvacState.value
+
+        assertEquals(hvacStateBefore, hvacStateAfter)
+    }
 }
