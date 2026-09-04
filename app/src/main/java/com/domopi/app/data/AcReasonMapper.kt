@@ -1,5 +1,7 @@
 package com.domopi.app.data
 
+import java.util.Locale
+
 enum class AcReasonCategory {
     CRITICAL,
     WARNING,
@@ -7,15 +9,21 @@ enum class AcReasonCategory {
     UNKNOWN
 }
 
+data class AcReasonMetric(
+    val label: String,
+    val value: String
+)
+
 data class AcReasonInfo(
     val code: String,
     val description: String,
-    val category: AcReasonCategory
+    val category: AcReasonCategory,
+    val metrics: List<AcReasonMetric> = emptyList()
 )
 
 object AcReasonMapper {
 
-    fun getAcReasonInfo(rawReason: String): AcReasonInfo {
+    fun getAcReasonInfo(rawReason: String, aiData: AiManagedData? = null): AcReasonInfo {
         val clean = rawReason.trim().uppercase()
         if (clean.isEmpty()) {
             return AcReasonInfo(
@@ -25,7 +33,7 @@ object AcReasonMapper {
             )
         }
 
-        return when {
+        val baseInfo = when {
             clean == "ANALISI_IN_CORSO" -> AcReasonInfo(
                 code = clean,
                 description = "Valore iniziale predefinito assegnato alla variabile all'inizio di ogni esecuzione del ciclo, prima che la macchina a stati valuti le condizioni ambientali ed energetiche.",
@@ -224,5 +232,44 @@ object AcReasonMapper {
                 category = AcReasonCategory.UNKNOWN
             )
         }
+
+        if (aiData == null) return baseInfo
+
+        val elec = aiData.metricheElettriche
+        val logica = aiData.logicaControllo
+        val env = aiData.metricheAmbientali
+
+        val metricsList = mutableListOf<AcReasonMetric>()
+
+        when {
+            clean.startsWith("WATCHDOG") -> {
+                metricsList.add(AcReasonMetric("Consumo AC", "${elec.consumoAcW.toInt()} W"))
+                metricsList.add(AcReasonMetric("Surplus Solare", "${elec.surplusW.toInt()} W"))
+            }
+
+            clean.contains("SOLARE") || clean.contains("DEFICIT") || clean.contains("TOLLERANZA") -> {
+                metricsList.add(AcReasonMetric("Surplus Solare", "${elec.surplusW.toInt()} W"))
+                metricsList.add(AcReasonMetric("SOC Batteria", "${elec.powerwallSocPercent.toInt()}%"))
+            }
+
+            clean.contains("BATTERIA") || clean.contains("PEAK_SHAVING") || clean.contains("SOPRAVVIVENZA") -> {
+                metricsList.add(AcReasonMetric("SOC Batteria", "${elec.powerwallSocPercent.toInt()}%"))
+                metricsList.add(AcReasonMetric("SOC Minimo", "${logica.socMinimoApplied.toInt()}%"))
+                metricsList.add(AcReasonMetric("Potenza Batteria", "${elec.batteryPowerW.toInt()} W"))
+            }
+
+            clean.contains("HUMIDEX") || clean.contains("COOLING") || clean.contains("NIGHT_DRY") || clean.contains("COMFORT") || clean.contains("PRONTO") -> {
+                metricsList.add(AcReasonMetric("Humidex Int.", "%.1f".format(Locale.getDefault(), env.humidex)))
+                metricsList.add(AcReasonMetric("Soglia Humidex", "%.1f".format(Locale.getDefault(), logica.sogliaAttivazioneApplicata)))
+                metricsList.add(AcReasonMetric("Surplus Solare", "${elec.surplusW.toInt()} W"))
+            }
+
+            else -> {
+                metricsList.add(AcReasonMetric("Surplus Solare", "${elec.surplusW.toInt()} W"))
+                metricsList.add(AcReasonMetric("SOC Batteria", "${elec.powerwallSocPercent.toInt()}%"))
+            }
+        }
+
+        return baseInfo.copy(metrics = metricsList)
     }
 }

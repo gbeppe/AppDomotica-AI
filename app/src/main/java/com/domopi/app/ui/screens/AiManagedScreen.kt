@@ -23,6 +23,8 @@ import com.domopi.app.data.AcReasonCategory
 import com.domopi.app.data.AcReasonMapper
 import com.domopi.app.data.EnvironmentState
 import com.domopi.app.data.HvacState
+import com.domopi.app.data.LogicaControllo
+import com.domopi.app.data.MetricheElettriche
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.NumericStepper
@@ -300,8 +302,8 @@ fun StatusCard(
             
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Sezione Motivo di Logica (motivoAc) + Descrizione Estesa
-            val reasonInfo = AcReasonMapper.getAcReasonInfo(data.statoCondizionatore.motivoLogica)
+            // Sezione Motivo di Logica (motivoAc) + Descrizione Estesa + Valori Live
+            val reasonInfo = AcReasonMapper.getAcReasonInfo(data.statoCondizionatore.motivoLogica, data)
             val categoryColor = when (reasonInfo.category) {
                 AcReasonCategory.CRITICAL -> Color.Red
                 AcReasonCategory.WARNING -> Color(0xFFFF9800)
@@ -342,6 +344,42 @@ fun StatusCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+
+                    if (reasonInfo.metrics.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            reasonInfo.metrics.forEach { metric ->
+                                Surface(
+                                    color = categoryColor.copy(alpha = 0.12f),
+                                    shape = MaterialTheme.shapes.extraSmall,
+                                    border = BorderStroke(0.5.dp, categoryColor.copy(alpha = 0.25f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${metric.label}: ",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 10.sp
+                                        )
+                                        Text(
+                                            text = metric.value,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = categoryColor,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

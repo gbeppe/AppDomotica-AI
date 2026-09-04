@@ -25,16 +25,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.AcReasonCategory
 import com.domopi.app.data.AcReasonMapper
+import com.domopi.app.data.AiManagedData
 import com.domopi.app.data.ConnectionMode
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.GithubStatus
 import com.domopi.app.data.GithubVersionChecker
+import com.domopi.app.data.LogicaControllo
+import com.domopi.app.data.MetricheElettriche
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.SettingsManager
+import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.EnergyFlowComponent
 import com.domopi.app.ui.components.PoolInteractiveComponent
 import com.domopi.app.ui.theme.SolarGreen
@@ -63,6 +68,7 @@ fun MainDashboard(
     
     var showPinDialog by remember { mutableStateOf(false) }
     var showAlarmDialog by remember { mutableStateOf(false) }
+    var showAcStatePopup by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
     val aiData by mqttManager.aiManagedData.collectAsState()
@@ -108,6 +114,122 @@ fun MainDashboard(
             confirmButton = {
                 TextButton(onClick = { showAlarmDialog = false }) {
                     Text("OK, HO CAPITO")
+                }
+            }
+        )
+    }
+
+    if (showAcStatePopup) {
+        val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { "OFF" }
+        val acStatusColor = when (acStatus.uppercase()) {
+            "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
+            "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
+            "STANDBY_INVERTER" -> Color(0xFFFFB300)
+            "HEAT_DIURNO", "HEAT_SICUREZZA_NOTTE", "RISCALDAMENTO" -> Color(0xFFFF5722)
+            else -> Color.Gray
+        }
+        val reasonInfo = AcReasonMapper.getAcReasonInfo(aiData.statoCondizionatore.motivoLogica, aiData)
+        val categoryColor = when (reasonInfo.category) {
+            AcReasonCategory.CRITICAL -> Color.Red
+            AcReasonCategory.WARNING -> Color(0xFFFF9800)
+            AcReasonCategory.NORMAL -> SolarGreen
+            AcReasonCategory.UNKNOWN -> MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+        AlertDialog(
+            onDismissRequest = { showAcStatePopup = false },
+            icon = { Icon(Icons.Default.AcUnit, null, tint = acStatusColor) },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Stato Climatizzazione", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Surface(
+                        color = acStatusColor.copy(alpha = 0.2f),
+                        shape = MaterialTheme.shapes.small,
+                        border = BorderStroke(1.dp, acStatusColor.copy(alpha = 0.5f))
+                    ) {
+                        Text(
+                            text = acStatus,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = acStatusColor,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.clickable { showAcStatePopup = false },
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        color = categoryColor.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.3f))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                val icon = when (reasonInfo.category) {
+                                    AcReasonCategory.CRITICAL -> Icons.Default.Error
+                                    AcReasonCategory.WARNING -> Icons.Default.Warning
+                                    AcReasonCategory.NORMAL -> Icons.Default.CheckCircle
+                                    AcReasonCategory.UNKNOWN -> Icons.Default.Info
+                                }
+                                Icon(icon, contentDescription = null, tint = categoryColor, modifier = Modifier.size(18.dp))
+                                Text(
+                                    text = reasonInfo.code,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = categoryColor
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(6.dp))
+                            
+                            Text(
+                                text = reasonInfo.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            if (reasonInfo.metrics.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    reasonInfo.metrics.forEach { metric ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text(
+                                                text = "• ${metric.label}:",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = metric.value,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = categoryColor
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAcStatePopup = false }) {
+                    Text("CHIUDI")
                 }
             }
         )
@@ -224,68 +346,78 @@ fun MainDashboard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Parte Sinistra: Naviga al menu Clima
                     Row(
-                        modifier = Modifier
-                            .clickable { if (isAdminMode) onNavigate("clima") }
-                            .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier.clickable { if (isAdminMode) onNavigate("clima") }
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.AutoMode, 
-                                null, 
-                                tint = if (aiSettings.systemEnabled) SolarGreen else Color.Gray
+                        Icon(
+                            Icons.Default.AutoMode, 
+                            null, 
+                            tint = if (aiSettings.systemEnabled) SolarGreen else Color.Gray
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Climatizzazione AI",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        
+                        // Indicatore Allarme
+                        if (aiSettings.alarm != null) {
+                            Spacer(Modifier.width(12.dp))
+                            val infiniteTransition = rememberInfiniteTransition(label = "alarm_blink")
+                            val alpha by infiniteTransition.animateFloat(
+                                initialValue = 0.2f,
+                                targetValue = 1f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(500, easing = LinearEasing),
+                                    repeatMode = RepeatMode.Reverse
+                                ),
+                                label = "alpha"
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Climatizzazione AI",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            
-                            // Indicatore Allarme
-                            if (aiSettings.alarm != null) {
-                                Spacer(Modifier.width(12.dp))
-                                val infiniteTransition = rememberInfiniteTransition(label = "alarm_blink")
-                                val alpha by infiniteTransition.animateFloat(
-                                    initialValue = 0.2f,
-                                    targetValue = 1f,
-                                    animationSpec = infiniteRepeatable(
-                                        animation = tween(500, easing = LinearEasing),
-                                        repeatMode = RepeatMode.Reverse
-                                    ),
-                                    label = "alpha"
+                            IconButton(
+                                onClick = { showAlarmDialog = true },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Warning,
+                                    contentDescription = "Dettagli Allarme",
+                                    tint = Color.Red.copy(alpha = alpha)
                                 )
-                                IconButton(
-                                    onClick = { showAlarmDialog = true },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Warning,
-                                        contentDescription = "Dettagli Allarme",
-                                        tint = Color.Red.copy(alpha = alpha)
-                                    )
-                                }
                             }
                         }
-                        
-                        Surface(
-                            color = if (aiSettings.systemEnabled) SolarGreen.copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f),
-                            shape = CircleShape,
-                            border = BorderStroke(1.dp, if (aiSettings.systemEnabled) SolarGreen else Color.Gray)
+                    }
+                    
+                    // Parte Destra: Badge Stato AC -> Apre il Popup Stato Clima
+                    val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { if (aiSettings.systemEnabled) "ATTIVATO" else "DISATTIVATO" }
+                    val acStatusColor = when (aiData.statoCondizionatore.statoAttuale.uppercase()) {
+                        "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
+                        "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
+                        "STANDBY_INVERTER" -> Color(0xFFFFB300)
+                        "HEAT_DIURNO", "HEAT_SICUREZZA_NOTTE", "RISCALDAMENTO" -> Color(0xFFFF5722)
+                        else -> if (aiSettings.systemEnabled) SolarGreen else Color.Gray
+                    }
+
+                    Surface(
+                        modifier = Modifier.clickable { showAcStatePopup = true },
+                        color = acStatusColor.copy(alpha = 0.1f),
+                        shape = CircleShape,
+                        border = BorderStroke(1.dp, acStatusColor)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically, 
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-                                if (!isAdminMode) {
-                                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = Color.Red.copy(alpha = 0.8f))
-                                    Spacer(Modifier.width(6.dp))
-                                }
-                                Text(
-                                    text = if (aiSettings.systemEnabled) "ATTIVATO" else "DISATTIVATO",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = if (aiSettings.systemEnabled) SolarGreen else Color.Gray,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            if (!isAdminMode) {
+                                Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = Color.Red.copy(alpha = 0.8f))
+                                Spacer(Modifier.width(6.dp))
                             }
+                            Text(
+                                text = acStatus,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = acStatusColor,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -343,57 +475,6 @@ fun MainDashboard(
                         Spacer(Modifier.height(8.dp))
                     }
 
-                    // Stato e Logica AC
-                    val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { "OFF" }
-                    val acStatusColor = when (acStatus.uppercase()) {
-                        "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
-                        "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
-                        "STANDBY_INVERTER" -> Color(0xFFFFB300)
-                        "HEAT_DIURNO", "HEAT_SICUREZZA_NOTTE", "RISCALDAMENTO" -> Color(0xFFFF5722)
-                        else -> Color.Gray
-                    }
-                    item {
-                        SummaryRow(
-                            icon = Icons.Default.AcUnit,
-                            label = "Stato Clima",
-                            value = acStatus,
-                            valueColor = acStatusColor
-                        )
-                    }
-
-                    if (aiData.statoCondizionatore.motivoLogica.isNotEmpty()) {
-                        val reasonInfo = AcReasonMapper.getAcReasonInfo(aiData.statoCondizionatore.motivoLogica)
-                        val categoryColor = when (reasonInfo.category) {
-                            AcReasonCategory.CRITICAL -> Color.Red
-                            AcReasonCategory.WARNING -> Color(0xFFFF9800)
-                            AcReasonCategory.NORMAL -> SolarGreen
-                            AcReasonCategory.UNKNOWN -> Color.Gray
-                        }
-
-                        item {
-                            Column(modifier = Modifier.padding(vertical = 2.dp)) {
-                                SummaryRow(
-                                    icon = when (reasonInfo.category) {
-                                        AcReasonCategory.CRITICAL -> Icons.Default.Error
-                                        AcReasonCategory.WARNING -> Icons.Default.Warning
-                                        AcReasonCategory.NORMAL -> Icons.Default.CheckCircle
-                                        AcReasonCategory.UNKNOWN -> Icons.Default.Info
-                                    },
-                                    label = "Motivo Logica",
-                                    value = reasonInfo.code,
-                                    valueColor = categoryColor,
-                                    iconTint = categoryColor
-                                )
-                                Text(
-                                    text = reasonInfo.description,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                    modifier = Modifier.padding(start = 24.dp, top = 2.dp, bottom = 4.dp)
-                                )
-                            }
-                        }
-                    }
-                    
                     // 1. Luci
                     val roomLightIds = listOf("sala", "libreria", "cucina", "televisione", "tavolinolettura", "lampadahifi", "lucecamera", "prolunga")
                     val activeLights = lightStates.filter { it.key in roomLightIds && it.value }
