@@ -32,15 +32,17 @@ val BatteryMagenta = Color(0xFFE040FB)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnergyDetailScreen(emoncmsIp: String, onBack: () -> Unit) {
-    val repository = remember { EnergyRepository(emoncmsIp) }
     var history by remember { mutableStateOf<EnergyHistory?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    var selectedHours by remember { mutableStateOf(24) }
+    var selectedHours by remember { mutableIntStateOf(24) }
 
-    LaunchedEffect(selectedHours) {
-        isLoading = true
-        history = repository.fetchHistory(selectedHours)
-        isLoading = false
+    LaunchedEffect(selectedHours, emoncmsIp) {
+        if (emoncmsIp.isNotEmpty()) {
+            val repository = EnergyRepository(emoncmsIp)
+            isLoading = true
+            history = repository.fetchHistory(selectedHours)
+            isLoading = false
+        }
     }
 
     Scaffold(

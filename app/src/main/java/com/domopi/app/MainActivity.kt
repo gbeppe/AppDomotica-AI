@@ -123,8 +123,8 @@ class MainActivity : ComponentActivity() {
                         )
                         "energy_detail" -> {
                             val mode by connectivityManager.connectionMode.collectAsState()
-                            val epLocalIp by settingsManager.emoncmsIp.collectAsState("")
-                            val epRemoteIp by settingsManager.emoncmsRemoteIp.collectAsState("")
+                            val epLocalIp by settingsManager.emoncmsIp.collectAsState(initial = "192.168.1.15")
+                            val epRemoteIp by settingsManager.emoncmsRemoteIp.collectAsState(initial = "")
                             val epIp = if (mode == ConnectionMode.LOCAL) epLocalIp else epRemoteIp
                             EnergyDetailScreen(emoncmsIp = epIp, onBack = { currentScreen = "home" })
                         }

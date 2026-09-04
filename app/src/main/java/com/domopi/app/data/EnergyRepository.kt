@@ -62,16 +62,28 @@ class EnergyRepository(private val emoncmsIp: String) {
     }
 
     private suspend fun fetchFeedData(feedId: Int, start: Long, end: Long, interval: Int): List<HistoryPoint> {
-        val url = "http://$emoncmsIp/emoncms/feed/data.json?id=$feedId&start=$start&end=$end&interval=$interval&apikey=$apiKey"
-        return try {
-            val response: JsonArray = client.get(url).body()
-            Log.d("EnergyRepo", "Feed $feedId: received ${response.size} points")
-            if (response.isNotEmpty()) {
-                Log.d("EnergyRepo", "Feed $feedId sample: ${response[0]}")
+        if (emoncmsIp.isEmpty()) return emptyList()
+
+        val urlPrimary = "http://$emoncmsIp/emoncms/feed/data.json?id=$feedId&start=$start&end=$end&interval=$interval&apikey=$apiKey"
+        val urlFallback = "http://$emoncmsIp/feed/data.json?id=$feedId&start=$start&end=$end&interval=$interval&apikey=$apiKey"
+
+        val responseText = try {
+            client.get(urlPrimary).body<String>()
+        } catch (e: Exception) {
+            try {
+                client.get(urlFallback).body<String>()
+            } catch (e2: Exception) {
+                Log.e("EnergyRepo", "Error fetching feed $feedId from $emoncmsIp: ${e2.message}")
+                return emptyList()
             }
-            response.mapNotNull { 
+        }
+
+        return try {
+            val jsonArray = Json.parseToJsonElement(responseText).jsonArray
+            Log.d("EnergyRepo", "Feed $feedId: received ${jsonArray.size} points")
+            jsonArray.mapNotNull { element ->
                 try {
-                    val arr = it.jsonArray
+                    val arr = element.jsonArray
                     val ts = arr[0].jsonPrimitive.long
                     val value = arr[1].jsonPrimitive.floatOrNull ?: 0f
                     HistoryPoint(ts, value)
@@ -80,7 +92,7 @@ class EnergyRepository(private val emoncmsIp: String) {
                 }
             }
         } catch (e: Exception) {
-            Log.e("EnergyRepo", "Error fetching feed $feedId", e)
+            Log.e("EnergyRepo", "Error parsing feed $feedId response: $responseText", e)
             emptyList()
         }
     }
