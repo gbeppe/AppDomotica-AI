@@ -631,8 +631,7 @@ class MqttManager {
     }
 
     fun sendLightScene(scene: String) {
-        val payload = if (scene == "TV Mode" || scene == "Sleep Mode") "on" else scene
-        publish("zara/interface/lights/scene/cmd", payload)
+        publish("zara/interface/lights/scene/cmd", scene)
     }
 
     fun publish(topic: String, payload: String, retained: Boolean = false) {

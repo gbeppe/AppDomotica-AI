@@ -79,10 +79,29 @@ fun LightsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 Text("Scenari", style = MaterialTheme.typography.titleMedium)
             }
             
-            item { SceneButton("TV Mode", "tv") { mqttManager.sendLightScene("TV Mode") } }
-            item { SceneButton("Sleep Mode", "sleep") { mqttManager.sendLightScene("Sleep Mode") } }
-            item { SceneButton("Tutte ON", "all_on") { mqttManager.sendLightScene("on") } }
-            item { SceneButton("Tutte OFF", "all_off") { mqttManager.sendLightScene("off") } }
+            item {
+                SceneButton("TV Mode", "tv") {
+                    mqttManager.sendLightScene("tv")
+                }
+            }
+
+            item {
+                SceneButton("Sleep Mode", "sleep") {
+                    mqttManager.sendLightScene("sleep")
+                }
+            }
+
+            item {
+                SceneButton("Tutte ON", "all_on") {
+                    mqttManager.sendLightScene("all_on")
+                }
+            }
+
+            item {
+                SceneButton("Tutte OFF", "all_off") {
+                    mqttManager.sendLightScene("all_off")
+                }
+            }
         }
     }
 }
