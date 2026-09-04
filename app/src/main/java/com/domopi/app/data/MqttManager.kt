@@ -236,7 +236,7 @@ class MqttManager {
             "lights", "pool" -> handleLightsDomain(device, isOn)
             "env" -> handleEnvDomain(device, property, rounded)
             "heating" -> handleHeatingDomain(device, property, rounded, payload)
-            "climate" -> handleClimateDomain(device, property, rounded, isOn)
+            "climate" -> handleClimateDomain(device, property, rounded, isOn, payload)
             "ai" -> handleAiDomain(device, isOn, payload)
             "ai_climate" -> handleAiClimateDomain(property, payload)
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
@@ -274,12 +274,25 @@ class MqttManager {
     private fun handleEnergyDomain(device: String, prop: String, value: Float) {
         _energyData.update { current ->
             when (device) {
-                "solar" -> current.copy(solarPower = value)
-                "home" -> current.copy(homeConsumption = value)
-                "grid" -> current.copy(gridPower = value)
-                "battery" -> if (prop == "soc") current.copy(batterySoc = value) else current.copy(batteryPower = value)
+                "solar" -> when (prop) {
+                    "power" -> current.copy(solarPower = value)
+                    else -> current
+                }
+                "home" -> when (prop) {
+                    "consumption" -> current.copy(homeConsumption = value)
+                    else -> current
+                }
+                "grid" -> when (prop) {
+                    "power_raw" -> current.copy(gridPower = value)
+                    else -> current
+                }
+                "battery" -> when (prop) {
+                    "power_raw" -> current.copy(batteryPower = value)
+                    "soc" -> current.copy(batterySoc = value)
+                    else -> current
+                }
                 "puffer_acs" -> current.copy(pufferAcs = value)
-                "puffer" -> when(prop) {
+                "puffer" -> when (prop) {
                     "acs" -> current.copy(pufferAcs = value)
                     "top_temperature" -> current.copy(pufferAlto = value)
                     "bottom_temperature" -> current.copy(pufferBasso = value)
@@ -288,36 +301,77 @@ class MqttManager {
                 else -> current
             }
         }
+
+        _aiManagedData.update { current ->
+            val elec = current.metricheElettriche
+            val updatedElec = when (device) {
+                "solar" -> when (prop) {
+                    "power" -> elec.copy(produzioneFvW = value)
+                    "surplus" -> elec.copy(surplusW = value)
+                    else -> elec
+                }
+                "home" -> when (prop) {
+                    "consumption" -> elec.copy(consumoCasaW = value)
+                    "historical_average_band" -> elec.copy(consumoMedioStoricoFasciaW = value)
+                    else -> elec
+                }
+                "grid" -> when (prop) {
+                    "power_raw" -> elec.copy(gridPowerW = value)
+                    "import" -> elec.copy(gridImportW = value)
+                    "export" -> elec.copy(gridExportW = value)
+                    else -> elec
+                }
+                "battery" -> when (prop) {
+                    "power_raw" -> elec.copy(batteryPowerW = value)
+                    "charge" -> elec.copy(batteryChargeW = value)
+                    "discharge" -> elec.copy(batteryDischargeW = value)
+                    "soc" -> elec.copy(powerwallSocPercent = value)
+                    else -> elec
+                }
+                "ac" -> when (prop) {
+                    "power" -> elec.copy(consumoAcW = value)
+                    else -> elec
+                }
+                else -> elec
+            }
+            current.copy(metricheElettriche = updatedElec)
+        }
     }
 
     private fun handleLogicControlDomain(prop: String, value: Float, raw: String, isOn: Boolean) {
         val floatVal = raw.toFloatOrNull() ?: 0f
         val intVal = floatVal.toInt()
         _aiManagedData.update { current ->
-            val updatedLogic = when(prop) {
-                "soc_minimo_applied" -> current.logicaControllo.copy(socMinimoApplied = value)
-                "soglia_attivazione_applicata" -> current.logicaControllo.copy(sogliaAttivazioneApplicata = value)
-                "tempo_mancante_anticiclo_minuti" -> current.logicaControllo.copy(tempoMancanteAnticicloMinuti = intVal)
-                "kwh_stimati_in_batteria" -> current.logicaControllo.copy(kwhStimatiInBatteria = value)
-                "previsione_ricarica_batteria_percent" -> current.logicaControllo.copy(previsioneRicaricaBatteryPercent = intVal)
-                "previsione_solare_data" -> current.logicaControllo.copy(previsioneSolareData = raw)
-                "previsione_solare_domani_kwh" -> current.logicaControllo.copy(previsioneSolareDomaniKwh = value)
-                "blocco_emergenza_attivo" -> current.logicaControllo.copy(bloccoEmergenzaAttivo = isOn)
-                "cuscinetto_sicurezza_kwh" -> current.logicaControllo.copy(cuscinettoSicurezzaKwh = value)
-                "cuscinetto_richiesto_kwh" -> current.logicaControllo.copy(cuscinettoRichiestoKwh = value)
-                "stagione_attuale" -> current.logicaControllo.copy(stagioneAttuale = raw)
-                "stanza_rilevamento_vmc" -> current.logicaControllo.copy(stanzaRilevamentoVmc = raw)
-                "vmc_portata_stimata_m3h" -> {
-                    val updated = current.logicaControllo.copy(vmcPortataStimataM3h = intVal)
-                    // Sincronizziamo lo stato VMC per l'animazione
-                    _hvacState.update { hvac ->
-                        hvac.copy(vmc = hvac.vmc.copy(active = intVal > 0))
+            if (prop == "stagione_attuale") {
+                current.copy(
+                    stagioneAttiva = raw,
+                    logicaControllo = current.logicaControllo.copy(stagioneAttuale = raw)
+                )
+            } else {
+                val updatedLogic = when (prop) {
+                    "soc_minimo_applied" -> current.logicaControllo.copy(socMinimoApplied = value)
+                    "soglia_attivazione_applicata" -> current.logicaControllo.copy(sogliaAttivazioneApplicata = value)
+                    "tempo_mancante_anticiclo_minuti" -> current.logicaControllo.copy(tempoMancanteAnticicloMinuti = intVal)
+                    "kwh_stimati_in_batteria" -> current.logicaControllo.copy(kwhStimatiInBatteria = value)
+                    "previsione_ricarica_batteria_percent" -> current.logicaControllo.copy(previsioneRicaricaBatteryPercent = intVal)
+                    "previsione_solare_data" -> current.logicaControllo.copy(previsioneSolareData = raw)
+                    "previsione_solare_domani_kwh" -> current.logicaControllo.copy(previsioneSolareDomaniKwh = value)
+                    "blocco_emergenza_attivo" -> current.logicaControllo.copy(bloccoEmergenzaAttivo = isOn)
+                    "cuscinetto_sicurezza_kwh" -> current.logicaControllo.copy(cuscinettoSicurezzaKwh = value)
+                    "cuscinetto_richiesto_kwh" -> current.logicaControllo.copy(cuscinettoRichiestoKwh = value)
+                    "stanza_rilevamento_vmc" -> current.logicaControllo.copy(stanzaRilevamentoVmc = raw)
+                    "vmc_portata_stimata_m3h" -> {
+                        val updated = current.logicaControllo.copy(vmcPortataStimataM3h = intVal)
+                        // Sincronizziamo lo stato VMC per l'animazione
+                        _hvacState.update { hvac ->
+                            hvac.copy(vmc = hvac.vmc.copy(active = intVal > 0))
+                        }
+                        updated
                     }
-                    updated
+                    else -> current.logicaControllo
                 }
-                else -> current.logicaControllo
+                current.copy(logicaControllo = updatedLogic)
             }
-            current.copy(logicaControllo = updatedLogic)
         }
     }
 
@@ -381,14 +435,24 @@ class MqttManager {
                 else -> current
             }
         }
-        if (device == "living") {
-            _aiManagedData.update { current ->
-                when(prop) {
-                    "temperature" -> current.copy(metricheAmbientali = current.metricheAmbientali.copy(temperaturaC = value))
-                    "humidex" -> current.copy(metricheAmbientali = current.metricheAmbientali.copy(humidex = value, humidexLiving = value))
-                    else -> current
+
+        _aiManagedData.update { current ->
+            val env = current.metricheAmbientali
+            val updatedEnv = when (device) {
+                "living" -> when (prop) {
+                    "temperature" -> env.copy(temperaturaC = value)
+                    "humidex" -> env.copy(humidexLiving = value)
+                    else -> env
                 }
+                "bedroom" -> when (prop) {
+                    "temperature" -> env.copy(tempCameraMatrimoniale = value)
+                    "humidex" -> env.copy(humidexBedroom = value)
+                    else -> env
+                }
+                "solar_altitude" -> env.copy(altitudineSole = value)
+                else -> env
             }
+            current.copy(metricheAmbientali = updatedEnv)
         }
     }
 
@@ -465,7 +529,32 @@ class MqttManager {
         }
     }
 
-    private fun handleClimateDomain(device: String, prop: String, value: Float, isOn: Boolean) {
+    private fun handleClimateDomain(device: String, prop: String, value: Float, isOn: Boolean, payload: String) {
+        if (device == "control" && prop == "humidex_reference") {
+            _aiManagedData.update { current ->
+                current.copy(metricheAmbientali = current.metricheAmbientali.copy(humidex = value))
+            }
+            return
+        }
+
+        if (device == "full_state") {
+            if (prop == "timestamp") {
+                val ts = payload.trim().toLongOrNull()
+                if (ts != null) {
+                    _aiManagedData.update { it.copy(timestamp = ts) }
+                }
+            } else if (prop == "data_ora_formattata") {
+                if (payload.isNotBlank()) {
+                    _aiManagedData.update { it.copy(dataOraFormattata = payload) }
+                }
+            }
+            return
+        }
+
+        if (device != "thermostat_living" && device != "thermostat_bath") {
+            return
+        }
+
         _hvacState.update { current ->
             val thermostat = if (device == "thermostat_living") current.thermostatLiving else current.thermostatBath
             val updated = when (prop) {
@@ -481,9 +570,32 @@ class MqttManager {
     }
 
     private fun handleVentilationDomain(device: String, prop: String, raw: String) {
-        if (device == "vmc" && prop == "speed") {
-            val speed = raw.toIntOrNull() ?: 1
-            _hvacState.update { it.copy(vmc = it.vmc.copy(speed = speed, active = true)) }
+        if (device != "vmc") return
+        val floatVal = raw.replace(",", ".").toFloatOrNull() ?: 0f
+
+        when (prop) {
+            "speed" -> {
+                val speed = raw.toIntOrNull() ?: 1
+                _hvacState.update { it.copy(vmc = it.vmc.copy(speed = speed, active = true)) }
+                _aiManagedData.update { current ->
+                    current.copy(statoVmc = current.statoVmc.copy(velocitaAttuale = speed))
+                }
+            }
+            "reason" -> {
+                _aiManagedData.update { current ->
+                    current.copy(statoVmc = current.statoVmc.copy(motivoLogica = raw.trim()))
+                }
+            }
+            "outdoor_humidex" -> {
+                _aiManagedData.update { current ->
+                    current.copy(statoVmc = current.statoVmc.copy(humidexEsterno = floatVal))
+                }
+            }
+            "outdoor_temperature" -> {
+                _aiManagedData.update { current ->
+                    current.copy(statoVmc = current.statoVmc.copy(temperaturaEsternaC = floatVal))
+                }
+            }
         }
     }
 
