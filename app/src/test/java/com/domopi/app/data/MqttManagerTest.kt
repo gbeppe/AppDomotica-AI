@@ -5,6 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class MqttManagerTest {
 
@@ -184,6 +185,100 @@ class MqttManagerTest {
 
         assertEquals("ESTATE", aiData.stagioneAttiva)
         assertEquals("ESTATE", aiData.logicaControllo.stagioneAttuale)
+    }
+
+    // --- PARTE A: RUNTIME OUTGOING CONTRACT TESTS ---
+
+    private val messageQueueField = MqttManager::class.java.getDeclaredField("messageQueue").apply {
+        isAccessible = true
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun getQueuedMessages(): List<MqttQueuedMessage> {
+        val queue = messageQueueField.get(mqttManager) as ConcurrentLinkedQueue<MqttQueuedMessage>
+        val list = queue.toList()
+        queue.clear()
+        return list
+    }
+
+    @Test
+    fun testSendLightSceneOutgoingContract() {
+        getQueuedMessages()
+
+        mqttManager.sendLightScene("tv")
+        val tvMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/scene/cmd", tvMsg.topic)
+        assertEquals("tv", tvMsg.payload)
+
+        mqttManager.sendLightScene("sleep")
+        val sleepMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/scene/cmd", sleepMsg.topic)
+        assertEquals("sleep", sleepMsg.payload)
+
+        mqttManager.sendLightScene("all_on")
+        val allOnMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/scene/cmd", allOnMsg.topic)
+        assertEquals("all_on", allOnMsg.payload)
+
+        mqttManager.sendLightScene("all_off")
+        val allOffMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/scene/cmd", allOffMsg.topic)
+        assertEquals("all_off", allOffMsg.payload)
+    }
+
+    @Test
+    fun testToggleLightOutgoingContract() {
+        getQueuedMessages()
+
+        mqttManager.toggleLight("sala", false)
+        val salaMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/living/power/cmd", salaMsg.topic)
+        assertEquals("true", salaMsg.payload)
+
+        mqttManager.toggleLight("televisione", true)
+        val tvMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/tv/power/cmd", tvMsg.topic)
+        assertEquals("false", tvMsg.payload)
+
+        mqttManager.toggleLight("tavolinolettura", false)
+        val readingMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/reading/power/cmd", readingMsg.topic)
+        assertEquals("true", readingMsg.payload)
+
+        mqttManager.toggleLight("lucecamera", true)
+        val bedMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/bedroom/power/cmd", bedMsg.topic)
+        assertEquals("false", bedMsg.payload)
+
+        mqttManager.toggleLight("lampadahifi", false)
+        val hifiMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/hifi/power/cmd", hifiMsg.topic)
+        assertEquals("true", hifiMsg.payload)
+    }
+
+    @Test
+    fun testTogglePoolOutgoingContract() {
+        getQueuedMessages()
+
+        mqttManager.toggleLight("pompapiscina", false)
+        val pumpMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/pool/pump/power/cmd", pumpMsg.topic)
+        assertEquals("true", pumpMsg.payload)
+
+        mqttManager.toggleLight("skimmerpiscina", true)
+        val skimmerMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/pool/skimmer/power/cmd", skimmerMsg.topic)
+        assertEquals("false", skimmerMsg.payload)
+
+        mqttManager.toggleLight("lucipiscina", false)
+        val waterMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/pool/water/power/cmd", waterMsg.topic)
+        assertEquals("true", waterMsg.payload)
+
+        mqttManager.toggleLight("lucipedanapiscina", true)
+        val deckMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/pool/deck/power/cmd", deckMsg.topic)
+        assertEquals("false", deckMsg.payload)
     }
 
     @Test
