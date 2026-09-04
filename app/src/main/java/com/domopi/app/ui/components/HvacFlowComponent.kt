@@ -134,7 +134,7 @@ fun androidx.compose.ui.graphics.drawscope.DrawScope.drawHvacCurvePath(
     val path = Path().apply {
         moveTo(start.x, start.y)
         val controlPoint = Offset((start.x + end.x) / 2, (start.y + end.y) / 2)
-        quadraticBezierTo(controlPoint.x, controlPoint.y, end.x, end.y)
+        quadraticTo(controlPoint.x, controlPoint.y, end.x, end.y)
     }
 
     drawPath(
