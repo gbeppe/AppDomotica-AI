@@ -85,8 +85,8 @@ fun EnergyFlowComponent(
             // House (Right) - Start from left border
             val homePoint = Offset(size.width - sidePadding.toPx() - iconSizePx, hubY.toPx())
             
-            // Battery (Bottom) - Start from top border
-            val batteryPoint = Offset(size.width / 2, (hubY + 25.dp).toPx())
+            // Battery (Bottom) - Start from top border of Tesla Powerwall card
+            val batteryPoint = Offset(size.width / 2, (hubY + 42.dp).toPx())
 
             // Paths
             drawEnergyPathTesla(solarPoint, hubPx, Color(0xFFFFEB3B), phase, active = solarPower > 15, reverse = false)
@@ -134,14 +134,14 @@ fun BatteryNodeMinimal(
     modifier: Modifier = Modifier,
     soc: Float
 ) {
-    val batteryHeight = 110.dp
-    val batteryWidth = 65.dp
+    val batteryHeight = 96.dp
+    val batteryWidth = 56.dp
     
     Box(
         modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.BottomCenter
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Battery Image (Transparent background)
+        // 1. Battery Image centered EXACLY at size.width / 2
         Image(
             painter = painterResource(id = R.drawable.tesla_powerwall),
             contentDescription = null,
@@ -149,24 +149,25 @@ fun BatteryNodeMinimal(
             contentScale = ContentScale.Fit
         )
 
-        // Aligned indicator on the right
+        // 2. Aligned indicator on the right of the centered battery
         Row(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(start = batteryWidth + 30.dp) 
-                .height(batteryHeight),
+                .align(Alignment.TopCenter)
+                .padding(start = batteryWidth + 48.dp)
+                .height(batteryHeight)
+                .padding(vertical = 6.dp),
             verticalAlignment = Alignment.Bottom
         ) {
             Box(
                 modifier = Modifier
-                    .width(8.dp)
+                    .width(6.dp)
                     .fillMaxHeight()
-                    .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(1.dp))
+                    .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(1.dp))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(soc / 100f)
+                        .fillMaxHeight((soc / 100f).coerceIn(0f, 1f))
                         .background(Color(0xFF00FF00))
                         .align(Alignment.BottomCenter)
                 )
@@ -179,7 +180,7 @@ fun BatteryNodeMinimal(
                 color = Color.White, 
                 fontSize = 11.sp, 
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 2.dp)
+                modifier = Modifier.align(Alignment.CenterVertically)
             )
         }
     }
