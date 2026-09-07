@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.AcReasonCategory
 import com.domopi.app.data.AcReasonMapper
+import com.domopi.app.data.AcReasonMetric
 import com.domopi.app.data.AiManagedData
 import com.domopi.app.data.ConnectionMode
 import com.domopi.app.data.ZaiConnectivityManager
@@ -200,28 +201,40 @@ fun MainDashboard(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
+                            if (reasonInfo.quandoCompare.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "📌 Quando compare: ${reasonInfo.quandoCompare}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            if (reasonInfo.effetto.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "⚙️ Effetto: ${reasonInfo.effetto}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            if (reasonInfo.soglieCostanti.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "📐 Soglia Attualizzata: ${reasonInfo.soglieCostanti}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = categoryColor
+                                )
+                            }
+
                             if (reasonInfo.metrics.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(10.dp))
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    reasonInfo.metrics.forEach { metric ->
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Text(
-                                                text = "• ${metric.label}:",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Text(
-                                                text = metric.value,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = categoryColor
-                                            )
-                                        }
-                                    }
-                                }
+                                OptInFlowRow(
+                                    metrics = reasonInfo.metrics,
+                                    categoryColor = categoryColor
+                                )
                             }
                         }
                     }
@@ -548,6 +561,43 @@ fun MainDashboard(
                             "%.1f°C".format(locale, envState.bedroom.temperature)
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun OptInFlowRow(metrics: List<AcReasonMetric>, categoryColor: Color) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        metrics.forEach { metric ->
+            Surface(
+                color = categoryColor.copy(alpha = 0.12f),
+                shape = MaterialTheme.shapes.extraSmall,
+                border = BorderStroke(0.5.dp, categoryColor.copy(alpha = 0.25f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${metric.label}: ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp
+                    )
+                    Text(
+                        text = metric.value,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = categoryColor,
+                        fontSize = 11.sp
+                    )
                 }
             }
         }

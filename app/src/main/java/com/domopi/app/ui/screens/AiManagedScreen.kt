@@ -260,6 +260,7 @@ fun ControlCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StatusCard(
     data: com.domopi.app.data.AiManagedData,
@@ -302,7 +303,7 @@ fun StatusCard(
             
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Sezione Motivo di Logica (motivoAc) + Descrizione Estesa + Valori Live
+            // Sezione Motivo di Logica (motivoAc) + Descrizione Estesa + Quando Compare + Effetto + Valori Live
             val reasonInfo = AcReasonMapper.getAcReasonInfo(data.statoCondizionatore.motivoLogica, data)
             val categoryColor = when (reasonInfo.category) {
                 AcReasonCategory.CRITICAL -> Color.Red
@@ -345,12 +346,40 @@ fun StatusCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
+                    if (reasonInfo.quandoCompare.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "📌 Quando compare: ${reasonInfo.quandoCompare}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (reasonInfo.effetto.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "⚙️ Effetto: ${reasonInfo.effetto}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (reasonInfo.soglieCostanti.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "📐 Soglia Attualizzata: ${reasonInfo.soglieCostanti}",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = categoryColor
+                        )
+                    }
+
                     if (reasonInfo.metrics.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
+                        Spacer(modifier = Modifier.height(12.dp))
+                        FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             reasonInfo.metrics.forEach { metric ->
                                 Surface(
