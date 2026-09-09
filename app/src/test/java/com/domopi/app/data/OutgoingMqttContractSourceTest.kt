@@ -107,6 +107,7 @@ class OutgoingMqttContractSourceTest {
     @Test
     fun testAiManagedScreenPublishContract() {
         val content = getScreenFile("AiManagedScreen.kt").readText()
+        assertTrue(content.contains("zara/interface/predictive_reserve/control_enabled/cmd"))
         assertTrue(content.contains("zara/interface/ai/system_enabled/cmd"))
         assertTrue(content.contains("zara/interface/ai/compressor_on_min/cmd"))
         assertTrue(content.contains("zara/interface/ai/compressor_off_min/cmd"))

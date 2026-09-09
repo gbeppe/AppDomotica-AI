@@ -1,5 +1,6 @@
 package com.domopi.app.data
 
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -185,6 +186,15 @@ class MqttManagerTest {
 
         assertEquals("ESTATE", aiData.stagioneAttiva)
         assertEquals("ESTATE", aiData.logicaControllo.stagioneAttuale)
+    }
+
+    @Test
+    fun testPredictiveReserveControlEnabledMapping() {
+        processMessage("zara/interface/predictive_reserve/control_enabled/stat", "true")
+        assertTrue(mqttManager.aiSettings.value.predictiveReserveEnabled)
+
+        processMessage("zara/interface/predictive_reserve/control_enabled/stat", "false")
+        Assert.assertFalse(mqttManager.aiSettings.value.predictiveReserveEnabled)
     }
 
     // --- PARTE A: RUNTIME OUTGOING CONTRACT TESTS ---

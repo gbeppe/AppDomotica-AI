@@ -70,6 +70,7 @@ fun MainDashboard(
     var showPinDialog by remember { mutableStateOf(false) }
     var showAlarmDialog by remember { mutableStateOf(false) }
     var showAcStatePopup by remember { mutableStateOf(false) }
+    var showPrDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
     val aiData by mqttManager.aiManagedData.collectAsState()
@@ -248,6 +249,38 @@ fun MainDashboard(
         )
     }
 
+    if (showPrDialog) {
+        val willEnable = !aiSettings.predictiveReserveEnabled
+        AlertDialog(
+            onDismissRequest = { showPrDialog = false },
+            icon = { Icon(Icons.Default.NightsStay, null, tint = if (willEnable) SolarGreen else Color.Gray) },
+            title = { Text("Conferma Modifica PR") },
+            text = {
+                Text(
+                    if (willEnable)
+                        "Sei sicuro di voler abilitare il controllo Predictive Reserve notturno?\n\nConsente al PR di influenzare AI Climate."
+                    else
+                        "Sei sicuro di voler disabilitare il controllo Predictive Reserve notturno?\n\nVieta al PR di influenzare AI Climate."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        mqttManager.publish("zara/interface/predictive_reserve/control_enabled/cmd", if (willEnable) "true" else "false")
+                        showPrDialog = false
+                    }
+                ) {
+                    Text("CONFERMA", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPrDialog = false }) {
+                    Text("ANNULLA")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -401,36 +434,71 @@ fun MainDashboard(
                         }
                     }
                     
-                    // Parte Destra: Badge Stato AC -> Apre il Popup Stato Clima
-                    val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { if (aiSettings.systemEnabled) "ATTIVATO" else "DISATTIVATO" }
-                    val acStatusColor = when (aiData.statoCondizionatore.statoAttuale.uppercase()) {
-                        "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
-                        "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
-                        "STANDBY_INVERTER" -> Color(0xFFFFB300)
-                        "HEAT_DIURNO", "HEAT_SICUREZZA_NOTTE", "RISCALDAMENTO" -> Color(0xFFFF5722)
-                        else -> if (aiSettings.systemEnabled) SolarGreen else Color.Gray
-                    }
-
-                    Surface(
-                        modifier = Modifier.clickable { showAcStatePopup = true },
-                        color = acStatusColor.copy(alpha = 0.1f),
-                        shape = CircleShape,
-                        border = BorderStroke(1.dp, acStatusColor)
+                    // Parte Destra: Badge PR + Badge Stato AC
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically, 
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        // Badge PR (Prima del circoletto dello stato condizionatore)
+                        val prColor = if (aiSettings.predictiveReserveEnabled) SolarGreen else Color.Gray
+                        Surface(
+                            modifier = Modifier.clickable { showPrDialog = true },
+                            color = prColor.copy(alpha = 0.12f),
+                            shape = CircleShape,
+                            border = BorderStroke(1.dp, prColor.copy(alpha = 0.5f))
                         ) {
-                            if (!isAdminMode) {
-                                Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = Color.Red.copy(alpha = 0.8f))
-                                Spacer(Modifier.width(6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.NightsStay,
+                                    contentDescription = null,
+                                    tint = prColor,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = if (aiSettings.predictiveReserveEnabled) "PR ON" else "PR OFF",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = prColor,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                )
                             }
-                            Text(
-                                text = acStatus,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = acStatusColor,
-                                fontWeight = FontWeight.Bold
-                            )
+                        }
+
+                        // Badge Stato AC -> Apre il Popup Stato Clima
+                        val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { if (aiSettings.systemEnabled) "ATTIVATO" else "DISATTIVATO" }
+                        val acStatusColor = when (aiData.statoCondizionatore.statoAttuale.uppercase()) {
+                            "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
+                            "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
+                            "STANDBY_INVERTER" -> Color(0xFFFFB300)
+                            "HEAT_DIURNO", "HEAT_SICUREZZA_NOTTE", "RISCALDAMENTO" -> Color(0xFFFF5722)
+                            else -> if (aiSettings.systemEnabled) SolarGreen else Color.Gray
+                        }
+
+                        Surface(
+                            modifier = Modifier.clickable { showAcStatePopup = true },
+                            color = acStatusColor.copy(alpha = 0.1f),
+                            shape = CircleShape,
+                            border = BorderStroke(1.dp, acStatusColor)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically, 
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                if (!isAdminMode) {
+                                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = Color.Red.copy(alpha = 0.8f))
+                                    Spacer(Modifier.width(6.dp))
+                                }
+                                Text(
+                                    text = acStatus,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = acStatusColor,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

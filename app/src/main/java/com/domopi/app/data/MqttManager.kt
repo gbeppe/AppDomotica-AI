@@ -40,6 +40,7 @@ data class EnvironmentState(
 
 data class AiSettings(
     val systemEnabled: Boolean = true,
+    val predictiveReserveEnabled: Boolean = false,
     val compressorOnMin: Int = 15,
     val compressorOffMin: Int = 15,
     val nightHumidexThreshold: Int = 30,
@@ -200,7 +201,8 @@ class MqttManager {
             "zara/interface/ai/#", "zara/interface/ai_climate/#", "zara/interface/fireplace/#", "zara/interface/ventilation/#",
             "zara/interface/settings/#", "zara/interface/garage/#", 
             "zara/interface/stato_condizionatore/#",
-            "zara/interface/logica_controllo/#"
+            "zara/interface/logica_controllo/#",
+            "zara/interface/predictive_reserve/#"
         )
         mqttClient?.subscribe(topics, IntArray(topics.size) { 1 })
     }
@@ -239,9 +241,16 @@ class MqttManager {
             "climate" -> handleClimateDomain(device, property, rounded, isOn, payload)
             "ai" -> handleAiDomain(device, isOn, payload)
             "ai_climate" -> handleAiClimateDomain(property, payload)
+            "predictive_reserve" -> handlePredictiveReserveDomain(property, isOn)
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
             "ventilation" -> handleVentilationDomain(device, property, payload)
             "settings" -> handleSettingsDomain(device, isOn)
+        }
+    }
+
+    private fun handlePredictiveReserveDomain(prop: String, isOn: Boolean) {
+        if (prop == "control_enabled") {
+            _aiSettings.update { it.copy(predictiveReserveEnabled = isOn) }
         }
     }
 

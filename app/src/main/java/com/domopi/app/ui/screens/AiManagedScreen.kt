@@ -1,5 +1,6 @@
 package com.domopi.app.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +28,7 @@ import com.domopi.app.data.HvacState
 import com.domopi.app.data.LogicaControllo
 import com.domopi.app.data.MetricheElettriche
 import com.domopi.app.data.MqttManager
+import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.NumericStepper
 import com.domopi.app.ui.theme.SolarGreen
@@ -35,7 +38,7 @@ import java.util.Locale
 @Composable
 fun AiManagedScreen(
     mqttManager: MqttManager,
-    settingsManager: com.domopi.app.data.SettingsManager,
+    settingsManager: SettingsManager,
     onBack: () -> Unit
 ) {
     val aiData by mqttManager.aiManagedData.collectAsState()
@@ -44,7 +47,41 @@ fun AiManagedScreen(
     val hvacState by mqttManager.hvacState.collectAsState()
     val isAdminMode by settingsManager.isAdminMode.collectAsState(initial = false)
 
-    androidx.activity.compose.BackHandler { onBack() }
+    var showPrDialog by remember { mutableStateOf(false) }
+
+    BackHandler { onBack() }
+
+    if (showPrDialog) {
+        val willEnable = !aiSettings.predictiveReserveEnabled
+        AlertDialog(
+            onDismissRequest = { showPrDialog = false },
+            icon = { Icon(Icons.Default.NightsStay, null, tint = if (willEnable) SolarGreen else Color.Gray) },
+            title = { Text("Conferma Modifica PR") },
+            text = {
+                Text(
+                    if (willEnable)
+                        "Sei sicuro di voler abilitare il controllo Predictive Reserve notturno?\n\nConsente al PR di influenzare AI Climate."
+                    else
+                        "Sei sicuro di voler disabilitare il controllo Predictive Reserve notturno?\n\nVieta al PR di influenzare AI Climate."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        mqttManager.publish("zara/interface/predictive_reserve/control_enabled/cmd", if (willEnable) "true" else "false")
+                        showPrDialog = false
+                    }
+                ) {
+                    Text("CONFERMA", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPrDialog = false }) {
+                    Text("ANNULLA")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -71,7 +108,7 @@ fun AiManagedScreen(
                     val alarm = aiSettings.alarm!!
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.1f)),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red.copy(alpha = 0.5f))
+                        border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.5f))
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -93,6 +130,56 @@ fun AiManagedScreen(
                                 )
                             }
                         }
+                    }
+                }
+            }
+
+            // 0. Predictive Reserve (In cima)
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(44.dp),
+                            shape = MaterialTheme.shapes.medium,
+                            color = if (aiSettings.predictiveReserveEnabled) SolarGreen.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.NightsStay,
+                                    contentDescription = null,
+                                    tint = if (aiSettings.predictiveReserveEnabled) SolarGreen else Color.Gray
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.width(16.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Controllo Predictive Reserve notturno",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                if (aiSettings.predictiveReserveEnabled) "Consente al PR di influenzare AI Climate" else "Vieta al PR di influenzare AI Climate",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (aiSettings.predictiveReserveEnabled) SolarGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Spacer(Modifier.width(8.dp))
+
+                        Switch(
+                            checked = aiSettings.predictiveReserveEnabled,
+                            onCheckedChange = { showPrDialog = true },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = SolarGreen,
+                                checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                            )
+                        )
                     }
                 }
             }
@@ -213,7 +300,7 @@ fun AiManagedScreen(
 @Composable
 fun ControlCard(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     isEnabled: Boolean,
     onEnabledChange: (Boolean) -> Unit
 ) {
@@ -263,9 +350,9 @@ fun ControlCard(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StatusCard(
-    data: com.domopi.app.data.AiManagedData,
-    envState: com.domopi.app.data.EnvironmentState,
-    hvacState: com.domopi.app.data.HvacState
+    data: AiManagedData,
+    envState: EnvironmentState,
+    hvacState: HvacState
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
