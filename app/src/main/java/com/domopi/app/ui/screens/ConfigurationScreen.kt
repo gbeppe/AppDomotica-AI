@@ -40,6 +40,7 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
     var domopiPort by remember { mutableStateOf("") }
     var domopiUser by remember { mutableStateOf("") }
     var domopiPass by remember { mutableStateOf("") }
+    var digitalTwinPrefix by remember { mutableStateOf("zara/interface") }
     
     var emoncmsIp by remember { mutableStateOf("") }
     var emoncmsRemoteIp by remember { mutableStateOf("") }
@@ -292,6 +293,13 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                 OutlinedTextField(value = domopiPort, onValueChange = { domopiPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiUser, onValueChange = { domopiUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiPass, onValueChange = { domopiPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = digitalTwinPrefix, onValueChange = { digitalTwinPrefix = it }, label = { Text("Prefisso Topic Digital Twin") }, modifier = Modifier.fillMaxWidth())
+                Text(
+                    text = "⚠️ Modificare questo prefisso richiede il riavvio dell'applicazione per ri-sottoscrivere i topic con la nuova alberatura.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                )
             }
             
             item {

@@ -194,32 +194,48 @@ class MqttManager {
         }
     }
 
+    var digitalTwinPrefix: String = "zara/interface"
+        private set
+
+    fun setDigitalTwinPrefix(prefix: String) {
+        val clean = prefix.trim().removeSuffix("/")
+        if (clean.isNotEmpty() && digitalTwinPrefix != clean) {
+            digitalTwinPrefix = clean
+            if (mqttClient?.isConnected == true) {
+                subscribeToUnifiedTopics()
+            }
+        }
+    }
+
     private fun subscribeToUnifiedTopics() {
+        val p = digitalTwinPrefix.removeSuffix("/")
         val topics = arrayOf(
-            "zara/interface/lights/#", "zara/interface/pool/#", "zara/interface/env/#",
-            "zara/interface/energy/#", "zara/interface/heating/#", "zara/interface/climate/#",
-            "zara/interface/ai/#", "zara/interface/ai_climate/#", "zara/interface/fireplace/#", "zara/interface/ventilation/#",
-            "zara/interface/settings/#", "zara/interface/garage/#", 
-            "zara/interface/stato_condizionatore/#",
-            "zara/interface/logica_controllo/#",
-            "zara/interface/predictive_reserve/#"
+            "$p/lights/#", "$p/pool/#", "$p/env/#",
+            "$p/energy/#", "$p/heating/#", "$p/climate/#",
+            "$p/ai/#", "$p/ai_climate/#", "$p/fireplace/#", "$p/ventilation/#",
+            "$p/settings/#", "$p/garage/#", 
+            "$p/stato_condizionatore/#",
+            "$p/logica_controllo/#",
+            "$p/predictive_reserve/#"
         )
         mqttClient?.subscribe(topics, IntArray(topics.size) { 1 })
     }
 
     private fun handleIncomingMessage(topic: String, payload: String) {
-        if (!topic.startsWith("zara/interface/")) return
+        val p = digitalTwinPrefix.removeSuffix("/")
+        if (!topic.startsWith(p)) return
         updateRateCounter()
         
-        val parts = topic.split("/")
-        if (parts.size < 4) return
+        val relativeTopic = topic.removePrefix(p).removePrefix("/")
+        val parts = relativeTopic.split("/")
+        if (parts.isEmpty()) return
 
-        val domain = parts[2]
+        val domain = parts[0]
         
-        // --- NUOVO PARSER UNIFICATO ---
+        // --- PARSER UNIFICATO ---
         val cleanParts = if (parts.last() == "stat" || parts.last() == "cmd") parts.dropLast(1) else parts
-        val device = if (cleanParts.size >= 4) cleanParts[3] else ""
-        val property = if (cleanParts.size >= 5) cleanParts[4] else device
+        val device = if (cleanParts.size >= 2) cleanParts[1] else ""
+        val property = if (cleanParts.size >= 3) cleanParts[2] else device
 
         // Filtro Log
         if (domain != "logica_controllo" && domain != "energy" && domain != "env" && domain != "stato_condizionatore") {
@@ -644,14 +660,21 @@ class MqttManager {
     }
 
     fun publish(topic: String, payload: String, retained: Boolean = false) {
+        val p = digitalTwinPrefix.removeSuffix("/")
+        val actualTopic = if (topic.startsWith("zara/interface")) {
+            topic.replace("zara/interface", p)
+        } else {
+            topic
+        }
+
         val client = mqttClient
         if (client == null || !client.isConnected) {
-            messageQueue.add(MqttQueuedMessage(topic, payload, retained))
+            messageQueue.add(MqttQueuedMessage(actualTopic, payload, retained))
             return
         }
         try {
-            client.publish(topic, MqttMessage(payload.toByteArray()).apply { qos = 1; isRetained = retained })
-        } catch (_: Exception) { messageQueue.add(MqttQueuedMessage(topic, payload, retained)) }
+            client.publish(actualTopic, MqttMessage(payload.toByteArray()).apply { qos = 1; isRetained = retained })
+        } catch (_: Exception) { messageQueue.add(MqttQueuedMessage(actualTopic, payload, retained)) }
     }
 
     private fun processMessageQueue() {

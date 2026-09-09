@@ -31,6 +31,13 @@ class MainActivity : ComponentActivity() {
         val connectivityManager = ZaiConnectivityManager(this)
         mqttManager = MqttManager()
 
+        // Sync prefisso Digital Twin
+        lifecycleScope.launch {
+            settingsManager.digitalTwinPrefix.collectLatest { prefix ->
+                mqttManager.setDigitalTwinPrefix(prefix)
+            }
+        }
+
         // --- Gateway Centrale .20 (Z-AI) ---
         lifecycleScope.launch {
             combine(

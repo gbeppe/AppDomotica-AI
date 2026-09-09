@@ -197,6 +197,26 @@ class MqttManagerTest {
         Assert.assertFalse(mqttManager.aiSettings.value.predictiveReserveEnabled)
     }
 
+    @Test
+    fun testCustomDigitalTwinPrefixMappingAndPublishing() {
+        mqttManager.setDigitalTwinPrefix("custom/prefix")
+        assertEquals("custom/prefix", mqttManager.digitalTwinPrefix)
+
+        // Verifico parsing con prefisso personalizzato
+        processMessage("custom/prefix/env/living/temperature/stat", "26.0")
+        assertEquals(26.0f, mqttManager.environmentState.value.living.temperature, 0.1f)
+
+        // Verifico pubblicazione comandi con prefisso personalizzato
+        getQueuedMessages()
+        mqttManager.sendLightScene("tv")
+        val msg = getQueuedMessages().first()
+        assertEquals("custom/prefix/lights/scene/cmd", msg.topic)
+        assertEquals("tv", msg.payload)
+
+        // Ripristino prefisso default
+        mqttManager.setDigitalTwinPrefix("zara/interface")
+    }
+
     // --- PARTE A: RUNTIME OUTGOING CONTRACT TESTS ---
 
     private val messageQueueField = MqttManager::class.java.getDeclaredField("messageQueue").apply {

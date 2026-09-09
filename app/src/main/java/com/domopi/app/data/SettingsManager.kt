@@ -23,6 +23,7 @@ class SettingsManager(private val context: Context) {
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
         val GITHUB_ICON_STYLE = stringPreferencesKey("github_icon_style")
+        val DIGITAL_TWIN_PREFIX = stringPreferencesKey("digital_twin_prefix")
 
         val DOMOPI_BROKER_IP = stringPreferencesKey("domopi_broker_ip")
         val DOMOPI_REMOTE_IP = stringPreferencesKey("domopi_remote_ip")
@@ -61,6 +62,7 @@ class SettingsManager(private val context: Context) {
     val isAdminMode: Flow<Boolean> = context.dataStore.data.map { it[IS_ADMIN_MODE] ?: false }.distinctUntilChanged()
     val adminPin: Flow<String> = context.dataStore.data.map { it[ADMIN_PIN] ?: "1234" }.distinctUntilChanged()
     val githubIconStyle: Flow<String> = context.dataStore.data.map { it[GITHUB_ICON_STYLE] ?: "branch" }.distinctUntilChanged()
+    val digitalTwinPrefix: Flow<String> = context.dataStore.data.map { it[DIGITAL_TWIN_PREFIX] ?: "zara/interface" }.distinctUntilChanged()
 
     val domopiIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_IP] ?: "192.168.1.20" }.distinctUntilChanged()
     val domopiRemoteIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_REMOTE_IP] ?: "" }.distinctUntilChanged()
@@ -102,6 +104,12 @@ class SettingsManager(private val context: Context) {
     suspend fun saveGithubIconStyle(style: String) {
         context.dataStore.edit {
             it[GITHUB_ICON_STYLE] = style
+        }
+    }
+
+    suspend fun saveDigitalTwinPrefix(prefix: String) {
+        context.dataStore.edit {
+            it[DIGITAL_TWIN_PREFIX] = prefix
         }
     }
 }
