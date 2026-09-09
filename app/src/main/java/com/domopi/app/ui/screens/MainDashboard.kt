@@ -37,6 +37,7 @@ import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.GithubStatus
 import com.domopi.app.data.GithubVersionChecker
 import com.domopi.app.data.LogicaControllo
+import com.domopi.app.data.MetricheAmbientali
 import com.domopi.app.data.MetricheElettriche
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.SettingsManager
@@ -825,36 +826,44 @@ fun DomainCard(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(8.dp)
                     ) {
-                        Text(aiData.statoCondizionatore.statoAttuale, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                        Text("Set: ${aiData.statoCondizionatore.temperaturaImpostataC}°C", style = MaterialTheme.typography.bodyMedium)
-                        Text(aiData.statoCondizionatore.modalitaAria, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { "OFF" }
+                        val acSetTemp = aiData.statoCondizionatore.temperaturaImpostataC
+                        val setSubtitle = if (acSetTemp > 0) "Set: %.1f°C".format(acSetTemp) else "Temp: %.1f°C".format(envState.living.temperature)
+                        val airMode = aiData.statoCondizionatore.modalitaAria.ifEmpty { "Standby" }
+
+                        Text(acStatus, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                        Text(setSubtitle, style = MaterialTheme.typography.bodyMedium)
+                        Text(airMode, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         
                         Spacer(Modifier.height(12.dp))
                         
-                        // Griglia Dettagli Logica (Tutti i 12 parametri)
+                        // Griglia Dettagli Logica e Misurazioni Reali (12 parametri)
                         val logica = aiData.logicaControllo
+                        val elec = aiData.metricheElettriche
+                        val env = aiData.metricheAmbientali
+
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("SOC", "${logica.socMinimoApplied.toInt()}%")
-                                CompactDetail("Humidex", "%.1f".format(logica.sogliaAttivazioneApplicata))
-                                CompactDetail("Timer", "${logica.tempoMancanteAnticicloMinuti}m")
+                                CompactDetail("SOC Bat.", "${elec.powerwallSocPercent.toInt()}%")
+                                CompactDetail("Humidex", "%.1f".format(env.humidexLiving))
+                                CompactDetail("Soglia Hum.", "%.1f".format(logica.sogliaAttivazioneApplicata))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("Batteria", "%.1f".format(logica.kwhStimatiInBatteria))
-                                CompactDetail("Carica", "${logica.previsioneRicaricaBatteryPercent}%")
-                                CompactDetail("Solare", "%.1f".format(logica.previsioneSolareDomaniKwh))
+                                CompactDetail("SOC Min.", "${logica.socMinimoApplied.toInt()}%")
+                                CompactDetail("Batteria", "%.1f kWh".format(logica.kwhStimatiInBatteria))
+                                CompactDetail("Prev. Sol.", "%.1f kWh".format(logica.previsioneSolareDomaniKwh))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 CompactDetail("Data Sol.", logica.previsioneSolareData.ifEmpty { "N/D" })
-                                CompactDetail("Cusc. Sic.", "%.1f".format(logica.cuscinettoSicurezzaKwh))
-                                CompactDetail("Cusc. Ric.", "%.1f".format(logica.cuscinettoRichiestoKwh))
+                                CompactDetail("Cusc. Sic.", "%.1f kWh".format(logica.cuscinettoSicurezzaKwh))
+                                CompactDetail("Cusc. Ric.", "%.1f kWh".format(logica.cuscinettoRichiestoKwh))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("VMC", "${logica.vmcPortataStimataM3h}")
-                                CompactDetail("Stanza", logica.stanzaRilevamentoVmc.ifEmpty { "N/D" })
+                                CompactDetail("VMC", "${logica.vmcPortataStimataM3h} m³/h")
+                                CompactDetail("Stanza", logica.stanzaRilevamentoVmc.ifEmpty { "LIVING" })
                                 CompactDetail("Blocco", if (logica.bloccoEmergenzaAttivo) "ON" else "OFF")
                             }
                         }
