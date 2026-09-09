@@ -70,7 +70,7 @@ fun MainDashboard(
     var showPinDialog by remember { mutableStateOf(false) }
     var showAlarmDialog by remember { mutableStateOf(false) }
     var showAcStatePopup by remember { mutableStateOf(false) }
-    var showPrDialog by remember { mutableStateOf(false) }
+    var showPrStatePopup by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     
     val aiData by mqttManager.aiManagedData.collectAsState()
@@ -249,33 +249,69 @@ fun MainDashboard(
         )
     }
 
-    if (showPrDialog) {
-        val willEnable = !aiSettings.predictiveReserveEnabled
+    if (showPrStatePopup) {
+        val isPrEnabled = aiSettings.predictiveReserveEnabled
+        val prColor = if (isPrEnabled) SolarGreen else Color.Gray
         AlertDialog(
-            onDismissRequest = { showPrDialog = false },
-            icon = { Icon(Icons.Default.NightsStay, null, tint = if (willEnable) SolarGreen else Color.Gray) },
-            title = { Text("Conferma Modifica PR") },
-            text = {
-                Text(
-                    if (willEnable)
-                        "Sei sicuro di voler abilitare il controllo Predictive Reserve notturno?\n\nConsente al PR di influenzare AI Climate."
-                    else
-                        "Sei sicuro di voler disabilitare il controllo Predictive Reserve notturno?\n\nVieta al PR di influenzare AI Climate."
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        mqttManager.publish("zara/interface/predictive_reserve/control_enabled/cmd", if (willEnable) "true" else "false")
-                        showPrDialog = false
-                    }
+            onDismissRequest = { showPrStatePopup = false },
+            icon = { Icon(Icons.Default.NightsStay, null, tint = prColor) },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("CONFERMA", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text("Predictive Reserve Notturno", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Surface(
+                        color = prColor.copy(alpha = 0.15f),
+                        shape = CircleShape,
+                        border = BorderStroke(1.dp, prColor.copy(alpha = 0.5f))
+                    ) {
+                        Text(
+                            text = if (isPrEnabled) "PR ON" else "PR OFF",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            color = prColor,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { showPrDialog = false }) {
-                    Text("ANNULLA")
+            text = {
+                Column(
+                    modifier = Modifier.clickable { showPrStatePopup = false },
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        color = prColor.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, prColor.copy(alpha = 0.3f))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = if (isPrEnabled) "Stato attuale: ATTIVO" else "Stato attuale: DISATTIVO",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = prColor
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = if (isPrEnabled)
+                                    "Consente al PR di influenzare AI Climate durante le ore notturne."
+                                else
+                                    "Vieta al PR di influenzare AI Climate durante le ore notturne.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPrStatePopup = false }) {
+                    Text("CHIUDI")
                 }
             }
         )
@@ -439,10 +475,10 @@ fun MainDashboard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Badge PR (Prima del circoletto dello stato condizionatore)
+                        // Badge PR (Prima del circoletto dello stato condizionatore) -> Apre Popup Dettaglio PR
                         val prColor = if (aiSettings.predictiveReserveEnabled) SolarGreen else Color.Gray
                         Surface(
-                            modifier = Modifier.clickable { showPrDialog = true },
+                            modifier = Modifier.clickable { showPrStatePopup = true },
                             color = prColor.copy(alpha = 0.12f),
                             shape = CircleShape,
                             border = BorderStroke(1.dp, prColor.copy(alpha = 0.5f))
@@ -460,10 +496,10 @@ fun MainDashboard(
                                 Spacer(Modifier.width(4.dp))
                                 Text(
                                     text = if (aiSettings.predictiveReserveEnabled) "PR ON" else "PR OFF",
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelLarge,
                                     color = prColor,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp
+                                    fontSize = 12.sp
                                 )
                             }
                         }
@@ -486,17 +522,18 @@ fun MainDashboard(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically, 
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
                                 if (!isAdminMode) {
-                                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(14.dp), tint = Color.Red.copy(alpha = 0.8f))
-                                    Spacer(Modifier.width(6.dp))
+                                    Icon(Icons.Default.Lock, null, modifier = Modifier.size(12.dp), tint = Color.Red.copy(alpha = 0.8f))
+                                    Spacer(Modifier.width(4.dp))
                                 }
                                 Text(
                                     text = acStatus,
                                     style = MaterialTheme.typography.labelLarge,
                                     color = acStatusColor,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
                                 )
                             }
                         }

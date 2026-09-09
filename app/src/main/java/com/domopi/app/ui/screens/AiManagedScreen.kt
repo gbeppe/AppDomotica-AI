@@ -159,7 +159,7 @@ fun AiManagedScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Controllo Predictive Reserve notturno",
+                                "Predictive Reserve notturno",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold
                             )
