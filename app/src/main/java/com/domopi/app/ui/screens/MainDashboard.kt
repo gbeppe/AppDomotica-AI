@@ -741,6 +741,7 @@ fun DomainCard(
 ) {
     val energyData by mqttManager.energyData.collectAsState()
     val aiData by mqttManager.aiManagedData.collectAsState()
+    val aiSettings by mqttManager.aiSettings.collectAsState()
     val lightStates by mqttManager.lightStates.collectAsState()
     val hvacState by mqttManager.hvacState.collectAsState()
     val envState by mqttManager.environmentState.collectAsState()
@@ -846,6 +847,11 @@ fun DomainCard(
                         val realKwh = if (logica.kwhStimatiInBatteria > 0) logica.kwhStimatiInBatteria else (realSoc / 100f) * 13.5f
                         val realHumidex = if (env.humidexLiving > 0) env.humidexLiving else envState.living.humidex
 
+                        val realSogliaHum = if (logica.sogliaAttivazioneApplicata > 0) logica.sogliaAttivazioneApplicata else aiSettings.nightHumidexThreshold.toFloat()
+                        val realSocMin = if (logica.socMinimoApplied > 0) logica.socMinimoApplied else 35f
+                        val realCuscSic = if (logica.cuscinettoSicurezzaKwh > 0) "%.1f kWh".format(logica.cuscinettoSicurezzaKwh) else "--"
+                        val realCuscRic = if (logica.cuscinettoRichiestoKwh > 0) "%.1f kWh".format(logica.cuscinettoRichiestoKwh) else "--"
+
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -853,17 +859,17 @@ fun DomainCard(
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 CompactDetail("SOC Bat.", "${realSoc.toInt()}%")
                                 CompactDetail("Humidex", "%.1f".format(realHumidex))
-                                CompactDetail("Soglia Hum.", "%.1f".format(logica.sogliaAttivazioneApplicata))
+                                CompactDetail("Soglia Hum.", "%.1f".format(realSogliaHum))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("SOC Min.", "${logica.socMinimoApplied.toInt()}%")
+                                CompactDetail("SOC Min.", "${realSocMin.toInt()}%")
                                 CompactDetail("Batteria", "%.1f kWh".format(realKwh))
                                 CompactDetail("Prev. Sol.", "%.1f kWh".format(logica.previsioneSolareDomaniKwh))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 CompactDetail("Data Sol.", logica.previsioneSolareData.ifEmpty { "N/D" })
-                                CompactDetail("Cusc. Sic.", "%.1f kWh".format(logica.cuscinettoSicurezzaKwh))
-                                CompactDetail("Cusc. Ric.", "%.1f kWh".format(logica.cuscinettoRichiestoKwh))
+                                CompactDetail("Cusc. Sic.", realCuscSic)
+                                CompactDetail("Cusc. Ric.", realCuscRic)
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 CompactDetail("VMC", "${logica.vmcPortataStimataM3h} m³/h")
