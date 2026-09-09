@@ -842,18 +842,22 @@ fun DomainCard(
                         val elec = aiData.metricheElettriche
                         val env = aiData.metricheAmbientali
 
+                        val realSoc = if (elec.powerwallSocPercent > 0) elec.powerwallSocPercent else energyData.batterySoc
+                        val realKwh = if (logica.kwhStimatiInBatteria > 0) logica.kwhStimatiInBatteria else (realSoc / 100f) * 13.5f
+                        val realHumidex = if (env.humidexLiving > 0) env.humidexLiving else envState.living.humidex
+
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("SOC Bat.", "${elec.powerwallSocPercent.toInt()}%")
-                                CompactDetail("Humidex", "%.1f".format(env.humidexLiving))
+                                CompactDetail("SOC Bat.", "${realSoc.toInt()}%")
+                                CompactDetail("Humidex", "%.1f".format(realHumidex))
                                 CompactDetail("Soglia Hum.", "%.1f".format(logica.sogliaAttivazioneApplicata))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 CompactDetail("SOC Min.", "${logica.socMinimoApplied.toInt()}%")
-                                CompactDetail("Batteria", "%.1f kWh".format(logica.kwhStimatiInBatteria))
+                                CompactDetail("Batteria", "%.1f kWh".format(realKwh))
                                 CompactDetail("Prev. Sol.", "%.1f kWh".format(logica.previsioneSolareDomaniKwh))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
