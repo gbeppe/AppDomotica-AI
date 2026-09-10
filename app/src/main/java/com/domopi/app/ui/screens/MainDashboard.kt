@@ -47,6 +47,7 @@ import com.domopi.app.ui.components.PoolInteractiveComponent
 import com.domopi.app.ui.components.formatLocalizedDate
 import com.domopi.app.ui.theme.SolarGreen
 import kotlinx.coroutines.launch
+import java.time.LocalTime
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -669,20 +670,33 @@ fun MainDashboard(
                         )
                     }
 
-                    // 7. Previsione FV Domani
+                    // 7. Previsione FV
                     item {
                         val locale = LocalConfiguration.current.locales[0]
                         val logica = aiData.logicaControllo
-                        val fvData = formatLocalizedDate(logica.previsioneSolareData, locale, "d MMMM yyyy").ifEmpty { "Domani" }
+                        val nowTime = LocalTime.now()
+                        val isTomorrow = nowTime.hour == 23 && nowTime.minute >= 1
+                        val fvLabel = if (isTomorrow) "Previsione FV domani" else "Previsione FV oggi"
+                        
+                        val fvData = formatLocalizedDate(logica.previsioneSolareData, locale, "dd/MM").ifEmpty { "--/--" }
                         val fvKwh = "%.1f".format(locale, logica.previsioneSolareDomaniKwh)
                         val battPercent = logica.previsioneRicaricaBatteryPercent
                         val fvText = "$fvData : $fvKwh kWh ($battPercent%)"
                         
-                        SummaryRow(
-                            Icons.Default.WbSunny,
-                            "FV domani",
-                            fvText
-                        )
+                        Column(modifier = Modifier.padding(vertical = 1.dp)) {
+                            SummaryRow(
+                                Icons.Default.WbSunny,
+                                fvLabel,
+                                fvText
+                            )
+                            Text(
+                                text = "La previsione si aggiorna alle 23:00",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontSize = 9.sp,
+                                modifier = Modifier.padding(start = 24.dp, bottom = 2.dp)
+                            )
+                        }
                     }
                 }
             }
