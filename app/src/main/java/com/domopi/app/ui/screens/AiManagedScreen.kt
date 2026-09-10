@@ -31,6 +31,7 @@ import com.domopi.app.data.MqttManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.NumericStepper
+import com.domopi.app.ui.components.formatLocalizedDate
 import com.domopi.app.ui.theme.SolarGreen
 import java.util.Locale
 
@@ -529,7 +530,7 @@ fun SystemDetailsCard(data: AiManagedData) {
             DetailRow("Previsione Ricarica", "${data.logicaControllo.previsioneRicaricaBatteryPercent}%")
             
             DetailRow("Prev. Solare Domani", "%.1f kWh".format(locale, data.logicaControllo.previsioneSolareDomaniKwh))
-            DetailRow("Data Prev. Solare", data.logicaControllo.previsioneSolareData)
+            DetailRow("Data Prev. Solare", formatLocalizedDate(data.logicaControllo.previsioneSolareData, locale))
             
             DetailRow("Cuscinetto Sicurezza", "%.1f kWh".format(locale, data.logicaControllo.cuscinettoSicurezzaKwh))
             DetailRow("Cuscinetto Richiesto", "%.1f kWh".format(locale, data.logicaControllo.cuscinettoRichiestoKwh))

@@ -44,6 +44,7 @@ import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.EnergyFlowComponent
 import com.domopi.app.ui.components.PoolInteractiveComponent
+import com.domopi.app.ui.components.formatLocalizedDate
 import com.domopi.app.ui.theme.SolarGreen
 import kotlinx.coroutines.launch
 
@@ -672,7 +673,7 @@ fun MainDashboard(
                     item {
                         val locale = LocalConfiguration.current.locales[0]
                         val logica = aiData.logicaControllo
-                        val fvData = logica.previsioneSolareData.ifEmpty { "Domani" }
+                        val fvData = formatLocalizedDate(logica.previsioneSolareData, locale, "d MMMM yyyy").ifEmpty { "Domani" }
                         val fvKwh = "%.1f".format(locale, logica.previsioneSolareDomaniKwh)
                         val battPercent = logica.previsioneRicaricaBatteryPercent
                         val fvText = "$fvData : $fvKwh kWh ($battPercent%)"
@@ -883,7 +884,8 @@ fun DomainCard(
                                 CompactDetail("Prev. Sol.", "%.1f kWh".format(logica.previsioneSolareDomaniKwh))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                CompactDetail("Data Sol.", logica.previsioneSolareData.ifEmpty { "N/D" })
+                                val locale = LocalConfiguration.current.locales[0]
+                                CompactDetail("Data Sol.", formatLocalizedDate(logica.previsioneSolareData, locale, "d MMM yyyy").ifEmpty { "N/D" })
                                 CompactDetail("Cusc. Sic.", realCuscSic)
                                 CompactDetail("Cusc. Ric.", realCuscRic)
                             }
