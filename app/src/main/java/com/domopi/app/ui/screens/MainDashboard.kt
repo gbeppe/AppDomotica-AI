@@ -667,6 +667,22 @@ fun MainDashboard(
                             "%.1f°C".format(locale, envState.bedroom.temperature)
                         )
                     }
+
+                    // 7. Previsione FV Domani
+                    item {
+                        val locale = LocalConfiguration.current.locales[0]
+                        val logica = aiData.logicaControllo
+                        val fvData = logica.previsioneSolareData.ifEmpty { "Domani" }
+                        val fvKwh = "%.1f".format(locale, logica.previsioneSolareDomaniKwh)
+                        val battPercent = logica.previsioneRicaricaBatteryPercent
+                        val fvText = "$fvData : $fvKwh kWh ($battPercent%)"
+                        
+                        SummaryRow(
+                            Icons.Default.WbSunny,
+                            "FV domani",
+                            fvText
+                        )
+                    }
                 }
             }
         }
