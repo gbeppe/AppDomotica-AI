@@ -674,19 +674,14 @@ fun MainDashboard(
                     item {
                         val locale = LocalConfiguration.current.locales[0]
                         val logica = aiData.logicaControllo
-                        val nowTime = LocalTime.now()
-                        val isTomorrow = nowTime.hour == 23 && nowTime.minute >= 1
-                        val fvLabel = if (isTomorrow) "Previsione FV domani" else "Previsione FV oggi"
-                        
-                        val fvData = formatLocalizedDate(logica.previsioneSolareData, locale, "dd/MM").ifEmpty { "--/--" }
                         val fvKwh = "%.1f".format(locale, logica.previsioneSolareDomaniKwh)
                         val battPercent = logica.previsioneRicaricaBatteryPercent
-                        val fvText = "$fvData : $fvKwh kWh ($battPercent%)"
+                        val fvText = "$fvKwh kWh (batt $battPercent%)"
                         
                         Column(modifier = Modifier.padding(vertical = 1.dp)) {
                             SummaryRow(
                                 Icons.Default.WbSunny,
-                                fvLabel,
+                                "Previsione FV",
                                 fvText
                             )
                             Text(
