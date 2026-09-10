@@ -18,9 +18,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 @Composable
 fun CameraStreamComponent(
     url: String,
+    modifier: Modifier = Modifier,
     user: String? = null,
-    pass: String? = null,
-    modifier: Modifier = Modifier
+    pass: String? = null
 ) {
     // Stato per tracciare se abbiamo già avviato il caricamento di questo URL
     val currentUrl = remember { mutableStateOf("") }

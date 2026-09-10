@@ -209,48 +209,6 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                         is GithubStatus.Error -> "⚠️ ${s.message}" to Color.Gray
                     }
                     BuildInfoRow("Stato GitHub", githubText, githubColor)
-
-                    Spacer(Modifier.height(12.dp))
-                    Text("Stile Icona GitHub (Titolo):", style = MaterialTheme.typography.labelMedium)
-                    Spacer(Modifier.height(8.dp))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val styles = listOf(
-                            "code" to (Icons.Default.Code to "< >"),
-                            "branch" to (Icons.Default.AccountTree to "Branch"),
-                            "sync" to (Icons.Default.CloudSync to "Sync"),
-                            "commit" to (Icons.Default.Commit to "Commit")
-                        )
-                        
-                        styles.forEach { (styleKey, pair) ->
-                            val (icon, label) = pair
-                            val isSelected = currentGithubIconStyle == styleKey
-                            
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = {
-                                    scope.launch { settingsManager.saveGithubIconStyle(styleKey) }
-                                },
-                                label = { Text(label, fontSize = 11.sp) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = label,
-                                        tint = if (isSelected) SolarGreen else Color.Gray,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = SolarGreen.copy(alpha = 0.15f),
-                                    selectedLabelColor = SolarGreen
-                                )
-                            )
-                        }
-                    }
                 }
                 HorizontalDivider(modifier = Modifier.padding(top = 16.dp))
             }

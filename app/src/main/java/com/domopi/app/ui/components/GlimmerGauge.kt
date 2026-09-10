@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,7 +70,8 @@ fun GlimmerGauge(
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            val formattedValue = "%.1f".format(java.util.Locale.getDefault(), value)
+            val locale = LocalConfiguration.current.locales[0]
+            val formattedValue = "%.1f".format(locale, value)
             Text(
                 text = formattedValue,
                 fontSize = (size.value * 0.18f).sp, // Font proporzionale

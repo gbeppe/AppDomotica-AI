@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,8 +86,9 @@ fun PufferLayer(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            val locale = LocalConfiguration.current.locales[0]
             Text(
-                text = "${"%.1f".format(java.util.Locale.getDefault(), temp)}°C",
+                text = "${"%.1f".format(locale, temp)}°C",
                 color = Color.White,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
