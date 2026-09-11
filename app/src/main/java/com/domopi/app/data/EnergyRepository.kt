@@ -9,6 +9,8 @@ import kotlinx.serialization.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.util.Log
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 data class HistoryPoint(val timestamp: Long, val value: Float)
 
@@ -58,6 +60,41 @@ class EnergyRepository(private val emoncmsIp: String) {
         } catch (e: Exception) {
             Log.e("EnergyRepo", "Error fetching history", e)
             EnergyHistory()
+        }
+    }
+
+    suspend fun fetchGridImportSummary(): Pair<Float, Float> = withContext(Dispatchers.IO) {
+        try {
+            val nowZone = ZonedDateTime.now(ZoneId.systemDefault())
+            val todayStart = nowZone.toLocalDate().atStartOfDay(nowZone.zone).toEpochSecond()
+            val yesterdayStart = nowZone.toLocalDate().minusDays(1).atStartOfDay(nowZone.zone).toEpochSecond()
+            val end = nowZone.toEpochSecond()
+            val interval = 300 // 5-minute sampling interval
+
+            val gridPoints = fetchFeedData(305, yesterdayStart, end, interval)
+            
+            var kwhIeri = 0f
+            var kwhOggi = 0f
+
+            for (i in 0 until gridPoints.size - 1) {
+                val pt = gridPoints[i]
+                val nextPt = gridPoints[i + 1]
+                val p = pt.value.coerceAtLeast(0f)
+                val dtSeconds = (nextPt.timestamp - pt.timestamp).coerceAtLeast(0L)
+                if (p > 0f && dtSeconds > 0) {
+                    val kwh = (p * dtSeconds) / (3600f * 1000f)
+                    if (pt.timestamp < todayStart) {
+                        kwhIeri += kwh
+                    } else {
+                        kwhOggi += kwh
+                    }
+                }
+            }
+
+            Pair(kwhIeri, kwhOggi)
+        } catch (e: Exception) {
+            Log.e("EnergyRepo", "Error calculating grid import summary", e)
+            Pair(0f, 0f)
         }
     }
 

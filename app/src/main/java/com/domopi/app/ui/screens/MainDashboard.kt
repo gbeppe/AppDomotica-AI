@@ -33,6 +33,7 @@ import com.domopi.app.data.AcReasonMapper
 import com.domopi.app.data.AcReasonMetric
 import com.domopi.app.data.AiManagedData
 import com.domopi.app.data.ConnectionMode
+import com.domopi.app.data.EnergyRepository
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.GithubStatus
 import com.domopi.app.data.GithubVersionChecker
@@ -68,6 +69,22 @@ fun MainDashboard(
 
     LaunchedEffect(Unit) {
         GithubVersionChecker.checkVersion()
+    }
+
+    val emoncmsLocalIp by settingsManager.emoncmsIp.collectAsState("192.168.1.15")
+    val emoncmsRemoteIp by settingsManager.emoncmsRemoteIp.collectAsState("")
+    val epIp = if (connectionMode == ConnectionMode.LOCAL) emoncmsLocalIp else emoncmsRemoteIp
+
+    LaunchedEffect(epIp) {
+        if (epIp.isNotEmpty()) {
+            try {
+                val repo = EnergyRepository(epIp)
+                val (kwhIeri, kwhOggi) = repo.fetchGridImportSummary()
+                if (kwhIeri > 0f || kwhOggi > 0f) {
+                    mqttManager.updateGridImportKwhSummary(kwhOggi, kwhIeri)
+                }
+            } catch (_: Exception) {}
+        }
     }
     
     var showPinDialog by remember { mutableStateOf(false) }
@@ -844,7 +861,9 @@ fun DomainCard(
                         homeConsumption = energyData.homeConsumption,
                         gridPower = energyData.gridPower,
                         batteryPower = energyData.batteryPower,
-                        batterySoc = energyData.batterySoc
+                        batterySoc = energyData.batterySoc,
+                        gridImportKwhOggi = if (aiData.metricheElettriche.gridImportKwhOggi > 0) aiData.metricheElettriche.gridImportKwhOggi else energyData.gridImportKwhOggi,
+                        gridImportKwhIeri = if (aiData.metricheElettriche.gridImportKwhIeri > 0) aiData.metricheElettriche.gridImportKwhIeri else energyData.gridImportKwhIeri
                     )
                     1 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         val roomLightIds = listOf("sala", "libreria", "cucina", "televisione", "tavolinolettura", "lampadahifi", "lucecamera", "prolunga")

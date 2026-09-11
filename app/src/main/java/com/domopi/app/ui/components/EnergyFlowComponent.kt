@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +31,8 @@ fun EnergyFlowComponent(
     gridPower: Float, 
     batteryPower: Float = 0f, 
     batterySoc: Float = 0f,
+    gridImportKwhOggi: Float = 0f,
+    gridImportKwhIeri: Float = 0f,
 ) {
     val hasData = (solarPower != 0f) || (homeConsumption != 0f) || (gridPower != 0f) || (batteryPower != 0f)
 
@@ -128,6 +132,51 @@ fun EnergyFlowComponent(
             batteryPower = batteryPower,
             soc = batterySoc
         )
+
+        // 5. Grid Import Summary Row (Importato ieri : X kWh • oggi : Y kWh)
+        val locale = LocalConfiguration.current.locales[0]
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Importato ieri : ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "%.1f kWh".format(locale, gridImportKwhIeri),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFD939F3)
+                )
+            }
+
+            Text(
+                text = "•",
+                color = Color.Gray.copy(alpha = 0.5f),
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "oggi : ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "%.1f kWh".format(locale, gridImportKwhOggi),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFD939F3)
+                )
+            }
+        }
     }
 }
 
