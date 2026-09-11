@@ -22,6 +22,7 @@ import kotlin.math.abs
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.R
+import com.domopi.app.ui.theme.SolarGreen
 
 @Composable
 fun EnergyFlowComponent(
@@ -135,6 +136,19 @@ fun EnergyFlowComponent(
 
         // 5. Grid Import Summary Row (Importato ieri : X kWh • oggi : Y kWh)
         val locale = LocalConfiguration.current.locales[0]
+        val blinkAlpha by infiniteTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(600, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "blink_red"
+        )
+
+        val ieriColor = if (gridImportKwhIeri > 0f) Color.Red else SolarGreen
+        val oggiColor = if (gridImportKwhOggi > 0f) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
+
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -153,7 +167,7 @@ fun EnergyFlowComponent(
                     text = "%.1f kWh".format(locale, gridImportKwhIeri),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFD939F3)
+                    color = ieriColor
                 )
             }
 
@@ -173,7 +187,7 @@ fun EnergyFlowComponent(
                     text = "%.1f kWh".format(locale, gridImportKwhOggi),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFD939F3)
+                    color = oggiColor
                 )
             }
         }
