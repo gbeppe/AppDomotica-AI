@@ -137,7 +137,7 @@ fun EnergyFlowComponent(
         // 5. Grid Import Summary Row (Importato ieri : X kWh • oggi : Y kWh)
         val locale = LocalConfiguration.current.locales[0]
         val blinkAlpha by infiniteTransition.animateFloat(
-            initialValue = 0.3f,
+            initialValue = 0.7f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
                 animation = tween(600, easing = LinearEasing),
