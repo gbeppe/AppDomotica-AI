@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import kotlin.math.abs
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -124,6 +125,7 @@ fun EnergyFlowComponent(
         // 4. Battery (Bottom Center - Aligned and Minimal)
         BatteryNodeMinimal(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = hubY + 25.dp),
+            batteryPower = batteryPower,
             soc = batterySoc
         )
     }
@@ -132,6 +134,7 @@ fun EnergyFlowComponent(
 @Composable
 fun BatteryNodeMinimal(
     modifier: Modifier = Modifier,
+    batteryPower: Float = 0f,
     soc: Float
 ) {
     val batteryHeight = 96.dp
@@ -141,7 +144,7 @@ fun BatteryNodeMinimal(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.TopCenter
     ) {
-        // 1. Battery Image centered EXACLY at size.width / 2
+        // 1. Battery Image centered EXACTLY at size.width / 2
         Image(
             painter = painterResource(id = R.drawable.tesla_powerwall),
             contentDescription = null,
@@ -175,13 +178,23 @@ fun BatteryNodeMinimal(
             
             Spacer(Modifier.width(6.dp))
             
-            Text(
-                text = "${soc.toInt()}%", 
-                color = Color.White, 
-                fontSize = 11.sp, 
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
+            Column(
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Text(
+                    text = "${"%.1f".format(abs(batteryPower) / 1000f)} kW",
+                    color = if (abs(batteryPower) > 15) Color(0xFF00FF00) else Color.Gray,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "${soc.toInt()}%", 
+                    color = Color.White, 
+                    fontSize = 11.sp, 
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
