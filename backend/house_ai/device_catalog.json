@@ -1,0 +1,3884 @@
+{
+  "schema": "house_ai.device_catalog.v1",
+  "scope": "static_app_and_supplied_router_export",
+  "router_export": "flows - 2026-09-11T113811.470.json",
+  "router_sha256": "0ddc5a4b57391378a14afa0fa7cffd1d000eea8b7de9b5650d10b7d41ddebbf2",
+  "router_node_id": "5a7c1d360710ca21",
+  "composite_topic": "casa/clima/stato_completo",
+  "extraction_counts": {
+    "registry": 89,
+    "compositeRegistry": 31
+  },
+  "screens": [
+    {
+      "screen": "AiManagedScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+      "sha256": "1987c9d59f09832e8586c258d23d13e80dc0b6e7f3a9e77f864020ad73f3d702",
+      "mqtt_state_flows": [
+        "aiManagedData",
+        "aiSettings",
+        "environmentState",
+        "hvacState"
+      ],
+      "direct_command_references": [
+        {
+          "topic": "zara/interface/predictive_reserve/control_enabled/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 72,
+          "payload_expression": "if (willEnable) \"true\" else \"false\")"
+        },
+        {
+          "topic": "zara/interface/ai/system_enabled/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 195,
+          "payload_expression": "if (enabled) \"true\" else \"false\")"
+        },
+        {
+          "topic": "zara/interface/ai/compressor_on_min/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 214,
+          "payload_expression": "it.toString()) }"
+        },
+        {
+          "topic": "zara/interface/ai/compressor_off_min/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 220,
+          "payload_expression": "it.toString()) }"
+        },
+        {
+          "topic": "zara/interface/ai/night_humidex_threshold/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 235,
+          "payload_expression": "it.toString()) }"
+        },
+        {
+          "topic": "zara/interface/ai/night_vmc_max_speed/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 242,
+          "payload_expression": "it.toInt().toString()) },"
+        },
+        {
+          "topic": "zara/interface/ai/deficit_tolerance_min/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 257,
+          "payload_expression": "it.toString()) },"
+        },
+        {
+          "topic": "zara/interface/ai/morning_ac_management/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 277,
+          "payload_expression": "if (it) \"true\" else \"false\") },"
+        },
+        {
+          "topic": "zara/interface/ai/morning_humidex_emergency/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 288,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "helper_calls": []
+    },
+    {
+      "screen": "AmbientiScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/AmbientiScreen.kt",
+      "sha256": "d9d7cda26eb5a02aa4d1c4aa27483c36b90478396543c895620b3e2ef8578f57",
+      "mqtt_state_flows": [
+        "environmentState"
+      ],
+      "direct_command_references": [],
+      "helper_calls": []
+    },
+    {
+      "screen": "CamerasScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/CamerasScreen.kt",
+      "sha256": "2ebf5afcd699edf9897a6b42bb4d1d9070c7590fc0723b623f07f8226b50e542",
+      "mqtt_state_flows": [],
+      "direct_command_references": [],
+      "helper_calls": []
+    },
+    {
+      "screen": "ConfigurationScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/ConfigurationScreen.kt",
+      "sha256": "abc8c9cf8f0725f5dc0cb801e5c54025ed5df0d874587962efc8deed2b5a5bee",
+      "mqtt_state_flows": [],
+      "direct_command_references": [],
+      "helper_calls": []
+    },
+    {
+      "screen": "DiagnosisScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/DiagnosisScreen.kt",
+      "sha256": "91cccfacfee75d9b6a32b8df91fcba3f9167c0c4abe2839491753f2b22341c2c",
+      "mqtt_state_flows": [
+        "isConnected",
+        "messageRate",
+        "trafficLog"
+      ],
+      "direct_command_references": [],
+      "helper_calls": []
+    },
+    {
+      "screen": "DomoticaSettingsScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+      "sha256": "fbbc4e81735168dda04e726824ebb71b111dc6e2c377c8b8a509dfb6130f6f21",
+      "mqtt_state_flows": [
+        "domoticaSettings"
+      ],
+      "direct_command_references": [
+        {
+          "topic": "zara/interface/settings/holiday_mode/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 60,
+          "payload_expression": "it.toString())"
+        },
+        {
+          "topic": "zara/interface/settings/eco_lights/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 71,
+          "payload_expression": "it.toString()) }"
+        },
+        {
+          "topic": "zara/interface/settings/pool_lights_auto/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 81,
+          "payload_expression": "it.toString()) }"
+        },
+        {
+          "topic": "zara/interface/settings/porch_sensor/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 91,
+          "payload_expression": "it.toString()) }"
+        },
+        {
+          "topic": "zara/interface/settings/ac_auto/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 101,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "helper_calls": []
+    },
+    {
+      "screen": "EnergyDetailScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/EnergyDetailScreen.kt",
+      "sha256": "a776e2934c025a0e6951dfb09481933cb17843540105b4e71d06ce26558e5dbd",
+      "mqtt_state_flows": [],
+      "direct_command_references": [],
+      "helper_calls": []
+    },
+    {
+      "screen": "GarageControlScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/GarageControlScreen.kt",
+      "sha256": "2f2e5e4f5a2cd3d99559a7263193b33ca938ccf7e838a62bc2304fce5da51b0d",
+      "mqtt_state_flows": [],
+      "direct_command_references": [
+        {
+          "topic": "zara/interface/garage/gate_1/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/GarageControlScreen.kt",
+          "line": 71,
+          "payload_expression": "\"true\") }"
+        },
+        {
+          "topic": "zara/interface/garage/gate_2/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/GarageControlScreen.kt",
+          "line": 78,
+          "payload_expression": "\"true\") }"
+        }
+      ],
+      "helper_calls": []
+    },
+    {
+      "screen": "HouseAiScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/HouseAiScreen.kt",
+      "sha256": "da5f6525b105a7ad630c220b60e197a71781f1365fce032e03ef0c3d5b71b598",
+      "mqtt_state_flows": [],
+      "direct_command_references": [],
+      "helper_calls": []
+    },
+    {
+      "screen": "HvacScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+      "sha256": "d57a622adfd22dc871ba0d28e3698a6687757b1323d2be64ed7f2371e3167bde",
+      "mqtt_state_flows": [
+        "energyData",
+        "hvacState"
+      ],
+      "direct_command_references": [
+        {
+          "topic": "zara/interface/ventilation/vmc/speed/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 83,
+          "payload_expression": "speed.toString()) },"
+        },
+        {
+          "topic": "zara/interface/heating/floor_pump/enabled/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 254,
+          "payload_expression": "if (it) \"true\" else \"false\") },"
+        },
+        {
+          "topic": "zara/interface/climate/thermostat_living/target_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 414,
+          "payload_expression": "\"%.1f\".format(Locale.US, it))"
+        },
+        {
+          "topic": "zara/interface/climate/thermostat_bath/target_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 414,
+          "payload_expression": "\"%.1f\".format(Locale.US, it))"
+        },
+        {
+          "topic": "zara/interface/climate/thermostat_living/min_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 439,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        },
+        {
+          "topic": "zara/interface/climate/thermostat_bath/min_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 439,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        },
+        {
+          "topic": "zara/interface/climate/thermostat_living/max_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 447,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        },
+        {
+          "topic": "zara/interface/climate/thermostat_bath/max_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 447,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        },
+        {
+          "topic": "zara/interface/fireplace/main/power/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 497,
+          "payload_expression": "it.toString()) },"
+        },
+        {
+          "topic": "zara/interface/fireplace/main/mode/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 534,
+          "payload_expression": "mode)"
+        },
+        {
+          "topic": "zara/interface/fireplace/main/start_time/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 548,
+          "payload_expression": "it) },"
+        },
+        {
+          "topic": "zara/interface/fireplace/main/stop_time/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 556,
+          "payload_expression": "it) },"
+        },
+        {
+          "topic": "zara/interface/fireplace/main/level/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 576,
+          "payload_expression": "it.toInt().toString()) },"
+        },
+        {
+          "topic": "zara/interface/fireplace/main/auto_power/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 613,
+          "payload_expression": "it.toString()) },"
+        }
+      ],
+      "helper_calls": []
+    },
+    {
+      "screen": "LightsScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+      "sha256": "57e4e685b11b05279298c3e24689c24789b6886d5bc35149a9caaddbeb3812b6",
+      "mqtt_state_flows": [
+        "lightStates"
+      ],
+      "direct_command_references": [],
+      "helper_calls": [
+        "sendLightScene",
+        "toggleLight"
+      ]
+    },
+    {
+      "screen": "MainDashboard",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/MainDashboard.kt",
+      "sha256": "facbf92c69552e3cf6183f67c8628d7a52f1468d3fd719c0ee9679fd9d1b1906",
+      "mqtt_state_flows": [
+        "aiManagedData",
+        "aiSettings",
+        "domoticaSettings",
+        "energyData",
+        "environmentState",
+        "hvacState",
+        "isConnected",
+        "lightStates"
+      ],
+      "direct_command_references": [],
+      "helper_calls": [
+        "toggleLight"
+      ]
+    },
+    {
+      "screen": "PoolScreen",
+      "file": "app/src/main/java/com/domopi/app/ui/screens/PoolScreen.kt",
+      "sha256": "585600bb0f6bab6cd42a2ae1f63974a3476f14573dc6cff58fc756fd0ed1af0c",
+      "mqtt_state_flows": [
+        "lightStates"
+      ],
+      "direct_command_references": [],
+      "helper_calls": [
+        "toggleLight"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "id": "ai_climate.allarme",
+      "domain": "ai_climate",
+      "state_topic": "zara/interface/ai_climate/allarme/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "STATO ALLARME AI CLIMATE",
+          "router_function_line": 7,
+          "legacy_state_topic": "casa/clima/system_health/stat",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai_climate.allarme\", \n        int_stat: \"zara/interface/ai_climate/allarme/stat\",    \n        leg_stat: \"casa/clima/system_health/stat\", \n        broker: \"home\", \n        }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "stato_condizionatore.modalita_aria",
+      "domain": "stato_condizionatore",
+      "state_topic": "zara/interface/stato_condizionatore/modalita_aria/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "STATO CONDIZIONATORE",
+          "router_function_line": 18,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"stato_condizionatore.modalita_aria\",\n            int_stat: \"zara/interface/stato_condizionatore/modalita_aria/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 452,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stato_condizionatore.modalita_aria",
+          "declaration": "{\n        json_path: \"stato_condizionatore.modalita_aria\",\n        int_stat: \"zara/interface/stato_condizionatore/modalita_aria/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "stato_condizionatore.temperatura_impostata_c",
+      "domain": "stato_condizionatore",
+      "state_topic": "zara/interface/stato_condizionatore/temperatura_impostata_c/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "STATO CONDIZIONATORE",
+          "router_function_line": 23,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"stato_condizionatore.temperatura_impostata_c\",\n            int_stat: \"zara/interface/stato_condizionatore/temperatura_impostata_c/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 447,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stato_condizionatore.temperatura_impostata_c",
+          "declaration": "{\n        json_path: \"stato_condizionatore.temperatura_impostata_c\",\n        int_stat: \"zara/interface/stato_condizionatore/temperatura_impostata_c/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "stato_condizionatore.motivo_logica",
+      "domain": "stato_condizionatore",
+      "state_topic": "zara/interface/stato_condizionatore/motivo_logica/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "STATO CONDIZIONATORE",
+          "router_function_line": 28,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"stato_condizionatore.motivo_logica\",\n            int_stat: \"zara/interface/stato_condizionatore/motivo_logica/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 442,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stato_condizionatore.motivo_logica",
+          "declaration": "{\n        json_path: \"stato_condizionatore.motivo_logica\",\n        int_stat: \"zara/interface/stato_condizionatore/motivo_logica/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "stato_condizionatore.stato_attuale",
+      "domain": "stato_condizionatore",
+      "state_topic": "zara/interface/stato_condizionatore/stato_attuale/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "STATO CONDIZIONATORE",
+          "router_function_line": 33,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"stato_condizionatore.stato_attuale\",\n            int_stat: \"zara/interface/stato_condizionatore/stato_attuale/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 437,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stato_condizionatore.stato_attuale",
+          "declaration": "{\n        json_path: \"stato_condizionatore.stato_attuale\",\n        int_stat: \"zara/interface/stato_condizionatore/stato_attuale/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.stagione_attuale",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/stagione_attuale/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 43,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.stagione_attuale\",\n            int_stat: \"zara/interface/logica_controllo/stagione_attuale/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 284,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stagione_attiva",
+          "declaration": "{ \n        json_path: \"stagione_attiva\",\n        int_stat: \"zara/interface/logica_controllo/stagione_attuale/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.cuscinetto_richiesto_kwh",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/cuscinetto_richiesto_kwh/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 48,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.cuscinetto_richiesto_kwh\",\n            int_stat: \"zara/interface/logica_controllo/cuscinetto_richiesto_kwh/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 427,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.cuscinetto_richiesto_kwh",
+          "declaration": "{\n        json_path: \"logica_controllo.cuscinetto_richiesto_kwh\",\n        int_stat: \"zara/interface/logica_controllo/cuscinetto_richiesto_kwh/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.cuscinetto_sicurezza_kwh",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/cuscinetto_sicurezza_kwh/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 53,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.cuscinetto_sicurezza_kwh\",\n            int_stat: \"zara/interface/logica_controllo/cuscinetto_sicurezza_kwh/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 422,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.cuscinetto_sicurezza_kwh",
+          "declaration": "{\n        json_path: \"logica_controllo.cuscinetto_sicurezza_kwh\",\n        int_stat: \"zara/interface/logica_controllo/cuscinetto_sicurezza_kwh/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.blocco_emergenza_attivo",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/blocco_emergenza_attivo/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 58,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.blocco_emergenza_attivo\",\n            int_stat: \"zara/interface/logica_controllo/blocco_emergenza_attivo/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 416,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.blocco_emergenza_attivo",
+          "declaration": "{\n        json_path: \"logica_controllo.blocco_emergenza_attivo\",\n        int_stat: \"zara/interface/logica_controllo/blocco_emergenza_attivo/stat\",\n        transform_func: (p) =>\n            (p === true || p === \"1\" || p === \"true\" || p === \"ON\")\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.kwh_stimati_in_batteria",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/kwh_stimati_in_batteria/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 63,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.kwh_stimati_in_batteria\",\n            int_stat: \"zara/interface/logica_controllo/kwh_stimati_in_batteria/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 411,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.kwh_stimati_in_batteria",
+          "declaration": "{\n        json_path: \"logica_controllo.kwh_stimati_in_batteria\",\n        int_stat: \"zara/interface/logica_controllo/kwh_stimati_in_batteria/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.previsione_ricarica_batteria_percent",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/previsione_ricarica_batteria_percent/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 68,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.previsione_ricarica_batteria_percent\",\n            int_stat: \"zara/interface/logica_controllo/previsione_ricarica_batteria_percent/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 406,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.previsione_ricarica_batteria_percent",
+          "declaration": "{\n        json_path: \"logica_controllo.previsione_ricarica_batteria_percent\",\n        int_stat: \"zara/interface/logica_controllo/previsione_ricarica_batteria_percent/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.previsione_solare_data",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/previsione_solare_data/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 73,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.previsione_solare_data\",\n            int_stat: \"zara/interface/logica_controllo/previsione_solare_data/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 401,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.previsione_solare_data",
+          "declaration": "{\n        json_path: \"logica_controllo.previsione_solare_data\",\n        int_stat: \"zara/interface/logica_controllo/previsione_solare_data/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.previsione_solare_domani_kwh",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/previsione_solare_domani_kwh/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 78,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.previsione_solare_domani_kwh\",\n            int_stat: \"zara/interface/logica_controllo/previsione_solare_domani_kwh/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 396,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.previsione_solare_domani_kwh",
+          "declaration": "{\n        json_path: \"logica_controllo.previsione_solare_domani_kwh\",\n        int_stat: \"zara/interface/logica_controllo/previsione_solare_domani_kwh/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.tempo_mancante_anticiclo_minuti",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/tempo_mancante_anticiclo_minuti/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 83,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.tempo_mancante_anticiclo_minuti\",\n            int_stat: \"zara/interface/logica_controllo/tempo_mancante_anticiclo_minuti/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 391,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.tempo_mancante_anticiclo_minuti",
+          "declaration": "{\n        json_path: \"logica_controllo.tempo_mancante_anticiclo_minuti\",\n        int_stat: \"zara/interface/logica_controllo/tempo_mancante_anticiclo_minuti/stat\",\n        transform_func: (p) => parseInt(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.soc_minimo_applied",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/soc_minimo_applied/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 88,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.soc_minimo_applied\",\n            int_stat: \"zara/interface/logica_controllo/soc_minimo_applied/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 386,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.soc_minimo_applied",
+          "declaration": "{\n        json_path: \"logica_controllo.soc_minimo_applied\",\n        int_stat: \"zara/interface/logica_controllo/soc_minimo_applied/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.soglia_attivazione_applicata",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/soglia_attivazione_applicata/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 93,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.soglia_attivazione_applicata\",\n            int_stat: \"zara/interface/logica_controllo/soglia_attivazione_applicata/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 381,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.soglia_attivazione_applicata",
+          "declaration": "{\n        json_path: \"logica_controllo.soglia_attivazione_applicata\",\n        int_stat: \"zara/interface/logica_controllo/soglia_attivazione_applicata/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.stanza_rilevamento_vmc",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/stanza_rilevamento_vmc/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 98,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.stanza_rilevamento_vmc\",\n            int_stat: \"zara/interface/logica_controllo/stanza_rilevamento_vmc/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 376,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.stanza_rilevamento_vmc",
+          "declaration": "{\n        json_path: \"logica_controllo.stanza_rilevamento_vmc\",\n        int_stat: \"zara/interface/logica_controllo/stanza_rilevamento_vmc/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "logica_controllo.vmc_portata_stimata_m3h",
+      "domain": "logica_controllo",
+      "state_topic": "zara/interface/logica_controllo/vmc_portata_stimata_m3h/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LOGICA CONTROLLO AI CLIMATE",
+          "router_function_line": 103,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n            id: \"logica_controllo.vmc_portata_stimata_m3h\",\n            int_stat: \"zara/interface/logica_controllo/vmc_portata_stimata_m3h/stat\"\n        }"
+        },
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 371,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "logica_controllo.vmc_portata_stimata_m3h",
+          "declaration": "{\n        json_path: \"logica_controllo.vmc_portata_stimata_m3h\",\n        int_stat: \"zara/interface/logica_controllo/vmc_portata_stimata_m3h/stat\",\n        transform_func: (p) => parseInt(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "garage.gate_1",
+      "domain": "garage",
+      "state_topic": null,
+      "command_topic": "zara/interface/garage/gate_1/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "CANCELLO GARAGE",
+          "router_function_line": 109,
+          "legacy_state_topic": null,
+          "legacy_command_topic": "zara/domotics/garage/gate_1",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"garage.gate_1\", int_cmd: \"zara/interface/garage/gate_1/cmd\", leg_cmd: \"zara/domotics/garage/gate_1\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\" } }"
+        }
+      ],
+      "access_in_router": "command_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "GarageControlScreen"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/garage/gate_1/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/GarageControlScreen.kt",
+          "line": 71,
+          "payload_expression": "\"true\") }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "garage.gate_2",
+      "domain": "garage",
+      "state_topic": null,
+      "command_topic": "zara/interface/garage/gate_2/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "CANCELLO GARAGE",
+          "router_function_line": 110,
+          "legacy_state_topic": null,
+          "legacy_command_topic": "zara/domotics/garage/gate_2",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"garage.gate_2\", int_cmd: \"zara/interface/garage/gate_2/cmd\", leg_cmd: \"zara/domotics/garage/gate_2\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\" } }"
+        }
+      ],
+      "access_in_router": "command_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "GarageControlScreen"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/garage/gate_2/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/GarageControlScreen.kt",
+          "line": 78,
+          "payload_expression": "\"true\") }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "settings.holiday_mode",
+      "domain": "settings",
+      "state_topic": "zara/interface/settings/holiday_mode/stat",
+      "command_topic": "zara/interface/settings/holiday_mode/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "SETTAGGI AUTOMATISMI",
+          "router_function_line": 113,
+          "legacy_state_topic": "zara/domotics/modalitavacanza",
+          "legacy_command_topic": "zara/domotics/modalitavacanza",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"settings.holiday_mode\", int_cmd: \"zara/interface/settings/holiday_mode/cmd\", int_stat: \"zara/interface/settings/holiday_mode/stat\", leg_cmd: \"zara/domotics/modalitavacanza\", leg_stat: \"zara/domotics/modalitavacanza\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "DomoticaSettingsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/settings/holiday_mode/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 60,
+          "payload_expression": "it.toString())"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "settings.eco_lights",
+      "domain": "settings",
+      "state_topic": "zara/interface/settings/eco_lights/stat",
+      "command_topic": "zara/interface/settings/eco_lights/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "SETTAGGI AUTOMATISMI",
+          "router_function_line": 114,
+          "legacy_state_topic": "zara/domotics/luciECO",
+          "legacy_command_topic": "zara/domotics/luciECO",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"settings.eco_lights\", int_cmd: \"zara/interface/settings/eco_lights/cmd\", int_stat: \"zara/interface/settings/eco_lights/stat\", leg_cmd: \"zara/domotics/luciECO\", leg_stat: \"zara/domotics/luciECO\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "DomoticaSettingsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/settings/eco_lights/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 71,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "settings.pool_lights_auto",
+      "domain": "settings",
+      "state_topic": "zara/interface/settings/pool_lights_auto/stat",
+      "command_topic": "zara/interface/settings/pool_lights_auto/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "SETTAGGI AUTOMATISMI",
+          "router_function_line": 115,
+          "legacy_state_topic": "zara/domotics/luciPiscinaAuto",
+          "legacy_command_topic": "zara/domotics/luciPiscinaAuto",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"settings.pool_lights_auto\", int_cmd: \"zara/interface/settings/pool_lights_auto/cmd\", int_stat: \"zara/interface/settings/pool_lights_auto/stat\", leg_cmd: \"zara/domotics/luciPiscinaAuto\", leg_stat: \"zara/domotics/luciPiscinaAuto\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "DomoticaSettingsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/settings/pool_lights_auto/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 81,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "settings.porch_sensor",
+      "domain": "settings",
+      "state_topic": "zara/interface/settings/porch_sensor/stat",
+      "command_topic": "zara/interface/settings/porch_sensor/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "SETTAGGI AUTOMATISMI",
+          "router_function_line": 116,
+          "legacy_state_topic": "zara/domotics/porch_sensor",
+          "legacy_command_topic": "zara/domotics/porch_sensor",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"settings.porch_sensor\", int_cmd: \"zara/interface/settings/porch_sensor/cmd\", int_stat: \"zara/interface/settings/porch_sensor/stat\", leg_cmd: \"zara/domotics/porch_sensor\", leg_stat: \"zara/domotics/porch_sensor\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "DomoticaSettingsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/settings/porch_sensor/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 91,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "settings.ac_auto",
+      "domain": "settings",
+      "state_topic": "zara/interface/settings/ac_auto/stat",
+      "command_topic": "zara/interface/settings/ac_auto/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "SETTAGGI AUTOMATISMI",
+          "router_function_line": 117,
+          "legacy_state_topic": "zara/domotics/ACAuto",
+          "legacy_command_topic": "zara/domotics/ACAuto",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"settings.ac_auto\", int_cmd: \"zara/interface/settings/ac_auto/cmd\", int_stat: \"zara/interface/settings/ac_auto/stat\", leg_cmd: \"zara/domotics/ACAuto\", leg_stat: \"zara/domotics/ACAuto\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "DomoticaSettingsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/settings/ac_auto/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/DomoticaSettingsScreen.kt",
+          "line": 101,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.system_enabled",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/system_enabled/stat",
+      "command_topic": "zara/interface/ai/system_enabled/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 120,
+          "legacy_state_topic": "casa/clima/stat/AI_climate_enabling",
+          "legacy_command_topic": "casa/clima/cmnd/AI_climate_enabling",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.system_enabled\", int_cmd: \"zara/interface/ai/system_enabled/cmd\", int_stat: \"zara/interface/ai/system_enabled/stat\", leg_cmd: \"casa/clima/cmnd/AI_climate_enabling\", leg_stat: \"casa/clima/stat/AI_climate_enabling\", broker: \"home\",                                               stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/system_enabled/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 195,
+          "payload_expression": "if (enabled) \"true\" else \"false\")"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "predictive_reserve.control_enabled",
+      "domain": "predictive_reserve",
+      "state_topic": "zara/interface/predictive_reserve/control_enabled/stat",
+      "command_topic": "zara/interface/predictive_reserve/control_enabled/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 122,
+          "legacy_state_topic": "casa/clima/stat/predictive_reserve_control_enabled",
+          "legacy_command_topic": "casa/clima/cmnd/predictive_reserve_control_enabled",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{\n        id: \"predictive_reserve.control_enabled\",\n\n        int_cmd:\n            \"zara/interface/predictive_reserve/control_enabled/cmd\",\n\n        int_stat:\n            \"zara/interface/predictive_reserve/control_enabled/stat\",\n\n        leg_cmd:\n            \"casa/clima/cmnd/predictive_reserve_control_enabled\",\n\n        leg_stat:\n            \"casa/clima/stat/predictive_reserve_control_enabled\",\n\n        broker: \"home\",\n\n        stat_trans_func: (p) =>\n        (\n            p === \"1\" ||\n            p === \"true\" ||\n            p === \"ON\" ||\n            p === true\n        )\n    }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/predictive_reserve/control_enabled/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 72,
+          "payload_expression": "if (willEnable) \"true\" else \"false\")"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.compressor_on_min",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/compressor_on_min/stat",
+      "command_topic": "zara/interface/ai/compressor_on_min/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 148,
+          "legacy_state_topic": "casa/clima/stat/min_run_time",
+          "legacy_command_topic": "casa/clima/cmnd/min_run_time",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.compressor_on_min\", int_cmd: \"zara/interface/ai/compressor_on_min/cmd\", int_stat: \"zara/interface/ai/compressor_on_min/stat\", leg_cmd: \"casa/clima/cmnd/min_run_time\", leg_stat: \"casa/clima/stat/min_run_time\", broker: \"home\", stat_trans_func: (p) => parseInt(p) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/compressor_on_min/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 214,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.compressor_off_min",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/compressor_off_min/stat",
+      "command_topic": "zara/interface/ai/compressor_off_min/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 149,
+          "legacy_state_topic": "casa/clima/stat/min_off_time",
+          "legacy_command_topic": "casa/clima/cmnd/min_off_time",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.compressor_off_min\", int_cmd: \"zara/interface/ai/compressor_off_min/cmd\", int_stat: \"zara/interface/ai/compressor_off_min/stat\", leg_cmd: \"casa/clima/cmnd/min_off_time\", leg_stat: \"casa/clima/stat/min_off_time\", broker: \"home\", stat_trans_func: (p) => parseInt(p) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/compressor_off_min/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 220,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.night_humidex_threshold",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/night_humidex_threshold/stat",
+      "command_topic": "zara/interface/ai/night_humidex_threshold/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 150,
+          "legacy_state_topic": "casa/clima/stat/target_humidex",
+          "legacy_command_topic": "casa/clima/cmnd/target_humidex",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.night_humidex_threshold\", int_cmd: \"zara/interface/ai/night_humidex_threshold/cmd\", int_stat: \"zara/interface/ai/night_humidex_threshold/stat\", leg_cmd: \"casa/clima/cmnd/target_humidex\", leg_stat: \"casa/clima/stat/target_humidex\", broker: \"home\", stat_trans_func: (p) => parseInt(p) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/night_humidex_threshold/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 235,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.night_vmc_max_speed",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/night_vmc_max_speed/stat",
+      "command_topic": "zara/interface/ai/night_vmc_max_speed/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 151,
+          "legacy_state_topic": "casa/clima/stat/vmc_max_notte",
+          "legacy_command_topic": "casa/clima/cmnd/vmc_max_notte",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.night_vmc_max_speed\", int_cmd: \"zara/interface/ai/night_vmc_max_speed/cmd\", int_stat: \"zara/interface/ai/night_vmc_max_speed/stat\", leg_cmd: \"casa/clima/cmnd/vmc_max_notte\", leg_stat: \"casa/clima/stat/vmc_max_notte\", broker: \"home\", stat_trans_func: (p) => parseInt(p) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/night_vmc_max_speed/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 242,
+          "payload_expression": "it.toInt().toString()) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.deficit_tolerance_min",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/deficit_tolerance_min/stat",
+      "command_topic": "zara/interface/ai/deficit_tolerance_min/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 152,
+          "legacy_state_topic": "casa/clima/stat/deficit_tolerance_time",
+          "legacy_command_topic": "casa/clima/cmnd/deficit_tolerance_time",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.deficit_tolerance_min\", int_cmd: \"zara/interface/ai/deficit_tolerance_min/cmd\", int_stat: \"zara/interface/ai/deficit_tolerance_min/stat\", leg_cmd: \"casa/clima/cmnd/deficit_tolerance_time\", leg_stat: \"casa/clima/stat/deficit_tolerance_time\", broker: \"home\", stat_trans_func: (p) => parseInt(p) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/deficit_tolerance_min/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 257,
+          "payload_expression": "it.toString()) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.morning_ac_management",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/morning_ac_management/stat",
+      "command_topic": "zara/interface/ai/morning_ac_management/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 153,
+          "legacy_state_topic": "casa/clima/stat/grace_mode_solar",
+          "legacy_command_topic": "casa/clima/cmnd/grace_mode_solar",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.morning_ac_management\", int_cmd: \"zara/interface/ai/morning_ac_management/cmd\", int_stat: \"zara/interface/ai/morning_ac_management/stat\", leg_cmd: \"casa/clima/cmnd/grace_mode_solar\", leg_stat: \"casa/clima/stat/grace_mode_solar\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/morning_ac_management/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 277,
+          "payload_expression": "if (it) \"true\" else \"false\") },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ai.morning_humidex_emergency",
+      "domain": "ai",
+      "state_topic": "zara/interface/ai/morning_humidex_emergency/stat",
+      "command_topic": "zara/interface/ai/morning_humidex_emergency/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "AI MANAGED PARAMETERS",
+          "router_function_line": 154,
+          "legacy_state_topic": "casa/clima/stat/emergency_humidex_away",
+          "legacy_command_topic": "casa/clima/cmnd/emergency_humidex_away",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"ai.morning_humidex_emergency\", int_cmd: \"zara/interface/ai/morning_humidex_emergency/cmd\", int_stat: \"zara/interface/ai/morning_humidex_emergency/stat\", leg_cmd: \"casa/clima/cmnd/emergency_humidex_away\", leg_stat: \"casa/clima/stat/emergency_humidex_away\", broker: \"home\", stat_trans_func: (p) => parseInt(p) }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ai/morning_humidex_emergency/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/AiManagedScreen.kt",
+          "line": 288,
+          "payload_expression": "it.toString()) }"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.living.power",
+      "domain": "lights",
+      "state_topic": "zara/interface/lights/living/power/stat",
+      "command_topic": "zara/interface/lights/living/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LIGHTS (Topic Legacy collegati ai flussi Broadlink/Dashboard)",
+          "router_function_line": 157,
+          "legacy_state_topic": "zara/domotics/lights/livinglamp",
+          "legacy_command_topic": "zara/domotics/lights/livinglamp",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"lights.living.power\", int_cmd: \"zara/interface/lights/living/power/cmd\", int_stat: \"zara/interface/lights/living/power/stat\", leg_cmd: \"zara/domotics/lights/livinglamp\", leg_stat: \"zara/domotics/lights/livinglamp\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "sala",
+          "label": "Soggiorno Main"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.libreria.power",
+      "domain": "lights",
+      "state_topic": "zara/interface/lights/libreria/power/stat",
+      "command_topic": "zara/interface/lights/libreria/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LIGHTS (Topic Legacy collegati ai flussi Broadlink/Dashboard)",
+          "router_function_line": 158,
+          "legacy_state_topic": "zara/domotics/lights/shelflamp",
+          "legacy_command_topic": "zara/domotics/lights/shelflamp",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"lights.libreria.power\", int_cmd: \"zara/interface/lights/libreria/power/cmd\", int_stat: \"zara/interface/lights/libreria/power/stat\", leg_cmd: \"zara/domotics/lights/shelflamp\", leg_stat: \"zara/domotics/lights/shelflamp\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "libreria",
+          "label": "Libreria"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.tv.power",
+      "domain": "lights",
+      "state_topic": "zara/interface/lights/tv/power/stat",
+      "command_topic": "zara/interface/lights/tv/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LIGHTS (Topic Legacy collegati ai flussi Broadlink/Dashboard)",
+          "router_function_line": 159,
+          "legacy_state_topic": "zara/domotics/lights/tvlamp",
+          "legacy_command_topic": "zara/domotics/lights/tvlamp",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"lights.tv.power\", int_cmd: \"zara/interface/lights/tv/power/cmd\", int_stat: \"zara/interface/lights/tv/power/stat\", leg_cmd: \"zara/domotics/lights/tvlamp\", leg_stat: \"zara/domotics/lights/tvlamp\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "televisione",
+          "label": "Televisione"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.reading.power",
+      "domain": "lights",
+      "state_topic": "zara/interface/lights/reading/power/stat",
+      "command_topic": "zara/interface/lights/reading/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LIGHTS (Topic Legacy collegati ai flussi Broadlink/Dashboard)",
+          "router_function_line": 160,
+          "legacy_state_topic": "zara/domotics/lights/readinglight",
+          "legacy_command_topic": "zara/domotics/lights/readinglight",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"lights.reading.power\", int_cmd: \"zara/interface/lights/reading/power/cmd\", int_stat: \"zara/interface/lights/reading/power/stat\", leg_cmd: \"zara/domotics/lights/readinglight\", leg_stat: \"zara/domotics/lights/readinglight\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "tavolinolettura",
+          "label": "Tavolino Lettura"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.bedroom.power",
+      "domain": "lights",
+      "state_topic": "zara/interface/lights/bedroom/power/stat",
+      "command_topic": "zara/interface/lights/bedroom/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LIGHTS (Topic Legacy collegati ai flussi Broadlink/Dashboard)",
+          "router_function_line": 161,
+          "legacy_state_topic": "zara/domotics/lights/bedroomlight",
+          "legacy_command_topic": "zara/domotics/lights/bedroomlight",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"lights.bedroom.power\", int_cmd: \"zara/interface/lights/bedroom/power/cmd\", int_stat: \"zara/interface/lights/bedroom/power/stat\", leg_cmd: \"zara/domotics/lights/bedroomlight\", leg_stat: \"zara/domotics/lights/bedroomlight\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "lucecamera",
+          "label": "Luce Camera"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.prolunga.power",
+      "domain": "lights",
+      "state_topic": "zara/interface/lights/prolunga/power/stat",
+      "command_topic": "zara/interface/lights/prolunga/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LIGHTS (Topic Legacy collegati ai flussi Broadlink/Dashboard)",
+          "router_function_line": 162,
+          "legacy_state_topic": "zara/domotics/lights/prolunga",
+          "legacy_command_topic": "zara/domotics/lights/prolunga",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"lights.prolunga.power\", int_cmd: \"zara/interface/lights/prolunga/power/cmd\", int_stat: \"zara/interface/lights/prolunga/power/stat\", leg_cmd: \"zara/domotics/lights/prolunga\", leg_stat: \"zara/domotics/lights/prolunga\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "prolunga",
+          "label": "Prolunga / Allarme"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.hifi.power",
+      "domain": "lights",
+      "state_topic": "zara/interface/lights/hifi/power/stat",
+      "command_topic": "zara/interface/lights/hifi/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "LIGHTS (Native MQTT / Tasmota)",
+          "router_function_line": 165,
+          "legacy_state_topic": "stat/tasmota_86AD14/POWER",
+          "legacy_command_topic": "cmnd/tasmota_86AD14/POWER",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"lights.hifi.power\", int_cmd: \"zara/interface/lights/hifi/power/cmd\", int_stat: \"zara/interface/lights/hifi/power/stat\", leg_cmd: \"cmnd/tasmota_86AD14/POWER\", leg_stat: \"stat/tasmota_86AD14/POWER\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\", \"1\": \"1\", \"0\": \"0\" }, stat_trans: { \"1\": true, \"0\": false, \"on\": true, \"off\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "lampadahifi",
+          "label": "Lampada HiFi"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "pool.pump.power",
+      "domain": "pool",
+      "state_topic": "zara/interface/pool/pump/power/stat",
+      "command_topic": "zara/interface/pool/pump/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "POOL (Topic Legacy)",
+          "router_function_line": 168,
+          "legacy_state_topic": "zara/domotics/lights/poolpump",
+          "legacy_command_topic": "zara/domotics/lights/poolpump",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"pool.pump.power\", int_cmd: \"zara/interface/pool/pump/power/cmd\", int_stat: \"zara/interface/pool/pump/power/stat\", leg_cmd: \"zara/domotics/lights/poolpump\", leg_stat: \"zara/domotics/lights/poolpump\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "PoolScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/PoolScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "pompapiscina"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "pool.skimmer.power",
+      "domain": "pool",
+      "state_topic": "zara/interface/pool/skimmer/power/stat",
+      "command_topic": "zara/interface/pool/skimmer/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "POOL (Topic Legacy)",
+          "router_function_line": 169,
+          "legacy_state_topic": "zara/domotics/lights/poolskimmer",
+          "legacy_command_topic": "zara/domotics/lights/poolskimmer",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"pool.skimmer.power\", int_cmd: \"zara/interface/pool/skimmer/power/cmd\", int_stat: \"zara/interface/pool/skimmer/power/stat\", leg_cmd: \"zara/domotics/lights/poolskimmer\", leg_stat: \"zara/domotics/lights/poolskimmer\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "PoolScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/PoolScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "skimmerpiscina"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "pool.water.power",
+      "domain": "pool",
+      "state_topic": "zara/interface/pool/water/power/stat",
+      "command_topic": "zara/interface/pool/water/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "POOL (Topic Legacy)",
+          "router_function_line": 170,
+          "legacy_state_topic": "zara/domotics/lights/poollight",
+          "legacy_command_topic": "zara/domotics/lights/poollight",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"pool.water.power\", int_cmd: \"zara/interface/pool/water/power/cmd\", int_stat: \"zara/interface/pool/water/power/stat\", leg_cmd: \"zara/domotics/lights/poollight\", leg_stat: \"zara/domotics/lights/poollight\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "PoolScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/PoolScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "lucipiscina"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "pool.deck.power",
+      "domain": "pool",
+      "state_topic": "zara/interface/pool/deck/power/stat",
+      "command_topic": "zara/interface/pool/deck/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "POOL (Topic Legacy)",
+          "router_function_line": 171,
+          "legacy_state_topic": "zara/domotics/lights/poolfloor",
+          "legacy_command_topic": "zara/domotics/lights/poolfloor",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"pool.deck.power\", int_cmd: \"zara/interface/pool/deck/power/cmd\", int_stat: \"zara/interface/pool/deck/power/stat\", leg_cmd: \"zara/domotics/lights/poolfloor\", leg_stat: \"zara/domotics/lights/poolfloor\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "PoolScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/PoolScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "lucipedanapiscina"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.solar.power",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/solar/power/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENERGY (RAW SENSORS)",
+          "router_function_line": 174,
+          "legacy_state_topic": "TeslaPowerwall/solar_instant_power",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"energy.solar.power\", int_stat: \"zara/interface/energy/solar/power/stat\", leg_stat: \"TeslaPowerwall/solar_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.home.consumption",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/home/consumption/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENERGY (RAW SENSORS)",
+          "router_function_line": 175,
+          "legacy_state_topic": "TeslaPowerwall/load_instant_power",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"energy.home.consumption\", int_stat: \"zara/interface/energy/home/consumption/stat\", leg_stat: \"TeslaPowerwall/load_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.battery.soc",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/battery/soc/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENERGY (RAW SENSORS)",
+          "router_function_line": 176,
+          "legacy_state_topic": "TeslaPowerwall/SOE",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"energy.battery.soc\", int_stat: \"zara/interface/energy/battery/soc/stat\", leg_stat: \"TeslaPowerwall/SOE\", stat_trans_func: (p, lastVal) => { let val = Math.round(parseFloat(p) * 10) / 10; if (lastVal !== undefined && Math.abs(val - lastVal) < 0.5) return null; return val; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.grid.power_raw",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/grid/power_raw/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENERGY (RAW SENSORS)",
+          "router_function_line": 177,
+          "legacy_state_topic": "TeslaPowerwall/site_instant_power",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"energy.grid.power_raw\", int_stat: \"zara/interface/energy/grid/power_raw/stat\", leg_stat: \"TeslaPowerwall/site_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.battery.power_raw",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/battery/power_raw/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENERGY (RAW SENSORS)",
+          "router_function_line": 178,
+          "legacy_state_topic": "TeslaPowerwall/battery_instant_power",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"energy.battery.power_raw\", int_stat: \"zara/interface/energy/battery/power_raw/stat\", leg_stat: \"TeslaPowerwall/battery_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.puffer.top_temperature",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/puffer/top_temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "HEATING",
+          "router_function_line": 181,
+          "legacy_state_topic": "emon/resolDL2/sensor3",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.puffer.top_temperature\",    int_stat: \"zara/interface/heating/puffer/top_temperature/stat\",    leg_stat: \"emon/resolDL2/sensor3\", broker: \"emon\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.puffer.bottom_temperature",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/puffer/bottom_temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "HEATING",
+          "router_function_line": 182,
+          "legacy_state_topic": "emon/resolDL2/sensor2",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.puffer.bottom_temperature\", int_stat: \"zara/interface/heating/puffer/bottom_temperature/stat\", leg_stat: \"emon/resolDL2/sensor2\", broker: \"emon\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.puffer.acs",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/puffer_acs/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "HEATING",
+          "router_function_line": 183,
+          "legacy_state_topic": "emon/shellyACS/tempACS",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"energy.puffer.acs\",                 int_stat: \"zara/interface/energy/puffer_acs/stat\",                 leg_stat: \"emon/shellyACS/tempACS\", broker: \"emon\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.solar_thermal.collector_temperature",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/solar_thermal/collector_temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "SOLAR THERMAL",
+          "router_function_line": 186,
+          "legacy_state_topic": "emon/resolDL2/sensor1",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.solar_thermal.collector_temperature\", int_stat: \"zara/interface/heating/solar_thermal/collector_temperature/stat\", leg_stat: \"emon/resolDL2/sensor1\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.solar_thermal.pump_speed",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/solar_thermal/pump_speed/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "SOLAR THERMAL",
+          "router_function_line": 187,
+          "legacy_state_topic": "emon/resolDL2/pump1",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.solar_thermal.pump_speed\", int_stat: \"zara/interface/heating/solar_thermal/pump_speed/stat\", leg_stat: \"emon/resolDL2/pump1\", stat_trans_func: (p) => { return isNaN(parseInt(p)) ? null : parseInt(p); } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.gas_boiler.flame",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/gas_boiler/flame/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "GAS BOILER",
+          "router_function_line": 190,
+          "legacy_state_topic": "emon/OTGcaldaia/flame",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.gas_boiler.flame\", int_stat: \"zara/interface/heating/gas_boiler/flame/stat\", leg_stat: \"emon/OTGcaldaia/flame\", stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.gas_boiler.modulation",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/gas_boiler/modulation/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "GAS BOILER",
+          "router_function_line": 191,
+          "legacy_state_topic": "emon/OTGcaldaia/modulation",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.gas_boiler.modulation\", int_stat: \"zara/interface/heating/gas_boiler/modulation/stat\", leg_stat: \"emon/OTGcaldaia/modulation\", stat_trans_func: (p) => { return isNaN(parseInt(p)) ? null : parseInt(p); } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.floor_pump.enabled",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/floor_pump/enabled/stat",
+      "command_topic": "zara/interface/heating/floor_pump/enabled/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FLOOR PUMP",
+          "router_function_line": 194,
+          "legacy_state_topic": "zara/domotics/pompapavimento/abilitata",
+          "legacy_command_topic": "zara/domotics/pompapavimento/abilitata",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.floor_pump.enabled\", int_cmd: \"zara/interface/heating/floor_pump/enabled/cmd\", int_stat: \"zara/interface/heating/floor_pump/enabled/stat\", leg_cmd: \"zara/domotics/pompapavimento/abilitata\", leg_stat: \"zara/domotics/pompapavimento/abilitata\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/heating/floor_pump/enabled/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 254,
+          "payload_expression": "if (it) \"true\" else \"false\") },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.floor_pump.running",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/floor_pump/running/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FLOOR PUMP",
+          "router_function_line": 195,
+          "legacy_state_topic": "zara/domotics/floorpumpstate",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.floor_pump.running\", int_stat: \"zara/interface/heating/floor_pump/running/stat\", leg_stat: \"zara/domotics/floorpumpstate\", stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.heat_pump.enabled",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/heat_pump/enabled/stat",
+      "command_topic": "zara/interface/heating/heat_pump/enabled/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "HEAT PUMP (WINTER)",
+          "router_function_line": 198,
+          "legacy_state_topic": "zara/domotics/HP/abilitata",
+          "legacy_command_topic": "zara/domotics/HP/abilitata",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.heat_pump.enabled\", int_cmd: \"zara/interface/heating/heat_pump/enabled/cmd\", int_stat: \"zara/interface/heating/heat_pump/enabled/stat\", leg_cmd: \"zara/domotics/HP/abilitata\", leg_stat: \"zara/domotics/HP/abilitata\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "obsolete_per_runtime_contract",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.heat_pump.solar_divert",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/heat_pump/solar_divert/stat",
+      "command_topic": "zara/interface/heating/heat_pump/solar_divert/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "HEAT PUMP (WINTER)",
+          "router_function_line": 199,
+          "legacy_state_topic": "zara/domotics/HP/solardivertmode",
+          "legacy_command_topic": "zara/domotics/HP/solardivertmode",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.heat_pump.solar_divert\", int_cmd: \"zara/interface/heating/heat_pump/solar_divert/cmd\", int_stat: \"zara/interface/heating/heat_pump/solar_divert/stat\", leg_cmd: \"zara/domotics/HP/solardivertmode\", leg_stat: \"zara/domotics/HP/solardivertmode\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "obsolete_per_runtime_contract",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.heat_pump.target_temperature",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/heat_pump/target_temperature/stat",
+      "command_topic": "zara/interface/heating/heat_pump/target_temperature/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "HEAT PUMP (WINTER)",
+          "router_function_line": 200,
+          "legacy_state_topic": "casa/clima/stat/target_temp_inverno",
+          "legacy_command_topic": "casa/clima/cmnd/target_temp_inverno",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.heat_pump.target_temperature\", int_cmd: \"zara/interface/heating/heat_pump/target_temperature/cmd\", int_stat: \"zara/interface/heating/heat_pump/target_temperature/stat\", leg_cmd: \"casa/clima/cmnd/target_temp_inverno\", leg_stat: \"casa/clima/stat/target_temp_inverno\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "obsolete_per_runtime_contract",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "heating.heat_pump.running",
+      "domain": "heating",
+      "state_topic": "zara/interface/heating/heat_pump/running/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "HEAT PUMP (WINTER)",
+          "router_function_line": 201,
+          "legacy_state_topic": "emon/AC/HPstatus",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"heating.heat_pump.running\", int_stat: \"zara/interface/heating/heat_pump/running/stat\", leg_stat: \"emon/AC/HPstatus\", stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "obsolete_per_runtime_contract",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "fireplace.main.power",
+      "domain": "fireplace",
+      "state_topic": "zara/interface/fireplace/main/power/stat",
+      "command_topic": "zara/interface/fireplace/main/power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FIREPLACE",
+          "router_function_line": 204,
+          "legacy_state_topic": "zara/domotics/palazzetti/acceso",
+          "legacy_command_topic": "zara/domotics/palazzetti/acceso",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"fireplace.main.power\", int_cmd: \"zara/interface/fireplace/main/power/cmd\", int_stat: \"zara/interface/fireplace/main/power/stat\", leg_cmd: \"zara/domotics/palazzetti/acceso\", leg_stat: \"zara/domotics/palazzetti/acceso\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/fireplace/main/power/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 497,
+          "payload_expression": "it.toString()) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "fireplace.main.level",
+      "domain": "fireplace",
+      "state_topic": "zara/interface/fireplace/main/level/stat",
+      "command_topic": "zara/interface/fireplace/main/level/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FIREPLACE",
+          "router_function_line": 205,
+          "legacy_state_topic": "emon/focolare/powerraw",
+          "legacy_command_topic": "alexa/caminetto",
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"fireplace.main.level\", int_cmd: \"zara/interface/fireplace/main/level/cmd\", int_stat: \"zara/interface/fireplace/main/level/stat\", leg_cmd: \"alexa/caminetto\", leg_stat: \"emon/focolare/powerraw\", broker: \"emon\", stat_trans_func: (p) => { return isNaN(parseInt(p)) ? null : parseInt(p); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/fireplace/main/level/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 576,
+          "payload_expression": "it.toInt().toString()) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "fireplace.main.mode",
+      "domain": "fireplace",
+      "state_topic": "zara/interface/fireplace/main/mode/stat",
+      "command_topic": "zara/interface/fireplace/main/mode/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FIREPLACE",
+          "router_function_line": 206,
+          "legacy_state_topic": "zara/domotics/palazzetti/modalita",
+          "legacy_command_topic": "zara/domotics/palazzetti/modalita",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"fireplace.main.mode\", int_cmd: \"zara/interface/fireplace/main/mode/cmd\", int_stat: \"zara/interface/fireplace/main/mode/stat\", leg_cmd: \"zara/domotics/palazzetti/modalita\", leg_stat: \"zara/domotics/palazzetti/modalita\", broker: \"home\", stat_trans_func: (p) => { return String(p); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/fireplace/main/mode/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 534,
+          "payload_expression": "mode)"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "fireplace.main.start_time",
+      "domain": "fireplace",
+      "state_topic": "zara/interface/fireplace/main/start_time/stat",
+      "command_topic": "zara/interface/fireplace/main/start_time/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FIREPLACE",
+          "router_function_line": 207,
+          "legacy_state_topic": "zara/domotics/palazzetti/oraavvio",
+          "legacy_command_topic": "zara/domotics/palazzetti/oraavvio",
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"fireplace.main.start_time\", int_cmd: \"zara/interface/fireplace/main/start_time/cmd\", int_stat: \"zara/interface/fireplace/main/start_time/stat\", leg_cmd: \"zara/domotics/palazzetti/oraavvio\", leg_stat: \"zara/domotics/palazzetti/oraavvio\", broker: \"emon\", stat_trans_func: (p) => { return String(p); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/fireplace/main/start_time/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 548,
+          "payload_expression": "it) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "fireplace.main.stop_time",
+      "domain": "fireplace",
+      "state_topic": "zara/interface/fireplace/main/stop_time/stat",
+      "command_topic": "zara/interface/fireplace/main/stop_time/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FIREPLACE",
+          "router_function_line": 208,
+          "legacy_state_topic": "zara/domotics/palazzetti/oraspegnimento",
+          "legacy_command_topic": "zara/domotics/palazzetti/oraspegnimento",
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"fireplace.main.stop_time\", int_cmd: \"zara/interface/fireplace/main/stop_time/cmd\", int_stat: \"zara/interface/fireplace/main/stop_time/stat\", leg_cmd: \"zara/domotics/palazzetti/oraspegnimento\", leg_stat: \"zara/domotics/palazzetti/oraspegnimento\", broker: \"emon\", stat_trans_func: (p) => { return String(p); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/fireplace/main/stop_time/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 556,
+          "payload_expression": "it) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "fireplace.main.auto_power",
+      "domain": "fireplace",
+      "state_topic": "zara/interface/fireplace/main/auto_power/stat",
+      "command_topic": "zara/interface/fireplace/main/auto_power/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "FIREPLACE",
+          "router_function_line": 209,
+          "legacy_state_topic": "zara/domotics/controlloAutomaticoPotenzaCaminetto",
+          "legacy_command_topic": "zara/domotics/controlloAutomaticoPotenzaCaminetto",
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"fireplace.main.auto_power\", int_cmd: \"zara/interface/fireplace/main/auto_power/cmd\", int_stat: \"zara/interface/fireplace/main/auto_power/stat\", leg_cmd: \"zara/domotics/controlloAutomaticoPotenzaCaminetto\", leg_stat: \"zara/domotics/controlloAutomaticoPotenzaCaminetto\", broker: \"emon\",                                                stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/fireplace/main/auto_power/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 613,
+          "payload_expression": "it.toString()) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_living.current_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_living/current_temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 212,
+          "legacy_state_topic": "emon/emonth5/temperature_calibrated",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_living.current_temperature\", int_stat: \"zara/interface/climate/thermostat_living/current_temperature/stat\", leg_stat: \"emon/emonth5/temperature_calibrated\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_living.target_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_living/target_temperature/stat",
+      "command_topic": "zara/interface/climate/thermostat_living/target_temperature/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 213,
+          "legacy_state_topic": "cmnd/tasmota_F32F4F/TEMPTARGETSET",
+          "legacy_command_topic": "cmnd/tasmota_F32F4F/TEMPTARGETSET",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_living.target_temperature\", int_cmd: \"zara/interface/climate/thermostat_living/target_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_living/target_temperature/stat\", leg_cmd: \"cmnd/tasmota_F32F4F/TEMPTARGETSET\", leg_stat: \"cmnd/tasmota_F32F4F/TEMPTARGETSET\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/climate/thermostat_living/target_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 414,
+          "payload_expression": "\"%.1f\".format(Locale.US, it))"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_living.power",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_living/power/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 214,
+          "legacy_state_topic": "emon/TermostatLiving/Switch",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_living.power\", int_stat: \"zara/interface/climate/thermostat_living/power/stat\", leg_stat: \"emon/TermostatLiving/Switch\", stat_trans: { \"100\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_living.min_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_living/min_temperature/stat",
+      "command_topic": "zara/interface/climate/thermostat_living/min_temperature/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 215,
+          "legacy_state_topic": "zara/domotics/livingThemostatMinValue",
+          "legacy_command_topic": "zara/domotics/livingThemostatMinValue",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_living.min_temperature\", int_cmd: \"zara/interface/climate/thermostat_living/min_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_living/min_temperature/stat\", leg_cmd: \"zara/domotics/livingThemostatMinValue\", leg_stat: \"zara/domotics/livingThemostatMinValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/climate/thermostat_living/min_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 439,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_living.max_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_living/max_temperature/stat",
+      "command_topic": "zara/interface/climate/thermostat_living/max_temperature/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 216,
+          "legacy_state_topic": "zara/domotics/livingThemostatMaxValue",
+          "legacy_command_topic": "zara/domotics/livingThemostatMaxValue",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_living.max_temperature\", int_cmd: \"zara/interface/climate/thermostat_living/max_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_living/max_temperature/stat\", leg_cmd: \"zara/domotics/livingThemostatMaxValue\", leg_stat: \"zara/domotics/livingThemostatMaxValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/climate/thermostat_living/max_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 447,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_bath.current_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_bath/current_temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 218,
+          "legacy_state_topic": "emon/bagnoServizio/temperature",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_bath.current_temperature\", int_stat: \"zara/interface/climate/thermostat_bath/current_temperature/stat\", leg_stat: \"emon/bagnoServizio/temperature\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_bath.target_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_bath/target_temperature/stat",
+      "command_topic": "zara/interface/climate/thermostat_bath/target_temperature/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 219,
+          "legacy_state_topic": "cmnd/SmallBathroomThermostat/TEMPTARGETSET",
+          "legacy_command_topic": "cmnd/SmallBathroomThermostat/TEMPTARGETSET",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_bath.target_temperature\", int_cmd: \"zara/interface/climate/thermostat_bath/target_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_bath/target_temperature/stat\", leg_cmd: \"cmnd/SmallBathroomThermostat/TEMPTARGETSET\", leg_stat: \"cmnd/SmallBathroomThermostat/TEMPTARGETSET\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/climate/thermostat_bath/target_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 414,
+          "payload_expression": "\"%.1f\".format(Locale.US, it))"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_bath.power",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_bath/power/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 220,
+          "legacy_state_topic": "emon/bagnoServizio/Switch",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_bath.power\", int_stat: \"zara/interface/climate/thermostat_bath/power/stat\", leg_stat: \"emon/bagnoServizio/Switch\", stat_trans: { \"100\": true, \"0\": false } }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_bath.min_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_bath/min_temperature/stat",
+      "command_topic": "zara/interface/climate/thermostat_bath/min_temperature/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 221,
+          "legacy_state_topic": "zara/domotics/SmallBathroomThermostatMinValue",
+          "legacy_command_topic": "zara/domotics/SmallBathroomThermostatMinValue",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_bath.min_temperature\", int_cmd: \"zara/interface/climate/thermostat_bath/min_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_bath/min_temperature/stat\", leg_cmd: \"zara/domotics/SmallBathroomThermostatMinValue\", leg_stat: \"zara/domotics/SmallBathroomThermostatMinValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/climate/thermostat_bath/min_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 439,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.thermostat_bath.max_temperature",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/thermostat_bath/max_temperature/stat",
+      "command_topic": "zara/interface/climate/thermostat_bath/max_temperature/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "THERMOSTATS",
+          "router_function_line": 222,
+          "legacy_state_topic": "zara/domotics/SmallBathroomThermostatMaxValue",
+          "legacy_command_topic": "zara/domotics/SmallBathroomThermostatMaxValue",
+          "broker_alias_explicit": "home",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"climate.thermostat_bath.max_temperature\", int_cmd: \"zara/interface/climate/thermostat_bath/max_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_bath/max_temperature/stat\", leg_cmd: \"zara/domotics/SmallBathroomThermostatMaxValue\", leg_stat: \"zara/domotics/SmallBathroomThermostatMaxValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/climate/thermostat_bath/max_temperature/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 447,
+          "payload_expression": "\"%.1f\".format(Locale.US, newValue))"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.living.temperature",
+      "domain": "env",
+      "state_topic": "zara/interface/env/living/temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 225,
+          "legacy_state_topic": "emon/emonth5/temperature_calibrated",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.living.temperature\", int_stat: \"zara/interface/env/living/temperature/stat\", leg_stat: \"emon/emonth5/temperature_calibrated\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.living.humidity",
+      "domain": "env",
+      "state_topic": "zara/interface/env/living/humidity/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 226,
+          "legacy_state_topic": "emon/emonth5/humidity",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.living.humidity\", int_stat: \"zara/interface/env/living/humidity/stat\", leg_stat: \"emon/emonth5/humidity\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.living.humidex",
+      "domain": "env",
+      "state_topic": "zara/interface/env/living/humidex/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 227,
+          "legacy_state_topic": "emon/emonth5/humidex",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.living.humidex\", int_stat: \"zara/interface/env/living/humidex/stat\", leg_stat: \"emon/emonth5/humidex\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.bedroom.temperature",
+      "domain": "env",
+      "state_topic": "zara/interface/env/bedroom/temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 229,
+          "legacy_state_topic": "emon/cameraMatrimoniale/temperature",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.bedroom.temperature\", int_stat: \"zara/interface/env/bedroom/temperature/stat\", leg_stat: \"emon/cameraMatrimoniale/temperature\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.bedroom.humidity",
+      "domain": "env",
+      "state_topic": "zara/interface/env/bedroom/humidity/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 230,
+          "legacy_state_topic": "emon/cameraMatrimoniale/humidity",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.bedroom.humidity\", int_stat: \"zara/interface/env/bedroom/humidity/stat\", leg_stat: \"emon/cameraMatrimoniale/humidity\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.bedroom.humidex",
+      "domain": "env",
+      "state_topic": "zara/interface/env/bedroom/humidex/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 231,
+          "legacy_state_topic": "emon/cameraMatrimoniale/humidex",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.bedroom.humidex\", int_stat: \"zara/interface/env/bedroom/humidex/stat\", leg_stat: \"emon/cameraMatrimoniale/humidex\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.outdoor.temperature",
+      "domain": "env",
+      "state_topic": "zara/interface/env/outdoor/temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 233,
+          "legacy_state_topic": "emon/weather/extTemp",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.outdoor.temperature\", int_stat: \"zara/interface/env/outdoor/temperature/stat\", leg_stat: \"emon/weather/extTemp\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.outdoor.humidity",
+      "domain": "env",
+      "state_topic": "zara/interface/env/outdoor/humidity/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 234,
+          "legacy_state_topic": "emon/weather/extHumidity",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.outdoor.humidity\", int_stat: \"zara/interface/env/outdoor/humidity/stat\", leg_stat: \"emon/weather/extHumidity\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.outdoor.humidex",
+      "domain": "env",
+      "state_topic": "zara/interface/env/outdoor/humidex/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 235,
+          "legacy_state_topic": "emon/sensore_outdoor/humidex",
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ id: \"env.outdoor.humidex\", int_stat: \"zara/interface/env/outdoor/humidex/stat\", leg_stat: \"emon/sensore_outdoor/humidex\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ventilation.vmc.speed",
+      "domain": "ventilation",
+      "state_topic": "zara/interface/ventilation/vmc/speed/stat",
+      "command_topic": "zara/interface/ventilation/vmc/speed/cmd",
+      "sources": [
+        {
+          "registry": "registry",
+          "group": "ENVIRONMENT SENSORS (REAL)",
+          "router_function_line": 248,
+          "legacy_state_topic": "/esp8266/brink/fanspeed",
+          "legacy_command_topic": "/esp8266/brink/fanspeed",
+          "broker_alias_explicit": "emon",
+          "composite_topic": null,
+          "json_path": null,
+          "declaration": "{ \n    id: \"ventilation.vmc.speed\", \n    int_cmd: \"zara/interface/ventilation/vmc/speed/cmd\", \n    int_stat: \"zara/interface/ventilation/vmc/speed/stat\", \n    leg_cmd: \"/esp8266/brink/fanspeed\", \n    leg_stat: \"/esp8266/brink/fanspeed\", \n    broker: \"emon\", \n    stat_trans_func: (p) => isNaN(parseInt(p)) ? null : parseInt(p) \n    }"
+        }
+      ],
+      "access_in_router": "read_write",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "topic": "zara/interface/ventilation/vmc/speed/cmd",
+          "file": "app/src/main/java/com/domopi/app/ui/screens/HvacScreen.kt",
+          "line": 83,
+          "payload_expression": "speed.toString()) },"
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.full_state.timestamp",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/full_state/timestamp/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 269,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "timestamp",
+          "declaration": "{ \n        json_path: \"timestamp\",\n        int_stat: \"zara/interface/climate/full_state/timestamp/stat\",\n        transform_func: (p) => parseInt(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.full_state.data_ora_formattata",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/full_state/data_ora_formattata/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 274,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "data_ora_formattata",
+          "declaration": "{ \n        json_path: \"data_ora_formattata\",\n        int_stat: \"zara/interface/climate/full_state/data_ora_formattata/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.solar.surplus",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/solar/surplus/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 306,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_elettriche.surplus_w",
+          "declaration": "{\n        json_path: \"metriche_elettriche.surplus_w\",\n        int_stat: \"zara/interface/energy/solar/surplus/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.grid.import",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/grid/import/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 311,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_elettriche.grid_import_w",
+          "declaration": "{\n        json_path: \"metriche_elettriche.grid_import_w\",\n        int_stat: \"zara/interface/energy/grid/import/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.grid.export",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/grid/export/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 316,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_elettriche.grid_export_w",
+          "declaration": "{\n        json_path: \"metriche_elettriche.grid_export_w\",\n        int_stat: \"zara/interface/energy/grid/export/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.battery.charge",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/battery/charge/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 321,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_elettriche.battery_charge_w",
+          "declaration": "{\n        json_path: \"metriche_elettriche.battery_charge_w\",\n        int_stat: \"zara/interface/energy/battery/charge/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.battery.discharge",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/battery/discharge/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 326,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_elettriche.battery_discharge_w",
+          "declaration": "{\n        json_path: \"metriche_elettriche.battery_discharge_w\",\n        int_stat: \"zara/interface/energy/battery/discharge/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.ac.power",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/ac/power/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 331,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_elettriche.consumo_ac_w",
+          "declaration": "{\n        json_path: \"metriche_elettriche.consumo_ac_w\",\n        int_stat: \"zara/interface/energy/ac/power/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "energy.home.historical_average_band",
+      "domain": "energy",
+      "state_topic": "zara/interface/energy/home/historical_average_band/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 336,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_elettriche.consumo_medio_storico_fascia_w",
+          "declaration": "{\n        json_path: \"metriche_elettriche.consumo_medio_storico_fascia_w\",\n        int_stat: \"zara/interface/energy/home/historical_average_band/stat\",\n        transform_func: (p) => parseFloat(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "MainDashboard",
+        "AiManagedScreen",
+        "HvacScreen"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "climate.control.humidex_reference",
+      "domain": "climate",
+      "state_topic": "zara/interface/climate/control/humidex_reference/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 356,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_ambientali.humidex",
+          "declaration": "{\n        json_path: \"metriche_ambientali.humidex\",\n        int_stat: \"zara/interface/climate/control/humidex_reference/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "env.solar_altitude",
+      "domain": "env",
+      "state_topic": "zara/interface/env/solar_altitude/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 361,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "metriche_ambientali.altitudine_sole",
+          "declaration": "{\n        json_path: \"metriche_ambientali.altitudine_sole\",\n        int_stat: \"zara/interface/env/solar_altitude/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "AmbientiScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ventilation.vmc.reason",
+      "domain": "ventilation",
+      "state_topic": "zara/interface/ventilation/vmc/reason/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 467,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stato_vmc.motivo_logica",
+          "declaration": "{\n        json_path: \"stato_vmc.motivo_logica\",\n        int_stat: \"zara/interface/ventilation/vmc/reason/stat\",\n        transform_func: (p) => String(p)\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ventilation.vmc.outdoor_humidex",
+      "domain": "ventilation",
+      "state_topic": "zara/interface/ventilation/vmc/outdoor_humidex/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 472,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stato_vmc.humidex_esterno",
+          "declaration": "{\n        json_path: \"stato_vmc.humidex_esterno\",\n        int_stat: \"zara/interface/ventilation/vmc/outdoor_humidex/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "ventilation.vmc.outdoor_temperature",
+      "domain": "ventilation",
+      "state_topic": "zara/interface/ventilation/vmc/outdoor_temperature/stat",
+      "command_topic": null,
+      "sources": [
+        {
+          "registry": "compositeRegistry",
+          "group": "TOPIC COMPOSITO",
+          "router_function_line": 477,
+          "legacy_state_topic": null,
+          "legacy_command_topic": null,
+          "broker_alias_explicit": null,
+          "composite_topic": "casa/clima/stato_completo",
+          "json_path": "stato_vmc.temperatura_esterna_c",
+          "declaration": "{\n        json_path: \"stato_vmc.temperatura_esterna_c\",\n        int_stat: \"zara/interface/ventilation/vmc/outdoor_temperature/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    }"
+        }
+      ],
+      "access_in_router": "read_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "HvacScreen",
+        "AiManagedScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    },
+    {
+      "id": "lights.scene",
+      "domain": "lights",
+      "state_topic": null,
+      "command_topic": "zara/interface/lights/scene/cmd",
+      "sources": [
+        {
+          "registry": "special_scene_bridge",
+          "group": "LIGHT SCENES",
+          "router_function_line": 599,
+          "allowed_ui_payloads": [
+            "tv",
+            "sleep",
+            "all_on",
+            "all_off"
+          ]
+        }
+      ],
+      "access_in_router": "command_only",
+      "lifecycle": "declared_in_export",
+      "android_domain_screens": [
+        "LightsScreen",
+        "MainDashboard"
+      ],
+      "android_command_references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "sendLightScene",
+          "payloads": [
+            "tv",
+            "sleep",
+            "all_on",
+            "all_off"
+          ]
+        }
+      ],
+      "physical_confirmation": "not_verified",
+      "live_validation": "not_performed_in_this_catalog_audit"
+    }
+  ],
+  "gaps": [
+    {
+      "topic": "zara/interface/lights/lavanderia/power/cmd",
+      "references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "lavanderia",
+          "label": "Lavanderia"
+        }
+      ],
+      "status": "android_command_without_exported_router_route"
+    },
+    {
+      "topic": "zara/interface/lights/portico/power/cmd",
+      "references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "portico",
+          "label": "Portico Ingresso"
+        }
+      ],
+      "status": "android_command_without_exported_router_route"
+    },
+    {
+      "topic": "zara/interface/lights/cucina/power/cmd",
+      "references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "cucina",
+          "label": "Cucina Piano"
+        }
+      ],
+      "status": "android_command_without_exported_router_route"
+    },
+    {
+      "topic": "zara/interface/lights/esterno/power/cmd",
+      "references": [
+        {
+          "file": "app/src/main/java/com/domopi/app/ui/screens/LightsScreen.kt",
+          "helper": "toggleLight",
+          "android_id": "esterno",
+          "label": "Esterno"
+        }
+      ],
+      "status": "android_command_without_exported_router_route"
+    }
+  ],
+  "non_mqtt_resources": [
+    {
+      "screen": "CamerasScreen",
+      "access": "read_only",
+      "transport": "HTTP MJPEG TinyCam",
+      "resources": [
+        {
+          "label": "Ingresso",
+          "camera_id": "936942165"
+        },
+        {
+          "label": "Soggiorno",
+          "camera_id": "1708386743"
+        }
+      ],
+      "endpoint_template": "/axis-cgi/mjpg/video.cgi?cameraId={id}"
+    },
+    {
+      "screen": "EnergyDetailScreen",
+      "access": "read_only",
+      "transport": "HTTP EmonCMS",
+      "feeds": {
+        "solar": 307,
+        "consumption": 303,
+        "grid": 305,
+        "battery": 306,
+        "soc": 304
+      },
+      "source": "app/src/main/java/com/domopi/app/data/EnergyRepository.kt"
+    },
+    {
+      "screen": "HouseAiScreen",
+      "access": "read_only",
+      "transport": "HTTP house_ai",
+      "endpoint_template": "/v1/report?day={day}",
+      "feeds": [
+        353,
+        304,
+        306
+      ]
+    },
+    {
+      "screen": "ConfigurationScreen",
+      "access": "local_settings_write",
+      "transport": "Android DataStore",
+      "note": "Connection settings, theme and expert PIN; no MQTT device command."
+    },
+    {
+      "screen": "DiagnosisScreen",
+      "access": "read_only",
+      "transport": "local_connection_diagnostics",
+      "note": "Connection mode, message rate and traffic log, not a physical device."
+    }
+  ],
+  "notes": [
+    "Entries are capabilities, not a count of physical devices.",
+    "android_domain_screens identifies domain consumers, not proof that every field is displayed.",
+    "Router declarations preserve exact transforms as inert text, not executable rules.",
+    "Command availability is not authorization to execute it."
+  ]
+}

@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.domopi.app.ui.theme.DomoPiTheme
 import com.domopi.app.ui.screens.*
 import com.domopi.app.data.ZaiConnectivityManager
@@ -100,10 +101,10 @@ class MainActivity : ComponentActivity() {
             val isDarkMode = isDarkModeSetting ?: true // Default a Dark Mode se non impostato
             
             DomoPiTheme(darkTheme = isDarkMode) {
-                var currentScreen by remember { mutableStateOf("home") }
+                var currentScreen by rememberSaveable { mutableStateOf("home") }
                 // Memorizziamo la pagina del carosello per tornare esattamente dove eravamo
                 // Inizializziamo a un multiplo di 9 (numero attuale di schede) per partire da ENERGIA (indice 0)
-                var lastDashboardPage by remember { mutableIntStateOf(1000 * 9) } 
+                var lastDashboardPage by rememberSaveable { mutableIntStateOf(1000 * 9) } 
                 
                 Surface(color = MaterialTheme.colorScheme.background) {
                     when (currentScreen) {
@@ -115,6 +116,13 @@ class MainActivity : ComponentActivity() {
                             onPageChanged = { lastDashboardPage = it },
                             onNavigate = { currentScreen = it }
                         )
+                        "ai_smart" -> {
+                            val state by mqttManager.aiSmartState.collectAsState()
+                            val connected by mqttManager.isConnected.collectAsState()
+                            AiSmartScreen(state, connected, onClassic = { currentScreen = "home" },
+                                onHistory = { currentScreen = "house_ai" })
+                        }
+                        "house_ai" -> HouseAiScreen(onBack = { currentScreen = "ai_smart" })
                         "lights" -> LightsScreen(
                             mqttManager = mqttManager,
                             onBack = { currentScreen = "home" }

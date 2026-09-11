@@ -329,6 +329,7 @@ fun MainDashboard(
                         modifier = Modifier.clickable { onNavigate("configuration") }
                     ) {
                         Text("Z-AI", fontWeight = FontWeight.Bold)
+                        TextButton(onClick = { onNavigate("ai_smart") }) { Text("AI smart") }
                         Spacer(Modifier.width(8.dp))
                         
                         // Icona GitHub Allineamento
@@ -1098,4 +1099,3 @@ fun CompactDetail(label: String, value: String) {
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
     }
 }
-

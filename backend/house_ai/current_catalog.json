@@ -1,0 +1,111 @@
+{
+  "schema": "house_ai.current_catalog.v1",
+  "status": "provisional_mapping_verified_against_export",
+  "entities": [
+    {
+      "id": "light.living",
+      "label": "Soggiorno",
+      "kind": "light",
+      "topic": "zara/interface/lights/living/power/stat",
+      "android_id": "sala",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.libreria",
+      "label": "Libreria",
+      "kind": "light",
+      "topic": "zara/interface/lights/libreria/power/stat",
+      "android_id": "libreria",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.tv",
+      "label": "Lampada TV",
+      "kind": "light",
+      "topic": "zara/interface/lights/tv/power/stat",
+      "android_id": "televisione",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.reading",
+      "label": "Tavolino lettura",
+      "kind": "light",
+      "topic": "zara/interface/lights/reading/power/stat",
+      "android_id": "tavolinolettura",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.bedroom",
+      "label": "Luce camera",
+      "kind": "light",
+      "topic": "zara/interface/lights/bedroom/power/stat",
+      "android_id": "lucecamera",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.hifi",
+      "label": "Lampada HiFi",
+      "kind": "light",
+      "topic": "zara/interface/lights/hifi/power/stat",
+      "android_id": "lampadahifi",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.pool_water",
+      "label": "Luci piscina",
+      "kind": "light",
+      "topic": "zara/interface/pool/water/power/stat",
+      "android_id": "lucipiscina",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.pool_deck",
+      "label": "Luci pedana piscina",
+      "kind": "light",
+      "topic": "zara/interface/pool/deck/power/stat",
+      "android_id": "lucipedanapiscina",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "temperature.living",
+      "label": "Temperatura living",
+      "kind": "temperature",
+      "unit": "°C",
+      "topic": "zara/interface/env/living/temperature/stat",
+      "physical_confirmation": "sensor_report"
+    },
+    {
+      "id": "temperature.acs",
+      "label": "Temperatura acqua sanitaria ACS",
+      "kind": "temperature",
+      "unit": "°C",
+      "topic": "zara/interface/energy/puffer_acs/stat",
+      "physical_confirmation": "sensor_report"
+    }
+  ],
+  "excluded": [
+    {
+      "topic": "zara/interface/lights/prolunga/power/stat",
+      "reason": "classification_pending"
+    },
+    {
+      "topic": "zara/interface/pool/pump/power/stat",
+      "reason": "pump_not_light"
+    },
+    {
+      "topic": "zara/interface/pool/skimmer/power/stat",
+      "reason": "skimmer_not_light"
+    }
+  ],
+  "unmapped_android_ids": [
+    "lavanderia",
+    "portico",
+    "cucina",
+    "esterno"
+  ],
+  "limitations": [
+    "No source measurement timestamps in mapped scalar payloads.",
+    "Light states do not establish physical confirmation.",
+    "Catalog does not establish coverage of every household light."
+  ]
+}

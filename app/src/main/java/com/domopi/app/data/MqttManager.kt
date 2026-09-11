@@ -60,6 +60,9 @@ data class DomoticaSettings(
 )
 
 class MqttManager {
+    private val _aiSmartState = MutableStateFlow(AiSmartState())
+    val aiSmartState: StateFlow<AiSmartState> = _aiSmartState
+
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
     
@@ -164,6 +167,7 @@ class MqttManager {
                     Log.i("MQTT", "Connesso a $serverURI")
                     addTrafficLog("CONNESSO: $serverURI")
                     isConnecting = false
+                    _aiSmartState.value = AiSmartState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     processMessageQueue()
@@ -175,7 +179,15 @@ class MqttManager {
                     addTrafficLog("DISCONNESSO: ${cause?.message}")
                 }
                 override fun messageArrived(topic: String?, message: MqttMessage?) {
-                    scope.launch { handleIncomingMessage(topic ?: "", message?.toString() ?: "") }
+                    val receivedAt = System.currentTimeMillis()
+                    val receivedPrefix = digitalTwinPrefix.removeSuffix("/") + "/"
+                    scope.launch {
+                        if (topic != null && message != null && topic.startsWith(receivedPrefix) &&
+                            receivedPrefix == digitalTwinPrefix.removeSuffix("/") + "/") {
+                            _aiSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained) }
+                        }
+                        handleIncomingMessage(topic ?: "", message?.toString() ?: "")
+                    }
                 }
                 override fun deliveryComplete(token: IMqttDeliveryToken?) {}
             })
@@ -200,6 +212,7 @@ class MqttManager {
     fun setDigitalTwinPrefix(prefix: String) {
         val clean = prefix.trim().removeSuffix("/")
         if (clean.isNotEmpty() && digitalTwinPrefix != clean) {
+            _aiSmartState.value = AiSmartState()
             digitalTwinPrefix = clean
             if (mqttClient?.isConnected == true) {
                 subscribeToUnifiedTopics()
