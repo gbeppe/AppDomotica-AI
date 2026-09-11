@@ -66,12 +66,13 @@ class EnergyRepository(private val emoncmsIp: String) {
     suspend fun fetchGridImportSummary(): Pair<Float, Float> = withContext(Dispatchers.IO) {
         try {
             val nowZone = ZonedDateTime.now(ZoneId.systemDefault())
-            val todayStart = nowZone.toLocalDate().atStartOfDay(nowZone.zone).toEpochSecond()
-            val yesterdayStart = nowZone.toLocalDate().minusDays(1).atStartOfDay(nowZone.zone).toEpochSecond()
-            val end = nowZone.toEpochSecond()
+            val todayStartSec = nowZone.toLocalDate().atStartOfDay(nowZone.zone).toEpochSecond()
+            val yesterdayStartSec = nowZone.toLocalDate().minusDays(1).atStartOfDay(nowZone.zone).toEpochSecond()
+            val endSec = nowZone.toEpochSecond()
             val interval = 300 // 5-minute sampling interval
 
-            val gridPoints = fetchFeedData(305, yesterdayStart, end, interval)
+            val gridPoints = fetchFeedData(305, yesterdayStartSec, endSec, interval)
+            if (gridPoints.size < 2) return@withContext Pair(0f, 0f)
             
             var kwhIeri = 0f
             var kwhOggi = 0f
@@ -79,11 +80,17 @@ class EnergyRepository(private val emoncmsIp: String) {
             for (i in 0 until gridPoints.size - 1) {
                 val pt = gridPoints[i]
                 val nextPt = gridPoints[i + 1]
-                val p = pt.value.coerceAtLeast(0f)
-                val dtSeconds = (nextPt.timestamp - pt.timestamp).coerceAtLeast(0L)
-                if (p > 0f && dtSeconds > 0) {
-                    val kwh = (p * dtSeconds) / (3600f * 1000f)
-                    if (pt.timestamp < todayStart) {
+
+                // Normalizziamo i timestamp in secondi (EmonCMS data.json restituisce ms 13 cifre)
+                val ptSec = if (pt.timestamp > 2000000000L) pt.timestamp / 1000 else pt.timestamp
+                val nextPtSec = if (nextPt.timestamp > 2000000000L) nextPt.timestamp / 1000 else nextPt.timestamp
+
+                val pWatts = pt.value.coerceAtLeast(0f)
+                val dtSeconds = (nextPtSec - ptSec).coerceAtLeast(0L)
+
+                if (pWatts > 0f && dtSeconds > 0) {
+                    val kwh = (pWatts * dtSeconds) / (3600f * 1000f)
+                    if (ptSec < todayStartSec) {
                         kwhIeri += kwh
                     } else {
                         kwhOggi += kwh
@@ -91,6 +98,7 @@ class EnergyRepository(private val emoncmsIp: String) {
                 }
             }
 
+            Log.d("EnergyRepo", "Grid import summary (00:00 window): Ieri = $kwhIeri kWh, Oggi = $kwhOggi kWh")
             Pair(kwhIeri, kwhOggi)
         } catch (e: Exception) {
             Log.e("EnergyRepo", "Error calculating grid import summary", e)

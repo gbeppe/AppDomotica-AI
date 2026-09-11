@@ -668,16 +668,16 @@ class MqttManager {
     fun updateGridImportKwhSummary(kwhOggi: Float, kwhIeri: Float) {
         _energyData.update { current ->
             current.copy(
-                gridImportKwhOggi = if (current.gridImportKwhOggi > 0) current.gridImportKwhOggi else kwhOggi,
-                gridImportKwhIeri = if (current.gridImportKwhIeri > 0) current.gridImportKwhIeri else kwhIeri
+                gridImportKwhOggi = kwhOggi,
+                gridImportKwhIeri = kwhIeri
             )
         }
         _aiManagedData.update { current ->
             val elec = current.metricheElettriche
             current.copy(
                 metricheElettriche = elec.copy(
-                    gridImportKwhOggi = if (elec.gridImportKwhOggi > 0) elec.gridImportKwhOggi else kwhOggi,
-                    gridImportKwhIeri = if (elec.gridImportKwhIeri > 0) elec.gridImportKwhIeri else kwhIeri
+                    gridImportKwhOggi = kwhOggi,
+                    gridImportKwhIeri = kwhIeri
                 )
             )
         }
