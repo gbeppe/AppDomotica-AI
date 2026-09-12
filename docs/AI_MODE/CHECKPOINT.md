@@ -132,3 +132,14 @@ compilati e moduli importati in memoria, timezone Europe/Rome verificata.
 Nessuna installazione o modifica del runtime domestico. Dettagli e limiti in
 [SMART_ENERGIA.md](SMART_ENERGIA.md#compatibilità-del-backend-con-raspberry-20).
 Il gateway del modello rimane da realizzare/configurare.
+
+## Gateway Groq — 13 settembre 2026
+
+Implementato `model_gateway.py`: JSON Schema strict, prompt di consultazione,
+validazione locale dei piani, autenticazione separata, errori sanitizzati, nessun
+retry automatico e nessuna pubblicazione MQTT. Default `openai/gpt-oss-20b`.
+58 test su Python 3.9.25 superati; import/compilazione in memoria su `.20` 3.9.2
+riusciti. TLS Groq raggiungibile con User-Agent applicativo, 401 senza chiave.
+Manca ancora una chiave Groq configurata privatamente: valutazione linguistica
+reale e collegamento completo alle sorgenti non eseguiti. Riprendere da
+[GATEWAY_MODELLO.md](GATEWAY_MODELLO.md). Nessun deployment effettuato.

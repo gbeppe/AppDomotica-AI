@@ -3,9 +3,9 @@
 Il dominio energia dispone del percorso Android → API autenticata → pianificatore
 HTTP configurabile → strumenti deterministici → risposta italiana comune a testo
 e voce. Non usa corrispondenze con frasi predefinite per scegliere gli strumenti.
-Il modello concreto e il suo gateway non sono stati scelti/configurati: pertanto
-l'implementazione è verificata con pianificatori simulati, non con comprensione
-linguistica reale o deployment domestico.
+È implementato il gateway Groq con modello predefinito `openai/gpt-oss-20b`.
+La chiave del provider non è disponibile: il percorso è verificato con risposte
+del modello simulate, non ancora con comprensione linguistica reale o deployment domestico.
 
 ## Funzioni implementate
 
@@ -58,7 +58,7 @@ Gli originali su `.20` sono stati esclusivamente letti.
    data, timezone e catalogo; restituisce `{"plan":{"operations":[...]}}` oppure
    `{"plan":{"clarification":"..."}}`. `HOUSE_AI_PLANNER_URL` non è una URL API
    arbitraria di OpenAI/Ollama/altro provider: serve un adattatore conforme al
-   modello scelto. Nessun gateway provider-specific è incluso o distribuito.
+   modello scelto. Il gateway Groq incluso è descritto in [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md); non è ancora distribuito.
 3. Impostare `HOUSE_AI_LOG_ROOT` solo su una cartella accessibile al backend,
    con i quattro file autorizzati. Non viene effettuata sincronizzazione SSH
    automatica. `HOUSE_AI_CLIMATE_LOG` resta separato per il rapporto precedente.
@@ -134,8 +134,8 @@ security del sistema né una prova di prestazioni sotto carico.
 La collocazione candidata è `.20` per backend leggero e accesso locale ai log,
 con `.15` come sorgente EmonCMS. La RAM comunicata per `.20` è 1,8 GiB totali e
 circa 1,0 GiB disponibili: questa verifica non qualifica l'esecuzione locale di
-un LLM. Restano da implementare/configurare il gateway del modello e verificare
-TLS, accesso alle sorgenti e prestazioni dell'intero percorso prima del deployment.
+un LLM. Il gateway è ora implementato; restano configurazione privata,
+accesso alle sorgenti e prestazioni dell'intero percorso prima del deployment.
 
 Per ripetere la regressione, dalla cartella `backend/house_ai`, usando un
 interprete Python 3.9 disponibile:
@@ -143,3 +143,18 @@ interprete Python 3.9 disponibile:
 ```sh
 python3.9 -B -m unittest discover -s tests -q
 ```
+
+## Gateway implementato — 13 settembre 2026
+
+[model_gateway.py](../../backend/house_ai/model_gateway.py) adatta il protocollo
+DomoPi a Groq, richiede JSON Schema strict e valida nuovamente ogni piano.
+Configurazione, riproduzione delle prove e limiti in
+[GATEWAY_MODELLO.md](GATEWAY_MODELLO.md).
+
+**58 test Python 3.9.25 superati**, inclusa la catena API backend → gateway HTTP →
+adattatore Groq con risposta provider simulata → strumenti → risposta italiana.
+Su `.20`, Python 3.9.2: compilazione di 28 file e import di 14 moduli in memoria
+riusciti; HTTPS verso Groq verificato, risposta 401 senza credenziali con
+User-Agent applicativo. Non equivale a inferenza riuscita. Nessun servizio installato.
+La prova completa con modello e sorgenti reali resta in attesa della chiave
+configurata privatamente e della configurazione del backend di prova.

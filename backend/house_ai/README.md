@@ -130,3 +130,11 @@ all'endpoint dinamico; comprende stato corrente, storico, confronto fra periodi
 e sintesi deterministiche dei quattro log. Le indicazioni precedenti di questa
 pagina descrivono gli incrementi storici. Rimangono necessari modello/gateway
 concreto, configurazione privata e validazione linguistica reale.
+
+## Gateway Groq
+
+`model_gateway.py` implementa l'adattatore concreto, compatibile con Python 3.9.
+Avvio manuale separato: `python3 -B model_gateway.py`, bind fisso localhost e
+porta predefinita 8766. Richiede `GROQ_API_KEY` e `HOUSE_AI_PLANNER_TOKEN` privati.
+Il backend usa `HOUSE_AI_PLANNER_URL=http://127.0.0.1:8766/v1/plan` e lo stesso
+planner token. Istruzioni aggiornate in `docs/AI_MODE/GATEWAY_MODELLO.md`.
