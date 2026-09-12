@@ -86,6 +86,27 @@ un limite: non ricostruisce variazioni fra campioni né garantisce misura fiscal
 7/30 giorni completi (oggi escluso); non interpreta ancora frasi libere.
 Questo incremento è disponibile in Python/CLI, non nella API HTTP o scheda Android.
 
+## Assistente dinamico del dominio energia
+
+`assistant.py` non riconosce frasi cablate: passa il testo a un pianificatore e
+fa eseguire a `energy_tools.py` soltanto un piano JSON validato contro
+`energy_sources.json`. Sono disponibili prelievo/immissione, consumo casa,
+produzione FV, carica/scarica batteria e SOC medio. Richieste composte possono
+produrre fino a sei operazioni.
+
+Configurazione facoltativa del gateway del pianificatore:
+
+```sh
+export HOUSE_AI_PLANNER_URL=https://planner.example/v1/plan
+export HOUSE_AI_PLANNER_TOKEN=...
+```
+
+`POST /v1/assistant/query`, corpo `{"question":"..."}`, usa l'autenticazione
+Bearer del servizio. Il gateway riceve istruzione, domanda, data, timezone e
+catalogo tool e restituisce `{"plan":{"operations":[...]}}` oppure
+`{"plan":{"clarification":"..."}}`. Nessuna credenziale EmonCMS viene inviata.
+Il provider concreto resta da scegliere e non è incluso nel deployment.
+
 La verifica reale del 12 settembre ha promosso i due mapping in
 `energy_sources.json`. È disponibile anche `GET /v1/energy/query?q=...`, con la
 stessa autenticazione Bearer degli altri endpoint. L'interprete accetta per ora

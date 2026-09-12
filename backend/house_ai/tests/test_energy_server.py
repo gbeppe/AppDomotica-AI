@@ -15,7 +15,11 @@ class EnergyServerTests(unittest.TestCase):
             def history(self, _feed, start, _end, interval):
                 return [[start * 1000, 50], [(start + interval) * 1000, 50]]
         self.token = "t" * 24
-        self.server = HTTPServer(("127.0.0.1", 0), handler(Client(), self.token, None))
+        class Planner:
+            def plan(self, question, tools, today):
+                return {"operations": [{"id": "one", "tool": "energy_metric",
+                    "metric": "soc_mean_percent", "start": "2026-09-01", "end": "2026-09-02"}]}
+        self.server = HTTPServer(("127.0.0.1", 0), handler(Client(), self.token, None, Planner()))
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.url = f"http://127.0.0.1:{self.server.server_port}"
@@ -47,3 +51,13 @@ class EnergyServerTests(unittest.TestCase):
             self.get("/v1/energy/query")
         self.assertEqual(invalid.exception.code, 400)
         invalid.exception.close()
+
+    def test_dynamic_assistant_post(self):
+        data = json.dumps({"question": "Una domanda mai cablata"}).encode()
+        request = Request(self.url + "/v1/assistant/query", data=data, method="POST",
+                          headers={"Authorization": "Bearer " + self.token,
+                                   "Content-Type": "application/json"})
+        with urlopen(request) as response:
+            body = json.load(response)
+        self.assertEqual(body["schema"], "house_ai.assistant_answer.v1")
+        self.assertEqual(body["results"][0]["metric"], "soc_mean_percent")

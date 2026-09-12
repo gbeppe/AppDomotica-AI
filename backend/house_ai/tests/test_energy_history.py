@@ -57,3 +57,11 @@ class EnergyTests(unittest.TestCase):
         for metric, unit, sign in [('grid_import_kwh', 'W', None), ('grid_import_kwh', '%', 1), ('soc_mean_percent', 'W', None)]:
             with self.assertRaises(ValueError):
                 energy_report(None, '2026-08-01', '2026-09-01', metric, 305, unit, sign)
+
+    def test_other_directional_energy_metrics(self):
+        for metric, sign in [('grid_export_kwh', -1), ('home_consumption_kwh', 1),
+                             ('solar_production_kwh', 1), ('battery_charge_kwh', -1),
+                             ('battery_discharge_kwh', 1)]:
+            value = -1000 if sign == -1 else 1000
+            result = self.calc([(0, value), (30, value)], metric, sign, end=30)
+            self.assertAlmostEqual(result['value'], 1/120)

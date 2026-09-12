@@ -17,6 +17,8 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
   segni, unità, copertura e prime domande backend.
 - [Politica file e ripresa](POLITICA_FILE_E_RIPRESA.md): cosa deve essere
   versionato e cosa può restare sacrificabile nelle cache.
+- [Interprete dinamico](ARCHITETTURA_INTERPRETE_DINAMICO.md): pianificatore,
+  strumenti energia, validazione dei piani e confini di sicurezza.
 
 ## Vincoli concordati
 

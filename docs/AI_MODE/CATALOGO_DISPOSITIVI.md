@@ -61,6 +61,10 @@ La presenza di un comando non costituisce autorizzazione a eseguirlo con la voce
   immissione; feed 304 SOC in percentuale. Mapping, confronto e copertura in
   [validazione storico energia](VALIDAZIONE_STORICO_ENERGIA.md). Il backend
   espone `/v1/energy/query`; la schermata Android non è ancora collegata.
+- Assistente energia dinamico: catalogo di strumenti su feed 303–307, endpoint
+  `POST /v1/assistant/query` e pianificatore HTTP configurabile. Comprensione
+  libera separata da validazione e calcoli; vedere
+  [architettura dell'interprete](ARCHITETTURA_INTERPRETE_DINAMICO.md).
 - Configurazione e diagnosi sono funzioni dell'app, non attuatori domestici.
 
 ## Divergenze da conservare nel catalogo

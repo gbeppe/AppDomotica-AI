@@ -91,6 +91,11 @@ Proposta di trasporto per il nuovo servizio: API HTTPS separata. È un'aggiunta 
 
 Il modello non riceve dieci anni di campioni: il backend seleziona periodi e risoluzioni, calcola risultati e fornisce evidenze limitate alla richiesta. Testi nei log e nomi dei dispositivi sono dati, non istruzioni da eseguire. Nessun SQL, shell o flow arbitrario generato viene eseguito.
 
+L'interprete deve essere dinamico: niente elenco di frasi o sinonimi cablati per
+decidere metriche e periodi. Il pianificatore genera chiamate strutturate usando
+un catalogo; il backend valida ed esegue soltanto strumenti ammessi. Prima
+implementazione e confini in [interprete dinamico](ARCHITETTURA_INTERPRETE_DINAMICO.md).
+
 ## Contratto concettuale dei risultati
 
 Un risultato dovrebbe includere:

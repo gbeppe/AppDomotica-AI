@@ -40,12 +40,15 @@ def positive_area(a, b, duration):
 
 
 def calculate(rows, start_ms, end_ms, metric, max_gap_ms=30000, import_sign=None):
-    if metric not in ('grid_import_kwh', 'soc_mean_percent'):
+    power_metrics = {'grid_import_kwh', 'grid_export_kwh',
+                     'home_consumption_kwh', 'solar_production_kwh',
+                     'battery_charge_kwh', 'battery_discharge_kwh'}
+    if metric not in power_metrics | {'soc_mean_percent'}:
         raise ValueError('Unknown metric')
     if end_ms <= start_ms or max_gap_ms <= 0:
         raise ValueError('Invalid bounds')
-    if metric == 'grid_import_kwh' and import_sign not in (-1, 1):
-        raise ValueError('Verified import sign required')
+    if metric in power_metrics and import_sign not in (-1, 1):
+        raise ValueError('Verified direction sign required')
     points, excluded = {}, []
     for row in rows:
         if not isinstance(row, (list, tuple)) or len(row) != 2:
@@ -73,11 +76,11 @@ def calculate(rows, start_ms, end_ms, metric, max_gap_ms=30000, import_sign=None
         if a is None or b is None or not 0 < dt <= max_gap_ms:
             continue
         total += (positive_area(a*import_sign, b*import_sign, dt)
-                  if metric == 'grid_import_kwh' else (a+b)*dt/2)
+                  if metric in power_metrics else (a+b)*dt/2)
         covered += dt
-    value = (total/3_600_000_000 if metric == 'grid_import_kwh' else total/covered) if covered else None
+    value = (total/3_600_000_000 if metric in power_metrics else total/covered) if covered else None
     return {'metric': metric, 'value': value,
-            'unit': 'kWh' if metric == 'grid_import_kwh' else '%',
+            'unit': 'kWh' if metric in power_metrics else '%',
             'coverage_ratio': covered/(end_ms-start_ms), 'covered_ms': covered,
             'status': 'complete' if covered == end_ms-start_ms else 'partial' if covered else 'insufficient_data',
             'excluded': excluded}
@@ -88,11 +91,14 @@ def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, i
     if (type(feed_id) is not int or feed_id <= 0 or type(interval) is not int
             or not 1 <= interval <= 300):
         raise ValueError('Invalid source configuration')
-    expected = {'grid_import_kwh': 'W', 'soc_mean_percent': '%'}
+    expected = {'grid_import_kwh': 'W', 'grid_export_kwh': 'W',
+                'home_consumption_kwh': 'W', 'solar_production_kwh': 'W',
+                'battery_charge_kwh': 'W', 'battery_discharge_kwh': 'W',
+                'soc_mean_percent': '%'}
     if metric not in expected or unit != expected[metric]:
         raise ValueError('Verified source unit required')
-    if metric == 'grid_import_kwh' and import_sign not in (-1, 1):
-        raise ValueError('Verified import sign required')
+    if unit == 'W' and import_sign not in (-1, 1):
+        raise ValueError('Verified direction sign required')
     lo, hi = period_bounds(start, end)
     # Bound work independently from HTTP response limits.
     if (hi-lo)//(interval*1000) > 1_100_000:

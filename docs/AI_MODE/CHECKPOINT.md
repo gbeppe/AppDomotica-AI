@@ -73,6 +73,16 @@ Aggiunti catalogo sorgenti, interprete italiano e endpoint protetto. Totale:
 Nessun collegamento Android incluso in questo incremento.
 Codice, documentazione e validazione sono salvati nel commit `d0bce5e`.
 
+## Interprete dinamico energia
+
+Implementata la base model-agnostic: pianificatore HTTP JSON, piano validato,
+sette metriche energetiche e endpoint `POST /v1/assistant/query`. Le frasi non
+sono mappate nel codice; i calcoli restano deterministici. 34 test backend
+passati e tutte le metriche verificate in sola lettura sul 6 settembre. Dettagli
+in [ARCHITETTURA_INTERPRETE_DINAMICO.md](ARCHITETTURA_INTERPRETE_DINAMICO.md).
+Restano scelta/configurazione del modello, valutazione linguistica indipendente
+e collegamento della UI/voce Android.
+
 ## Persistenza dei lavori
 
 Tutto ciò che serve a sviluppo e ripresa deve essere nel repository e

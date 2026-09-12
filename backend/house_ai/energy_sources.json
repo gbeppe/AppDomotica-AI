@@ -12,6 +12,51 @@
       "import_sign": 1,
       "semantics": "positive import, negative export"
     },
+    "grid_export_kwh": {
+      "feed_id": 305,
+      "name": "site_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "direction_sign": -1,
+      "semantics": "negative values represent export"
+    },
+    "home_consumption_kwh": {
+      "feed_id": 303,
+      "name": "load_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "direction_sign": 1,
+      "semantics": "positive home load"
+    },
+    "solar_production_kwh": {
+      "feed_id": 307,
+      "name": "solar_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "direction_sign": 1,
+      "semantics": "positive photovoltaic production"
+    },
+    "battery_charge_kwh": {
+      "feed_id": 306,
+      "name": "battery_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "direction_sign": -1,
+      "semantics": "negative values represent battery charging"
+    },
+    "battery_discharge_kwh": {
+      "feed_id": 306,
+      "name": "battery_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "direction_sign": 1,
+      "semantics": "positive values represent battery discharging"
+    },
     "soc_mean_percent": {
       "feed_id": 304,
       "name": "SOE",

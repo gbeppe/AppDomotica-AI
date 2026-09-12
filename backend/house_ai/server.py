@@ -9,9 +9,11 @@ from urllib.parse import parse_qs, urlsplit
 from emoncms import Emoncms
 from energy_query import answer as energy_answer
 from service import report
+from assistant import ask as assistant_ask
+from planner import HttpJsonPlanner
 
 
-def handler(client, token, log_path):
+def handler(client, token, log_path, planner=None):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_args):
             pass  # Do not persist household queries or credentials.
@@ -50,6 +52,27 @@ def handler(client, token, log_path):
                 self.send_json(400, {"error": "Invalid request parameters"})
             except (OSError, RuntimeError):
                 self.send_json(502, {"error": "Source unavailable"})
+
+        def do_POST(self):
+            provided = self.headers.get("Authorization", "")
+            if not hmac.compare_digest(provided.encode(), ("Bearer " + token).encode()):
+                self.send_json(401, {"error": "Authentication required"})
+                return
+            if urlsplit(self.path).path != "/v1/assistant/query":
+                self.send_json(404, {"error": "Not found"})
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 < length <= 4096:
+                    raise ValueError("Invalid body size")
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict) or set(body) != {"question"}:
+                    raise ValueError("Invalid body")
+                self.send_json(200, assistant_ask(client, planner, body["question"]))
+            except (ValueError, json.JSONDecodeError):
+                self.send_json(400, {"error": "Invalid request"})
+            except RuntimeError:
+                self.send_json(502, {"error": "Planner or source unavailable"})
     return Handler
 
 
@@ -59,9 +82,12 @@ def main():
         raise SystemExit("Set HOUSE_AI_TOKEN to a secret of at least 24 characters")
     client = Emoncms(os.environ.get("EMONCMS_URL", ""), os.environ.get("EMONCMS_API_KEY", ""))
     log = os.environ.get("HOUSE_AI_CLIMATE_LOG")
+    planner_url = os.environ.get("HOUSE_AI_PLANNER_URL", "")
+    planner = (HttpJsonPlanner(planner_url, os.environ.get("HOUSE_AI_PLANNER_TOKEN", ""))
+               if planner_url else None)
     server = HTTPServer((os.environ.get("HOUSE_AI_BIND", "127.0.0.1"),
                          int(os.environ.get("HOUSE_AI_PORT", "8765"))),
-                        handler(client, token, Path(log) if log else None))
+                        handler(client, token, Path(log) if log else None, planner))
     try:
         server.serve_forever()
     finally:
