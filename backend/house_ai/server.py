@@ -13,7 +13,7 @@ from assistant import ask as assistant_ask
 from planner import HttpJsonPlanner
 
 
-def handler(client, token, log_path, planner=None):
+def handler(client, token, log_path, planner=None, log_root=None):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_args):
             pass  # Do not persist household queries or credentials.
@@ -66,12 +66,16 @@ def handler(client, token, log_path, planner=None):
                 if not 0 < length <= 4096:
                     raise ValueError("Invalid body size")
                 body = json.loads(self.rfile.read(length))
-                if not isinstance(body, dict) or set(body) != {"question"}:
+                if (not isinstance(body, dict)
+                        or set(body) - {"question", "current_energy"}
+                        or "question" not in body):
                     raise ValueError("Invalid body")
-                self.send_json(200, assistant_ask(client, planner, body["question"]))
+                self.send_json(200, assistant_ask(client, planner, body["question"],
+                                                  current_snapshot=body.get("current_energy"),
+                                                  log_root=log_root))
             except (ValueError, json.JSONDecodeError):
                 self.send_json(400, {"error": "Invalid request"})
-            except RuntimeError:
+            except (OSError, RuntimeError):
                 self.send_json(502, {"error": "Planner or source unavailable"})
     return Handler
 
@@ -87,7 +91,8 @@ def main():
                if planner_url else None)
     server = HTTPServer((os.environ.get("HOUSE_AI_BIND", "127.0.0.1"),
                          int(os.environ.get("HOUSE_AI_PORT", "8765"))),
-                        handler(client, token, Path(log) if log else None, planner))
+                        handler(client, token, Path(log) if log else None, planner,
+                                os.environ.get("HOUSE_AI_LOG_ROOT")))
     try:
         server.serve_forever()
     finally:

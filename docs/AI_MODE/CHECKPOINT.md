@@ -83,6 +83,14 @@ in [ARCHITETTURA_INTERPRETE_DINAMICO.md](ARCHITETTURA_INTERPRETE_DINAMICO.md).
 Restano scelta/configurazione del modello, valutazione linguistica indipendente
 e collegamento della UI/voce Android.
 
+## Fase energia Digital Twin e Android
+
+Aggiunto stato energetico corrente con provenienza, nuovo tool corrente nel
+catalogo del pianificatore e invio dello snapshot al backend. La schermata AI
+smart usa lo stesso testo digitato o trascritto per l'endpoint dinamico e mostra
+una risposta utilizzabile dalla sintesi vocale. Dettagli e limiti in
+[FASE_ENERGIA_DIGITAL_TWIN_ANDROID.md](FASE_ENERGIA_DIGITAL_TWIN_ANDROID.md).
+
 ## Persistenza dei lavori
 
 Tutto ciò che serve a sviluppo e ripresa deve essere nel repository e
@@ -90,3 +98,10 @@ committato; `.validation/` e le altre cache devono restare sacrificabili. Il
 repository Git comune è fuori dal worktree temporaneo, in
 `/home/giuseppe/AndroidStudioProjects/DomoPiAndroidApp/.git`. Regole complete in
 [POLITICA_FILE_E_RIPRESA.md](POLITICA_FILE_E_RIPRESA.md).
+
+## Fonti Node-RED aggiuntive
+
+Verificati i quattro log reali su `.20` in sola lettura; aggiunto tool backend
+per lettura giornaliera con provenienza e limiti. Vedere
+[FONTI_LOG_NODERED.md](FONTI_LOG_NODERED.md) per configurazione, campionamento,
+copertura implementata e lavoro restante. Test backend: 41 superati.

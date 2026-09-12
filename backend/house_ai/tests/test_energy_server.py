@@ -17,6 +17,9 @@ class EnergyServerTests(unittest.TestCase):
         self.token = "t" * 24
         class Planner:
             def plan(self, question, tools, today):
+                if "corrente" in question:
+                    return {"operations": [{"id": "now", "tool": "current_energy_metric",
+                        "metric": "solar_power_w"}]}
                 return {"operations": [{"id": "one", "tool": "energy_metric",
                     "metric": "soc_mean_percent", "start": "2026-09-01", "end": "2026-09-02"}]}
         self.server = HTTPServer(("127.0.0.1", 0), handler(Client(), self.token, None, Planner()))
@@ -61,3 +64,19 @@ class EnergyServerTests(unittest.TestCase):
             body = json.load(response)
         self.assertEqual(body["schema"], "house_ai.assistant_answer.v1")
         self.assertEqual(body["results"][0]["metric"], "soc_mean_percent")
+
+    def test_dynamic_post_accepts_current_digital_twin_snapshot(self):
+        payload = {"question": "potenza corrente", "current_energy": {
+            "schema": "house_ai.current_energy_input.v1", "connected": True,
+            "observations": {"solar_power_w": {"value": 2500.0,
+                "received_at_ms": 1789200000000, "retained": True,
+                "source_topic": "zara/interface/energy/solar/power/stat"}}}}
+        request = Request(self.url + "/v1/assistant/query",
+            data=json.dumps(payload).encode(), method="POST",
+            headers={"Authorization": "Bearer " + self.token,
+                     "Content-Type": "application/json"})
+        with urlopen(request) as response:
+            body = json.load(response)
+        self.assertIn("2500.0 W", body["answer"])
+        self.assertEqual(body["results"][0]["result"]["schema"],
+                         "house_ai.current_energy_result.v1")

@@ -11,11 +11,16 @@ METRIC_LABELS = {
     "solar_production_kwh": "Produzione fotovoltaica",
     "battery_charge_kwh": "Energia caricata nella batteria",
     "battery_discharge_kwh": "Energia scaricata dalla batteria",
-    "soc_mean_percent": "Livello medio della batteria Tesla"
+    "soc_mean_percent": "Livello medio della batteria Tesla",
+    "solar_power_w": "Produzione fotovoltaica attuale",
+    "home_consumption_w": "Consumo attuale della casa",
+    "grid_power_w": "Potenza attuale della rete",
+    "battery_power_w": "Potenza attuale della batteria",
+    "battery_soc_percent": "Carica attuale della batteria Tesla"
 }
 
 
-def ask(client, planner, question, today=None):
+def ask(client, planner, question, today=None, current_snapshot=None, log_root=None):
     if not isinstance(question, str) or not question.strip() or len(question) > 1000:
         raise ValueError("Invalid question")
     if planner is None:
@@ -23,7 +28,7 @@ def ask(client, planner, question, today=None):
                 "answer": "Il pianificatore dinamico non è configurato sul backend."}
     current = today or date.today()
     proposed = planner.plan(question.strip(), catalog(), current)
-    execution = execute(client, proposed)
+    execution = execute(client, proposed, current_snapshot=current_snapshot, log_root=log_root)
     if execution["clarification"]:
         return {"schema": "house_ai.assistant_answer.v1",
                 "status": "clarification_required",
@@ -31,6 +36,24 @@ def ask(client, planner, question, today=None):
     lines, statuses = [], []
     for item in execution["results"]:
         result = item["result"]
+        if result["schema"] == "house_ai.backend_log_evidence.v1":
+            statuses.append("partial" if result["records"] else "insufficient_data")
+            lines.append(f"Log {result['file']} del {result['day']}: "
+                         f"{result['matched_records']} record trovati, "
+                         f"{len(result['records'])} restituiti; stato {result['status']}. "
+                         + " ".join(result["limitations"]))
+            continue
+        if result["schema"] == "house_ai.current_energy_result.v1":
+            observation = result["observation"]
+            if observation is None:
+                statuses.append("insufficient_data")
+                lines.append(f"{METRIC_LABELS[item['metric']]}: dato non disponibile.")
+            else:
+                statuses.append("complete" if result["connected"] else "partial")
+                unit = "%" if item["metric"] == "battery_soc_percent" else "W"
+                qualifier = "" if result["connected"] else " Ultimo dato ricevuto; Digital Twin disconnesso."
+                lines.append(f"{METRIC_LABELS[item['metric']]}: {observation['value']:.1f} {unit}." + qualifier)
+            continue
         statuses.append(result["status"])
         value = result["value"]
         label = METRIC_LABELS[item["metric"]]

@@ -114,3 +114,11 @@ prelievo rete e SOC medio con «mese scorso», «settimana scorsa», «ultimi 30
 giorni» e «ultimi 7 giorni». «Ultimo mese/settimana» produce una richiesta di
 chiarimento tra calendario e finestra mobile. Il risultato include sempre il
 periodo assoluto, la copertura e le limitazioni analitiche.
+
+## Log Node-RED aggiuntivi
+
+`HOUSE_AI_LOG_ROOT` abilita il tool `backend_log_day` nell'assistente per i
+quattro log allowlist di `.20`. Deve indicare una cartella accessibile al
+processo backend; nessuna connessione SSH automatica. Fonte/giorno sono
+validati, lettura e risposta limitate, provenienza file/riga preservata.
+Dettagli e limiti: `docs/AI_MODE/FONTI_LOG_NODERED.md` dalla radice repository.

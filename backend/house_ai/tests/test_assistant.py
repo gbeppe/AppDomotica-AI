@@ -70,3 +70,38 @@ class AssistantTests(unittest.TestCase):
             validate_plan({"operations": [operation] * 7})
         with self.assertRaises(ValueError):
             validate_plan({"operations": [{**operation, "extra": True}]})
+
+    def test_current_digital_twin_metric_keeps_provenance(self):
+        planner = Planner({"operations": [{"id": "now", "tool": "current_energy_metric",
+                                            "metric": "solar_power_w"}]})
+        snapshot = {"schema": "house_ai.current_energy_input.v1", "connected": True,
+                    "observations": {"solar_power_w": {"value": 3210.0,
+                        "received_at_ms": 1789200000000, "retained": True,
+                        "source_topic": "zara/interface/energy/solar/power/stat"}}}
+        result = ask(None, planner, "Come va il fotovoltaico adesso?",
+                     date(2026, 9, 12), snapshot)
+        self.assertIn("3210.0 W", result["answer"])
+        self.assertTrue(result["results"][0]["result"]["observation"]["retained"])
+
+    def test_missing_and_disconnected_current_data_are_qualified(self):
+        planner = Planner({"operations": [{"id": "now", "tool": "current_energy_metric",
+                                            "metric": "battery_soc_percent"}]})
+        empty = {"schema": "house_ai.current_energy_input.v1", "connected": False,
+                 "observations": {}}
+        self.assertIn("dato non disponibile", ask(None, planner, "carica?", date(2026, 9, 12), empty)["answer"])
+        snapshot = {**empty, "observations": {"battery_soc_percent": {"value": 81.0,
+            "received_at_ms": 1, "retained": False,
+            "source_topic": "custom/energy/battery/soc/stat"}}}
+        self.assertIn("Digital Twin disconnesso", ask(None, planner, "carica?", date(2026,9,12), snapshot)["answer"])
+
+    def test_invalid_current_snapshot_is_rejected(self):
+        operation = {"operations": [{"id": "x", "tool": "current_energy_metric",
+                                      "metric": "battery_soc_percent"}]}
+        for snapshot in [
+            {"schema": "wrong", "connected": True, "observations": {}},
+            {"schema": "house_ai.current_energy_input.v1", "connected": True,
+             "observations": {"battery_soc_percent": {"value": 101,
+                "received_at_ms": 1, "retained": False, "source_topic": "x/stat"}}},
+        ]:
+            with self.assertRaises(ValueError):
+                execute(None, operation, current_snapshot=snapshot)
