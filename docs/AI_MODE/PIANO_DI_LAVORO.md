@@ -89,3 +89,7 @@ risorse HTTP/locali, quattro comandi UI senza rotta e quattro capacità obsolete
 isolate. Dodici test backend passati. Vedere [catalogo completo](CATALOGO_DISPOSITIVI.md).
 Il dominio è ricavato dai topic e dalle sezioni reali, senza equipararlo
 a classificazione fisica certa o ad autorizzazione di comando.
+
+## Avanzamento del 12 settembre 2026
+
+Completamento della scheda AI smart sul sottoinsieme luci/living/ACS, provenienza delle letture e interazione vocale: vedere [implementazione, verifiche e limiti](AVANZAMENTO_STATO_VOCE.md). Le osservazioni MQTT riportate sopra restano la fotografia dell’11 settembre, non letture correnti.

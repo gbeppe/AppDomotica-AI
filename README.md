@@ -37,3 +37,9 @@ Z-AI is a modern Android application built with Jetpack Compose to monitor and c
 ## Getting Started
 1. Configure your Broker IP addresses in the **Z-AI** settings (Expert Mode required for some fields).
 2. Ensure you are on the same network or connected via VPN (Tailscale recommended).
+
+## Ripresa progetto AI smart
+
+Branch dedicato: `feature/ai-home-assistant`. Per riprendere in questa o una nuova
+chat leggere prima [checkpoint e prossime attività](docs/AI_MODE/CHECKPOINT.md),
+poi [avanzamento implementativo](docs/AI_MODE/AVANZAMENTO_STATO_VOCE.md).

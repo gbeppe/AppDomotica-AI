@@ -27,3 +27,7 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
 Non sono incluse chiavi API, password, copie integrali dei flow o dei log domestici.
 
 Il mapping è ora esteso a tutte le schede nel [catalogo dispositivi e capacità](CATALOGO_DISPOSITIVI.md), con distinzioni fra letture, comandi, risorse non MQTT e voci obsolete.
+
+## Avanzamento del 12 settembre 2026
+
+Completamento della scheda AI smart sul sottoinsieme luci/living/ACS, provenienza delle letture e interazione vocale: vedere [implementazione, verifiche e limiti](AVANZAMENTO_STATO_VOCE.md). Le osservazioni MQTT riportate sopra restano la fotografia dell’11 settembre, non letture correnti.

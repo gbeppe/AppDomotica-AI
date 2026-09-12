@@ -184,7 +184,7 @@ class MqttManager {
                     scope.launch {
                         if (topic != null && message != null && topic.startsWith(receivedPrefix) &&
                             receivedPrefix == digitalTwinPrefix.removeSuffix("/") + "/") {
-                            _aiSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained) }
+                            _aiSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, sourceTopic = topic) }
                         }
                         handleIncomingMessage(topic ?: "", message?.toString() ?: "")
                     }

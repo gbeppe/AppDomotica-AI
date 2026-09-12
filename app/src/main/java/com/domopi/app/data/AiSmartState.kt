@@ -2,15 +2,40 @@ package com.domopi.app.data
 
 import java.text.Normalizer
 import java.util.Locale
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-data class SmartObservation(val payload: String, val receivedAtMs: Long, val retained: Boolean)
+data class SmartObservation(
+    val payload: String, val receivedAtMs: Long, val retained: Boolean,
+    val sourceTopic: String
+)
+
+data class SmartEntity(val topic: String, val label: String, val isLight: Boolean)
+
+data class SmartReading(
+    val entity: SmartEntity, val value: String, val quality: String,
+    val observation: SmartObservation?
+) {
+    fun provenance(): String {
+        val received = observation ?: return "Nessun messaggio ricevuto. Età della misura ignota."
+        val time = Instant.ofEpochMilli(received.receivedAtMs).atZone(ZoneId.of("Europe/Rome"))
+            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.ITALIAN))
+        return "Ricevuto il $time (Europe/Rome). " +
+            (if (received.retained) "Messaggio conservato dal broker (retained). " else "Messaggio non retained. ") +
+            "Età della misura ignota."
+    }
+}
 
 /** Only the validated read-only subset. Missing and invalid values never become OFF/zero. */
 data class AiSmartState(val observations: Map<String, SmartObservation> = emptyMap()) {
-    fun observe(topic: String, payload: String, receivedAtMs: Long, retained: Boolean): AiSmartState {
-        if (topic !in topics) return this
+    fun observe(
+        topic: String, payload: String, receivedAtMs: Long, retained: Boolean,
+        sourceTopic: String = "zara/interface/$topic"
+    ): AiSmartState {
+        if (topic !in topics || receivedAtMs < 0) return this
         if ((observations[topic]?.receivedAtMs ?: Long.MIN_VALUE) > receivedAtMs) return this
-        return copy(observations = observations + (topic to SmartObservation(payload, receivedAtMs, retained)))
+        return copy(observations = observations + (topic to SmartObservation(payload, receivedAtMs, retained, sourceTopic)))
     }
 
     private fun light(topic: String): Boolean? = when (observations[topic]?.payload?.trim()?.lowercase(Locale.ROOT)) {
@@ -22,11 +47,22 @@ data class AiSmartState(val observations: Map<String, SmartObservation> = emptyM
     fun temperature(topic: String): Double? = observations[topic]?.payload?.trim()
         ?.replace(',', '.')?.toDoubleOrNull()?.takeIf { it.isFinite() }
 
+    fun readings(): List<SmartReading> = entities.map { entity ->
+        val observation = observations[entity.topic]
+        val value = if (entity.isLight) light(entity.topic) else temperature(entity.topic)
+        SmartReading(entity, when (value) {
+            true -> "Acceso dichiarato"
+            false -> "Spento dichiarato"
+            is Double -> String.format(Locale.ITALIAN, "%.1f °C", value)
+            else -> if (observation == null) "Dato non ricevuto" else "Dato non valido"
+        }, if (observation == null) "missing" else if (value == null) "invalid" else "reported", observation)
+    }
+
     fun lightsText(): String {
         val states = lightTopics.map { light(it) }
         val on = states.count { it == true }
         val off = states.count { it == false }
-        return "Negli ultimi stati ricevuti: $on punti luce accesi, $off spenti e ${8-on-off} senza un dato valido, su 8 punti mappati. " +
+        return "Negli ultimi stati ricevuti: $on punti luce accesi, $off spenti e ${states.size-on-off} senza un dato valido, su ${states.size} punti mappati. " +
             "Il conteggio non copre tutte le luci della casa e non conferma l'accensione fisica."
     }
 
@@ -62,7 +98,13 @@ data class AiSmartState(val observations: Map<String, SmartObservation> = emptyM
             "pool/water/power/stat", "pool/deck/power/stat")
         const val livingTopic = "env/living/temperature/stat"
         const val acsTopic = "energy/puffer_acs/stat"
-        val topics = lightTopics + livingTopic + acsTopic
+        val entities = lightTopics.zip(listOf("Soggiorno", "Libreria", "Lampada TV", "Tavolino lettura",
+            "Luce camera", "Lampada HiFi", "Luci piscina", "Luci pedana piscina"))
+            .map { (topic, label) -> SmartEntity(topic, label, true) } + listOf(
+                SmartEntity(livingTopic, "Temperatura living", false),
+                SmartEntity(acsTopic, "Acqua sanitaria ACS", false)
+            )
+        val topics = entities.map { it.topic }
         const val freshnessText = "L'ora delle misure non è disponibile: non posso confermare quanto siano aggiornate."
     }
 }

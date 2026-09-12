@@ -63,7 +63,7 @@ Criteri di accettazione:
   correzione o nuovo tentativo senza perdere l'accesso alla scheda.
 - La consultazione vocale non pubblica comandi agli attuatori.
 
-Requisito registrato l'11 settembre 2026; non ancora implementato o validato.
+Requisito registrato l'11 settembre 2026. Per l’implementazione del primo sottoinsieme e lo stato delle verifiche al 12 settembre, vedere [avanzamento stato e voce](AVANZAMENTO_STATO_VOCE.md).
 
 ### Riepilogo spontaneo
 

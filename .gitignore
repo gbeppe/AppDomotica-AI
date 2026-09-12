@@ -10,3 +10,7 @@ local.properties
 .DS_Store
 /app/build/
 *.hprof
+
+# Worktree-local validation caches and artifacts
+/.validation/
+/.kotlin/sessions/
