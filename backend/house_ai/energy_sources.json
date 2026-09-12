@@ -1,0 +1,28 @@
+{
+  "schema": "house_ai.energy_sources.v1",
+  "verified_at": "2026-09-12",
+  "timezone": "Europe/Rome",
+  "sources": {
+    "grid_import_kwh": {
+      "feed_id": 305,
+      "name": "site_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "import_sign": 1,
+      "semantics": "positive import, negative export"
+    },
+    "soc_mean_percent": {
+      "feed_id": 304,
+      "name": "SOE",
+      "tag": "TeslaPowerwall",
+      "unit": "%",
+      "interval_seconds": 30,
+      "semantics": "battery state of energy"
+    }
+  },
+  "limitations": [
+    "EmonCMS metadata leaves the unit blank; units were validated against names, ranges, application mappings and the Tesla power balance.",
+    "These are operational measurements, not billing-grade meter readings."
+  ]
+}

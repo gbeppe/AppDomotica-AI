@@ -57,6 +57,10 @@ La presenza di un comando non costituisce autorizzazione a eseguirlo con la voce
 - Storico Android EmonCMS: feed 307 FV, 303 casa, 305 rete, 306 batteria, 304 SOC.
 - API `house_ai`: `/v1/report?day={day}`, feed 353 AC, 304 SOC e 306 batteria,
   più il log climatico. Non confondere archivio storico e stato MQTT corrente.
+- Storico energia validato: feed 305 in W, positivo prelievo e negativo
+  immissione; feed 304 SOC in percentuale. Mapping, confronto e copertura in
+  [validazione storico energia](VALIDAZIONE_STORICO_ENERGIA.md). Il backend
+  espone `/v1/energy/query`; la schermata Android non è ancora collegata.
 - Configurazione e diagnosi sono funzioni dell'app, non attuatori domestici.
 
 ## Divergenze da conservare nel catalogo

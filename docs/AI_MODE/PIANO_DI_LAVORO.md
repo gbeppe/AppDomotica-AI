@@ -93,3 +93,30 @@ a classificazione fisica certa o ad autorizzazione di comando.
 ## Avanzamento del 12 settembre 2026
 
 Completamento della scheda AI smart sul sottoinsieme luci/living/ACS, provenienza delle letture e interazione vocale: vedere [implementazione, verifiche e limiti](AVANZAMENTO_STATO_VOCE.md). Le osservazioni MQTT riportate sopra restano la fotografia dell’11 settembre, non letture correnti.
+
+## Requisito aggiunto: storico energia
+
+La prosecuzione deve includere [domande complesse sui flussi energetici](DOMANDE_ENERGIA.md):
+prelievo rete nel mese, media carica Tesla nella settimana e interrogazioni
+composte. Prima dell'implementazione validare serie, unità/segni, periodi e
+significato della percentuale richiesta. Requisito documentato, non implementato.
+
+## Incremento storico energia implementato — 12 settembre 2026
+
+Aggiunti `backend/house_ai/energy_history.py`, comando CLI `energy` e sette test.
+Calcoli prelievo rete e SOC medio temporale, copertura esplicita, gestione
+di null/invalidi/duplicati conflittuali, limiti e blocchi per richieste mensili.
+Periodi Europe/Rome con fine esclusa e cambio d'ora; nomi distinti per periodi
+di calendario e ultimi giorni completi. Unità e segno import devono essere
+forniti esplicitamente sulla base di una verifica della sorgente.
+
+Verifica locale iniziale: **19 test backend passati**, sintassi Python e diff Git validi.
+Prova sintetica: 1 kW costante nel mese di agosto produce 744 kWh, copertura 100%.
+Non è un risultato domestico reale.
+
+Passo successivo completato: mapping e campioni reali verificati in sola lettura,
+con esiti in [VALIDAZIONE_STORICO_ENERGIA.md](VALIDAZIONE_STORICO_ENERGIA.md).
+Aggiunti catalogo sorgenti, interprete italiano e endpoint protetto. Totale:
+26 test backend passati. Prossimo passo: collegare l'endpoint a UI e voce Android.
+Nessun collegamento Android incluso in questo incremento.
+Codice, documentazione e validazione sono salvati nel commit `9b65052`.

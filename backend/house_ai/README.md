@@ -58,3 +58,38 @@ l’interprete delle osservazioni pubbliche. Non avviano connessioni né espongo
 nuovi endpoint. Conteggi riferiti agli stati dichiarati, con copertura parziale
 e freschezza ignota. Evidenze: `docs/AI_MODE/MAPPING_STATO_CORRENTE.md` dalla radice
 del progetto. I test si eseguono dalla cartella di questo modulo come sopra.
+
+## Storico energia — primo incremento
+
+`energy_history.py` calcola `grid_import_kwh` e `soc_mean_percent`, con copertura
+temporale e stato complete/partial/insufficient_data. Date locali Europe/Rome,
+fine esclusa, massimo 366 giorni. Media SOC ponderata nel tempo; integrazione
+del solo prelievo con attraversamento dello zero interpolato linearmente.
+Nessuna estrapolazione attraverso buchi o valori invalidi. Valori SOC fuori
+0–100 esclusi; picchi dentro tale intervallo non filtrati senza ulteriori evidenze.
+
+CLI dalla directory `backend/house_ai`, con `EMONCMS_URL` e `EMONCMS_API_KEY`
+configurati; verificare metadati/unità prima di usare il mapping statico:
+
+```sh
+python3 -B cli.py energy --start 2026-09-01 --end 2026-09-08 --metric soc_mean_percent --feed-id 304 --unit %
+```
+
+Per `grid_import_kwh` occorrono `--unit W` e `--import-sign 1` o `-1`,
+secondo la convenzione verificata del feed. Il programma rifiuta segno assente:
+non considera il mapping statico una verifica fisica. Nessuna nuova credenziale
+è incorporata nel codice. Richieste suddivise in blocchi sotto 10000 campioni,
+risoluzione CLI 30 secondi, senza medie mensili preventive. La risoluzione resta
+un limite: non ricostruisce variazioni fra campioni né garantisce misura fiscale.
+
+`relative_period` distingue mese precedente, settimana precedente e ultimi
+7/30 giorni completi (oggi escluso); non interpreta ancora frasi libere.
+Questo incremento è disponibile in Python/CLI, non nella API HTTP o scheda Android.
+
+La verifica reale del 12 settembre ha promosso i due mapping in
+`energy_sources.json`. È disponibile anche `GET /v1/energy/query?q=...`, con la
+stessa autenticazione Bearer degli altri endpoint. L'interprete accetta per ora
+prelievo rete e SOC medio con «mese scorso», «settimana scorsa», «ultimi 30
+giorni» e «ultimi 7 giorni». «Ultimo mese/settimana» produce una richiesta di
+chiarimento tra calendario e finestra mobile. Il risultato include sempre il
+periodo assoluto, la copertura e le limitazioni analitiche.

@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from emoncms import Emoncms
+from energy_query import answer as energy_answer
 from service import report
 
 
@@ -38,10 +39,15 @@ def handler(client, token, log_path):
                     if len(days) != 1:
                         raise ValueError("One day is required")
                     self.send_json(200, report(client, log_path, days[0]))
+                elif url.path == "/v1/energy/query":
+                    questions = parse_qs(url.query).get("q", [])
+                    if len(questions) != 1 or len(questions[0]) > 500:
+                        raise ValueError("One bounded question is required")
+                    self.send_json(200, energy_answer(client, questions[0]))
                 else:
                     self.send_json(404, {"error": "Not found"})
             except ValueError:
-                self.send_json(400, {"error": "Invalid day; use YYYY-MM-DD"})
+                self.send_json(400, {"error": "Invalid request parameters"})
             except (OSError, RuntimeError):
                 self.send_json(502, {"error": "Source unavailable"})
     return Handler
