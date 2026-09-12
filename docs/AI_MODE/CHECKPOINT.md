@@ -15,21 +15,23 @@ Dettagli in [avanzamento](AVANZAMENTO_STATO_VOCE.md).
 Le verifiche precedenti documentano 32 test Android e 12 backend passati;
 non sono stati rieseguiti per il commit di checkpoint.
 
-L'ispezione del risultato locale `.validation/ui-results.txt` mostra quattro test
-strumentali eseguiti, tre passati e uno fallito:
-`compoundAnswerMatchesSpokenTextAndChangesOnDisconnection`, riga 37.
-Il selettore `useUnmergedTree = true` punta al testo «Chiedi» e non alla
-semantica del pulsante disabilitato: verificare/correggere e rieseguire.
-La validazione UI non è quindi ancora completa.
+## Ripresa successiva al checkpoint `27c89c2`
+
+Corretto il selettore del test «Chiedi», usando la semantica aggregata del
+pulsante. Build `:app:assembleDebug :app:assembleDebugAndroidTest` riuscita.
+Rieseguiti i quattro test UI su emulatore isolato: **4/4 passati**, 27,887 s.
+Ispezionati cinque screenshot in tema chiaro/scuro: riepilogo, provenienza,
+risposta composta, disconnessione e dati mancanti. Testi leggibili e controlli
+coerenti nelle porzioni visualizzate; le schermate sono scorrevoli.
+Evidenze salvate in [evidence/2026-09-12](evidence/2026-09-12/).
+I valori sono fixture dei test, non letture domestiche correnti.
 
 ## Prossime attività
 
-1. Correggere il selettore del test, ricompilare e rieseguire i quattro test
-   su emulatore isolato; esaminare gli screenshot chiari/scuri.
-2. Aggiornare questo checkpoint con gli esiti effettivi.
-3. Verificare navigazione completa e voce su telefono; distinguere i callback
-   simulati da riconoscimento e riproduzione acustica reali.
-4. Restano da concordare backend/modello/accesso remoto e da risolvere
+1. Verificare navigazione completa e voce su telefono; i test appena passati
+   coprono contenuto isolato e callback simulati, non riconoscimento e
+   riproduzione acustica reali né navigazione MainActivity con MQTT reale.
+2. Restano da concordare backend/modello/accesso remoto e da risolvere
    freschezza sorgente, entità mancanti e mapping storico VMC/AC.
 
 ## Riproduzione locale e confini

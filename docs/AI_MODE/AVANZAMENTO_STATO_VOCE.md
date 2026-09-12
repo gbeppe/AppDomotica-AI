@@ -64,11 +64,16 @@ Gli artefatti di build ordinari restano nelle directory di build del worktree.
 
 ## Restano aperti
 
-Verifica strumentale e visiva della nuova scheda, prova acustica e dettatura
-reale su telefono, freschezza sorgente verificabile, classificazioni mancanti,
+Prova acustica e dettatura reale su telefono, navigazione completa, freschezza sorgente verificabile, classificazioni mancanti,
 estensione dell'interprete al catalogo completo, scelte di backend/modello e
 accesso remoto. Lo snapshot Python non viene ancora esposto con una nuova API:
 questo incremento collega lo stato alla scheda tramite l'osservatore Android.
 
 La verifica della schermata isolata non prova la navigazione completa con
 MQTT reale né autorizza installazioni sui Raspberry o attivazioni di regole.
+
+## Verifica UI completata dopo il checkpoint
+
+Build APK e APK test riuscita; quattro test strumentali su contenuto isolato
+passati dopo la correzione del selettore del pulsante «Chiedi». Cinque screenshot
+chiari/scuri ispezionati. Esiti ed evidenze nel [checkpoint](CHECKPOINT.md).

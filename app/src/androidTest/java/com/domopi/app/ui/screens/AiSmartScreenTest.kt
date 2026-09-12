@@ -34,7 +34,7 @@ class AiSmartScreenTest {
                     speechReady = true, onSpeak = { spoken = it })
             }
         }
-        compose.onNodeWithText("Chiedi", useUnmergedTree = true).assertIsNotEnabled()
+        compose.onNodeWithText("Chiedi").assertIsNotEnabled()
         compose.onNodeWithText("La tua domanda").performScrollTo()
             .performTextInput("Quante luci sono accese e quali sono le temperature living e ACS?")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
