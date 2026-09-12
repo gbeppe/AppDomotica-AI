@@ -105,3 +105,21 @@ Verificati i quattro log reali su `.20` in sola lettura; aggiunto tool backend
 per lettura giornaliera con provenienza e limiti. Vedere
 [FONTI_LOG_NODERED.md](FONTI_LOG_NODERED.md) per configurazione, campionamento,
 copertura implementata e lavoro restante. Test backend: 41 superati.
+
+## Completamento implementazione del dominio energia
+
+Percorso Android/repository HTTP/evidenze completato per i cinque stati correnti,
+sette metriche storiche, confronti omogenei e sintesi deterministiche dei quattro
+log. Riepilogo dedicato energia, provenienza della risposta, gestione errori e
+stessa risposta per testo/voce, inclusa suddivisione per sintesi lunga.
+Vedere [SMART_ENERGIA.md](SMART_ENERGIA.md): è il punto di ripresa aggiornato.
+
+Il pianificatore concreto non è configurato; all'utente è stata chiesta la scelta
+locale/cloud/gateway esistente, senza richiedere segreti. Non dichiarare operativa
+la comprensione linguistica reale, non confondere test con planner simulato e
+validazione su modello. Nessun deployment o modifica del runtime domestico.
+
+Validazione conclusiva di questo incremento: 51 test Python, 36 unitari Android,
+9 test UI/repository e 1 navigazione MainActivity, tutti superati. Quattro
+screenshot ispezionati e ricevute versionate in
+[VERIFICA_SMART_ENERGIA.md](VERIFICA_SMART_ENERGIA.md). APK debug generato.

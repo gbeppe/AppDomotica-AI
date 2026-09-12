@@ -30,6 +30,11 @@ date assolute. Campi extra, tool o metriche inventati, ID duplicati e piani
 troppo grandi vengono rifiutati prima dell'accesso ai dati. Non esistono tool
 shell, SQL, MQTT o comando dispositivi.
 
+Il catalogo comprende anche `current_energy_metric`: legge esclusivamente lo
+snapshot costruito dall'osservatore Android sui topic pubblici del Digital Twin.
+Le operazioni storiche continuano invece a usare EmonCMS. Provenienza e limiti
+dell'integrazione in [fase Digital Twin Android](FASE_ENERGIA_DIGITAL_TWIN_ANDROID.md).
+
 ## Metriche disponibili nel primo catalogo
 
 - prelievo e immissione dalla rete;
@@ -80,3 +85,8 @@ modello reale. Prossimi criteri: scegliere/configurare un pianificatore,
 costruire un insieme di domande italiane indipendente dallo sviluppo, misurare
 correttezza di tool/periodo e richieste di chiarimento, quindi collegare Android
 e verificare che testo e voce producano la stessa richiesta.
+
+## Aggiornamento successivo del 12 settembre
+
+Per lo stato finale dell'implementazione, le funzioni aggiunte, la configurazione
+e i limiti ancora aperti consultare [SMART_ENERGIA.md](SMART_ENERGIA.md).

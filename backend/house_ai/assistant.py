@@ -1,73 +1,36 @@
-"""Dynamic planner -> validated energy tools -> evidence-based response."""
-from datetime import date
-
-from energy_tools import catalog, execute
-
-
-METRIC_LABELS = {
-    "grid_import_kwh": "Prelievo dalla rete",
-    "grid_export_kwh": "Energia immessa in rete",
-    "home_consumption_kwh": "Consumo della casa",
-    "solar_production_kwh": "Produzione fotovoltaica",
-    "battery_charge_kwh": "Energia caricata nella batteria",
-    "battery_discharge_kwh": "Energia scaricata dalla batteria",
-    "soc_mean_percent": "Livello medio della batteria Tesla",
-    "solar_power_w": "Produzione fotovoltaica attuale",
-    "home_consumption_w": "Consumo attuale della casa",
-    "grid_power_w": "Potenza attuale della rete",
-    "battery_power_w": "Potenza attuale della batteria",
-    "battery_soc_percent": "Carica attuale della batteria Tesla"
-}
+"""Dynamic interpretation followed by validated tools and deterministic answers."""
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from energy_tools import catalog, execute, validate_current_snapshot
+from energy_presenter import describe
 
 
 def ask(client, planner, question, today=None, current_snapshot=None, log_root=None):
     if not isinstance(question, str) or not question.strip() or len(question) > 1000:
-        raise ValueError("Invalid question")
+        raise ValueError('Invalid question')
+    validate_current_snapshot(current_snapshot)
+    now = datetime.now(ZoneInfo('Europe/Rome'))
+    base = {'schema': 'house_ai.assistant_answer.v1', 'question': question,
+            'generated_at': now.isoformat(), 'results': [], 'limitations': []}
     if planner is None:
-        return {"schema": "house_ai.assistant_answer.v1", "status": "not_configured",
-                "answer": "Il pianificatore dinamico non è configurato sul backend."}
-    current = today or date.today()
-    proposed = planner.plan(question.strip(), catalog(), current)
-    execution = execute(client, proposed, current_snapshot=current_snapshot, log_root=log_root)
-    if execution["clarification"]:
-        return {"schema": "house_ai.assistant_answer.v1",
-                "status": "clarification_required",
-                "answer": execution["clarification"]}
-    lines, statuses = [], []
-    for item in execution["results"]:
-        result = item["result"]
-        if result["schema"] == "house_ai.backend_log_evidence.v1":
-            statuses.append("partial" if result["records"] else "insufficient_data")
-            lines.append(f"Log {result['file']} del {result['day']}: "
-                         f"{result['matched_records']} record trovati, "
-                         f"{len(result['records'])} restituiti; stato {result['status']}. "
-                         + " ".join(result["limitations"]))
-            continue
-        if result["schema"] == "house_ai.current_energy_result.v1":
-            observation = result["observation"]
-            if observation is None:
-                statuses.append("insufficient_data")
-                lines.append(f"{METRIC_LABELS[item['metric']]}: dato non disponibile.")
-            else:
-                statuses.append("complete" if result["connected"] else "partial")
-                unit = "%" if item["metric"] == "battery_soc_percent" else "W"
-                qualifier = "" if result["connected"] else " Ultimo dato ricevuto; Digital Twin disconnesso."
-                lines.append(f"{METRIC_LABELS[item['metric']]}: {observation['value']:.1f} {unit}." + qualifier)
-            continue
-        statuses.append(result["status"])
-        value = result["value"]
-        label = METRIC_LABELS[item["metric"]]
-        if value is None:
-            lines.append(f"{label}: dati insufficienti.")
-        else:
-            lines.append(f"{label}: {value:.2f} {result['unit']} dal "
-                         f"{result['period']['start']} al "
-                         f"{result['period']['end_exclusive']} escluso; "
-                         f"copertura {result['coverage_ratio']:.1%}.")
-    overall = ("insufficient_data" if all(s == "insufficient_data" for s in statuses)
-               else "partial" if any(s != "complete" for s in statuses) else "complete")
-    return {"schema": "house_ai.assistant_answer.v1", "status": overall,
-            "question": question, "answer": " ".join(lines),
-            "plan": execution["operations"], "results": execution["results"],
-            "limitations": ["Il pianificatore interpreta; i valori sono calcolati dagli strumenti validati.",
-                            "Una copertura parziale non rappresenta un totale completo."]}
+        return {**base, 'status': 'not_configured',
+                'answer': 'Il pianificatore dinamico non è configurato sul backend.'}
+    current = today or now.date()
+    try:
+        proposed = planner.plan(question.strip(), catalog(), current)
+    except (ValueError, RuntimeError):
+        raise RuntimeError('Planner unavailable or invalid response') from None
+    try:
+        execution = execute(client, proposed, current_snapshot=current_snapshot, log_root=log_root)
+    except (ValueError, TypeError, OverflowError):
+        raise RuntimeError('Planner returned an invalid plan') from None
+    if execution['clarification']:
+        return {**base, 'status': 'clarification_required', 'answer': execution['clarification']}
+    statuses = [item['result']['status'] for item in execution['results']]
+    overall = ('insufficient_data' if all(s in ('insufficient_data', 'missing', 'unavailable', 'source_rejected') for s in statuses)
+               else 'partial' if any(s != 'complete' for s in statuses) else 'complete')
+    return {**base, 'status': overall,
+            'answer': '\n\n'.join(describe(item) for item in execution['results']),
+            'plan': execution['operations'], 'results': execution['results'],
+            'limitations': ['Il pianificatore interpreta; i valori sono calcolati dagli strumenti validati.',
+                            'Le risposte descrivono le fonti al momento della richiesta e non si aggiornano automaticamente.']}

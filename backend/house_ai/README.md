@@ -122,3 +122,11 @@ quattro log allowlist di `.20`. Deve indicare una cartella accessibile al
 processo backend; nessuna connessione SSH automatica. Fonte/giorno sono
 validati, lettura e risposta limitate, provenienza file/riga preservata.
 Dettagli e limiti: `docs/AI_MODE/FONTI_LOG_NODERED.md` dalla radice repository.
+
+## Stato aggiornato: smart energia
+
+Il riferimento aggiornato è `docs/AI_MODE/SMART_ENERGIA.md`. Android è collegato
+all'endpoint dinamico; comprende stato corrente, storico, confronto fra periodi
+e sintesi deterministiche dei quattro log. Le indicazioni precedenti di questa
+pagina descrivono gli incrementi storici. Rimangono necessari modello/gateway
+concreto, configurazione privata e validazione linguistica reale.

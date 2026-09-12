@@ -38,7 +38,7 @@ class LogTests(unittest.TestCase):
                 return plan
         result = ask(None, Planner(), 'Esamina il log shadow')
         self.assertEqual(result['status'], 'insufficient_data')
-        self.assertIn('simulazione', result['answer'])
+        self.assertIn('sorgente non disponibile', result['answer'])
         plan['operations'][0]['path'] = '/etc/passwd'
         with self.assertRaises(ValueError):
             validate_plan(plan)

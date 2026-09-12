@@ -19,6 +19,8 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
   versionato e cosa può restare sacrificabile nelle cache.
 - [Interprete dinamico](ARCHITETTURA_INTERPRETE_DINAMICO.md): pianificatore,
   strumenti energia, validazione dei piani e confini di sicurezza.
+- [Fase energia Digital Twin e Android](FASE_ENERGIA_DIGITAL_TWIN_ANDROID.md):
+  fusione controllata di stato MQTT corrente e storico EmonCMS.
 
 ## Vincoli concordati
 
@@ -49,3 +51,6 @@ Questa estensione non è ancora disponibile nel prototipo corrente.
 Primo incremento backend disponibile: calcolo prelievo rete/SOC medio via CLI e
 API, mapping live validato e 26 test passati. Integrazione nella scheda aperta.
 Dettagli e ripresa nel [checkpoint](CHECKPOINT.md).
+
+Stato aggiornato del dominio energia, istruzioni e limiti:
+[SMART_ENERGIA.md](SMART_ENERGIA.md).

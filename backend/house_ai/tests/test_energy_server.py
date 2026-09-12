@@ -77,6 +77,6 @@ class EnergyServerTests(unittest.TestCase):
                      "Content-Type": "application/json"})
         with urlopen(request) as response:
             body = json.load(response)
-        self.assertIn("2500.0 W", body["answer"])
+        self.assertIn("2500,0 W", body["answer"])
         self.assertEqual(body["results"][0]["result"]["schema"],
                          "house_ai.current_energy_result.v1")

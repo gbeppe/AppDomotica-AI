@@ -1,0 +1,45 @@
+{
+  "verification": "Read-only SSH copies from 192.168.1.20, /home/pi/AI_climate; captured separately, not an atomic multi-file snapshot.",
+  "records": [
+    {
+      "source": "learning",
+      "day": "2026-09-12",
+      "bytes": 774209,
+      "sha256": "5f8b8bb98faa0c580cf4a4be820fa7ae9a4f97b039dd897a8ec71b234099d57f",
+      "matched": 18,
+      "invalid": 0,
+      "truncated": false,
+      "answer": "Log apprendimento_storico.log del 2026-09-12: 18 record trovati. Ultimo record restituito, riga 2026. Consumo medio orario registrato: 612,00 W. Produzione media oraria registrata: 242,00 W. Carica media oraria registrata: 0,00 W. Efficienza storica EMA registrata: 0,612; non è una misura istantanea. I log non garantiscono copertura continua e non sostituiscono lo stato corrente."
+    },
+    {
+      "source": "climate",
+      "day": "2026-09-12",
+      "bytes": 5174660,
+      "sha256": "0c4a81d0291fc9024dc7c3469f15e50e64b8ca2f4ab86b91daa3eef086515acf",
+      "matched": 3,
+      "invalid": 1,
+      "truncated": false,
+      "answer": "Log clima_controllo.log del 2026-09-12: 3 record trovati. Ultimo record restituito, riga 4660. Motivo AC registrato: MANTENIMENTO_COOLING_ON. È un evento registrato, non una conferma fisica né una spiegazione causale aggiuntiva. Righe non utilizzabili: 1. I log non garantiscono copertura continua e non sostituiscono lo stato corrente."
+    },
+    {
+      "source": "reserve_shadow",
+      "day": "2026-09-06",
+      "bytes": 191462,
+      "sha256": "598192be90f2b98f68a6c8417ba2191ed91d4051739c6255685cbd66e47b9c70",
+      "matched": 83,
+      "invalid": 0,
+      "truncated": true,
+      "answer": "Log predictive_reserve_shadow.log del 2026-09-06: 83 record trovati. Ultimo record restituito, riga 100. Riserva simulata: 2,38 kWh. Budget climatico simulato: 2,85 kWh. Supporto previsto: 2,23 kWh. Questo log è telemetria SHADOW: non dimostra attivazioni o autorizzazioni ai dispositivi. Risultati limitati: il dettaglio non comprende tutti i record. I log non garantiscono copertura continua e non sostituiscono lo stato corrente."
+    },
+    {
+      "source": "solar_forecast",
+      "day": "2026-09-12",
+      "bytes": 17903,
+      "sha256": "6ba7a5d0891266c03dfd9eacdfca3083f68272e5e45e020d43d7b6b4d1d8b479",
+      "matched": 1,
+      "invalid": 0,
+      "truncated": false,
+      "answer": "Log zara_previsione_kwh_openmeteo.log del 2026-09-12: 1 record trovati. Ultimo record restituito, riga 118. Produzione prevista: 18,00 kWh. È una previsione per il giorno indicato, non produzione misurata; ora di elaborazione non presente. I log non garantiscono copertura continua e non sostituiscono lo stato corrente."
+    }
+  ]
+}

@@ -14,3 +14,7 @@ local.properties
 # Worktree-local validation caches and artifacts
 /.validation/
 /.kotlin/sessions/
+
+# Regenerable Python bytecode
+/backend/house_ai/**/__pycache__/
+/backend/house_ai/__pycache__/

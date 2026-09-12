@@ -15,6 +15,10 @@ from planner import HttpJsonPlanner
 
 def handler(client, token, log_path, planner=None, log_root=None):
     class Handler(BaseHTTPRequestHandler):
+        def setup(self):
+            super().setup()
+            self.connection.settimeout(120)
+
         def log_message(self, *_args):
             pass  # Do not persist household queries or credentials.
 
@@ -35,7 +39,9 @@ def handler(client, token, log_path, planner=None, log_root=None):
             url = urlsplit(self.path)
             try:
                 if url.path == "/v1/health":
-                    self.send_json(200, {"status": "ok", "mode": "read_only"})
+                    self.send_json(200, {"status": "ok", "mode": "read_only",
+                                         "planner_configured": planner is not None,
+                                         "log_root_configured": log_root is not None})
                 elif url.path == "/v1/report":
                     days = parse_qs(url.query).get("day", [])
                     if len(days) != 1:
@@ -63,7 +69,7 @@ def handler(client, token, log_path, planner=None, log_root=None):
                 return
             try:
                 length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= 4096:
+                if not 0 < length <= 8192 or self.headers.get("Transfer-Encoding") is not None:
                     raise ValueError("Invalid body size")
                 body = json.loads(self.rfile.read(length))
                 if (not isinstance(body, dict)

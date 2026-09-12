@@ -62,6 +62,8 @@ data class DomoticaSettings(
 class MqttManager {
     private val _aiSmartState = MutableStateFlow(AiSmartState())
     val aiSmartState: StateFlow<AiSmartState> = _aiSmartState
+    private val _energySmartState = MutableStateFlow(EnergySmartState())
+    val energySmartState: StateFlow<EnergySmartState> = _energySmartState
 
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
@@ -168,6 +170,7 @@ class MqttManager {
                     addTrafficLog("CONNESSO: $serverURI")
                     isConnecting = false
                     _aiSmartState.value = AiSmartState()
+                    _energySmartState.value = EnergySmartState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     processMessageQueue()
@@ -185,6 +188,7 @@ class MqttManager {
                         if (topic != null && message != null && topic.startsWith(receivedPrefix) &&
                             receivedPrefix == digitalTwinPrefix.removeSuffix("/") + "/") {
                             _aiSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, sourceTopic = topic) }
+                            _energySmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                         }
                         handleIncomingMessage(topic ?: "", message?.toString() ?: "")
                     }
@@ -213,6 +217,7 @@ class MqttManager {
         val clean = prefix.trim().removeSuffix("/")
         if (clean.isNotEmpty() && digitalTwinPrefix != clean) {
             _aiSmartState.value = AiSmartState()
+            _energySmartState.value = EnergySmartState()
             digitalTwinPrefix = clean
             if (mqttClient?.isConnected == true) {
                 subscribeToUnifiedTopics()

@@ -61,3 +61,8 @@ interprete italiano ed endpoint autenticato implementati nel backend. Vedere
 [validazione dello storico energia](VALIDAZIONE_STORICO_ENERGIA.md). Restano da
 collegare la scheda Android e la voce; le altre metriche energetiche sono ancora
 requisiti successivi.
+
+## Aggiornamento successivo del 12 settembre
+
+Per lo stato finale dell'implementazione, le funzioni aggiunte, la configurazione
+e i limiti ancora aperti consultare [SMART_ENERGIA.md](SMART_ENERGIA.md).

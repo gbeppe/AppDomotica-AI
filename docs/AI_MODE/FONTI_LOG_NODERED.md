@@ -41,3 +41,8 @@ presenti restano partial; assenza di record non significa assenza di eventi.
 Verifica locale: 41 test backend superati, inclusi mapping temporali,
 provenienza, input non consentiti, troncamento e assistente. Nessuna prova
 Android o deployment inclusa in questo incremento.
+
+## Aggiornamento successivo del 12 settembre
+
+Per lo stato finale dell'implementazione, le funzioni aggiunte, la configurazione
+e i limiti ancora aperti consultare [SMART_ENERGIA.md](SMART_ENERGIA.md).

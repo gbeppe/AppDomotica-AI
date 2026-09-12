@@ -103,3 +103,8 @@ Il mapping è ora esteso a tutte le schede nel [catalogo dispositivi e capacità
 ## Avanzamento del 12 settembre 2026
 
 Completamento della scheda AI smart sul sottoinsieme luci/living/ACS, provenienza delle letture e interazione vocale: vedere [implementazione, verifiche e limiti](AVANZAMENTO_STATO_VOCE.md). Le osservazioni MQTT riportate sopra restano la fotografia dell’11 settembre, non letture correnti.
+
+Il modello corrente è stato esteso alle cinque letture energetiche pubbliche FV,
+casa, rete, batteria e SOC, mantenendo assenza/invalidità separate da zero e
+conservando topic, ricezione e retained. Vedere
+[fase energia Digital Twin Android](FASE_ENERGIA_DIGITAL_TWIN_ANDROID.md).

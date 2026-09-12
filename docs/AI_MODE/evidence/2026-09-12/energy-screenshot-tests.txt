@@ -1,0 +1,48 @@
+* daemon not running; starting now at tcp:5037
+* daemon started successfully
+1
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+INSTRUMENTATION_STATUS: class=com.domopi.app.ui.screens.AiSmartScreenTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+com.domopi.app.ui.screens.AiSmartScreenTest:
+INSTRUMENTATION_STATUS: test=energyDictationRequiresExplicitSendAndClarificationKeepsQuestionEditable
+INSTRUMENTATION_STATUS_CODE: 1
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+INSTRUMENTATION_STATUS: class=com.domopi.app.ui.screens.AiSmartScreenTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=energyDictationRequiresExplicitSendAndClarificationKeepsQuestionEditable
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.domopi.app.ui.screens.AiSmartScreenTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=energyEvidenceAndVoiceUseTheExactAnswerAndKeepClassicNavigation
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.domopi.app.ui.screens.AiSmartScreenTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=energyEvidenceAndVoiceUseTheExactAnswerAndKeepClassicNavigation
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 17.245
+
+OK (2 tests)
+
+
+INSTRUMENTATION_CODE: -1
+/sdcard/Android/data/com.domopi.app/files/: 10 files pulled, 0 skipped. 12.2 MB/s (1841552 bytes in 0.144s)

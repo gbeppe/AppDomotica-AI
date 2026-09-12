@@ -1,6 +1,8 @@
 """Bounded read-only access to explicitly configured Node-RED JSONL sources."""
 import json
 import math
+import os
+import stat
 from datetime import date
 from pathlib import Path
 
@@ -39,8 +41,10 @@ def read_day(root, source, day):
         return result
     path = Path(root) / filename
     try:
-        with path.open("rb") as stream:
-            if path.is_symlink() or path.stat().st_size > MAX_BYTES:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(descriptor, "rb") as stream:
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_BYTES:
                 result["status"] = "source_rejected"
                 return result
             consumed = 0
@@ -54,6 +58,7 @@ def read_day(root, source, day):
                     record = json.loads(raw, parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
                     if not isinstance(record, dict):
                         raise ValueError()
+                    json.dumps(record, allow_nan=False)  # Reject nested nonfinite values too.
                     stamp = record.get(time_key)
                     if time_key == "data_previsione":
                         date.fromisoformat(stamp)
@@ -70,7 +75,7 @@ def read_day(root, source, day):
                             result["records"].pop(0)
                             retained_bytes.pop(0)
                             result["truncated"] = True
-                except (ValueError, TypeError, UnicodeDecodeError):
+                except (ValueError, TypeError, UnicodeDecodeError, RecursionError, OverflowError):
                     result["invalid_lines"] += 1
         result["status"] = "partial" if result["records"] else "insufficient_data"
     except OSError:

@@ -5,6 +5,8 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.domopi.app.data.AiSmartState
+import com.domopi.app.data.EnergySmartState
+import com.domopi.app.data.EnergyAssistantAnswer
 import com.domopi.app.ui.theme.DomoPiTheme
 import org.junit.Assert.*
 import org.junit.Rule
@@ -107,6 +109,91 @@ class AiSmartScreenTest {
         compose.onNodeWithTag("smart-answer").performScrollTo().assertTextContains("41,1 gradi", substring = true)
         compose.onNodeWithText("Ferma lettura").performScrollTo().performClick()
         compose.runOnIdle { assertTrue(stopped) }
+    }
+
+    @Test fun dynamicEnergyQuestionRequiresConfigurationAndRendersBackendAnswer() {
+        var asked = ""
+        compose.setContent {
+            var question by remember { mutableStateOf("Quanta energia ho prodotto oggi?") }
+            var url by remember { mutableStateOf("") }
+            var token by remember { mutableStateOf("") }
+            var answer by remember { mutableStateOf<String?>(null) }
+            DomoPiTheme(darkTheme = true) {
+                AiSmartContent(state(), true, question, { question = it }, {}, {},
+                    dynamicMode = true, serviceUrl = url, serviceToken = token,
+                    onServiceUrlChange = { url = it }, onServiceTokenChange = { token = it },
+                    dynamicAnswer = answer, onAskDynamic = {
+                        asked = it
+                        answer = "Produzione fotovoltaica: 12,50 kWh; copertura 99,0%."
+                    })
+            }
+        }
+        compose.onNodeWithText("Chiedi").assertIsNotEnabled()
+        compose.onNodeWithText("Indirizzo backend AI").performScrollTo().performTextInput("http://10.0.2.2:8765")
+        compose.onNodeWithText("Token backend").performScrollTo().performTextInput("token-di-test-abbastanza-lungo")
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithTag("smart-answer").performScrollTo()
+            .assertTextContains("12,50 kWh", substring = true)
+        compose.runOnIdle { assertEquals("Quanta energia ho prodotto oggi?", asked) }
+        screenshot("smart-dark-energy-dynamic.png")
+    }
+
+    @Test fun energyEvidenceAndVoiceUseTheExactAnswerAndKeepClassicNavigation() {
+        var spoken = ""
+        var classic = false
+        val response = EnergyAssistantAnswer(
+            "Prelievo dalla rete: 2,50 kWh; copertura 80,0%. Stima limitata agli intervalli coperti, non totale del periodo.",
+            "partial", "Prelievo di ieri?", "2026-09-12T18:00:00+02:00",
+            listOf("EmonCMS · feed 305\nCopertura 80,0%; intervalli mancanti non colmati."))
+        val energy = EnergySmartState().observe("energy/grid/power_raw/stat", "-450", 1789200000000,
+            true, "zara/interface/energy/grid/power_raw/stat")
+        compose.setContent {
+            DomoPiTheme(darkTheme = false) {
+                AiSmartContent(state(), false, "Prelievo di ieri?", {}, { classic = true }, {},
+                    dynamicMode = true, energyState = energy, dynamicResponse = response,
+                    dynamicAnswer = response.text, speechReady = true, onSpeak = { spoken = it })
+            }
+        }
+        compose.onNodeWithTag("smart-summary").assertTextContains("Immissione rete: 450,0 W", substring = true)
+        screenshot("energy-light-summary.png")
+        compose.onNodeWithTag("smart-answer").performScrollTo().assertTextEquals(response.text)
+        compose.onNodeWithText("Leggi risposta").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(response.text, spoken) }
+        screenshot("energy-light-answer.png")
+        compose.onNodeWithText("Mostra provenienza e limiti").performScrollTo().performClick()
+        compose.onNodeWithTag("energy-evidence-0").performScrollTo().assertIsDisplayed()
+        screenshot("energy-light-evidence.png")
+        compose.onNodeWithTag("energy-source-grid_power_w").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Apri app classica").performScrollTo().performClick()
+        compose.runOnIdle { assertTrue(classic) }
+    }
+
+    @Test fun energyDictationRequiresExplicitSendAndClarificationKeepsQuestionEditable() {
+        var asked = ""
+        compose.setContent {
+            var question by remember { mutableStateOf("") }
+            var response by remember { mutableStateOf<String?>(null) }
+            DomoPiTheme(darkTheme = true) {
+                AiSmartContent(state(), true, question, { question = it }, {}, {},
+                    dynamicMode = true, serviceUrl = "http://localhost", serviceToken = "fixture",
+                    onDictate = { question = "Percentuale media di ricarica ultima settimana" },
+                    dynamicAnswer = response, onAskDynamic = {
+                        asked = it
+                        response = "Intendi il livello medio della batteria? Quale periodo di calendario?"
+                    })
+            }
+        }
+        compose.onNodeWithText("Detta domanda").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals("", asked) }
+        compose.onNodeWithTag("smart-answer").assertDoesNotExist()
+        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithTag("smart-answer").performScrollTo().assertTextContains("Intendi il livello medio", substring = true)
+        screenshot("energy-dark-clarification.png")
+        compose.onNodeWithText("La tua domanda").performScrollTo().performTextReplacement("SOC medio dal 1 al 7 settembre inclusi")
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals("SOC medio dal 1 al 7 settembre inclusi", asked) }
     }
 
     private fun screenshot(name: String) {

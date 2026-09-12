@@ -80,7 +80,7 @@ class AssistantTests(unittest.TestCase):
                         "source_topic": "zara/interface/energy/solar/power/stat"}}}
         result = ask(None, planner, "Come va il fotovoltaico adesso?",
                      date(2026, 9, 12), snapshot)
-        self.assertIn("3210.0 W", result["answer"])
+        self.assertIn("3210,0 W", result["answer"])
         self.assertTrue(result["results"][0]["result"]["observation"]["retained"])
 
     def test_missing_and_disconnected_current_data_are_qualified(self):

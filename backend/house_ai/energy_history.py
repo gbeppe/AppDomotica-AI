@@ -1,5 +1,6 @@
 """Read-only historical metrics; explicit source semantics, no inferred grid sign."""
 import math
+import time as clock
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -86,7 +87,7 @@ def calculate(rows, start_ms, end_ms, metric, max_gap_ms=30000, import_sign=None
             'excluded': excluded}
 
 
-def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, interval=30):
+def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, interval=30, now_ms=None):
     """Caller supplies a verified feed/unit/sign; query without coarse monthly averaging."""
     if (type(feed_id) is not int or feed_id <= 0 or type(interval) is not int
             or not 1 <= interval <= 300):
@@ -103,15 +104,22 @@ def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, i
     # Bound work independently from HTTP response limits.
     if (hi-lo)//(interval*1000) > 1_100_000:
         raise ValueError('Too many samples requested')
+    observed_until = min(hi, now_ms if now_ms is not None else int(clock.time()*1000))
     rows, cursor, requests = [], lo//1000, 0
-    while cursor <= hi//1000:
-        stop = min(cursor+9999*interval, hi//1000+interval)
-        rows.extend(client.history(feed_id, cursor, stop, interval))
+    while cursor <= observed_until//1000:
+        stop = min(cursor+9999*interval, observed_until//1000+interval)
+        for row in client.history(feed_id, cursor, stop, interval):
+            if (not isinstance(row, (list, tuple)) or len(row) != 2
+                    or type(row[0]) not in (int, float) or not math.isfinite(row[0])):
+                raise RuntimeError('Invalid historical source row')
+            timestamp = row[0] if row[0] > 100_000_000_000 else row[0]*1000
+            if timestamp <= observed_until:
+                rows.append(row)
         requests += 1
         cursor = stop
     result = calculate(rows, lo, hi, metric, interval*1000, import_sign)
     result.update({'schema': 'house_ai.energy_history.v1', 'timezone': 'Europe/Rome',
-                   'period': {'start': start, 'end_exclusive': end}, 'period_ms': [lo, hi],
+                   'period': {'start': start, 'end_exclusive': end}, 'period_ms': [lo, hi], 'observed_until_ms': observed_until,
                    'source': {'feed_id': feed_id, 'unit': unit, 'import_sign': import_sign,
                               'interval_seconds': interval, 'requests': requests},
                    'limitations': ['Stima sugli intervalli coperti, senza colmare dati mancanti.',

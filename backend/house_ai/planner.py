@@ -22,7 +22,8 @@ class HttpJsonPlanner:
             "schema": "house_ai.planner_request.v1",
             "instruction": (
                 "Interpret the Italian user request using only the supplied tools. "
-                "Return JSON with operations or one clarification. Never invent metrics, "
+                "Return an envelope {plan: {operations: [...]}} or {plan: {clarification: text}}. "
+                "Each operation needs id, tool and exactly the listed tool parameters. Never invent metrics, "
                 "sources or values. Resolve dates using today and Europe/Rome."
             ),
             "question": question,

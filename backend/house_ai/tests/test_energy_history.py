@@ -53,6 +53,20 @@ class EnergyTests(unittest.TestCase):
         self.assertAlmostEqual(r['value'], 744)
         self.assertGreater(len(calls), 1)
 
+    def test_future_samples_and_future_period_are_not_measurements(self):
+        start, end = period_bounds('2026-09-12', '2026-09-13')
+        class Future:
+            def history(self, *args):
+                return [[start, 1000], [start+30000, 1000], [end, 1000]]
+        r = energy_report(Future(), '2026-09-12', '2026-09-13', 'grid_import_kwh', 305, 'W', 1,
+                          now_ms=start+30000)
+        self.assertEqual(r['covered_ms'], 30000)
+        self.assertEqual(r['status'], 'partial')
+        r = energy_report(None, '2026-09-12', '2026-09-13', 'grid_import_kwh', 305, 'W', 1,
+                          now_ms=start-1)
+        self.assertIsNone(r['value'])
+        self.assertEqual(r['source']['requests'], 0)
+
     def test_validate_before_network(self):
         for metric, unit, sign in [('grid_import_kwh', 'W', None), ('grid_import_kwh', '%', 1), ('soc_mean_percent', 'W', None)]:
             with self.assertRaises(ValueError):
