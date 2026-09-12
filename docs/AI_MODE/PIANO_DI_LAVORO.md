@@ -119,4 +119,4 @@ con esiti in [VALIDAZIONE_STORICO_ENERGIA.md](VALIDAZIONE_STORICO_ENERGIA.md).
 Aggiunti catalogo sorgenti, interprete italiano e endpoint protetto. Totale:
 26 test backend passati. Prossimo passo: collegare l'endpoint a UI e voce Android.
 Nessun collegamento Android incluso in questo incremento.
-Codice, documentazione e validazione sono salvati nel commit `9b65052`.
+Codice, documentazione e validazione sono salvati nel commit `d0bce5e`.

@@ -15,6 +15,8 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
 - [Mapping stato corrente](MAPPING_STATO_CORRENTE.md): luci, living, ACS e limiti di freschezza.
 - [Validazione storico energia](VALIDAZIONE_STORICO_ENERGIA.md): feed rete/SOC,
   segni, unità, copertura e prime domande backend.
+- [Politica file e ripresa](POLITICA_FILE_E_RIPRESA.md): cosa deve essere
+  versionato e cosa può restare sacrificabile nelle cache.
 
 ## Vincoli concordati
 

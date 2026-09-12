@@ -43,3 +43,7 @@ Z-AI is a modern Android application built with Jetpack Compose to monitor and c
 Branch dedicato: `feature/ai-home-assistant`. Per riprendere in questa o una nuova
 chat leggere prima [checkpoint e prossime attività](docs/AI_MODE/CHECKPOINT.md),
 poi [avanzamento implementativo](docs/AI_MODE/AVANZAMENTO_STATO_VOCE.md).
+
+Tutti i file necessari a sviluppo e ripresa devono essere versionati e
+committati. Cache e artefatti ignorati devono essere sacrificabili. Vedere la
+[politica dei file e della ripresa](docs/AI_MODE/POLITICA_FILE_E_RIPRESA.md).

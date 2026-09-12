@@ -33,6 +33,8 @@ Un secondo calcolo indipendente sugli stessi campioni coincide entro
 per il controllo restano in `.validation/energy-live/`, ignorati da Git; i loro
 SHA-256 sono registrati nei rapporti locali. I valori sono una fotografia della
 verifica, non dati aggiornati in tempo reale e non misure fiscali del contatore.
+La perdita dei file grezzi non impedisce di proseguire: mapping, metodo, risultati,
+limiti e test di calcolo sono tutti versionati nel repository.
 
 ## Limiti e conseguenze
 
