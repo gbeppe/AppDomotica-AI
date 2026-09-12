@@ -146,8 +146,11 @@ fun EnergyFlowComponent(
             label = "blink_red"
         )
 
-        val ieriColor = if (gridImportKwhIeri > 0f) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
-        val oggiColor = if (gridImportKwhOggi > 0f) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
+        val isIeriImported = gridImportKwhIeri >= 0.05f
+        val isOggiImported = gridImportKwhOggi >= 0.05f
+
+        val ieriColor = if (isIeriImported) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
+        val oggiColor = if (isOggiImported) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
 
         Row(
             modifier = Modifier
