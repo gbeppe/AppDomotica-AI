@@ -123,3 +123,12 @@ Validazione conclusiva di questo incremento: 51 test Python, 36 unitari Android,
 9 test UI/repository e 1 navigazione MainActivity, tutti superati. Quattro
 screenshot ispezionati e ricevute versionate in
 [VERIFICA_SMART_ENERGIA.md](VERIFICA_SMART_ENERGIA.md). APK debug generato.
+
+## Compatibilità Python 3.9 su `.20`
+
+Corretto il solo tipo opzionale in `service.report`. Suite completa: 51 test
+superati su Python 3.9.25 locale. Su `.20` (Python 3.9.2/aarch64), sorgenti
+compilati e moduli importati in memoria, timezone Europe/Rome verificata.
+Nessuna installazione o modifica del runtime domestico. Dettagli e limiti in
+[SMART_ENERGIA.md](SMART_ENERGIA.md#compatibilità-del-backend-con-raspberry-20).
+Il gateway del modello rimane da realizzare/configurare.

@@ -2,6 +2,7 @@
 import math
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Optional
 
 from evidence import climate_day, day_bounds
 
@@ -52,7 +53,7 @@ def integrate(points, max_gap_ms=30000):
     return watt_ms / 3_600_000_000, covered
 
 
-def report(client, log_path: Path | None, day: str):
+def report(client, log_path: Optional[Path], day: str):
     start, end = day_bounds(day)
     def fetch(item):
         key, (feed, label, unit) = item

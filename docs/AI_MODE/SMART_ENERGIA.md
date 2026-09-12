@@ -107,3 +107,39 @@ Non impostare quell'argomento su un telefono o un emulatore con rete domestica.
 Risultati dettagliati in [VERIFICA_SMART_ENERGIA.md](VERIFICA_SMART_ENERGIA.md).
 Restano fuori dalla prova: modello reale, accesso remoto end-to-end, ricezione
 MQTT fisica su telefono e riconoscimento/riproduzione acustica su dispositivo.
+
+## Compatibilità del backend con Raspberry `.20`
+
+Verifica del 12 settembre 2026: il backend è compatibile con Python 3.9 dopo
+una modifica dell'annotazione di `service.report`, da `Path | None` a
+`Optional[Path]`. Nessuna modifica ai calcoli o al protocollo HTTP.
+
+- Python 3.9.25 Linux x86_64, interprete isolato nella cache del worktree:
+  prima della correzione due errori di importazione impedivano di caricare
+  tutte le suite; dopo la correzione **51 test superati**.
+- Raspberry `pi@192.168.1.20`, Python **3.9.2**, **aarch64**: compilazione in
+  memoria di tutti i 26 file Python e importazione dei 13 moduli principali
+  riuscite. Verificati gli offset invernale/estivo di `Europe/Rome`.
+  SSL disponibile: OpenSSL 1.1.1w. Nessuna connessione a provider verificata.
+- Prova remota tramite `ssh` e `python3 -B -`, sorgenti forniti su stdin con
+  caricatore in memoria: nessun file installato, servizio avviato o Python di
+  sistema modificato. La suite completa è stata eseguita localmente su 3.9.25,
+  non sul Raspberry; la prova su 3.9.2 riguarda compilazione/import e timezone.
+
+Il backend usa soltanto la libreria standard e richiede i dati timezone di
+sistema, presenti su `.20`. Non serve sostituire Python per questo incremento.
+La compatibilità funzionale non costituisce una verifica degli aggiornamenti
+security del sistema né una prova di prestazioni sotto carico.
+
+La collocazione candidata è `.20` per backend leggero e accesso locale ai log,
+con `.15` come sorgente EmonCMS. La RAM comunicata per `.20` è 1,8 GiB totali e
+circa 1,0 GiB disponibili: questa verifica non qualifica l'esecuzione locale di
+un LLM. Restano da implementare/configurare il gateway del modello e verificare
+TLS, accesso alle sorgenti e prestazioni dell'intero percorso prima del deployment.
+
+Per ripetere la regressione, dalla cartella `backend/house_ai`, usando un
+interprete Python 3.9 disponibile:
+
+```sh
+python3.9 -B -m unittest discover -s tests -q
+```

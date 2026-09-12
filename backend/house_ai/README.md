@@ -1,6 +1,6 @@
 # Primo modulo di consultazione
 
-Prototipo Python 3.10+ con sola libreria standard e dati timezone Europe/Rome.
+Prototipo Python 3.9+ con sola libreria standard e dati timezone Europe/Rome.
 Eseguibile localmente; non installa servizi e non contiene connessioni MQTT o comandi ai dispositivi.
 Python è usato per questo adattatore verificabile, senza vincolare il resto del backend.
 
