@@ -14,6 +14,48 @@ bisogno di un file presente soltanto in una cartella ignorata, in una cache o
 nella memoria della sessione. Prima del commit verificare almeno `git status`,
 `git diff --check`, test pertinenti e assenza di credenziali nei nuovi diff.
 
+## Documentazione obbligatoria di architettura e deployment
+
+Vincolo ribadito dall'utente il 13 settembre 2026.
+
+Ogni incremento che modifica modello, provider, gateway, fonti dati,
+autenticazione, Tailscale, servizi di sistema o host di esecuzione deve aggiornare
+la documentazione nello stesso commit del codice o della configurazione. La
+documentazione deve permettere a una persona che non ha seguito la sessione di
+capire la scelta e replicare l'installazione su un altro Raspberry Pi.
+
+Devono essere registrati almeno:
+
+1. problema, requisiti e vincoli che hanno guidato la scelta;
+2. alternative valutate, motivi della scelta e compromessi accettati;
+3. architettura risultante, flussi dei dati, confini di fiducia e responsabilità
+   dei singoli host;
+4. inventario dei tool e dei servizi, distinguendo ciò che era già presente,
+   ciò che è stato installato e ciò che è stato usato solo temporaneamente;
+5. versioni, compatibilità hardware e software, prerequisiti, costi e limiti del
+   provider, con data e fonte quando possono cambiare;
+6. prestazioni attese e misure osservate, mantenendole esplicitamente distinte;
+7. comandi e file necessari per installazione, configurazione, verifica,
+   aggiornamento, replica e rollback;
+8. gestione dei segreti con nome della variabile, percorso, proprietario,
+   permessi e procedura di rotazione, senza riportare mai il valore;
+9. prove eseguite, risultato, limiti della verifica e stato reale del deployment.
+
+Per il dominio energia i riferimenti minimi da mantenere allineati sono:
+
+- `docs/AI_MODE/SMART_ENERGIA.md` per requisiti e comportamento funzionale;
+- `docs/AI_MODE/GATEWAY_MODELLO.md` per decisioni su modello, Groq, gateway e
+  Tailscale;
+- un documento datato `DEPLOYMENT_*.md` per lo stato effettivamente installato;
+- un documento datato `VERIFICA_*.md` quando vengono svolte prove su servizi o
+  sorgenti reali;
+- `docs/AI_MODE/CHECKPOINT.md` per il punto di ripresa complessivo.
+
+Nei documenti il provider scelto deve essere chiamato **Groq**. **Grok** indica
+un prodotto differente e non deve essere usato come sinonimo. Ogni documento
+deve inoltre distinguere configurazioni di esempio, stato osservato sugli host,
+test simulati e verifiche effettuate su sorgenti reali.
+
 ## File temporanei e sacrificabili
 
 Le aree ignorate, tra cui `.validation/`, `.gradle/`, `build/`, `app/build/`,

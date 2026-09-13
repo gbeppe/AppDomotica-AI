@@ -47,3 +47,12 @@ poi [avanzamento implementativo](docs/AI_MODE/AVANZAMENTO_STATO_VOCE.md).
 Tutti i file necessari a sviluppo e ripresa devono essere versionati e
 committati. Cache e artefatti ignorati devono essere sacrificabili. Vedere la
 [politica dei file e della ripresa](docs/AI_MODE/POLITICA_FILE_E_RIPRESA.md).
+
+## Gateway del modello e replica
+
+Le decisioni su Groq, gateway, Tailscale, costi, compatibilità e procedura di
+replica sono raccolte nella
+[documentazione del gateway](docs/AI_MODE/GATEWAY_MODELLO.md). Lo stato
+installato su ciascun host e le prove reali restano registrati in documenti
+datati nella stessa cartella. Ogni modifica a questi componenti deve aggiornare
+la documentazione insieme al codice, secondo la politica del repository.

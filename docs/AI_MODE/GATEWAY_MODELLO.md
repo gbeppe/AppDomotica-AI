@@ -1,7 +1,20 @@
 # Gateway del modello: decisione, architettura e replica
 
+## Manutenzione del documento
+
+Questo è il documento canonico per le scelte relative a modello, provider
+Groq, gateway e collegamento Tailscale. Deve essere aggiornato nello stesso
+commit di ogni modifica a questi componenti, includendo motivazione, impatto,
+configurazione, verifica, replica e rollback. Costi, quote, modelli disponibili
+e prestazioni dipendenti dal provider devono riportare la data della verifica e
+devono essere ricontrollati prima di una nuova installazione.
+
+La regola completa è definita in
+[`POLITICA_FILE_E_RIPRESA.md`](POLITICA_FILE_E_RIPRESA.md).
+
 Stato verificato il 13 settembre 2026. Questo documento separa l'architettura
-scelta, le prove temporanee e l'installazione persistente ancora da eseguire.
+scelta, le prove temporanee e l'installazione persistente completata su `.20`,
+descritta in [`DEPLOYMENT_20_TLS_2026-09-13.md`](DEPLOYMENT_20_TLS_2026-09-13.md).
 Prezzi, modelli e quote cloud possono cambiare: verificare le fonti collegate.
 
 ## Decisione e motivazioni
