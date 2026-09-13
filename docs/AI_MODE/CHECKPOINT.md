@@ -131,15 +131,21 @@ superati su Python 3.9.25 locale. Su `.20` (Python 3.9.2/aarch64), sorgenti
 compilati e moduli importati in memoria, timezone Europe/Rome verificata.
 Nessuna installazione o modifica del runtime domestico. Dettagli e limiti in
 [SMART_ENERGIA.md](SMART_ENERGIA.md#compatibilità-del-backend-con-raspberry-20).
-Il gateway del modello rimane da realizzare/configurare.
+Il gateway del modello era ancora da realizzare a questo checkpoint storico.
 
-## Gateway Groq — 13 settembre 2026
+Aggiornamento 13 settembre: gateway Groq provato con chiave reale su `.20`;
+calendario relativo ora calcolato dal gateway e chiave leggibile da file privato.
+60 test Python superati. Le prove reali confermano confronto EmonCMS e lettura
+dei quattro log; hanno anche rilevato limiti linguistici documentati. Aggiunti
+test Android live opt-in e template systemd, non installati. Guida completa:
+[GATEWAY_MODELLO.md](GATEWAY_MODELLO.md). Restano deployment persistente, TLS e
+prova completa su telefono prima della promozione.
+
+## Gateway Groq — stato corrente del 13 settembre 2026
 
 Implementato `model_gateway.py`: JSON Schema strict, prompt di consultazione,
 validazione locale dei piani, autenticazione separata, errori sanitizzati, nessun
-retry automatico e nessuna pubblicazione MQTT. Default `openai/gpt-oss-20b`.
-58 test su Python 3.9.25 superati; import/compilazione in memoria su `.20` 3.9.2
-riusciti. TLS Groq raggiungibile con User-Agent applicativo, 401 senza chiave.
-Manca ancora una chiave Groq configurata privatamente: valutazione linguistica
-reale e collegamento completo alle sorgenti non eseguiti. Riprendere da
-[GATEWAY_MODELLO.md](GATEWAY_MODELLO.md). Nessun deployment effettuato.
+retry automatico e nessuna pubblicazione MQTT. Default promosso a
+`openai/gpt-oss-120b` dopo il confronto reale col 20B. 60 test Python superati;
+inferenze reali, confronto EmonCMS e quattro log verificati da `.20`. Riprendere
+da [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md). Nessun deployment persistente.

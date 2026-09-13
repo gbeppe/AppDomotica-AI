@@ -10,7 +10,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from energy_tools import catalog
-from model_gateway import GroqPlanner, gateway_handler, checked_request, plan_schema, MAX_RESPONSE
+from model_gateway import GroqPlanner, gateway_handler, checked_request, plan_schema, MAX_RESPONSE, configured_api_key
 from planner import HttpJsonPlanner
 from server import handler
 
@@ -40,6 +40,31 @@ def serving(handler_class):
 
 
 class GatewayTests(unittest.TestCase):
+    def test_private_key_file_and_environment_are_exclusive(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as root:
+            path = Path(root, 'groq.key')
+            path.write_text('private-test-key\n')
+            path.chmod(0o600)
+            with patch.dict('os.environ', {'GROQ_API_KEY_FILE': str(path)}, clear=True):
+                self.assertEqual(configured_api_key(), 'private-test-key')
+                path.chmod(0o644)
+                with self.assertRaises(ValueError):
+                    configured_api_key()
+            with patch.dict('os.environ', {'GROQ_API_KEY_FILE': str(path), 'GROQ_API_KEY': 'other'}, clear=True):
+                with self.assertRaises(ValueError):
+                    configured_api_key()
+
+    def test_calendar_crosses_year_and_leap_month_without_model_arithmetic(self):
+        january = checked_request({**envelope(), 'today': '2027-01-02'})['calendar']
+        self.assertEqual(january['previous_month'], {'start': '2026-12-01', 'end_exclusive': '2027-01-01'})
+        leap = checked_request({**envelope(), 'today': '2024-03-01'})['calendar']
+        self.assertEqual(leap['yesterday'], '2024-02-29')
+        for day in ('0001-01-01', '9999-12-31'):
+            with self.assertRaises(ValueError):
+                checked_request({**envelope(), 'today': day})
+
     def test_provider_protocol_and_credential_separation(self):
         plan = {'operations': [], 'clarification': 'Quale periodo?'}
         with patch('model_gateway.build_opener') as opener:
@@ -51,10 +76,10 @@ class GatewayTests(unittest.TestCase):
             self.assertEqual(request.get_header('User-agent'), 'DomoPi-HouseAI/1.0')
             payload = json.loads(request.data)
             self.assertTrue(payload['response_format']['json_schema']['strict'])
-            self.assertEqual(payload['model'], 'openai/gpt-oss-20b')
+            self.assertEqual(payload['model'], 'openai/gpt-oss-120b')
             self.assertNotIn('ignored caller instruction', payload['messages'][0]['content'])
             context = json.loads(payload['messages'][1]['content'])
-            self.assertEqual(set(context), {'question', 'today', 'timezone', 'tool_catalog'})
+            self.assertEqual(set(context), {'question', 'today', 'timezone', 'calendar', 'tool_catalog'})
             self.assertNotIn('provider-secret', request.data.decode())
 
     def test_invalid_model_outputs_fail_closed(self):
@@ -82,6 +107,8 @@ class GatewayTests(unittest.TestCase):
                        {'question': 'x' * 1001}, {'timezone': 'UTC'}, {'current_energy': {}}]:
             with self.subTest(change=change), self.assertRaises(ValueError):
                 checked_request({**envelope(), **change})
+        self.assertEqual(checked_request(envelope())['calendar']['previous_week'],
+                         {'start': '2026-08-31', 'end_exclusive': '2026-09-07'})
         variants = plan_schema()['properties']['operations']['items']['anyOf']
         self.assertEqual(len(variants), 4)
         for variant in variants:

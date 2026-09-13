@@ -3,9 +3,10 @@
 Il dominio energia dispone del percorso Android → API autenticata → pianificatore
 HTTP configurabile → strumenti deterministici → risposta italiana comune a testo
 e voce. Non usa corrispondenze con frasi predefinite per scegliere gli strumenti.
-È implementato il gateway Groq con modello predefinito `openai/gpt-oss-20b`.
-La chiave del provider non è disponibile: il percorso è verificato con risposte
-del modello simulate, non ancora con comprensione linguistica reale o deployment domestico.
+È implementato il gateway Groq; la valutazione reale indica
+`openai/gpt-oss-120b` come prima scelta e mantiene `openai/gpt-oss-20b` come
+alternativa economica. La chiave provider privata è stata verificata su `.20`.
+Il deployment persistente e il TLS verso l'app restano da configurare.
 
 ## Funzioni implementate
 
@@ -88,8 +89,9 @@ python3 -B tools/evaluate_planner.py
 
 Il secondo comando richiede gateway configurato e testa 16 domande sintetiche
 senza accesso a sorgenti domestiche. La suite è una regressione scritta durante
-lo sviluppo, non una valutazione linguistica indipendente; non è stata eseguita
-contro un modello reale. Servono anche domande indipendenti dell'utente per
+lo sviluppo, non una valutazione linguistica indipendente; è stata eseguita
+contro modelli reali il 13 settembre con gli esiti documentati. Servono anche
+domande indipendenti dell'utente per
 verificare ambiguità, scelta di periodo/strumento e richieste non supportate.
 
 Da radice Android, con SDK/JDK compatibili:
@@ -151,10 +153,18 @@ DomoPi a Groq, richiede JSON Schema strict e valida nuovamente ogni piano.
 Configurazione, riproduzione delle prove e limiti in
 [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md).
 
-**58 test Python 3.9.25 superati**, inclusa la catena API backend → gateway HTTP →
+**60 test Python 3.9.25 superati**, inclusa la catena API backend → gateway HTTP →
 adattatore Groq con risposta provider simulata → strumenti → risposta italiana.
 Su `.20`, Python 3.9.2: compilazione di 28 file e import di 14 moduli in memoria
 riusciti; HTTPS verso Groq verificato, risposta 401 senza credenziali con
-User-Agent applicativo. Non equivale a inferenza riuscita. Nessun servizio installato.
-La prova completa con modello e sorgenti reali resta in attesa della chiave
-configurata privatamente e della configurazione del backend di prova.
+User-Agent applicativo. Sono poi riuscite inferenze autentiche con la chiave
+privata e letture reali di Digital Twin, EmonCMS e log. La suite linguistica ha
+evidenziato errori e guidato le correzioni al prompt/calendario; i risultati e
+la procedura di replica sono in [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md).
+Nessun servizio persistente è stato installato.
+
+Il test Android opt-in ha poi superato il percorso repository Android → backend
+e gateway temporanei su `.20` → Groq 120B → Digital Twin, EmonCMS `.15` e log
+OpenMeteo. Sono riusciti anche il confronto EmonCMS e la lettura aggregata dei
+quattro log. Evidenza completa in
+[VERIFICA_GATEWAY_REALE_2026-09-13.md](VERIFICA_GATEWAY_REALE_2026-09-13.md).

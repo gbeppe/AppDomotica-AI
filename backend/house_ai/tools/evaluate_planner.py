@@ -1,4 +1,6 @@
 """Evaluate a configured gateway on synthetic Italian requests, without reading household data."""
+import argparse
+import time
 import json
 import os
 import sys
@@ -10,9 +12,11 @@ from planner import HttpJsonPlanner
 from energy_tools import catalog, validate_plan
 
 
-def evaluate(planner, suite):
+def evaluate(planner, suite, interval_seconds=0):
     results = []
-    for case in suite['cases']:
+    for index, case in enumerate(suite['cases']):
+        if index and interval_seconds:
+            time.sleep(interval_seconds)
         try:
             plan = validate_plan(planner.plan(case['question'], catalog(), date.fromisoformat(suite['today'])))
             if case.get('clarification'):
@@ -31,10 +35,13 @@ def evaluate(planner, suite):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--interval-seconds', type=int, default=20, choices=range(0, 121), metavar='0..120')
+    args = parser.parse_args()
     url, token = os.environ.get('HOUSE_AI_PLANNER_URL'), os.environ.get('HOUSE_AI_PLANNER_TOKEN')
     if not url or not token:
         raise SystemExit('Configure HOUSE_AI_PLANNER_URL and HOUSE_AI_PLANNER_TOKEN in the environment')
     suite = json.loads(Path(__file__).resolve().parents[1].joinpath('evaluation/energy_it.json').read_text())
-    result = evaluate(HttpJsonPlanner(url, token), suite)
+    result = evaluate(HttpJsonPlanner(url, token), suite, args.interval_seconds)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     raise SystemExit(0 if result['passed'] == result['count'] else 1)

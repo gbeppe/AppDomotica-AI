@@ -1,0 +1,30 @@
+[Unit]
+Description=DomoPi House AI read-only backend
+After=network-online.target house-ai-gateway.service
+Wants=network-online.target
+Requires=house-ai-gateway.service
+
+[Service]
+Type=simple
+User=house-ai
+Group=house-ai
+WorkingDirectory=/opt/domopi-house-ai/backend/house_ai
+EnvironmentFile=/etc/house-ai/backend.env
+ExecStart=/usr/bin/python3 -B server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+BindReadOnlyPaths=/home/pi/AI_climate
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

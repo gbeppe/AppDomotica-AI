@@ -1,100 +1,203 @@
-# Gateway del modello — 13 settembre 2026
+# Gateway del modello: decisione, architettura e replica
 
-Implementato in `backend/house_ai/model_gateway.py`, Python 3.9 e sola libreria
-standard. Default: Groq `openai/gpt-oss-20b`, endpoint HTTPS fisso
-`https://api.groq.com/openai/v1/chat/completions`. La modalità JSON Schema strict
-è documentata per questo modello nelle [fonti ufficiali Groq](https://console.groq.com/docs/structured-outputs),
-consultate il 13 settembre 2026. La disponibilità gratuita dipende dalle quote
-dell'account; il gateway non gestisce abbonamenti o attivazioni a pagamento.
+Stato verificato il 13 settembre 2026. Questo documento separa l'architettura
+scelta, le prove temporanee e l'installazione persistente ancora da eseguire.
+Prezzi, modelli e quote cloud possono cambiare: verificare le fonti collegate.
 
-## Percorso e confini
+## Decisione e motivazioni
 
-App → backend `/v1/assistant/query` → gateway localhost `/v1/plan` → Groq →
-piano validato → strumenti backend → risposta italiana deterministica → app.
+Il modello viene eseguito su GroqCloud; il Raspberry ospita due piccoli processi
+Python: gateway e backend deterministico. Il modello interpreta la domanda e
+produce un piano chiuso. Non vede i valori della casa e non calcola energia.
+EmonCMS, Digital Twin e log vengono letti soltanto dopo la validazione completa.
 
-Il gateway riceve il protocollo `house_ai.planner_request.v1` e restituisce
-`{"plan":{"operations":[...],"clarification":null}}`, oppure operations vuoto
-e clarification testuale. Il catalogo ricevuto deve corrispondere a quello
-versionato. L'istruzione inviata dal chiamante non viene usata come prompt:
-il gateway possiede le regole di sistema. La domanda rimane dato non fidato.
+Modello consigliato: `openai/gpt-oss-120b`; alternativa più economica:
+`openai/gpt-oss-20b`. Entrambi supportano Structured Outputs strict. Nella prova
+iniziale il 20B ha superato 12 casi su 16: ha omesso parte di una domanda
+composta, sbagliato una settimana di calendario e risolto due ambiguità senza
+chiedere. Sono stati quindi aggiunti calendario calcolato e regole esplicite.
+Il 120B ha superato 12 dei primi 13 casi completati; ha chiesto un chiarimento
+superfluo sulla produzione FV corrente. Sono dati di una piccola suite interna,
+non un benchmark indipendente né una garanzia per ogni frase italiana.
 
-Al provider vengono inviati domanda, data, timezone e catalogo. Non vengono
-inoltrati snapshot Digital Twin, record dei log, serie EmonCMS o credenziali
-domestiche. Una domanda può comunque contenere informazioni personali scritte
-dall'utente: il percorso Groq è cloud. La chiave provider resta nel processo gateway.
+La scelta cloud evita un LLM sui Raspberry da 2 GB. `.20`, con circa 1 GB di RAM
+disponibile, può ospitare il gateway standard-library. `.15`, 32 bit con root e
+swap esaurite, resta EmonCMS. Un Raspberry più potente può replicare la stessa
+architettura; più RAM aumenta il margine del backend, non accelera GroqCloud.
 
-JSON Schema chiuso sui quattro strumenti; il validatore locale controlla anche
-metriche, date, budget campioni, massimo sei operazioni e riferimenti dei confronti.
-Un piano invalido o una risposta troncata/refused produce 502; nessun fallback
-che inventi una risposta o esegua azioni. Timeout provider 20 s, nessun retry
-automatico, risposta provider massima 256 KiB. Ingresso gateway massimo 32 KiB,
-1000 caratteri per domanda, token di almeno 24 caratteri all'avvio.
-Il servizio è seriale e adatto alla prova domestica; prestazioni concorrenti non validate.
+## Costi, quote e prestazioni
 
-## Configurazione privata e avvio manuale
+Fonti ufficiali consultate il 13 settembre 2026: [GPT-OSS 20B](https://console.groq.com/docs/model/openai/gpt-oss-20b),
+[GPT-OSS 120B](https://console.groq.com/docs/model/openai/gpt-oss-120b),
+[Structured Outputs](https://console.groq.com/docs/structured-outputs) e
+[limiti Groq](https://console.groq.com/docs/rate-limits).
 
-Usare `backend/house_ai/config.env.example` come elenco di variabili; sostituire
-privatamente i segnaposto. Non inserire chiavi in Git, chat, argomenti shell o screenshot.
-I due processi possono ricevere ambienti separati:
+| Modello | Input / 1M token | Output / 1M token | Velocità indicativa | Prova DomoPi |
+|---|---:|---:|---:|---|
+| GPT-OSS 20B | USD 0,075 | USD 0,30 | circa 1.000 token/s | 12/16 prima delle correzioni |
+| GPT-OSS 120B | USD 0,15 | USD 0,60 | circa 500 token/s | 12/13 nei casi completati |
 
-- Gateway: `GROQ_API_KEY`, `HOUSE_AI_PLANNER_TOKEN`, facoltativi `HOUSE_AI_MODEL`
-  e `HOUSE_AI_GATEWAY_PORT` (8766). La porta ascolta solo su `127.0.0.1`.
-- Backend: `EMONCMS_URL`, `EMONCMS_API_KEY` di lettura, `HOUSE_AI_TOKEN`,
-  `HOUSE_AI_PLANNER_URL=http://127.0.0.1:8766/v1/plan`, stesso
-  `HOUSE_AI_PLANNER_TOKEN`, percorsi log e impostazioni bind/porta esistenti.
+Il piano Free pubblicato indica per entrambi 30 richieste/minuto, 1.000/giorno,
+8.000 token/minuto e 200.000 token/giorno, per organizzazione. Contano i limiti
+effettivi mostrati nella console. HTTP 429 indica quota superata. Il gateway non
+ritenta automaticamente: evita duplicazioni e attese imprevedibili. La suite
+live usa 20 secondi fra richieste perché il catalogo ripetuto pesa sui token.
 
-Dalla cartella `backend/house_ai`, in due terminali con i rispettivi ambienti:
+Il piano Free non offre un impegno di disponibilità. I prezzi valgono per un
+eventuale uso a consumo e non implicano che sia stato abilitato un pagamento.
+Prima di un piano a pagamento impostare uno spend limit nella console. Le prove
+live hanno richiesto circa 0,6–1,8 secondi lato modello; sono campioni singoli,
+non percentili di produzione. Lo storico dipende anche da EmonCMS e Android ha
+timeout 120 secondi. Backend e gateway sono seriali, adeguati al basso traffico
+di una casa; la concorrenza multiutente non è stata qualificata.
 
-```sh
-python3 -B model_gateway.py
+## Architettura e dati inviati
+
+```mermaid
+flowchart LR
+    A[App Android] -->|TLS e token app| B[Backend House AI su .20]
+    B -->|piano e token interno, loopback| G[Gateway Groq su .20]
+    G -->|HTTPS: domanda, data, calendario, catalogo| M[GroqCloud GPT-OSS]
+    M -->|piano JSON strict| G
+    G -->|piano validato| B
+    B -->|sola lettura| D[Digital Twin MQTT .20]
+    B -->|sola lettura| L[4 log Node-RED .20]
+    B -->|sola lettura LAN| E[EmonCMS .15]
+    B -->|testo ed evidenze| A
 ```
 
-```sh
-python3 -B server.py
-```
+Groq riceve domanda, data, timezone, calendario e catalogo. Non riceve snapshot
+MQTT, campioni EmonCMS, contenuto dei log, risultati o credenziali domestiche.
+La domanda può contenere dati personali scritti/dettati e viene elaborata nel
+cloud: vedere [Your Data in GroqCloud](https://console.groq.com/docs/your-data).
 
-Non servono pacchetti pip. Nessun servizio systemd è incluso o installato.
-L'accesso Android remoto richiede il consueto endpoint backend TLS raggiungibile;
-il gateway resta sullo stesso host del backend. `.20` è il candidato backend,
-con log locali in `/home/pi/AI_climate`; `.15` resta sorgente EmonCMS.
+Lo schema ammette solo `energy_metric`, `current_energy_metric`,
+`backend_log_day` ed `energy_comparison`, con oggetti chiusi e massimo sei
+operazioni. `validate_plan` ricontrolla tool, metriche, date, budget e riferimenti
+prima di qualsiasi lettura. Il testo finale è deterministico. Non esistono tool
+di scrittura, MQTT `/cmd`, shell o attuazione. Output invalido, refusal, timeout,
+redirect o dimensione eccessiva falliscono chiusi con HTTP 502 sanitizzato.
 
-## Evidenza ottenuta
+## Inventario reale
 
-- 58 test superati su Python 3.9.25 locale, comando dalla cartella del modulo:
-  `python3.9 -B -m unittest discover -s tests -q`.
-- Sette nuovi test coprono richiesta al provider e separazione credenziali,
-  output malformati/troncati, errori sanitizzati senza retry, schema/catalogo,
-  autenticazione, errore 502 senza letture e catena HTTP con tre fonti sintetiche.
-- Nella catena HTTP: FV corrente 1234 W, prelievo storico 24 kWh e previsione
-  da file temporaneo 18 kWh ritornano nel testo. Backend e gateway sono server
-  reali su porte loopback effimere; risposta Groq e client storico sono simulati.
-  Non è una valutazione della correttezza linguistica del modello.
-- `.20`, Python 3.9.2/aarch64: tutti i 28 file compilati e i 14 moduli principali
-  importati in memoria via SSH/stdin, bytecode disabilitato, senza installare file.
-- Da `.20`, TLS verificato verso `/openai/v1/models`: con User-Agent predefinito
-  urllib risposta 403; con `DomoPi-HouseAI/1.0` risposta JSON 401 Invalid API Key
-  (nessuna chiave inviata). Il gateway include quel User-Agent. Questo prova
-  raggiungibilità TLS, non autenticazione o disponibilità del modello.
+### `.20` — `domopi`, host candidato
 
-## Prova reale ancora da eseguire
+Verificato via SSH in sola lettura:
 
-Non è presente `GROQ_API_KEY` nell'ambiente di lavoro. È stato chiesto all'utente
-di indicare il nome della variabile o il percorso privato dove è configurata,
-senza inviare il segreto. Non cercare chiavi indiscriminatamente nei file domestici.
+- Raspberry Pi 4 Rev 1.5, ARM64, Debian 11, Python 3.9.2;
+- Node-RED e Mosquitto attivi; `mosquitto-clients` 2.0.11;
+- Node.js 22.23.2; log in `/home/pi/AI_climate` prodotti da Node-RED;
+- `/home/pi/.config/house-ai/groq.key`, `pi:pi`, modo `600`, 56 byte; il
+  contenuto non è stato stampato né committato;
+- TLS, chiave e inferenze Groq reali verificati senza SDK o pacchetti pip;
+- prove con codice trasmesso via stdin e directory temporanee. Nessun codice
+  persistente, servizio systemd, porta 8765/8766 o reverse proxy installato.
 
-Dopo configurazione, eseguire dal modulo:
+Le prove hanno letto i cinque topic pubblici `zara/interface/energy/.../stat`,
+i quattro log e il catalogo EmonCMS. Il test Android end-to-end è passato e i
+processi/tunnel temporanei sono stati chiusi. Numeri e limiti sono in
+[VERIFICA_GATEWAY_REALE_2026-09-13.md](VERIFICA_GATEWAY_REALE_2026-09-13.md).
 
-```sh
-python3 -B tools/evaluate_planner.py
-```
+### `.15` — `emonpi`, sorgente storica
 
-La suite contiene 16 domande italiane sintetiche e non legge sorgenti domestiche.
-Poi verificare attraverso `/v1/assistant/query` almeno stato corrente con snapshot
-reale dell'app, un giorno storico, un confronto e ciascuna delle quattro fonti log.
-Confrontare piano, periodo, unità, provenienza e copertura con gli strumenti diretti;
-non interpretare risposta HTTP 200 o copertura parziale come prova di tutti i dati.
-Verificare anche richieste ambigue/non supportate e indisponibilità del provider.
+Inventario comunicato dall'utente e verifica applicativa precedente:
 
-Restano aperti inferenza reale, autenticazione provider, percorso Android/TLS,
-accesso integrato alle sorgenti e prestazioni sul Raspberry. Nessun deployment,
-modifica Node-RED o comando ai dispositivi eseguito durante questo incremento.
+- Raspberry Pi 4 Rev 1.4, ARMv7 32 bit, Raspbian 10, Python 3.7.3;
+- EmonCMS con 256 feed; dati su volume separato con circa 45 GB liberi;
+- root 4,1 GB al 100%, 38 MB liberi; swap 58 MB esaurita;
+- nessun gateway, chiave Groq o componente House AI installato;
+- il backend accederà a `http://192.168.1.15/emoncms` con chiave read-only.
+
+Non servono modifiche a `.15`. L'SSH non interattivo non è disponibile, quindi
+le versioni dei suoi pacchetti non sono state ricontrollate in questa sessione.
+
+## Software versionato
+
+- `model_gateway.py`: Groq, prompt, calendario, schema strict, validazione e key file;
+- `server.py`, `assistant.py`, `energy_tools.py`, `energy_history.py`, `log_tools.py`:
+  API, orchestrazione, calcoli e accesso alle fonti;
+- `planner.py`: protocollo privato backend-gateway;
+- `tools/evaluate_planner.py`: 16 domande italiane, pausa predefinita 20 secondi;
+- `deploy/`: environment di esempio, unità systemd e verifica post-installazione;
+- `HouseAiLiveGatewayTest.kt`: test Android opt-in; non parte nei test ordinari.
+
+È sufficiente Python 3.9 standard library. Non servono pip, Docker, LiteLLM,
+Ollama o llama.cpp. Questi ultimi restano alternative per un futuro modello
+locale e richiederebbero nuove prove di RAM, temperatura, latenza e qualità.
+
+## Gestione delle chiavi
+
+I segreti sono separati: `GROQ_API_KEY`, `HOUSE_AI_PLANNER_TOKEN` interno,
+`HOUSE_AI_TOKEN` dell'app e chiave EmonCMS read-only. Non riusare valori. Generare
+i token House AI con almeno 32 byte casuali direttamente sul server, per esempio
+`openssl rand -base64 32`, e non passarli come argomenti di processo.
+
+Il gateway accetta `GROQ_API_KEY` oppure `GROQ_API_KEY_FILE`, mai entrambi. Il
+file deve essere regolare, non symlink, massimo 4096 byte e senza permessi per
+gruppo/altri. L'installazione proposta usa `/etc/house-ai/secrets/groq.key`,
+`house-ai:house-ai`, `0600`; gli environment file sono `root:house-ai`, `0640`. Ruotare la
+chiave sostituendo atomicamente il file, riavviando il gateway, verificando e
+poi revocando la precedente nella console.
+
+Se una chiave appare in Git, log, screenshot o chat, revocarla e sostituirla.
+Il gateway sanitizza gli errori provider; backend e gateway non registrano query
+o header. Non usare `systemctl show ... Environment` nelle verifiche condivise.
+
+## Replica su un Raspberry più potente
+
+Consigliati Debian/Raspberry Pi OS 64 bit supportato, Python 3.9+, almeno 2 GB
+RAM, storage libero, NTP e CA TLS funzionanti. Installare con utente dedicato:
+
+1. Clonare il repository e verificare branch/commit. Copiare il contenuto
+   versionato in `/opt/domopi-house-ai`, escludendo `.validation`, build e segreti.
+2. Creare utente e configurazione:
+
+   ```sh
+   sudo useradd --system --home /nonexistent --shell /usr/sbin/nologin house-ai
+   sudo install -d -o root -g house-ai -m 0750 /etc/house-ai /etc/house-ai/secrets
+   sudo install -o house-ai -g house-ai -m 0600 /dev/null /etc/house-ai/secrets/groq.key
+   sudo install -o root -g house-ai -m 0640 backend/house_ai/deploy/gateway.env.example /etc/house-ai/gateway.env
+   sudo install -o root -g house-ai -m 0640 backend/house_ai/deploy/backend.env.example /etc/house-ai/backend.env
+   ```
+
+   Inserire i segreti con editor privilegiato senza stamparli e sostituire ogni
+   `REPLACE_...`. Concedere al servizio sola lettura dei log tramite gruppo/ACL.
+3. Prima dei servizi:
+
+   ```sh
+   cd /opt/domopi-house-ai/backend/house_ai
+   python3 -B -m unittest discover -s tests -q
+   python3 -m py_compile *.py tools/*.py deploy/verify_install.py
+   ```
+
+4. Installare e verificare le unità:
+
+   ```sh
+   sudo install -o root -g root -m 0644 deploy/house-ai-gateway.service /etc/systemd/system/
+   sudo install -o root -g root -m 0644 deploy/house-ai-backend.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemd-analyze verify /etc/systemd/system/house-ai-gateway.service /etc/systemd/system/house-ai-backend.service
+   sudo systemctl enable --now house-ai-gateway.service house-ai-backend.service
+   ```
+
+5. Caricare privatamente `/etc/house-ai/backend.env` in una shell root ed
+   eseguire `python3 -B deploy/verify_install.py`.
+6. Eseguire `tools/evaluate_planner.py --interval-seconds 20`, poi una domanda
+   corrente, storica, confronto e ogni log, verificando piano, unità e copertura.
+7. Esporre all'app solo il backend mediante TLS. Il gateway resta loopback.
+   Senza TLS usare un tunnel temporaneo per la prova, non aprire 8765/8766.
+
+Le unità sono template versionati, non installati su `.20`. `ProtectHome=read-only`
+e `BindReadOnlyPaths=/home/pi/AI_climate` vanno adattati se i log cambiano percorso.
+
+## Aggiornamento, rollback e criteri di promozione
+
+Annotare il commit in uso e salvare environment/unità fuori dal repository.
+Preparare ogni aggiornamento in una nuova directory, testarlo, fermare i servizi,
+cambiare atomicamente il percorso e riavviare. Per rollback ripristinare directory
+o commit precedente; non ci sono migrazioni dati.
+
+Prima della promozione servono ancora suite linguistica indipendente, TLS verso
+l'app, prova su telefono, verifica rate-limit/errori e osservazione senza comandi.
+Un PASS prova il percorso consultivo indicato; non autorizza attuazioni né
+modifiche a Node-RED, MQTT o EmonCMS.
