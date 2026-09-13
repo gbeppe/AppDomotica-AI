@@ -8,6 +8,9 @@ seleziona il tool chiuso `current_air_conditioner`; un successivo «perché?» u
 un contesto limitato a dominio e focus, senza cronologia libera. Dettagli,
 contratti, replica e rollback in
 [`SMART_CLIMATIZZAZIONE.md`](SMART_CLIMATIZZAZIONE.md).
+La release `.20` `20260913-climate-reason`, revisione `ef1de8b`, ha superato 69
+test su Python 3.9.2. Le due domande reali via TLS e i record MQTT osservati sono
+in [`VERIFICA_CLIMATIZZAZIONE_2026-09-13.md`](VERIFICA_CLIMATIZZAZIONE_2026-09-13.md).
 
 ## Diagnostica stack Smart — 13 settembre 2026
 

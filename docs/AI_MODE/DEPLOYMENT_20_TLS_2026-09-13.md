@@ -4,10 +4,10 @@ Eseguito il 13 settembre 2026 con autorizzazione esplicita dell'utente.
 
 ## Stato installato
 
-- Release attiva: `/opt/domopi-house-ai/releases/20260913-stack-health`, con
-  `REVISION` uguale a `f2d50d8`;
+- Release attiva: `/opt/domopi-house-ai/releases/20260913-climate-reason`, con
+  `REVISION` uguale a `ef1de8b`;
 - release precedente disponibile per rollback:
-  `/opt/domopi-house-ai/releases/20260913-partial-extremes`, revisione `30ddc13`;
+  `/opt/domopi-house-ai/releases/20260913-stack-health`, revisione `f2d50d8`;
 - symlink attivo: `/opt/domopi-house-ai/current`;
 - utente non interattivo: `house-ai`;
 - `house-ai-gateway.service`: abilitato e attivo, `127.0.0.1:8766`;
@@ -47,6 +47,13 @@ dipendenze o credenziali. Ha superato 66 test su `.20` con Python 3.9.2 prima
 dell'attivazione. La verifica TLS ha osservato gateway, EmonCMS e log verdi,
 Groq inizialmente sconosciuto e poi verde dopo una richiesta reale. Evidenza in
 [`VERIFICA_DIAGNOSTICA_STACK_2026-09-13.md`](VERIFICA_DIAGNOSTICA_STACK_2026-09-13.md).
+
+La release `ef1de8b` aggiunge la consultazione read-only di stato e motivo del
+condizionatore senza nuove porte, dipendenze o credenziali. Ha superato il
+parsing sintattico e 69 test su `.20` con Python 3.9.2 prima dell'attivazione.
+Le domande reali «Perché il condizionatore è acceso?» e «Perché?» sono riuscite
+tramite TLS, gateway Groq e record MQTT retained. Evidenza in
+[`VERIFICA_CLIMATIZZAZIONE_2026-09-13.md`](VERIFICA_CLIMATIZZAZIONE_2026-09-13.md).
 
 L'app precompila questo URL e `HouseAiRepository` accetta HTTP soltanto per
 loopback di test. Il token non è incorporato nell'APK e resta in memoria nella

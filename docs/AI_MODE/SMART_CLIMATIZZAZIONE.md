@@ -78,6 +78,8 @@ setpoint invalido, contesto valido/non valido, piano chiuso e presentazione del
 motivo. La compilazione Android verifica il collegamento fra MQTT, repository e
 schermata Smart. La verifica reale e la revisione distribuita sono registrate
 nel documento di deployment dopo l'attivazione su `.20`.
+La prova eseguita è disponibile in
+[VERIFICA_CLIMATIZZAZIONE_2026-09-13.md](VERIFICA_CLIMATIZZAZIONE_2026-09-13.md).
 
 Il rollback non richiede modifiche a MQTT o Node-RED: si ripunta
 `/opt/domopi-house-ai/current` alla release backend precedente e si riavviano

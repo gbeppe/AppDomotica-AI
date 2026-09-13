@@ -23,6 +23,8 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
   fusione controllata di stato MQTT corrente e storico EmonCMS.
 - [Dominio climatizzazione](SMART_CLIMATIZZAZIONE.md): stato corrente,
   motivazione registrata e seguito contestuale «perché?».
+- [Verifica reale climatizzazione](VERIFICA_CLIMATIZZAZIONE_2026-09-13.md):
+  deployment `.20`, record MQTT e doppia domanda via TLS/Groq.
 
 ## Vincoli concordati
 
