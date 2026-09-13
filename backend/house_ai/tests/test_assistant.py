@@ -121,3 +121,45 @@ class AssistantTests(unittest.TestCase):
         ]:
             with self.assertRaises(ValueError):
                 execute(None, operation, current_snapshot=snapshot)
+
+    def test_current_air_conditioner_uses_recorded_reason_and_returns_context(self):
+        planner = Planner({"operations": [{"id": "clima", "tool": "current_air_conditioner"}]})
+        snapshot = {"schema": "house_ai.current_climate_input.v1", "connected": True,
+                    "observations": {
+                        "current_state": {"value": "ACCESO", "received_at_ms": 1789200000000,
+                            "retained": True, "source_topic": "zara/interface/stato_condizionatore/stato_attuale/stat"},
+                        "temperature_set_c": {"value": "25", "received_at_ms": 1789200000001,
+                            "retained": False, "source_topic": "zara/interface/stato_condizionatore/temperatura_impostata_c/stat"},
+                        "recorded_reason": {"value": "humidex sopra soglia", "received_at_ms": 1789200000002,
+                            "retained": False, "source_topic": "zara/interface/stato_condizionatore/motivo_logica/stat"}}}
+        result = ask(None, planner, "Perché il condizionatore è acceso?", date(2026, 9, 12),
+                     climate_snapshot=snapshot)
+        self.assertIn("Stato dichiarato: ACCESO", result["answer"])
+        self.assertIn("Motivo registrato dal controller: humidex sopra soglia", result["answer"])
+        self.assertIn("non una deduzione", result["answer"])
+        self.assertEqual(result["conversation_context"],
+                         {"domain": "climate", "focus": "air_conditioner"})
+
+    def test_bare_why_is_expanded_only_for_valid_air_conditioner_context(self):
+        plan = {"operations": [{"id": "clima", "tool": "current_air_conditioner"}]}
+        planner = Planner(plan)
+        ask(None, planner, "Perché?", date(2026, 9, 12),
+            conversation_context={"domain": "climate", "focus": "air_conditioner"})
+        self.assertEqual(planner.seen[0], "Perché il condizionatore è nello stato attuale?")
+        with self.assertRaises(ValueError):
+            ask(None, planner, "Perché?", date(2026, 9, 12),
+                conversation_context={"domain": "energy", "focus": "air_conditioner"})
+
+    def test_invalid_climate_snapshot_is_rejected(self):
+        operation = {"operations": [{"id": "clima", "tool": "current_air_conditioner"}]}
+        base = {"schema": "house_ai.current_climate_input.v1", "connected": True,
+                "observations": {}}
+        invalid = [
+            {**base, "observations": {"invented": {"value": "on", "received_at_ms": 1,
+                "retained": False, "source_topic": "zara/interface/stato_condizionatore/x/stat"}}},
+            {**base, "observations": {"current_state": {"value": "on", "received_at_ms": 1,
+                "retained": False, "source_topic": "zara/interface/stato_condizionatore/stato_attuale/cmd"}}},
+        ]
+        for snapshot in invalid:
+            with self.assertRaises(ValueError):
+                execute(None, operation, climate_snapshot=snapshot)

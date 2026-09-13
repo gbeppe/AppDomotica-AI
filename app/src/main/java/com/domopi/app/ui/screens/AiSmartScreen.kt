@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 fun AiSmartScreen(
     state: AiSmartState,
     energyState: EnergySmartState,
+    climateState: ClimateSmartState,
     connected: Boolean,
     onClassic: () -> Unit,
     onHistory: () -> Unit,
@@ -51,6 +52,7 @@ fun AiSmartScreen(
     var serviceUrl by rememberSaveable { mutableStateOf(HouseAiRepository.DEFAULT_BASE_URL) }
     var serviceToken by remember { mutableStateOf("") }
     var response by remember { mutableStateOf<EnergyAssistantAnswer?>(null) }
+    var assistantContext by remember { mutableStateOf<AssistantContext?>(null) }
     var dynamicError by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -171,8 +173,10 @@ fun AiSmartScreen(
                 response = null
                 try {
                     val started = System.currentTimeMillis()
-                    val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected)
+                    val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
+                        climateState, assistantContext)
                     response = result
+                    assistantContext = result.context ?: assistantContext
                     stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
                         statusCode = 200, latencyMs = System.currentTimeMillis() - started,
                         details = "Richiesta completata"))

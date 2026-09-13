@@ -64,6 +64,8 @@ class MqttManager {
     val aiSmartState: StateFlow<AiSmartState> = _aiSmartState
     private val _energySmartState = MutableStateFlow(EnergySmartState())
     val energySmartState: StateFlow<EnergySmartState> = _energySmartState
+    private val _climateSmartState = MutableStateFlow(ClimateSmartState())
+    val climateSmartState: StateFlow<ClimateSmartState> = _climateSmartState
 
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
@@ -171,6 +173,7 @@ class MqttManager {
                     isConnecting = false
                     _aiSmartState.value = AiSmartState()
                     _energySmartState.value = EnergySmartState()
+                    _climateSmartState.value = ClimateSmartState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     processMessageQueue()
@@ -189,6 +192,7 @@ class MqttManager {
                             receivedPrefix == digitalTwinPrefix.removeSuffix("/") + "/") {
                             _aiSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, sourceTopic = topic) }
                             _energySmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
+                            _climateSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                         }
                         handleIncomingMessage(topic ?: "", message?.toString() ?: "")
                     }
@@ -218,6 +222,7 @@ class MqttManager {
         if (clean.isNotEmpty() && digitalTwinPrefix != clean) {
             _aiSmartState.value = AiSmartState()
             _energySmartState.value = EnergySmartState()
+            _climateSmartState.value = ClimateSmartState()
             digitalTwinPrefix = clean
             if (mqttClient?.isConnected == true) {
                 subscribeToUnifiedTopics()

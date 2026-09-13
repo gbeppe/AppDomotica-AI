@@ -15,6 +15,13 @@ CURRENT_METRICS = {
     "solar_power_w", "home_consumption_w", "grid_power_w",
     "battery_power_w", "battery_soc_percent"
 }
+CLIMATE_METRICS = {"current_state", "air_mode", "temperature_set_c", "recorded_reason"}
+CLIMATE_TOPICS = {
+    "current_state": "zara/interface/stato_condizionatore/stato_attuale/stat",
+    "air_mode": "zara/interface/stato_condizionatore/modalita_aria/stat",
+    "temperature_set_c": "zara/interface/stato_condizionatore/temperatura_impostata_c/stat",
+    "recorded_reason": "zara/interface/stato_condizionatore/motivo_logica/stat",
+}
 DAILY_EXTREME_METRICS = {
     "grid_import_kwh", "grid_export_kwh", "home_consumption_kwh",
     "solar_production_kwh", "battery_charge_kwh", "battery_discharge_kwh"
@@ -24,7 +31,7 @@ DAILY_EXTREME_METRICS = {
 def catalog(path=CATALOG_PATH):
     sources = json.loads(path.read_text(encoding="utf-8"))["sources"]
     return {
-        "domain": "energy",
+        "domains": ["energy", "climate"],
         "tools": [{
             "name": "energy_metric",
             "description": "Calculate one validated historical energy metric",
@@ -33,6 +40,10 @@ def catalog(path=CATALOG_PATH):
                 "start": "YYYY-MM-DD Europe/Rome, inclusive",
                 "end": "YYYY-MM-DD Europe/Rome, exclusive"
             }
+        }, {
+            "name": "current_air_conditioner",
+            "description": "Read current declared air-conditioner state, mode, setpoint and recorded controller reason",
+            "parameters": {}
         }, {
             "name": "current_energy_metric",
             "description": "Read one current Digital Twin energy metric",
@@ -85,7 +96,8 @@ def validate_plan(plan, sources=None):
         tool = operation.get("tool")
         expected = ({"id", "tool", "metric", "start", "end"}
                     if tool == "energy_metric" else {"id", "tool", "metric", "start", "end", "extremum"}
-                    if tool == "energy_daily_extreme" else {"id", "tool", "metric"}
+                    if tool == "energy_daily_extreme" else {"id", "tool"}
+                    if tool == "current_air_conditioner" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
                     if tool == "energy_comparison" else None)
@@ -167,10 +179,33 @@ def validate_current_snapshot(snapshot):
     return clean
 
 
-def execute(client, plan, sources=None, current_snapshot=None, log_root=None):
+def validate_climate_snapshot(snapshot):
+    if snapshot is None:
+        return None
+    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema", "connected", "observations"}
+            or snapshot["schema"] != "house_ai.current_climate_input.v1"
+            or type(snapshot["connected"]) is not bool or not isinstance(snapshot["observations"], dict)
+            or set(snapshot["observations"]) - CLIMATE_METRICS):
+        raise ValueError("Invalid current climate snapshot")
+    clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
+    for metric, observation in snapshot["observations"].items():
+        if (not isinstance(observation, dict)
+                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or not isinstance(observation["value"], str) or not 1 <= len(observation["value"]) <= 500
+                or type(observation["received_at_ms"]) is not int
+                or not 0 <= observation["received_at_ms"] <= 253402214400000
+                or type(observation["retained"]) is not bool
+                or observation["source_topic"] != CLIMATE_TOPICS[metric]):
+            raise ValueError("Invalid climate observation")
+        clean["observations"][metric] = dict(observation)
+    return clean
+
+
+def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None, log_root=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     current = validate_current_snapshot(current_snapshot)
+    climate = validate_climate_snapshot(climate_snapshot)
     if checked["clarification"]:
         return checked
     results = []
@@ -219,6 +254,17 @@ def execute(client, plan, sources=None, current_snapshot=None, log_root=None):
                                 "observation": observation,
                                 "limitations": ["Timestamp di ricezione Android; età della misura sorgente ignota.",
                                                 "Retained non costituisce conferma fisica o di freschezza."]}})
+            continue
+        if operation["tool"] == "current_air_conditioner":
+            observations = climate["observations"] if climate else {}
+            results.append({"id": operation["id"], "result": {
+                "schema": "house_ai.current_air_conditioner.v1",
+                "status": "available" if observations else "missing",
+                "connected": climate["connected"] if climate else False,
+                "observations": observations,
+                "limitations": ["Stati dichiarati dal Digital Twin; non conferma fisica.",
+                    "Il motivo è testo registrato dal controller, non una deduzione del modello.",
+                    "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
             continue
         source = sources[operation["metric"]]
         sign = source.get("import_sign", source.get("direction_sign"))

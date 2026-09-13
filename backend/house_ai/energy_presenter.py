@@ -134,6 +134,38 @@ def describe(item):
         return (f"{label}: {number(value, 1)} {unit}, ultimo dato ricevuto il {received}." + qualifier +
                 (' Messaggio retained.' if obs['retained'] else '') +
                 ' Età della misura sorgente ignota; non è una conferma fisica in tempo reale.')
+    if schema == 'house_ai.current_air_conditioner.v1':
+        observations = r['observations']
+        if not observations:
+            return ('Condizionatore: stato e motivo non disponibili nel Digital Twin al momento '
+                    'della richiesta.')
+        labels = {
+            'current_state': 'Stato dichiarato',
+            'air_mode': 'Modalità aria',
+            'temperature_set_c': 'Temperatura impostata',
+            'recorded_reason': 'Motivo registrato dal controller',
+        }
+        parts = []
+        for metric in ('current_state', 'air_mode', 'temperature_set_c', 'recorded_reason'):
+            observation = observations.get(metric)
+            if observation is None:
+                continue
+            value = observation['value']
+            if metric == 'temperature_set_c':
+                try:
+                    value = number(float(value.replace(',', '.')), 1) + ' °C'
+                except (ValueError, AttributeError):
+                    value = 'non disponibile'
+            parts.append(f"{labels[metric]}: {value}.")
+        received = max(observation['received_at_ms'] for observation in observations.values())
+        received_text = datetime.fromtimestamp(received / 1000, ZoneInfo('Europe/Rome')).isoformat()
+        qualifiers = [f"Ultimo dato ricevuto il {received_text}."]
+        if not r['connected']:
+            qualifiers.append('Digital Twin disconnesso al momento della richiesta.')
+        if any(observation['retained'] for observation in observations.values()):
+            qualifiers.append('Uno o più messaggi sono retained.')
+        qualifiers.append('Il motivo è il testo pubblicato da Node-RED, non una deduzione né una conferma fisica; età delle misure sorgente ignota.')
+        return ' '.join(parts + qualifiers)
     if r['value'] is None:
         return f"{label}: dati insufficienti dal {r['period']['start']} al {r['period']['end_exclusive']} escluso."
     return (f"{label}: {number(r['value'])} {r['unit']} dal {r['period']['start']} "

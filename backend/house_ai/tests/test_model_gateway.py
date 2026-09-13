@@ -120,13 +120,16 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(checked_request(envelope())['calendar']['previous_week'],
                          {'start': '2026-08-31', 'end_exclusive': '2026-09-07'})
         variants = plan_schema()['properties']['operations']['items']['anyOf']
-        self.assertEqual(len(variants), 5)
+        self.assertEqual(len(variants), 6)
         for variant in variants:
             self.assertFalse(variant['additionalProperties'])
             self.assertEqual(set(variant['properties']), set(variant['required']))
         daily = next(v for v in variants
                      if v['properties']['tool'].get('enum') == ['energy_daily_extreme'])
         self.assertEqual(daily['properties']['extremum']['enum'], ['maximum', 'minimum'])
+        climate = next(v for v in variants
+                       if v['properties']['tool'].get('enum') == ['current_air_conditioner'])
+        self.assertEqual(set(climate['properties']), {'id', 'tool'})
 
     def test_http_authentication_and_malformed_request_never_call_provider(self):
         from unittest.mock import Mock

@@ -79,6 +79,23 @@ class HouseAiRepositoryTest {
         }
     }
 
+    @Test fun serializesClimateEvidenceAndKeepsBoundedConversationContext() {
+        val body = """{"schema":"house_ai.assistant_answer.v1","status":"partial","question":"Perché?","answer":"Motivo registrato dal controller: humidex alto.","generated_at":"2026-09-13T10:00:00+02:00","results":[{"id":"clima","result":{"schema":"house_ai.current_air_conditioner.v1","status":"available","connected":true,"observations":{"recorded_reason":{"value":"humidex alto","received_at_ms":1789200000000,"retained":true,"source_topic":"zara/interface/stato_condizionatore/motivo_logica/stat"}},"limitations":[]}}],"conversation_context":{"domain":"climate","focus":"air_conditioner"},"limitations":[]}"""
+        val climate = ClimateSmartState().observe("stato_condizionatore/motivo_logica/stat",
+            "humidex alto", 1789200000000, true,
+            "zara/interface/stato_condizionatore/motivo_logica/stat")
+        val request = exchange(body = body) { url ->
+            val result = runBlocking { HouseAiRepository().assistant(url, "test-token", "Perché?",
+                EnergySmartState(), true, climate, AssistantContext("climate", "air_conditioner")) }
+            assertEquals(AssistantContext("climate", "air_conditioner"), result.context)
+            assertTrue(result.evidence.single().contains("motivo_logica/stat"))
+        }
+        val payload = JSONObject(request.substringAfter("\n\n"))
+        assertEquals("humidex alto", payload.getJSONObject("current_climate")
+            .getJSONObject("observations").getJSONObject("recorded_reason").getString("value"))
+        assertEquals("air_conditioner", payload.getJSONObject("conversation_context").getString("focus"))
+    }
+
     @Test fun remoteBackendRequiresTlsWhileLoopbackRemainsAvailableForTests() {
         var rejected = false
         try {

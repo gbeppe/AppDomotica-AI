@@ -9,6 +9,7 @@ data class EnergyAssistantAnswer(
     val question: String,
     val generatedAt: String,
     val evidence: List<String>,
+    val context: AssistantContext? = null,
 ) {
     val statusLabel: String get() = when (status) {
         "complete" -> "Periodo coperto"
@@ -51,6 +52,15 @@ data class EnergyAssistantAnswer(
                             detail += "Retained: ${if (observation.getBoolean("retained")) "sì" else "no"}"
                         }
                     }
+                    "house_ai.current_air_conditioner.v1" -> {
+                        detail += "Digital Twin · stato condizionatore dal registry"
+                        detail += "Motivazione registrata da Node-RED; non deduzione causale"
+                        val observations = result.getJSONObject("observations")
+                        val topics = observations.keys().asSequence().map {
+                            observations.getJSONObject(it).getString("source_topic")
+                        }.toList().sorted()
+                        detail += topics
+                    }
                     "house_ai.backend_log_evidence.v1" -> {
                         detail += "Node-RED · ${result.getString("file")} · ${result.getString("day")}"
                         detail += "Tipo: ${result.getString("evidence_type")} · record trovati: ${result.getInt("matched_records")}"
@@ -71,7 +81,14 @@ data class EnergyAssistantAnswer(
             }
             val limits = body.optJSONArray("limitations")
             for (i in 0 until (limits?.length() ?: 0)) sources += limits!!.getString(i)
-            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources)
+            val context = body.optJSONObject("conversation_context")?.let {
+                val parsed = AssistantContext(it.getString("domain"), it.getString("focus"))
+                require(parsed == AssistantContext("climate", "air_conditioner"))
+                parsed
+            }
+            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context)
         }
     }
 }
+
+data class AssistantContext(val domain: String, val focus: String)

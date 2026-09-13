@@ -21,6 +21,8 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
   strumenti energia, validazione dei piani e confini di sicurezza.
 - [Fase energia Digital Twin e Android](FASE_ENERGIA_DIGITAL_TWIN_ANDROID.md):
   fusione controllata di stato MQTT corrente e storico EmonCMS.
+- [Dominio climatizzazione](SMART_CLIMATIZZAZIONE.md): stato corrente,
+  motivazione registrata e seguito contestuale «perché?».
 
 ## Vincoli concordati
 

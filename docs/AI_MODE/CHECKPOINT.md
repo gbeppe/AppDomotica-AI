@@ -1,5 +1,14 @@
 # Checkpoint — 12 settembre 2026
 
+## Primo incremento climatizzazione — 13 settembre 2026
+
+Implementato il percorso read-only dal registry MQTT alla risposta deterministica
+per stato, modalità, setpoint e motivo registrato del condizionatore. Il gateway
+seleziona il tool chiuso `current_air_conditioner`; un successivo «perché?» usa
+un contesto limitato a dominio e focus, senza cronologia libera. Dettagli,
+contratti, replica e rollback in
+[`SMART_CLIMATIZZAZIONE.md`](SMART_CLIMATIZZAZIONE.md).
+
 ## Diagnostica stack Smart — 13 settembre 2026
 
 Implementata l'icona di stato con scheda gerarchica e health autenticato per

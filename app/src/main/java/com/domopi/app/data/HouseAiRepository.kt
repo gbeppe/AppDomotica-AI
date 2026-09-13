@@ -124,6 +124,8 @@ class HouseAiRepository {
         question: String,
         energy: EnergySmartState,
         connected: Boolean,
+        climate: ClimateSmartState = ClimateSmartState(),
+        context: AssistantContext? = null,
     ): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
         val base = validatedBase(baseUrl)
         require(token.isNotBlank() && question.isNotBlank() && question.length <= 1000)
@@ -141,7 +143,17 @@ class HouseAiRepository {
                 .put("schema", "house_ai.current_energy_input.v1")
                 .put("connected", connected)
                 .put("observations", observations))
-            .toString()
+        val climateObservations = JSONObject()
+        climate.validObservations().forEach { (metric, observation) ->
+            climateObservations.put(metric, JSONObject().put("value", observation.value)
+                .put("received_at_ms", observation.receivedAtMs).put("retained", observation.retained)
+                .put("source_topic", observation.sourceTopic))
+        }
+        body.put("current_climate", JSONObject().put("schema", "house_ai.current_climate_input.v1")
+            .put("connected", connected).put("observations", climateObservations))
+        context?.let { body.put("conversation_context", JSONObject()
+            .put("domain", it.domain).put("focus", it.focus)) }
+        val requestBody = body.toString()
         val connection = URL("${base.toExternalForm()}/v1/assistant/query")
             .openConnection() as HttpURLConnection
         try {
@@ -152,7 +164,7 @@ class HouseAiRepository {
             connection.readTimeout = 120000
             connection.setRequestProperty("Authorization", "Bearer $token")
             connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+            connection.outputStream.use { it.write(requestBody.toByteArray(Charsets.UTF_8)) }
             checkStatus(connection.responseCode)
             EnergyAssistantAnswer.fromJson(JSONObject(readBounded(connection)))
         } finally {
