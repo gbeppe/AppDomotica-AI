@@ -66,6 +66,8 @@ class MqttManager {
     val energySmartState: StateFlow<EnergySmartState> = _energySmartState
     private val _climateSmartState = MutableStateFlow(ClimateSmartState())
     val climateSmartState: StateFlow<ClimateSmartState> = _climateSmartState
+    private val _smartControlState = MutableStateFlow(SmartControlState())
+    val smartControlState: StateFlow<SmartControlState> = _smartControlState
 
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
@@ -174,6 +176,7 @@ class MqttManager {
                     _aiSmartState.value = AiSmartState()
                     _energySmartState.value = EnergySmartState()
                     _climateSmartState.value = ClimateSmartState()
+                    _smartControlState.value = SmartControlState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     processMessageQueue()
@@ -193,6 +196,7 @@ class MqttManager {
                             _aiSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, sourceTopic = topic) }
                             _energySmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                             _climateSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
+                            _smartControlState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                         }
                         handleIncomingMessage(topic ?: "", message?.toString() ?: "")
                     }
@@ -223,6 +227,7 @@ class MqttManager {
             _aiSmartState.value = AiSmartState()
             _energySmartState.value = EnergySmartState()
             _climateSmartState.value = ClimateSmartState()
+            _smartControlState.value = SmartControlState()
             digitalTwinPrefix = clean
             if (mqttClient?.isConnected == true) {
                 subscribeToUnifiedTopics()

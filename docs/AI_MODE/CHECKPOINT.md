@@ -1,5 +1,14 @@
 # Checkpoint — 12 settembre 2026
 
+## Preparazione controlli Clima e Impianti — 13 settembre 2026
+
+Catalogati e rappresentati in Smart tutti i 23 controlli già presenti nelle
+schede dashboard Clima e Impianti: 9 e 14 rispettivamente. La nuova schermata
+legge esclusivamente i topic `/stat`; non riceve `MqttManager`, non contiene
+callback operative e lascia sconosciuti gli stati non ricevuti. Strategia,
+copertura e requisiti per una futura attivazione in
+[`PREPARAZIONE_CONTROLLI_SMART.md`](PREPARAZIONE_CONTROLLI_SMART.md).
+
 ## Primo incremento climatizzazione — 13 settembre 2026
 
 Implementato il percorso read-only dal registry MQTT alla risposta deterministica

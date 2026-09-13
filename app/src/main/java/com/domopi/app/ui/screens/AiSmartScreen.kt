@@ -42,6 +42,7 @@ fun AiSmartScreen(
     connected: Boolean,
     onClassic: () -> Unit,
     onHistory: () -> Unit,
+    onControls: () -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -146,6 +147,7 @@ fun AiSmartScreen(
         onQuestionChange = { question = it },
         onClassic = onClassic,
         onHistory = onHistory,
+        onControls = onControls,
         voiceNotice = voiceNotice,
         speechReady = speechReady,
         dynamicMode = true,
@@ -236,6 +238,7 @@ internal fun AiSmartContent(
     onQuestionChange: (String) -> Unit,
     onClassic: () -> Unit,
     onHistory: () -> Unit,
+    onControls: () -> Unit = {},
     voiceNotice: String? = null,
     speechReady: Boolean = false,
     onDictate: () -> Unit = {},
@@ -300,7 +303,7 @@ internal fun AiSmartContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(if (dynamicMode) "Energia della casa" else "La casa, dai dati disponibili", style = MaterialTheme.typography.headlineSmall)
+            Text(if (dynamicMode) "Casa Smart" else "La casa, dai dati disponibili", style = MaterialTheme.typography.headlineSmall)
             Text(if (connected) "Collegamento attivo · età delle misure ignota" else "Collegamento assente · dati non aggiornabili",
                 color = if (connected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
             Card(Modifier.fillMaxWidth()) {
@@ -311,7 +314,7 @@ internal fun AiSmartContent(
                 }
             }
             Text("Chiedi alla casa", style = MaterialTheme.typography.titleLarge)
-            Text(if (dynamicMode) "Puoi fare domande libere sul fotovoltaico, i consumi, la rete e la Powerwall. Lo stato corrente arriva dal Digital Twin; lo storico da EmonCMS; previsioni e decisioni registrate dai log Node-RED."
+            Text(if (dynamicMode) "Puoi fare domande libere su energia e climatizzazione. Lo stato corrente arriva dal Digital Twin; lo storico da EmonCMS; previsioni e decisioni registrate dai log Node-RED."
                  else "Puoi chiedere quante luci risultano accese e le temperature di living e acqua sanitaria ACS, anche insieme.")
             if (dynamicMode) {
                 OutlinedTextField(serviceUrl, onServiceUrlChange,
@@ -401,10 +404,13 @@ internal fun AiSmartContent(
                 }
             }
             HorizontalDivider()
-            Text(if (dynamicMode) "Consultazione energetica di sola lettura. Il pianificatore sceglie strumenti validati; non può inviare comandi ai dispositivi."
+            Text(if (dynamicMode) "Consultazione Smart di sola lettura. Il pianificatore sceglie strumenti validati; non può inviare comandi ai dispositivi."
                  else "Consultazione di luci, living e ACS. Le risposte sono preparate dai dati mappati; le altre richieste non sono ancora disponibili.",
                 style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = onHistory, modifier = Modifier.fillMaxWidth()) { Text("Storico e motivazioni") }
+            if (dynamicMode) OutlinedButton(onClick = onControls, modifier = Modifier.fillMaxWidth()) {
+                Text("Controlli Clima e Impianti · sola lettura")
+            }
             TextButton(onClick = onClassic, modifier = Modifier.fillMaxWidth()) { Text("Apri app classica") }
         }
     }
