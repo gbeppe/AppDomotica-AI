@@ -15,6 +15,8 @@ Decisione successiva: EmonCMS resta utilizzabile anche nei giorni incompleti. La
 risposta espone sia il massimo fra giorni al 100%, sia il massimo dell'energia
 osservata includendo i parziali con la relativa copertura dati. Non chiama la
 copertura “certezza” e segnala quando il massimo assoluto non è dimostrabile.
+Questa modalità è attiva su `.20` nella release
+`20260913-partial-extremes`, revisione `30ddc13`; la prova TLS reale è riuscita.
 
 ## Dove riprendere
 

@@ -4,10 +4,10 @@ Eseguito il 13 settembre 2026 con autorizzazione esplicita dell'utente.
 
 ## Stato installato
 
-- Release attiva: `/opt/domopi-house-ai/releases/20260913-daily-extreme`, con
-  `REVISION` uguale a `16e47fa`;
+- Release attiva: `/opt/domopi-house-ai/releases/20260913-partial-extremes`, con
+  `REVISION` uguale a `30ddc13`;
 - release precedente disponibile per rollback:
-  `/opt/domopi-house-ai/releases/20260913-tls`, revisione `3c04bd1`;
+  `/opt/domopi-house-ai/releases/20260913-daily-extreme`, revisione `16e47fa`;
 - symlink attivo: `/opt/domopi-house-ai/current`;
 - utente non interattivo: `house-ai`;
 - `house-ai-gateway.service`: abilitato e attivo, `127.0.0.1:8766`;
@@ -36,6 +36,11 @@ riavvio, health autenticato, servizi e quattro log allowlisted risultavano
 disponibili. La domanda originale è riuscita attraverso il TLS dell'app; dati e
 limiti sono in
 [`VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md`](VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md).
+
+La release successiva `30ddc13` mantiene nel secondo confronto anche i valori
+dei giorni parziali come energia osservata. Ha superato compilazione e 64 test su
+Python 3.9.2 prima dell'attivazione; health e prova TLS reale sono riusciti senza
+modificare servizi, porte o credenziali.
 
 L'app precompila questo URL e `HouseAiRepository` accetta HTTP soltanto per
 loopback di test. Il token non è incorporato nell'APK e resta in memoria nella

@@ -78,5 +78,21 @@ commit `16e47fa` o successivo, eseguire compilazione e test con il Python del
 server, quindi spostare il symlink `current` e riavviare gateway e backend.
 
 Per rollback su `.20`, ripuntare `current` a
-`/opt/domopi-house-ai/releases/20260913-tls` e riavviare entrambi i servizi. Non
+`/opt/domopi-house-ai/releases/20260913-daily-extreme` e riavviare entrambi i servizi. Non
 occorre modificare Tailscale, API key Groq, token applicativo o chiave EmonCMS.
+
+## Verifica della presentazione con giorni parziali
+
+La revisione `30ddc13`, release `20260913-partial-extremes`, ha superato 64 test
+su `.20` con Python 3.9.2. La domanda originale, ripetuta attraverso l'endpoint
+TLS dell'app, ha restituito HTTP 200 e:
+
+- massimo fra i giorni completi: 11 settembre, 3,75 kWh, copertura 100%;
+- massimo osservato usando tutti i dati disponibili: 11 settembre, 3,75 kWh,
+  copertura 100%;
+- 19 giorni con copertura incompleta, comunque considerati per la loro energia
+  osservata;
+- massimo assoluto dichiarato non determinabile per la presenza dei periodi
+  mancanti.
+
+Il rollback immediato è la release `20260913-daily-extreme`, revisione `16e47fa`.
