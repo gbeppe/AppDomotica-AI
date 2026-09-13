@@ -78,8 +78,9 @@ class AssistantTests(unittest.TestCase):
         result = ask(Client(), Planner({"operations": [operation]}),
                      "Quale giorno ha avuto il maggior prelievo?", date(2026, 9, 12))
         self.assertEqual(result["status"], "complete")
-        self.assertIn("giorno con il prelievo dalla rete maggiore", result["answer"].lower())
-        self.assertIn("Giorni confrontati con copertura completa: 3", result["answer"])
+        self.assertIn("tra i giorni con copertura completa", result["answer"].lower())
+        self.assertIn("Giorni completi confrontati: 3", result["answer"])
+        self.assertIn("Considerando tutti i dati EmonCMS disponibili", result["answer"])
         for invalid in ({**operation, "extremum": "largest"},
                         {**operation, "metric": "soc_mean_percent"},
                         {**operation, "extra": True}):

@@ -115,3 +115,27 @@ class EnergyTests(unittest.TestCase):
         self.assertEqual(result['eligible_days'], 2)
         self.assertEqual(result['excluded_days'][0]['day'], '2026-09-02')
         self.assertEqual(result['winner']['day'], '2026-09-01')
+        self.assertEqual(result['observed_winner']['day'], '2026-09-01')
+        self.assertIsNone(result['absolute_winner'])
+
+    def test_partial_observations_remain_available_as_lower_bounds(self):
+        day_lo, day_hi = period_bounds('2026-09-02', '2026-09-03')
+        class PartialPeak:
+            def history(self, _feed, start, end, interval):
+                rows = []
+                for timestamp in range(start, end + 1, interval):
+                    if day_lo // 1000 < timestamp < day_hi // 1000:
+                        if timestamp >= day_lo // 1000 + 12 * 3600:
+                            continue
+                        value = 4000
+                    else:
+                        value = 1000
+                    rows.append([timestamp * 1000, value])
+                return rows
+        result = daily_extreme_report(PartialPeak(), '2026-09-01', '2026-09-04',
+                                      'grid_import_kwh', 305, 'W', 1, 30,
+                                      'maximum', now_ms=period_bounds('2026-09-04', '2026-09-05')[0])
+        self.assertEqual(result['winner']['day'], '2026-09-01')
+        self.assertEqual(result['observed_winner']['day'], '2026-09-02')
+        self.assertAlmostEqual(result['observed_winner']['coverage_ratio'], .5, places=2)
+        self.assertEqual(result['absolute_winner']['day'], '2026-09-02')

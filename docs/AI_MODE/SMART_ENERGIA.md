@@ -25,7 +25,9 @@ in TLS privato tramite Tailscale Serve.
 - Ricerca deterministica del giorno con massimo o minimo totale per una metrica
   energetica in un intervallo fino a 366 giorni. Sono confrontati soltanto giorni
   di calendario `Europe/Rome` con copertura completa; quelli incompleti vengono
-  contati ed esclusi. A parità viene scelto il primo giorno cronologico.
+  usati anche in un secondo massimo basato sull'energia osservata e sulla relativa
+  copertura. Un valore parziale è un limite minimo, non un totale stimato né una
+  percentuale di certezza. A parità viene scelto il primo giorno cronologico.
 - Quattro log Node-RED, con estrazione giornaliera e file/riga. Testo con ultimo
   dato restituito: previsione FV, medie orarie/EMA, riserva e budget SHADOW,
   motivo AC registrato. I record grezzi sono nelle evidenze API; Android mostra

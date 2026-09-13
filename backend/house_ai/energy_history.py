@@ -165,7 +165,7 @@ def daily_extreme_report(client, start, end, metric, feed_id, unit,
         by_day.setdefault(key, []).append(row)
         if (local.hour, local.minute, local.second, local.microsecond) == (0, 0, 0, 0):
             by_day.setdefault(key - timedelta(days=1), []).append(row)
-    candidates, excluded = [], []
+    candidates, observed, excluded = [], [], []
     day = date.fromisoformat(start)
     last = date.fromisoformat(end)
     while day < last:
@@ -173,29 +173,43 @@ def daily_extreme_report(client, start, end, metric, feed_id, unit,
         day_lo, day_hi = period_bounds(day.isoformat(), next_day.isoformat())
         result = calculate(by_day.get(day, []), day_lo, day_hi,
                            metric, interval * 1000, import_sign)
+        summary = {'day': day.isoformat(), 'value': result['value'],
+                   'coverage_ratio': result['coverage_ratio'], 'status': result['status']}
+        if result['value'] is not None:
+            observed.append(summary)
         if result['status'] == 'complete':
-            candidates.append({'day': day.isoformat(), 'value': result['value'],
-                               'coverage_ratio': result['coverage_ratio']})
+            candidates.append(summary)
         else:
-            excluded.append({'day': day.isoformat(),
-                             'coverage_ratio': result['coverage_ratio'],
-                             'status': result['status']})
+            excluded.append(summary)
         day = next_day
     winner = None
     if candidates:
         ordered = sorted(candidates, key=lambda item: item['day'])
         winner = (max if extremum == 'maximum' else min)(ordered,
                                                          key=lambda item: item['value'])
+    observed_winner = None
+    if observed:
+        ordered = sorted(observed, key=lambda item: item['day'])
+        observed_winner = (max if extremum == 'maximum' else min)(
+            ordered, key=lambda item: item['value'])
+    absolute_winner = winner if not excluded else None
+    if (extremum == 'maximum' and len(excluded) == 1
+            and excluded[0]['value'] is not None
+            and (winner is None or excluded[0]['value'] > winner['value'])):
+        # Its observed lower bound already exceeds every complete day and there
+        # are no other incomplete competitors. The date is proven, not its total.
+        absolute_winner = excluded[0]
     status = ('insufficient_data' if winner is None else
               'complete' if not excluded else 'partial')
     return {'schema': 'house_ai.energy_daily_extreme.v1', 'status': status,
             'metric': metric, 'extremum': extremum,
             'period': {'start': start, 'end_exclusive': end},
-            'winner': winner, 'unit': 'kWh',
+            'winner': winner, 'observed_winner': observed_winner,
+            'absolute_winner': absolute_winner, 'unit': 'kWh',
             'eligible_days': len(candidates), 'excluded_days': excluded,
             'source': {'feed_id': feed_id, 'unit': unit, 'import_sign': import_sign,
                        'interval_seconds': interval, 'requests': requests},
             'limitations': ['Sono confrontati solo giorni di calendario Europe/Rome con copertura completa.',
-                            'I giorni incompleti sono esclusi, non stimati.',
+                            'I valori parziali sono energia osservata e costituiscono limiti minimi, non totali stimati.',
                             'In caso di parità viene restituito il primo giorno cronologico.',
                             'Stima da campioni EmonCMS, non misura fiscale.']}

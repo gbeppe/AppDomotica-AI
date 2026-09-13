@@ -88,8 +88,10 @@ Lo schema ammette solo `energy_metric`, `energy_daily_extreme`,
 `current_energy_metric`, `backend_log_day` ed `energy_comparison`, con oggetti
 chiusi e massimo sei operazioni. `energy_daily_extreme` legge una metrica storica
 una sola volta, la integra per giorni di calendario `Europe/Rome`, esclude quelli
-senza copertura completa e seleziona massimo o minimo; a parità conserva il primo
-giorno cronologico. `validate_plan` ricontrolla tool, metriche, date, modalità,
+senza copertura completa dal confronto omogeneo e seleziona massimo o minimo; i
+valori parziali restano disponibili come energia osservata con la propria
+copertura. A parità conserva il primo giorno cronologico. `validate_plan`
+ricontrolla tool, metriche, date, modalità,
 budget e riferimenti prima di qualsiasi lettura. Il testo finale è deterministico. Non esistono tool
 di scrittura, MQTT `/cmd`, shell o attuazione. Output invalido, refusal, timeout,
 redirect o dimensione eccessiva falliscono chiusi con HTTP 502 sanitizzato.

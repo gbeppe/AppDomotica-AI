@@ -12,6 +12,13 @@ risultato. Il backend legge il feed EmonCMS validato una volta, assegna i campio
 ai giorni di calendario `Europe/Rome`, integra il solo verso richiesto e confronta
 esclusivamente i giorni con copertura completa.
 
+La presentazione successiva usa anche tutti i valori parziali EmonCMS: mostra
+separatamente il massimo fra giorni completi e il massimo dell'energia osservata
+fra tutti i giorni. Per un giorno incompleto il valore è un limite minimo e la
+percentuale è chiamata **copertura dati**, mai certezza. Senza un limite fisico o
+un modello validato per gli intervalli mancanti, il massimo assoluto viene
+dichiarato indeterminato quando altri giorni parziali potrebbero superarlo.
+
 Questa soluzione evita circa 184 operazioni nel piano e mantiene invariati il
 limite di sei operazioni, il protocollo read-only, le credenziali e il confine fra
 planner probabilistico e calcoli deterministici. Non sono stati installati nuovi
@@ -56,10 +63,11 @@ Risultato osservato, senza riportare credenziali o campioni grezzi:
 - massimo fra i giorni eleggibili: **11 settembre 2026, 3,75 kWh**;
 - 53 richieste EmonCMS a blocchi, intervallo sorgente 30 secondi.
 
-`partial` non indica un errore del calcolo: segnala che il risultato vale per i
-165 giorni completi e che 19 giorni non hanno partecipato alla selezione. I
-giorni incompleti non vengono colmati o stimati; uno di essi potrebbe quindi
-avere avuto un valore reale superiore. Il valore è una stima operativa dai
+`partial` non indica un errore del calcolo: segnala che il primo confronto vale
+per i 165 giorni completi. I 19 giorni incompleti partecipano al secondo confronto
+con la sola energia effettivamente osservata e la propria copertura; i buchi non
+vengono colmati o stimati. Uno di essi potrebbe quindi avere avuto un valore reale
+superiore. Il valore è una stima operativa dai
 campioni del feed 305, non una misura fiscale del contatore.
 
 ## Replica e rollback

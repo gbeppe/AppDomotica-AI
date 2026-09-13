@@ -11,6 +11,11 @@ Groq ed EmonCMS: 165 giorni completi confrontati, 19 esclusi, massimo eleggibile
 [`VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md`](VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md)
 per limiti, replica e rollback.
 
+Decisione successiva: EmonCMS resta utilizzabile anche nei giorni incompleti. La
+risposta espone sia il massimo fra giorni al 100%, sia il massimo dell'energia
+osservata includendo i parziali con la relativa copertura dati. Non chiama la
+copertura “certezza” e segnala quando il massimo assoluto non è dimostrabile.
+
 ## Dove riprendere
 
 Worktree: `/home/giuseppe/.cache/Google/AndroidStudio2026.1.4/aia/agents/DomoPiAndroidApp-ai-mode`

@@ -90,14 +90,28 @@ def describe(item):
     if schema == 'house_ai.energy_daily_extreme.v1':
         label = LABELS.get(r['metric'], item.get('id', 'Dato'))
         if r['winner'] is None:
-            return (f"{label}: nessun giorno con copertura completa dal {r['period']['start']} "
+            text = (f"{label}: nessun giorno con copertura completa dal {r['period']['start']} "
                     f"al {r['period']['end_exclusive']} escluso.")
-        kind = 'maggiore' if r['extremum'] == 'maximum' else 'minore'
-        text = (f"Il giorno con il {label.lower()} {kind} è stato il "
-                f"{r['winner']['day']}: {number(r['winner']['value'])} {r['unit']}. "
-                f"Giorni confrontati con copertura completa: {r['eligible_days']}.")
+        else:
+            kind = 'maggiore' if r['extremum'] == 'maximum' else 'minore'
+            text = (f"Tra i giorni con copertura completa, il {label.lower()} {kind} è stato il "
+                    f"{r['winner']['day']}: {number(r['winner']['value'])} {r['unit']}, "
+                    f"copertura dati 100%. Giorni completi confrontati: {r['eligible_days']}.")
+        observed = r['observed_winner']
+        if observed is not None:
+            text += (f" Considerando tutti i dati EmonCMS disponibili, il {label.lower()} "
+                     f"osservato {('maggiore' if r['extremum'] == 'maximum' else 'minore')} "
+                     f"è stato il {observed['day']}: "
+                     f"{'almeno ' if observed['status'] != 'complete' else ''}"
+                     f"{number(observed['value'])} {r['unit']}, copertura dati "
+                     f"{number(observed['coverage_ratio'] * 100, 1)}%.")
+        if r['absolute_winner'] is None and r['excluded_days']:
+            text += (' Il massimo assoluto non è determinabile: nei periodi mancanti '
+                     'potrebbe esserci ulteriore energia non registrata.')
+        elif r['absolute_winner'] is not None:
+            text += f" Il giorno del valore assoluto è determinato: {r['absolute_winner']['day']}."
         if r['excluded_days']:
-            text += f" Giorni incompleti esclusi: {len(r['excluded_days'])}."
+            text += f" Giorni con copertura incompleta: {len(r['excluded_days'])}."
         return text + ' Stima da campioni EmonCMS, non misura fiscale.'
     label = LABELS.get(item.get('metric'), item.get('id', 'Dato'))
     if schema == 'house_ai.source_error.v1':
