@@ -39,6 +39,10 @@ in TLS privato tramite Tailscale Serve.
 - Trascrizione italiana modificabile e invio esplicito; sintesi italiana offline
   se disponibile. Le risposte lunghe sono suddivise senza alterarne il testo.
 - Ritorno alla dashboard classica e al rapporto giornaliero precedente.
+- Icona diagnostica dello stack nella barra Smart, con dettaglio di percorso TLS,
+  backend, Digital Twin, gateway, Groq, EmonCMS e log. I controlli e il log in
+  memoria esistono soltanto durante la schermata Smart; vedere
+  [DIAGNOSTICA_STACK_SMART.md](DIAGNOSTICA_STACK_SMART.md).
 
 ## Provenienza e limiti
 

@@ -2,6 +2,8 @@
 import hmac
 import json
 import os
+import stat
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -11,6 +13,54 @@ from energy_query import answer as energy_answer
 from service import report
 from assistant import ask as assistant_ask
 from planner import HttpJsonPlanner
+from log_tools import SOURCES
+
+
+def detailed_health(client, planner, log_root):
+    components = [{'id': 'backend', 'label': 'Backend House AI (.20)',
+                   'status': 'online', 'detail': 'API read-only operativa'}]
+    started = time.monotonic()
+    try:
+        gateway = planner.health() if planner is not None else None
+        components.append({'id': 'gateway', 'label': 'Gateway modello (.20)',
+                           'status': 'online' if gateway else 'offline',
+                           'latency_ms': int((time.monotonic() - started) * 1000),
+                           'detail': 'Processo locale raggiungibile' if gateway else 'Non configurato'})
+        provider_status = gateway['provider_status'] if gateway else 'unknown'
+        components.append({'id': 'groq', 'label': 'Groq',
+                           'status': provider_status,
+                           'last_checked_ms': gateway.get('provider_last_checked_ms') if gateway else None,
+                           'detail': {'online': 'Ultima richiesta riuscita',
+                                      'offline': 'Ultima richiesta non riuscita',
+                                      'unknown': 'Configurato, non ancora verificato dal riavvio'}[provider_status]})
+    except RuntimeError:
+        components.extend([
+            {'id': 'gateway', 'label': 'Gateway modello (.20)', 'status': 'offline',
+             'latency_ms': int((time.monotonic() - started) * 1000), 'detail': 'Non raggiungibile'},
+            {'id': 'groq', 'label': 'Groq', 'status': 'unknown',
+             'detail': 'Gateway non raggiungibile'}])
+    started = time.monotonic()
+    try:
+        feeds = client.catalog()
+        components.append({'id': 'emoncms', 'label': 'Storico EmonCMS (.15)',
+                           'status': 'online', 'latency_ms': int((time.monotonic() - started) * 1000),
+                           'detail': '{} feed leggibili'.format(len(feeds))})
+    except RuntimeError:
+        components.append({'id': 'emoncms', 'label': 'Storico EmonCMS (.15)',
+                           'status': 'offline', 'latency_ms': int((time.monotonic() - started) * 1000),
+                           'detail': 'Sorgente non raggiungibile'})
+    missing = []
+    for filename, _key, _kind in SOURCES.values():
+        try:
+            if not stat.S_ISREG((Path(log_root) / filename).lstat().st_mode):
+                missing.append(filename)
+        except (OSError, TypeError):
+            missing.append(filename)
+    components.append({'id': 'logs', 'label': 'Log Node-RED (.20)',
+                       'status': 'online' if not missing else 'offline',
+                       'detail': '4 file leggibili' if not missing else '{} file non disponibili'.format(len(missing))})
+    return {'schema': 'house_ai.stack_health.v1', 'mode': 'read_only',
+            'checked_at_ms': int(time.time() * 1000), 'components': components}
 
 
 def handler(client, token, log_path, planner=None, log_root=None):
@@ -42,6 +92,8 @@ def handler(client, token, log_path, planner=None, log_root=None):
                     self.send_json(200, {"status": "ok", "mode": "read_only",
                                          "planner_configured": planner is not None,
                                          "log_root_configured": log_root is not None})
+                elif url.path == "/v1/health/details":
+                    self.send_json(200, detailed_health(client, planner, log_root))
                 elif url.path == "/v1/report":
                     days = parse_qs(url.query).get("day", [])
                     if len(days) != 1:

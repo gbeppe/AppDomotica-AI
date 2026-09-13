@@ -139,6 +139,10 @@ le versioni dei suoi pacchetti non sono state ricontrollate in questa sessione.
 - `deploy/`: environment di esempio, unità systemd e verifica post-installazione;
 - `HouseAiLiveGatewayTest.kt`: test Android opt-in; non parte nei test ordinari.
 
+La diagnostica autenticata e il significato dello stato Groq sono descritti in
+[`DIAGNOSTICA_STACK_SMART.md`](DIAGNOSTICA_STACK_SMART.md). Il controllo non
+genera inferenze periodiche e non consuma quota Groq autonomamente.
+
 È sufficiente Python 3.9 standard library. Non servono pip, Docker, LiteLLM,
 Ollama o llama.cpp. Questi ultimi restano alternative per un futuro modello
 locale e richiederebbero nuove prove di RAM, temperatura, latenza e qualità.

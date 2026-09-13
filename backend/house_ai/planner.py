@@ -50,3 +50,21 @@ class HttpJsonPlanner:
             raise
         except Exception:
             raise RuntimeError("Planner unavailable") from None
+
+    def health(self):
+        request = Request(self.url.rsplit('/', 1)[0] + '/health', headers={
+            "Authorization": "Bearer " + self.token, "Accept": "application/json"})
+        try:
+            with build_opener(NoRedirect).open(request, timeout=5) as response:
+                raw = response.read(16 * 1024 + 1)
+            if len(raw) > 16 * 1024:
+                raise ValueError("Planner health response exceeds limit")
+            result = json.loads(raw)
+            if (not isinstance(result, dict)
+                    or result.get('schema') != 'house_ai.gateway_health.v1'
+                    or result.get('status') != 'online'
+                    or result.get('provider_status') not in ('online', 'offline', 'unknown')):
+                raise ValueError("Invalid planner health response")
+            return result
+        except Exception:
+            raise RuntimeError("Planner health unavailable") from None

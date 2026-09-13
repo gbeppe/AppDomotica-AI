@@ -7,6 +7,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.domopi.app.data.AiSmartState
 import com.domopi.app.data.EnergySmartState
 import com.domopi.app.data.EnergyAssistantAnswer
+import com.domopi.app.data.StackHealthState
+import com.domopi.app.data.StackOverallStatus
 import com.domopi.app.ui.theme.DomoPiTheme
 import org.junit.Assert.*
 import org.junit.Rule
@@ -194,6 +196,29 @@ class AiSmartScreenTest {
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.onNodeWithText("Chiedi").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("SOC medio dal 1 al 7 settembre inclusi", asked) }
+    }
+
+    @Test fun stackStatusIconDisplaysAndOpensBottomSheet() {
+        val stackState = StackHealthState(
+            overallStatus = StackOverallStatus.ONLINE
+        )
+        compose.setContent {
+            DomoPiTheme(darkTheme = true) {
+                AiSmartContent(
+                    state = state(),
+                    connected = true,
+                    question = "",
+                    onQuestionChange = {},
+                    onClassic = {},
+                    onHistory = {},
+                    stackHealthState = stackState
+                )
+            }
+        }
+        compose.onNodeWithTag("stack-status-icon").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("stack-status-sheet").assertIsDisplayed()
+        compose.onNodeWithText("Stato Stack & Traffico").assertIsDisplayed()
+        compose.onNodeWithText("Stack Completamente Operativo").assertIsDisplayed()
     }
 
     private fun screenshot(name: String) {

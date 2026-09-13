@@ -55,6 +55,23 @@ class EnergyServerTests(unittest.TestCase):
         self.assertEqual(invalid.exception.code, 400)
         invalid.exception.close()
 
+    def test_detailed_health_reports_server_dependencies_without_secrets(self):
+        from server import detailed_health
+        class Client:
+            def catalog(self): return [{'id': 305}]
+        class Planner:
+            def health(self):
+                return {'provider_status': 'online', 'provider_last_checked_ms': 123}
+        body = detailed_health(Client(), Planner(), None)
+        self.assertEqual(body['schema'], 'house_ai.stack_health.v1')
+        states = {item['id']: item['status'] for item in body['components']}
+        self.assertEqual(states['backend'], 'online')
+        self.assertEqual(states['gateway'], 'online')
+        self.assertEqual(states['groq'], 'online')
+        self.assertEqual(states['emoncms'], 'online')
+        self.assertEqual(states['logs'], 'offline')
+        self.assertNotIn('key', json.dumps(body).lower())
+
     def test_dynamic_assistant_post(self):
         data = json.dumps({"question": "Una domanda mai cablata"}).encode()
         request = Request(self.url + "/v1/assistant/query", data=data, method="POST",

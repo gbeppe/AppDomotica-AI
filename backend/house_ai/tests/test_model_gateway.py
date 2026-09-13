@@ -40,6 +40,16 @@ def serving(handler_class):
 
 
 class GatewayTests(unittest.TestCase):
+    def test_authenticated_health_exposes_last_provider_result_only(self):
+        from unittest.mock import Mock
+        provider = Mock(last_provider_status='unknown', last_provider_check_ms=None)
+        with serving(gateway_handler(provider, 'gateway-token')) as url:
+            request = Request(url + '/v1/health', headers={'Authorization': 'Bearer gateway-token'})
+            with urlopen(request) as response:
+                body = json.load(response)
+        self.assertEqual(body, {'schema': 'house_ai.gateway_health.v1', 'status': 'online',
+                                'provider': 'groq', 'provider_status': 'unknown',
+                                'provider_last_checked_ms': None})
     def test_private_key_file_and_environment_are_exclusive(self):
         from pathlib import Path
         from tempfile import TemporaryDirectory

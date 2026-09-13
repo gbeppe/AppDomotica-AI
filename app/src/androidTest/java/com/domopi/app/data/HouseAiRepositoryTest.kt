@@ -25,7 +25,8 @@ class HouseAiRepositoryTest {
                             if (line.isEmpty()) break
                             lines += line
                         }
-                        val size = lines.first { it.startsWith("Content-Length:", true) }.substringAfter(':').trim().toInt()
+                        val size = lines.firstOrNull { it.startsWith("Content-Length:", true) }
+                            ?.substringAfter(':')?.trim()?.toInt() ?: 0
                         val data = CharArray(size)
                         var received = 0
                         while (received < size) {
@@ -85,5 +86,25 @@ class HouseAiRepositoryTest {
         } catch (_: IllegalArgumentException) { rejected = true }
         assertTrue(rejected)
         assertEquals("https://domopi.tailf30ba8.ts.net", HouseAiRepository.DEFAULT_BASE_URL)
+    }
+
+    @Test fun detailedHealthCombinesTlsBackendAndDigitalTwinState() {
+        val components = """[
+          {"id":"backend","status":"online","detail":"API read-only operativa"},
+          {"id":"gateway","status":"online","detail":"Processo locale raggiungibile","latency_ms":2},
+          {"id":"groq","status":"unknown","detail":"Non ancora verificato","last_checked_ms":null},
+          {"id":"emoncms","status":"online","detail":"256 feed leggibili","latency_ms":20},
+          {"id":"logs","status":"online","detail":"4 file leggibili"}
+        ]"""
+        val body = """{"schema":"house_ai.stack_health.v1","mode":"read_only","checked_at_ms":1789200000000,"components":$components}"""
+        val request = exchange(body = body) { url ->
+            val result = runBlocking { HouseAiRepository().stackHealth(url, "test-token", false) }
+            assertEquals(StackOverallStatus.DEGRADED, result.overallStatus)
+            assertEquals(NodeStatus.ONLINE, result.nodeStates[StackNode.PRIVATE_ROUTE]?.status)
+            assertEquals(NodeStatus.DEGRADED, result.nodeStates[StackNode.DIGITAL_TWIN]?.status)
+            assertEquals(NodeStatus.UNKNOWN, result.nodeStates[StackNode.GROQ]?.status)
+        }
+        assertTrue(request.startsWith("GET /v1/health/details HTTP/1.1"))
+        assertTrue(request.contains("Authorization: Bearer test-token", true))
     }
 }

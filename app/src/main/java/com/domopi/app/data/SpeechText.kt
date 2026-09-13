@@ -10,7 +10,7 @@ fun speechChunks(text: String, limit: Int): List<String> {
         if (end < text.length) {
             val space = text.lastIndexOf(' ', end - 1)
             if (space > offset) end = space + 1
-            else if (end > offset + 1 && text[end - 1].isHighSurrogate() && text[end].isLowSurrogate()) end--
+            else if (end > offset + 1 && Character.isHighSurrogate(text[end - 1]) && Character.isLowSurrogate(text[end])) end--
         }
         chunks += text.substring(offset, end)
         offset = end

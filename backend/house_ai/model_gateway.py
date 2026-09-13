@@ -3,6 +3,7 @@ import hmac
 import json
 import os
 import stat
+import time
 from datetime import date, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.request import Request, build_opener
@@ -88,6 +89,8 @@ class GroqPlanner:
         if not api_key or not model:
             raise ValueError('Configure GROQ_API_KEY and model')
         self.api_key, self.model = api_key, model
+        self.last_provider_status = 'unknown'
+        self.last_provider_check_ms = None
 
     def plan(self, body):
         context = checked_request(body)
@@ -112,8 +115,13 @@ class GroqPlanner:
             plan = json.loads(message['content'])
             if not isinstance(plan, dict) or set(plan) != {'operations', 'clarification'}:
                 raise ValueError('Invalid structured response')
-            return {'plan': validate_plan(plan)}
+            result = {'plan': validate_plan(plan)}
+            self.last_provider_status = 'online'
+            self.last_provider_check_ms = int(time.time() * 1000)
+            return result
         except Exception:
+            self.last_provider_status = 'offline'
+            self.last_provider_check_ms = int(time.time() * 1000)
             # No provider body, credentials or household question in errors/logs.
             raise RuntimeError('Model unavailable or invalid plan') from None
 
@@ -135,6 +143,19 @@ def gateway_handler(provider, token):
             self.send_header('Content-Length', str(len(raw)))
             self.end_headers()
             self.wfile.write(raw)
+
+        def do_GET(self):
+            if not hmac.compare_digest(self.headers.get('Authorization', '').encode(),
+                                       ('Bearer ' + token).encode()):
+                self.send_json(401, {'error': 'Authentication required'})
+                return
+            if self.path != '/v1/health':
+                self.send_json(404, {'error': 'Not found'})
+                return
+            self.send_json(200, {'schema': 'house_ai.gateway_health.v1',
+                                 'status': 'online', 'provider': 'groq',
+                                 'provider_status': provider.last_provider_status,
+                                 'provider_last_checked_ms': provider.last_provider_check_ms})
 
         def do_POST(self):
             if not hmac.compare_digest(self.headers.get('Authorization', '').encode(),

@@ -1,5 +1,13 @@
 # Checkpoint — 12 settembre 2026
 
+## Diagnostica stack Smart — 13 settembre 2026
+
+Implementata l'icona di stato con scheda gerarchica e health autenticato per
+percorso TLS, `.20`, Digital Twin, gateway, Groq, EmonCMS `.15` e log Node-RED.
+Il controllo ogni 60 secondi e i log sanitizzati sono attivi solo mentre la
+schermata Smart è `STARTED`. Architettura e replica in
+[`DIAGNOSTICA_STACK_SMART.md`](DIAGNOSTICA_STACK_SMART.md).
+
 ## Estremi energetici giornalieri — 13 settembre 2026
 
 Il commit `16e47fa` aggiunge il tool deterministico `energy_daily_extreme` per

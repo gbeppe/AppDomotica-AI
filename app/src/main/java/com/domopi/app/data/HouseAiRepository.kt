@@ -45,6 +45,59 @@ class HouseAiRepository {
         }
     }
 
+    suspend fun stackHealth(baseUrl: String, token: String, digitalTwinConnected: Boolean): StackHealthState =
+        withContext(Dispatchers.IO) {
+            val base = validatedBase(baseUrl)
+            require(token.isNotBlank())
+            val started = System.currentTimeMillis()
+            val connection = URL("${base.toExternalForm()}/v1/health/details")
+                .openConnection() as HttpURLConnection
+            try {
+                connection.instanceFollowRedirects = false
+                connection.connectTimeout = 10000
+                connection.readTimeout = 30000
+                connection.setRequestProperty("Authorization", "Bearer $token")
+                checkStatus(connection.responseCode)
+                val body = JSONObject(readBounded(connection))
+                check(body.optString("schema") == "house_ai.stack_health.v1")
+                val checkedAt = body.getLong("checked_at_ms")
+                val states = mutableMapOf<StackNode, StackNodeState>()
+                states[StackNode.PRIVATE_ROUTE] = StackNodeState(StackNode.PRIVATE_ROUTE,
+                    NodeStatus.ONLINE, System.currentTimeMillis() - started,
+                    "HTTPS e certificato verificati", checkedAt)
+                states[StackNode.DIGITAL_TWIN] = StackNodeState(StackNode.DIGITAL_TWIN,
+                    if (digitalTwinConnected) NodeStatus.ONLINE else NodeStatus.DEGRADED,
+                    detail = if (digitalTwinConnected) "Broker MQTT collegato" else "Broker MQTT non collegato",
+                    lastCheckedMs = checkedAt)
+                val mapping = mapOf("backend" to StackNode.BACKEND, "gateway" to StackNode.GATEWAY,
+                    "groq" to StackNode.GROQ, "emoncms" to StackNode.EMONCMS, "logs" to StackNode.LOGS)
+                val components = body.getJSONArray("components")
+                repeat(components.length()) { index ->
+                    val item = components.getJSONObject(index)
+                    val node = mapping[item.getString("id")] ?: error("Componente sconosciuto")
+                    val status = when (item.getString("status")) {
+                        "online" -> NodeStatus.ONLINE
+                        "offline" -> NodeStatus.OFFLINE
+                        "degraded" -> NodeStatus.DEGRADED
+                        "unknown" -> NodeStatus.UNKNOWN
+                        else -> error("Stato componente sconosciuto")
+                    }
+                    states[node] = StackNodeState(node, status,
+                        item.optLong("latency_ms").takeIf { item.has("latency_ms") },
+                        item.optString("detail"),
+                        item.optLong("last_checked_ms").takeIf { item.has("last_checked_ms") && !item.isNull("last_checked_ms") })
+                }
+                check(states.keys.containsAll(StackNode.entries))
+                val blockers = setOf(StackNode.PRIVATE_ROUTE, StackNode.BACKEND, StackNode.GATEWAY)
+                val overall = when {
+                    blockers.any { states[it]?.status == NodeStatus.OFFLINE } -> StackOverallStatus.OFFLINE
+                    states.values.all { it.status == NodeStatus.ONLINE } -> StackOverallStatus.ONLINE
+                    else -> StackOverallStatus.DEGRADED
+                }
+                StackHealthState(overall, states)
+            } finally { connection.disconnect() }
+        }
+
     suspend fun report(baseUrl: String, token: String, day: String): JSONObject = withContext(Dispatchers.IO) {
         java.time.LocalDate.parse(day)
         val base = validatedBase(baseUrl)
