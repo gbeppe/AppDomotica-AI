@@ -219,6 +219,7 @@ class AiSmartScreenTest {
         compose.onNodeWithTag("stack-status-sheet").assertIsDisplayed()
         compose.onNodeWithText("Stato Stack & Traffico").assertIsDisplayed()
         compose.onNodeWithText("Stack Completamente Operativo").assertIsDisplayed()
+        screenshot("smart-stack-status.png")
     }
 
     private fun screenshot(name: String) {

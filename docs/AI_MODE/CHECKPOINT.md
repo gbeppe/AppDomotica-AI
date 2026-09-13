@@ -7,6 +7,9 @@ percorso TLS, `.20`, Digital Twin, gateway, Groq, EmonCMS `.15` e log Node-RED.
 Il controllo ogni 60 secondi e i log sanitizzati sono attivi solo mentre la
 schermata Smart è `STARTED`. Architettura e replica in
 [`DIAGNOSTICA_STACK_SMART.md`](DIAGNOSTICA_STACK_SMART.md).
+La release backend `20260913-stack-health`, revisione `f2d50d8`, è attiva su
+`.20`; verifica reale e rollback in
+[`VERIFICA_DIAGNOSTICA_STACK_2026-09-13.md`](VERIFICA_DIAGNOSTICA_STACK_2026-09-13.md).
 
 ## Estremi energetici giornalieri — 13 settembre 2026
 

@@ -4,10 +4,10 @@ Eseguito il 13 settembre 2026 con autorizzazione esplicita dell'utente.
 
 ## Stato installato
 
-- Release attiva: `/opt/domopi-house-ai/releases/20260913-partial-extremes`, con
-  `REVISION` uguale a `30ddc13`;
+- Release attiva: `/opt/domopi-house-ai/releases/20260913-stack-health`, con
+  `REVISION` uguale a `f2d50d8`;
 - release precedente disponibile per rollback:
-  `/opt/domopi-house-ai/releases/20260913-daily-extreme`, revisione `16e47fa`;
+  `/opt/domopi-house-ai/releases/20260913-partial-extremes`, revisione `30ddc13`;
 - symlink attivo: `/opt/domopi-house-ai/current`;
 - utente non interattivo: `house-ai`;
 - `house-ai-gateway.service`: abilitato e attivo, `127.0.0.1:8766`;
@@ -41,6 +41,12 @@ La release successiva `30ddc13` mantiene nel secondo confronto anche i valori
 dei giorni parziali come energia osservata. Ha superato compilazione e 64 test su
 Python 3.9.2 prima dell'attivazione; health e prova TLS reale sono riusciti senza
 modificare servizi, porte o credenziali.
+
+La release `f2d50d8` aggiunge gli endpoint health autenticati senza nuove porte,
+dipendenze o credenziali. Ha superato 66 test su `.20` con Python 3.9.2 prima
+dell'attivazione. La verifica TLS ha osservato gateway, EmonCMS e log verdi,
+Groq inizialmente sconosciuto e poi verde dopo una richiesta reale. Evidenza in
+[`VERIFICA_DIAGNOSTICA_STACK_2026-09-13.md`](VERIFICA_DIAGNOSTICA_STACK_2026-09-13.md).
 
 L'app precompila questo URL e `HouseAiRepository` accetta HTTP soltanto per
 loopback di test. Il token non è incorporato nell'APK e resta in memoria nella
