@@ -1,5 +1,16 @@
 # Checkpoint — 12 settembre 2026
 
+## Estremi energetici giornalieri — 13 settembre 2026
+
+Il commit `16e47fa` aggiunge il tool deterministico `energy_daily_extreme` per
+massimo/minimo giornaliero fino a 366 giorni. La release
+`/opt/domopi-house-ai/releases/20260913-daily-extreme` è attiva su `.20`; 63 test
+passano su Python 3.9.2. La domanda reale sui sei mesi è riuscita tramite TLS,
+Groq ed EmonCMS: 165 giorni completi confrontati, 19 esclusi, massimo eleggibile
+11 settembre 2026 con 3,75 kWh. Vedere
+[`VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md`](VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md)
+per limiti, replica e rollback.
+
 ## Dove riprendere
 
 Worktree: `/home/giuseppe/.cache/Google/AndroidStudio2026.1.4/aia/agents/DomoPiAndroidApp-ai-mode`

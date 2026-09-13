@@ -159,7 +159,7 @@ DomoPi a Groq, richiede JSON Schema strict e valida nuovamente ogni piano.
 Configurazione, riproduzione delle prove e limiti in
 [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md).
 
-**60 test Python 3.9.25 superati**, inclusa la catena API backend → gateway HTTP →
+**63 test superati** nell'ultima regressione, inclusa la catena API backend → gateway HTTP →
 adattatore Groq con risposta provider simulata → strumenti → risposta italiana.
 Su `.20`, Python 3.9.2: compilazione di 28 file e import di 14 moduli in memoria
 riusciti; HTTPS verso Groq verificato, risposta 401 senza credenziali con
@@ -176,3 +176,8 @@ e gateway temporanei su `.20` → Groq 120B → Digital Twin, EmonCMS `.15` e lo
 OpenMeteo. Sono riusciti anche il confronto EmonCMS e la lettura aggregata dei
 quattro log. Evidenza completa in
 [VERIFICA_GATEWAY_REALE_2026-09-13.md](VERIFICA_GATEWAY_REALE_2026-09-13.md).
+
+La release `16e47fa` aggiunge la ricerca del massimo/minimo giornaliero ed è
+stata verificata su `.20` con Python 3.9.2, EmonCMS reale e lo stesso endpoint
+TLS usato dall'app. La prova della domanda sui sei mesi è documentata in
+[VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md](VERIFICA_ESTREMI_GIORNALIERI_2026-09-13.md).
