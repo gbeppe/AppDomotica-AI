@@ -4,7 +4,7 @@ import math
 import time
 from pathlib import Path
 
-from energy_history import energy_report, period_bounds
+from energy_history import daily_extreme_report, energy_report, period_bounds
 from log_tools import SOURCES as LOG_SOURCES, tool_catalog, read_day
 from evidence import day_bounds
 
@@ -14,6 +14,10 @@ MAX_OPERATIONS = 6
 CURRENT_METRICS = {
     "solar_power_w", "home_consumption_w", "grid_power_w",
     "battery_power_w", "battery_soc_percent"
+}
+DAILY_EXTREME_METRICS = {
+    "grid_import_kwh", "grid_export_kwh", "home_consumption_kwh",
+    "solar_production_kwh", "battery_charge_kwh", "battery_discharge_kwh"
 }
 
 
@@ -33,6 +37,15 @@ def catalog(path=CATALOG_PATH):
             "name": "current_energy_metric",
             "description": "Read one current Digital Twin energy metric",
             "parameters": {"metric": sorted(CURRENT_METRICS)}
+        }, {
+            "name": "energy_daily_extreme",
+            "description": "Find the maximum or minimum complete daily total in a validated historical period",
+            "parameters": {
+                "metric": sorted(DAILY_EXTREME_METRICS),
+                "start": "YYYY-MM-DD Europe/Rome, inclusive",
+                "end": "YYYY-MM-DD Europe/Rome, exclusive",
+                "extremum": ["maximum", "minimum"]
+            }
         }, tool_catalog(), {
             "name": "energy_comparison",
             "description": "Calculate left minus right and percent change for the same historical metric; requires complete coverage",
@@ -71,7 +84,8 @@ def validate_plan(plan, sources=None):
             raise ValueError("Invalid operation schema")
         tool = operation.get("tool")
         expected = ({"id", "tool", "metric", "start", "end"}
-                    if tool == "energy_metric" else {"id", "tool", "metric"}
+                    if tool == "energy_metric" else {"id", "tool", "metric", "start", "end", "extremum"}
+                    if tool == "energy_daily_extreme" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
                     if tool == "energy_comparison" else None)
@@ -81,25 +95,29 @@ def validate_plan(plan, sources=None):
         if (not isinstance(identifier, str) or not identifier or len(identifier) > 40
                 or identifier in ids):
             raise ValueError("Invalid operation id")
-        if tool in ("energy_metric", "current_energy_metric") and not isinstance(operation["metric"], str):
+        if tool in ("energy_metric", "energy_daily_extreme", "current_energy_metric") and not isinstance(operation["metric"], str):
             raise ValueError("Invalid metric")
         if ((tool == "energy_metric" and operation["metric"] not in sources)
                 or (tool == "current_energy_metric" and operation["metric"] not in CURRENT_METRICS)):
             raise ValueError("Unknown tool or metric")
+        if tool == "energy_daily_extreme" and (operation["metric"] not in DAILY_EXTREME_METRICS
+                                                or operation["extremum"] not in ("maximum", "minimum")):
+            raise ValueError("Unknown daily extreme metric or mode")
         if tool == "backend_log_day":
             if not isinstance(operation["source"], str) or operation["source"] not in LOG_SOURCES:
                 raise ValueError("Unknown log source")
             if not isinstance(operation["day"], str):
                 raise ValueError("Invalid day")
             day_bounds(operation["day"])
-        if tool == "energy_metric":
+        if tool in ("energy_metric", "energy_daily_extreme"):
             if not all(isinstance(operation[k], str) for k in ("start", "end")):
                 raise ValueError("Invalid dates")
             lo, hi = period_bounds(operation["start"], operation["end"])
             sample_budget += (hi-lo)//(sources[operation["metric"]]["interval_seconds"]*1000)
             if sample_budget > 2_200_000:
                 raise ValueError("Plan exceeds sample budget")
-            historical[identifier] = operation
+            if tool == "energy_metric":
+                historical[identifier] = operation
         if tool == "energy_comparison":
             left, right = operation["left_id"], operation["right_id"]
             if (not isinstance(left, str) or not isinstance(right, str)
@@ -205,9 +223,14 @@ def execute(client, plan, sources=None, current_snapshot=None, log_root=None):
         source = sources[operation["metric"]]
         sign = source.get("import_sign", source.get("direction_sign"))
         try:
-            result = energy_report(cached, operation["start"], operation["end"],
-                                   operation["metric"], source["feed_id"], source["unit"],
-                                   sign, source["interval_seconds"])
+            if operation["tool"] == "energy_daily_extreme":
+                result = daily_extreme_report(cached, operation["start"], operation["end"],
+                                              operation["metric"], source["feed_id"], source["unit"],
+                                              sign, source["interval_seconds"], operation["extremum"])
+            else:
+                result = energy_report(cached, operation["start"], operation["end"],
+                                       operation["metric"], source["feed_id"], source["unit"],
+                                       sign, source["interval_seconds"])
         except (OSError, RuntimeError):
             result = {"schema": "house_ai.source_error.v1", "status": "unavailable",
                       "source": {"feed_id": source["feed_id"]},

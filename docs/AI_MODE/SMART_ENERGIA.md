@@ -6,7 +6,8 @@ e voce. Non usa corrispondenze con frasi predefinite per scegliere gli strumenti
 È implementato il gateway Groq; la valutazione reale indica
 `openai/gpt-oss-120b` come prima scelta e mantiene `openai/gpt-oss-20b` come
 alternativa economica. La chiave provider privata è stata verificata su `.20`.
-Il deployment persistente e il TLS verso l'app restano da configurare.
+Backend e gateway sono installati persistentemente su `.20`; l'app li raggiunge
+in TLS privato tramite Tailscale Serve.
 
 ## Funzioni implementate
 
@@ -21,6 +22,10 @@ Il deployment persistente e il TLS verso l'app restano da configurare.
   metrica fra due periodi: differenza e variazione relativa, solo con copertura
   completa. La base zero rende indefinita la variazione relativa; per SOC la
   differenza è in punti percentuali. Nessuna normalizzazione implicita per durata.
+- Ricerca deterministica del giorno con massimo o minimo totale per una metrica
+  energetica in un intervallo fino a 366 giorni. Sono confrontati soltanto giorni
+  di calendario `Europe/Rome` con copertura completa; quelli incompleti vengono
+  contati ed esclusi. A parità viene scelto il primo giorno cronologico.
 - Quattro log Node-RED, con estrazione giornaliera e file/riga. Testo con ultimo
   dato restituito: previsione FV, medie orarie/EMA, riserva e budget SHADOW,
   motivo AC registrato. I record grezzi sono nelle evidenze API; Android mostra
@@ -59,13 +64,14 @@ Gli originali su `.20` sono stati esclusivamente letti.
    data, timezone e catalogo; restituisce `{"plan":{"operations":[...]}}` oppure
    `{"plan":{"clarification":"..."}}`. `HOUSE_AI_PLANNER_URL` non è una URL API
    arbitraria di OpenAI/Ollama/altro provider: serve un adattatore conforme al
-   modello scelto. Il gateway Groq incluso è descritto in [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md); non è ancora distribuito.
+   modello scelto. Il gateway Groq incluso e il deployment attivo sono descritti
+   in [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md).
 3. Impostare `HOUSE_AI_LOG_ROOT` solo su una cartella accessibile al backend,
    con i quattro file autorizzati. Non viene effettuata sincronizzazione SSH
    automatica. `HOUSE_AI_CLIMATE_LOG` resta separato per il rapporto precedente.
 4. Dal modulo `backend/house_ai`, avvio manuale `python3 -B server.py`.
    Il bind predefinito è localhost. Per accesso remoto usare un endpoint TLS
-   raggiungibile: nessun reverse proxy o servizio è stato installato qui.
+   raggiungibile. Su `.20` viene usato Tailscale Serve, senza esposizione pubblica.
 5. Nell'app: AI smart → indirizzo backend e token → domanda → Chiedi.
    Il token resta in memoria della schermata; uscendo o ricreandola va reinserito.
 

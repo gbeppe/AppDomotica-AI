@@ -32,6 +32,8 @@ calendario e finestra mobile. SOC medio e percentuale di ricarica non sono equiv
 Per confrontare periodi usa due energy_metric della stessa metrica seguiti da
 energy_comparison con left_id (periodo da valutare) e right_id (base). ID univoci,
 massimo sei operazioni. Le richieste SHADOW riguardano simulazioni, mai azioni fisiche.
+Per trovare il giorno con valore massimo o minimo in un periodo usa
+energy_daily_extreme; non creare una energy_metric separata per ogni giorno.
 Ogni sotto-domanda supportata deve avere la propria operazione: non omettere parti di
 una richiesta composta. Rete e batteria sono due flussi distinti, usa entrambi i tool
 quando richiesti. Usa gli intervalli del calendario fornito per i periodi relativi:

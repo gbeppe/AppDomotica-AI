@@ -87,6 +87,18 @@ def describe(item):
         else:
             text += ' Variazione percentuale non definita: base zero.'
         return text + ' I periodi non sono normalizzati per durata.'
+    if schema == 'house_ai.energy_daily_extreme.v1':
+        label = LABELS.get(r['metric'], item.get('id', 'Dato'))
+        if r['winner'] is None:
+            return (f"{label}: nessun giorno con copertura completa dal {r['period']['start']} "
+                    f"al {r['period']['end_exclusive']} escluso.")
+        kind = 'maggiore' if r['extremum'] == 'maximum' else 'minore'
+        text = (f"Il giorno con il {label.lower()} {kind} è stato il "
+                f"{r['winner']['day']}: {number(r['winner']['value'])} {r['unit']}. "
+                f"Giorni confrontati con copertura completa: {r['eligible_days']}.")
+        if r['excluded_days']:
+            text += f" Giorni incompleti esclusi: {len(r['excluded_days'])}."
+        return text + ' Stima da campioni EmonCMS, non misura fiscale.'
     label = LABELS.get(item.get('metric'), item.get('id', 'Dato'))
     if schema == 'house_ai.source_error.v1':
         return f"{label}: sorgente non disponibile; riprova più tardi."

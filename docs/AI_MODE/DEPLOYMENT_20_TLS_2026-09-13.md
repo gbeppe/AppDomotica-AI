@@ -23,6 +23,11 @@ TLS: certificato Let's Encrypt valido per `domopi.tailf30ba8.ts.net`; health
 autenticato HTTP 200. Domanda reale HTTPS sul prelievo del 6 settembre: piano
 corretto, una evidenza EmonCMS e stato `complete`.
 
+L'aggiornamento successivo aggiunge `energy_daily_extreme`: selezione read-only
+del massimo o minimo giornaliero su EmonCMS, con esclusione dei giorni senza
+copertura completa. Non richiede nuove dipendenze, porte, credenziali o modifiche
+a `.15`, Node-RED, Mosquitto e Tailscale.
+
 L'app precompila questo URL e `HouseAiRepository` accetta HTTP soltanto per
 loopback di test. Il token non è incorporato nell'APK e resta in memoria nella
 schermata. Sul telefono connesso alla stessa tailnet, copiare privatamente il

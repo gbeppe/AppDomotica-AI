@@ -1,6 +1,6 @@
 import unittest
 from datetime import date
-from energy_history import calculate, energy_report, period_bounds, relative_period
+from energy_history import calculate, daily_extreme_report, energy_report, period_bounds, relative_period
 
 
 class EnergyTests(unittest.TestCase):
@@ -79,3 +79,39 @@ class EnergyTests(unittest.TestCase):
             value = -1000 if sign == -1 else 1000
             result = self.calc([(0, value), (30, value)], metric, sign, end=30)
             self.assertAlmostEqual(result['value'], 1/120)
+
+    def test_daily_extreme_uses_complete_days_and_earliest_tie(self):
+        starts = {day: period_bounds(day, end)[0] // 1000 for day, end in
+                  [('2026-09-01', '2026-09-02'), ('2026-09-02', '2026-09-03'),
+                   ('2026-09-03', '2026-09-04')]}
+        class Daily:
+            def history(self, _feed, start, end, interval):
+                rows = []
+                for timestamp in range(start, end + 1, interval):
+                    if starts['2026-09-02'] <= timestamp < starts['2026-09-03']:
+                        value = 2000
+                    else:
+                        value = 1000
+                    rows.append([timestamp * 1000, value])
+                return rows
+        result = daily_extreme_report(Daily(), '2026-09-01', '2026-09-04',
+                                      'grid_import_kwh', 305, 'W', 1, 30,
+                                      'maximum', now_ms=period_bounds('2026-09-04', '2026-09-05')[0])
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['winner']['day'], '2026-09-02')
+        self.assertAlmostEqual(result['winner']['value'], 48, places=2)
+        self.assertEqual(result['eligible_days'], 3)
+
+    def test_daily_extreme_excludes_incomplete_days(self):
+        missing_lo, missing_hi = period_bounds('2026-09-02', '2026-09-03')
+        class Missing:
+            def history(self, _feed, start, end, interval):
+                return [[t * 1000, 1000] for t in range(start, end + 1, interval)
+                        if not missing_lo // 1000 < t < missing_hi // 1000]
+        result = daily_extreme_report(Missing(), '2026-09-01', '2026-09-04',
+                                      'grid_import_kwh', 305, 'W', 1, 30,
+                                      'maximum', now_ms=period_bounds('2026-09-04', '2026-09-05')[0])
+        self.assertEqual(result['status'], 'partial')
+        self.assertEqual(result['eligible_days'], 2)
+        self.assertEqual(result['excluded_days'][0]['day'], '2026-09-02')
+        self.assertEqual(result['winner']['day'], '2026-09-01')

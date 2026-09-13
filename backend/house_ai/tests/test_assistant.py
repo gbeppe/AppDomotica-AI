@@ -71,6 +71,21 @@ class AssistantTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_plan({"operations": [{**operation, "extra": True}]})
 
+    def test_daily_extreme_plan_is_closed_and_presented(self):
+        operation = {"id": "peak", "tool": "energy_daily_extreme",
+                     "metric": "grid_import_kwh", "start": "2026-09-01",
+                     "end": "2026-09-04", "extremum": "maximum"}
+        result = ask(Client(), Planner({"operations": [operation]}),
+                     "Quale giorno ha avuto il maggior prelievo?", date(2026, 9, 12))
+        self.assertEqual(result["status"], "complete")
+        self.assertIn("giorno con il prelievo dalla rete maggiore", result["answer"].lower())
+        self.assertIn("Giorni confrontati con copertura completa: 3", result["answer"])
+        for invalid in ({**operation, "extremum": "largest"},
+                        {**operation, "metric": "soc_mean_percent"},
+                        {**operation, "extra": True}):
+            with self.assertRaises(ValueError):
+                validate_plan({"operations": [invalid]})
+
     def test_current_digital_twin_metric_keeps_provenance(self):
         planner = Planner({"operations": [{"id": "now", "tool": "current_energy_metric",
                                             "metric": "solar_power_w"}]})

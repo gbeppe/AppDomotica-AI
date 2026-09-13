@@ -127,3 +127,75 @@ def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, i
                        'Semantica della sorgente fornita dal chiamante; non verificata automaticamente.',
                        'Copertura completa non certifica accuratezza fisica o assenza di aliasing.']})
     return result
+
+
+def daily_extreme_report(client, start, end, metric, feed_id, unit,
+                         import_sign=None, interval=30, extremum='maximum', now_ms=None):
+    """Select a daily extreme using only complete Europe/Rome calendar days."""
+    if extremum not in ('maximum', 'minimum'):
+        raise ValueError('Invalid extremum')
+    lo, hi = period_bounds(start, end)
+    power_metrics = {'grid_import_kwh', 'grid_export_kwh',
+                     'home_consumption_kwh', 'solar_production_kwh',
+                     'battery_charge_kwh', 'battery_discharge_kwh'}
+    if (metric not in power_metrics or unit != 'W' or import_sign not in (-1, 1)
+            or type(feed_id) is not int or feed_id <= 0 or type(interval) is not int
+            or not 1 <= interval <= 300
+            or (hi-lo)//(interval*1000) > 1_100_000):
+        raise ValueError('Invalid daily extreme source configuration')
+    rows = []
+    observed_until = min(hi, now_ms if now_ms is not None else int(clock.time()*1000))
+    if observed_until >= lo:
+        cursor, requests = lo // 1000, 0
+        while cursor <= observed_until // 1000:
+            stop = min(cursor + 9999 * interval, observed_until // 1000 + interval)
+            rows.extend(client.history(feed_id, cursor, stop, interval))
+            requests += 1
+            cursor = stop
+    else:
+        requests = 0
+    by_day = {}
+    for row in rows:
+        if (not isinstance(row, (list, tuple)) or len(row) != 2
+                or type(row[0]) not in (float, int) or not math.isfinite(row[0])):
+            raise RuntimeError('Invalid historical source row')
+        timestamp_ms = int(row[0] if row[0] > 100_000_000_000 else row[0] * 1000)
+        local = datetime.fromtimestamp(timestamp_ms / 1000, ROME)
+        key = local.date()
+        by_day.setdefault(key, []).append(row)
+        if (local.hour, local.minute, local.second, local.microsecond) == (0, 0, 0, 0):
+            by_day.setdefault(key - timedelta(days=1), []).append(row)
+    candidates, excluded = [], []
+    day = date.fromisoformat(start)
+    last = date.fromisoformat(end)
+    while day < last:
+        next_day = day + timedelta(days=1)
+        day_lo, day_hi = period_bounds(day.isoformat(), next_day.isoformat())
+        result = calculate(by_day.get(day, []), day_lo, day_hi,
+                           metric, interval * 1000, import_sign)
+        if result['status'] == 'complete':
+            candidates.append({'day': day.isoformat(), 'value': result['value'],
+                               'coverage_ratio': result['coverage_ratio']})
+        else:
+            excluded.append({'day': day.isoformat(),
+                             'coverage_ratio': result['coverage_ratio'],
+                             'status': result['status']})
+        day = next_day
+    winner = None
+    if candidates:
+        ordered = sorted(candidates, key=lambda item: item['day'])
+        winner = (max if extremum == 'maximum' else min)(ordered,
+                                                         key=lambda item: item['value'])
+    status = ('insufficient_data' if winner is None else
+              'complete' if not excluded else 'partial')
+    return {'schema': 'house_ai.energy_daily_extreme.v1', 'status': status,
+            'metric': metric, 'extremum': extremum,
+            'period': {'start': start, 'end_exclusive': end},
+            'winner': winner, 'unit': 'kWh',
+            'eligible_days': len(candidates), 'excluded_days': excluded,
+            'source': {'feed_id': feed_id, 'unit': unit, 'import_sign': import_sign,
+                       'interval_seconds': interval, 'requests': requests},
+            'limitations': ['Sono confrontati solo giorni di calendario Europe/Rome con copertura completa.',
+                            'I giorni incompleti sono esclusi, non stimati.',
+                            'In caso di parità viene restituito il primo giorno cronologico.',
+                            'Stima da campioni EmonCMS, non misura fiscale.']}

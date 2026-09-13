@@ -84,10 +84,13 @@ MQTT, campioni EmonCMS, contenuto dei log, risultati o credenziali domestiche.
 La domanda può contenere dati personali scritti/dettati e viene elaborata nel
 cloud: vedere [Your Data in GroqCloud](https://console.groq.com/docs/your-data).
 
-Lo schema ammette solo `energy_metric`, `current_energy_metric`,
-`backend_log_day` ed `energy_comparison`, con oggetti chiusi e massimo sei
-operazioni. `validate_plan` ricontrolla tool, metriche, date, budget e riferimenti
-prima di qualsiasi lettura. Il testo finale è deterministico. Non esistono tool
+Lo schema ammette solo `energy_metric`, `energy_daily_extreme`,
+`current_energy_metric`, `backend_log_day` ed `energy_comparison`, con oggetti
+chiusi e massimo sei operazioni. `energy_daily_extreme` legge una metrica storica
+una sola volta, la integra per giorni di calendario `Europe/Rome`, esclude quelli
+senza copertura completa e seleziona massimo o minimo; a parità conserva il primo
+giorno cronologico. `validate_plan` ricontrolla tool, metriche, date, modalità,
+budget e riferimenti prima di qualsiasi lettura. Il testo finale è deterministico. Non esistono tool
 di scrittura, MQTT `/cmd`, shell o attuazione. Output invalido, refusal, timeout,
 redirect o dimensione eccessiva falliscono chiusi con HTTP 502 sanitizzato.
 
@@ -103,8 +106,8 @@ Verificato via SSH in sola lettura:
 - `/home/pi/.config/house-ai/groq.key`, `pi:pi`, modo `600`, 56 byte; il
   contenuto non è stato stampato né committato;
 - TLS, chiave e inferenze Groq reali verificati senza SDK o pacchetti pip;
-- prove con codice trasmesso via stdin e directory temporanee. Nessun codice
-  persistente, servizio systemd, porta 8765/8766 o reverse proxy installato.
+- backend e gateway installati come servizi systemd persistenti e collegati
+  all'app tramite Tailscale Serve; dettagli e rollback nel documento di deployment.
 
 Le prove hanno letto i cinque topic pubblici `zara/interface/energy/.../stat`,
 i quattro log e il catalogo EmonCMS. Il test Android end-to-end è passato e i
