@@ -77,4 +77,13 @@ class HouseAiRepositoryTest {
             }
         }
     }
+
+    @Test fun remoteBackendRequiresTlsWhileLoopbackRemainsAvailableForTests() {
+        var rejected = false
+        try {
+            runBlocking { HouseAiRepository().assistant("http://192.168.1.20:8765", "token", "Rete?", EnergySmartState(), false) }
+        } catch (_: IllegalArgumentException) { rejected = true }
+        assertTrue(rejected)
+        assertEquals("https://domopi.tailf30ba8.ts.net", HouseAiRepository.DEFAULT_BASE_URL)
+    }
 }

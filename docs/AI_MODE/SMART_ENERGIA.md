@@ -161,7 +161,9 @@ User-Agent applicativo. Sono poi riuscite inferenze autentiche con la chiave
 privata e letture reali di Digital Twin, EmonCMS e log. La suite linguistica ha
 evidenziato errori e guidato le correzioni al prompt/calendario; i risultati e
 la procedura di replica sono in [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md).
-Nessun servizio persistente è stato installato.
+Il 13 settembre backend e gateway sono stati installati come servizi persistenti
+su `.20` e il backend è esposto in TLS solo nella tailnet tramite Tailscale Serve.
+Dettagli e rollback in [DEPLOYMENT_20_TLS_2026-09-13.md](DEPLOYMENT_20_TLS_2026-09-13.md).
 
 Il test Android opt-in ha poi superato il percorso repository Android → backend
 e gateway temporanei su `.20` → Groq 120B → Digital Twin, EmonCMS `.15` e log

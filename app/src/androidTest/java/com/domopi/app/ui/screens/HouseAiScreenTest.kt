@@ -21,7 +21,7 @@ class HouseAiScreenTest {
         val token = requireNotNull(args.getString("houseAiToken"))
         compose.setContent { DomoPiTheme(darkTheme = args.getString("houseAiDark") == "true") { HouseAiScreen(onBack = {}) } }
         compose.onNodeWithText("Analizza la giornata").assertIsNotEnabled()
-        compose.onNodeWithText("Indirizzo del servizio").performTextInput(url)
+        compose.onNodeWithText("Indirizzo del servizio").performTextReplacement(url)
         compose.onNodeWithText("Token di accesso").performTextInput(token)
         compose.onNodeWithText("Giorno (AAAA-MM-GG)").performTextReplacement("2026-09-06")
         androidx.test.espresso.Espresso.closeSoftKeyboard()

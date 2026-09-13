@@ -187,8 +187,10 @@ RAM, storage libero, NTP e CA TLS funzionanti. Installare con utente dedicato:
 7. Esporre all'app solo il backend mediante TLS. Il gateway resta loopback.
    Senza TLS usare un tunnel temporaneo per la prova, non aprire 8765/8766.
 
-Le unità sono template versionati, non installati su `.20`. `ProtectHome=read-only`
-e `BindReadOnlyPaths=/home/pi/AI_climate` vanno adattati se i log cambiano percorso.
+Le unità sono state installate su `.20` il 13 settembre. Stato e rollback sono
+documentati in [DEPLOYMENT_20_TLS_2026-09-13.md](DEPLOYMENT_20_TLS_2026-09-13.md).
+`ProtectHome=read-only` e `BindReadOnlyPaths=/home/pi/AI_climate` vanno adattati
+se i log cambiano percorso nella replica.
 
 ## Aggiornamento, rollback e criteri di promozione
 

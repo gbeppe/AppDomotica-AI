@@ -148,4 +148,6 @@ validazione locale dei piani, autenticazione separata, errori sanitizzati, nessu
 retry automatico e nessuna pubblicazione MQTT. Default promosso a
 `openai/gpt-oss-120b` dopo il confronto reale col 20B. 60 test Python superati;
 inferenze reali, confronto EmonCMS e quattro log verificati da `.20`. Riprendere
-da [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md). Nessun deployment persistente.
+da [GATEWAY_MODELLO.md](GATEWAY_MODELLO.md). Deployment persistente e TLS
+Tailscale completati successivamente; vedere
+[DEPLOYMENT_20_TLS_2026-09-13.md](DEPLOYMENT_20_TLS_2026-09-13.md).

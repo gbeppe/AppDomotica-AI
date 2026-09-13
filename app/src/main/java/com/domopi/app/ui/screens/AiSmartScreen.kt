@@ -48,7 +48,7 @@ fun AiSmartScreen(
     var voiceNotice by remember { mutableStateOf<String?>(null) }
     var speechReady by remember { mutableStateOf(false) }
     var speech by remember { mutableStateOf<TextToSpeech?>(null) }
-    var serviceUrl by rememberSaveable { mutableStateOf("") }
+    var serviceUrl by rememberSaveable { mutableStateOf(HouseAiRepository.DEFAULT_BASE_URL) }
     var serviceToken by remember { mutableStateOf("") }
     var response by remember { mutableStateOf<EnergyAssistantAnswer?>(null) }
     var dynamicError by remember { mutableStateOf<String?>(null) }

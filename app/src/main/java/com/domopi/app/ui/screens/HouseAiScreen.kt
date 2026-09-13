@@ -25,7 +25,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HouseAiScreen(onBack: () -> Unit) {
     androidx.activity.compose.BackHandler(onBack = onBack)
-    var url by rememberSaveable { mutableStateOf("") }
+    var url by rememberSaveable { mutableStateOf(HouseAiRepository.DEFAULT_BASE_URL) }
     var token by remember { mutableStateOf("") }
     var day by rememberSaveable { mutableStateOf(LocalDate.now(ZoneId.of("Europe/Rome")).minusDays(1).toString()) }
     var result by remember { mutableStateOf<JSONObject?>(null) }
@@ -38,7 +38,7 @@ fun HouseAiScreen(onBack: () -> Unit) {
         Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Storico e motivazioni", style = MaterialTheme.typography.headlineSmall)
-            Text("Consulta i dati della casa e le decisioni registrate. Le domande libere saranno disponibili dopo la configurazione del modello AI.")
+            Text("Consulta i dati della casa e le decisioni registrate tramite il servizio TLS privato.")
             OutlinedTextField(url, { url = it; result = null }, label = { Text("Indirizzo del servizio") },
                 placeholder = { Text("https://…") }, singleLine = true, enabled = !loading, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(token, { token = it }, label = { Text("Token di accesso") },

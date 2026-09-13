@@ -10,9 +10,15 @@ import java.net.URL
 class HouseAiRepository {
     private fun validatedBase(baseUrl: String): URL {
         val base = URL(baseUrl.trim().trimEnd('/'))
-        require(base.protocol in listOf("http", "https") && base.host.isNotBlank() && base.userInfo == null &&
+        val loopback = base.host in setOf("127.0.0.1", "localhost", "::1", "[::1]")
+        require((base.protocol == "https" || base.protocol == "http" && loopback) &&
+            base.host.isNotBlank() && base.userInfo == null &&
             base.query == null && base.ref == null)
         return base
+    }
+
+    companion object {
+        const val DEFAULT_BASE_URL = "https://domopi.tailf30ba8.ts.net"
     }
 
     private fun readBounded(connection: HttpURLConnection): String =
