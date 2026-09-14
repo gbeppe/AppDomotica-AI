@@ -61,6 +61,14 @@ data class EnergyAssistantAnswer(
                         }.toList().sorted()
                         detail += topics
                     }
+                    "house_ai.current_lights.v1" -> {
+                        detail += "Digital Twin · stati dichiarati dei punti luce dal registry"
+                        val observations = result.getJSONObject("observations")
+                        val topics = observations.keys().asSequence().map {
+                            observations.getJSONObject(it).getString("source_topic")
+                        }.toList().sorted()
+                        detail += topics
+                    }
                     "house_ai.backend_log_evidence.v1" -> {
                         detail += "Node-RED · ${result.getString("file")} · ${result.getString("day")}"
                         detail += "Tipo: ${result.getString("evidence_type")} · record trovati: ${result.getInt("matched_records")}"

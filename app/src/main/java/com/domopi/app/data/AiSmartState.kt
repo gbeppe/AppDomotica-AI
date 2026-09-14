@@ -11,7 +11,9 @@ data class SmartObservation(
     val sourceTopic: String
 )
 
-data class SmartEntity(val topic: String, val label: String, val isLight: Boolean)
+data class SmartEntity(val topic: String, val label: String, val isLight: Boolean) {
+    val id: String get() = topic.substringBefore("/power/stat").replace('/', '_')
+}
 
 data class SmartReading(
     val entity: SmartEntity, val value: String, val quality: String,
@@ -66,6 +68,30 @@ data class AiSmartState(val observations: Map<String, SmartObservation> = emptyM
             "Il conteggio non copre tutte le luci della casa e non conferma l'accensione fisica."
     }
 
+    fun activeDeviceLabels(): List<String> =
+        entities.filter { it.isLight && light(it.topic) == true }.map { it.label }
+
+    /** Valid declared light states for the read-only assistant snapshot. */
+    fun validLightObservations(): Map<String, SmartObservation> = lightEntities.mapNotNull { entity ->
+        val observation = observations[entity.topic] ?: return@mapNotNull null
+        val value = light(entity.topic) ?: return@mapNotNull null
+        entity.id to observation.copy(payload = value.toString())
+    }.toMap()
+
+    fun activeDevicesText(): String {
+        val active = activeDeviceLabels()
+        return if (active.isEmpty()) "Nessun dispositivo attivo rilevato tra quelli mappati."
+        else "Dispositivi attivi dichiarati: ${active.joinToString(", ")}."
+    }
+
+    fun environmentalMeasuresText(): String {
+        val measures = listOfNotNull(
+            temperature(livingTopic)?.let { "living ${String.format(Locale.ITALIAN, "%.1f °C", it)}" },
+        )
+        return if (measures.isEmpty()) "Misure ambientali non disponibili."
+        else "Misure disponibili: ${measures.joinToString(" · ")}."
+    }
+
     fun temperatureText(topic: String, name: String): String = temperature(topic)?.let {
         "$name: ${String.format(Locale.ITALIAN, "%.1f", it)} gradi."
     } ?: "$name: dato non disponibile."
@@ -79,8 +105,16 @@ data class AiSmartState(val observations: Map<String, SmartObservation> = emptyM
     fun answer(question: String, connected: Boolean): String {
         val q = Normalizer.normalize(question.lowercase(Locale.ITALIAN), Normalizer.Form.NFD)
             .replace(Regex("\\p{M}"), "")
-        if (Regex("\\b(accendi|spegni|apri|chiudi|imposta|attiva|disattiva|regola|aumenta|abbassa)\\b").containsMatchIn(q))
-            return "AI smart per ora risponde alle domande. Per comandare i dispositivi passa all'app classica."
+
+        val isOtherCommand = Regex("\\b(apri|chiudi|imposta|regola|aumenta|abbassa)\\b").containsMatchIn(q)
+        if (isOtherCommand) {
+            return "La modalità Smart è in sola lettura: il comando non è stato eseguito."
+        }
+
+        val isTurnOn = Regex("\\b(accendi|attiva)\\b").containsMatchIn(q)
+        val isTurnOff = Regex("\\b(spegni|disattiva)\\b").containsMatchIn(q)
+        if (isTurnOn || isTurnOff) return "La modalità Smart è in sola lettura: il comando non è stato eseguito."
+
         if (Regex("\\b(casa|riepilogo|sintesi)\\b").containsMatchIn(q) &&
             !Regex("\\b(luci|living|acs|sanitaria)\\b").containsMatchIn(q)) return summary(connected)
         val parts = mutableListOf<String>()
@@ -98,9 +132,10 @@ data class AiSmartState(val observations: Map<String, SmartObservation> = emptyM
             "pool/water/power/stat", "pool/deck/power/stat")
         const val livingTopic = "env/living/temperature/stat"
         const val acsTopic = "energy/puffer_acs/stat"
-        val entities = lightTopics.zip(listOf("Soggiorno", "Libreria", "Lampada TV", "Tavolino lettura",
+        val lightEntities = lightTopics.zip(listOf("Soggiorno", "Libreria", "Lampada TV", "Tavolino lettura",
             "Luce camera", "Lampada HiFi", "Luci piscina", "Luci pedana piscina"))
-            .map { (topic, label) -> SmartEntity(topic, label, true) } + listOf(
+            .map { (topic, label) -> SmartEntity(topic, label, true) }
+        val entities = lightEntities + listOf(
                 SmartEntity(livingTopic, "Temperatura living", false),
                 SmartEntity(acsTopic, "Acqua sanitaria ACS", false)
             )

@@ -22,6 +22,16 @@ CLIMATE_TOPICS = {
     "temperature_set_c": "zara/interface/stato_condizionatore/temperatura_impostata_c/stat",
     "recorded_reason": "zara/interface/stato_condizionatore/motivo_logica/stat",
 }
+LIGHT_TOPICS = {
+    "lights_living": "zara/interface/lights/living/power/stat",
+    "lights_libreria": "zara/interface/lights/libreria/power/stat",
+    "lights_tv": "zara/interface/lights/tv/power/stat",
+    "lights_reading": "zara/interface/lights/reading/power/stat",
+    "lights_bedroom": "zara/interface/lights/bedroom/power/stat",
+    "lights_hifi": "zara/interface/lights/hifi/power/stat",
+    "pool_water": "zara/interface/pool/water/power/stat",
+    "pool_deck": "zara/interface/pool/deck/power/stat",
+}
 DAILY_EXTREME_METRICS = {
     "grid_import_kwh", "grid_export_kwh", "home_consumption_kwh",
     "solar_production_kwh", "battery_charge_kwh", "battery_discharge_kwh"
@@ -31,7 +41,7 @@ DAILY_EXTREME_METRICS = {
 def catalog(path=CATALOG_PATH):
     sources = json.loads(path.read_text(encoding="utf-8"))["sources"]
     return {
-        "domains": ["energy", "climate"],
+        "domains": ["energy", "climate", "lights"],
         "tools": [{
             "name": "energy_metric",
             "description": "Calculate one validated historical energy metric",
@@ -40,6 +50,10 @@ def catalog(path=CATALOG_PATH):
                 "start": "YYYY-MM-DD Europe/Rome, inclusive",
                 "end": "YYYY-MM-DD Europe/Rome, exclusive"
             }
+        }, {
+            "name": "current_lights",
+            "description": "Read declared current states for one or all mapped lights",
+            "parameters": {"light": ["all"] + sorted(LIGHT_TOPICS)}
         }, {
             "name": "current_air_conditioner",
             "description": "Read current declared air-conditioner state, mode, setpoint and recorded controller reason",
@@ -97,7 +111,8 @@ def validate_plan(plan, sources=None):
         expected = ({"id", "tool", "metric", "start", "end"}
                     if tool == "energy_metric" else {"id", "tool", "metric", "start", "end", "extremum"}
                     if tool == "energy_daily_extreme" else {"id", "tool"}
-                    if tool == "current_air_conditioner" else {"id", "tool", "metric"}
+                    if tool == "current_air_conditioner" else {"id", "tool", "light"}
+                    if tool == "current_lights" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
                     if tool == "energy_comparison" else None)
@@ -112,6 +127,8 @@ def validate_plan(plan, sources=None):
         if ((tool == "energy_metric" and operation["metric"] not in sources)
                 or (tool == "current_energy_metric" and operation["metric"] not in CURRENT_METRICS)):
             raise ValueError("Unknown tool or metric")
+        if tool == "current_lights" and operation["light"] not in (["all"] + sorted(LIGHT_TOPICS)):
+            raise ValueError("Unknown light")
         if tool == "energy_daily_extreme" and (operation["metric"] not in DAILY_EXTREME_METRICS
                                                 or operation["extremum"] not in ("maximum", "minimum")):
             raise ValueError("Unknown daily extreme metric or mode")
@@ -201,11 +218,35 @@ def validate_climate_snapshot(snapshot):
     return clean
 
 
-def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None, log_root=None):
+def validate_lights_snapshot(snapshot):
+    if snapshot is None:
+        return None
+    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema", "connected", "observations"}
+            or snapshot["schema"] != "house_ai.current_lights_input.v1"
+            or type(snapshot["connected"]) is not bool or not isinstance(snapshot["observations"], dict)
+            or set(snapshot["observations"]) - set(LIGHT_TOPICS)):
+        raise ValueError("Invalid current lights snapshot")
+    clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
+    for light, observation in snapshot["observations"].items():
+        if (not isinstance(observation, dict)
+                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or type(observation["value"]) is not bool
+                or type(observation["received_at_ms"]) is not int
+                or not 0 <= observation["received_at_ms"] <= 253402214400000
+                or type(observation["retained"]) is not bool
+                or observation["source_topic"] != LIGHT_TOPICS[light]):
+            raise ValueError("Invalid light observation")
+        clean["observations"][light] = dict(observation)
+    return clean
+
+
+def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
+            lights_snapshot=None, log_root=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     current = validate_current_snapshot(current_snapshot)
     climate = validate_climate_snapshot(climate_snapshot)
+    lights = validate_lights_snapshot(lights_snapshot)
     if checked["clarification"]:
         return checked
     results = []
@@ -265,6 +306,21 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "limitations": ["Stati dichiarati dal Digital Twin; non conferma fisica.",
                     "Il motivo è testo registrato dal controller, non una deduzione del modello.",
                     "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
+            continue
+        if operation["tool"] == "current_lights":
+            selected = lights["observations"] if lights else {}
+            if operation["light"] != "all":
+                selected = ({operation["light"]: selected[operation["light"]]}
+                            if operation["light"] in selected else {})
+            results.append({"id": operation["id"], "light": operation["light"], "result": {
+                "schema": "house_ai.current_lights.v1",
+                "status": "available" if selected else "missing",
+                "connected": lights["connected"] if lights else False,
+                "observations": selected,
+                "mapped_count": len(LIGHT_TOPICS),
+                "limitations": ["Stati dichiarati dal Digital Twin; non conferma fisica.",
+                    "Timestamp di ricezione Android, non istante del cambio stato.",
+                    "Retained non dimostra freschezza, durata o autore dell'azione."]}})
             continue
         source = sources[operation["metric"]]
         sign = source.get("import_sign", source.get("direction_sign"))

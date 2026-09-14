@@ -84,15 +84,20 @@ class HouseAiRepositoryTest {
         val climate = ClimateSmartState().observe("stato_condizionatore/motivo_logica/stat",
             "humidex alto", 1789200000000, true,
             "zara/interface/stato_condizionatore/motivo_logica/stat")
+        val lights = AiSmartState().observe("lights/libreria/power/stat", "ON",
+            1789200000001, true, "zara/interface/lights/libreria/power/stat")
         val request = exchange(body = body) { url ->
             val result = runBlocking { HouseAiRepository().assistant(url, "test-token", "Perche?",
-                EnergySmartState(), true, climate, AssistantContext("climate", "air_conditioner")) }
+                EnergySmartState(), true, climate, lights,
+                AssistantContext("climate", "air_conditioner")) }
             assertEquals(AssistantContext("climate", "air_conditioner"), result.context)
             assertTrue(result.evidence.single().contains("motivo_logica/stat"))
         }
         val payload = JSONObject(request.substringAfter("\n\n"))
         assertEquals("humidex alto", payload.getJSONObject("current_climate")
             .getJSONObject("observations").getJSONObject("recorded_reason").getString("value"))
+        assertTrue(payload.getJSONObject("current_lights").getJSONObject("observations")
+            .getJSONObject("lights_libreria").getBoolean("value"))
         assertEquals("air_conditioner", payload.getJSONObject("conversation_context").getString("focus"))
     }
 

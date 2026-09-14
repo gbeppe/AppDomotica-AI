@@ -125,6 +125,7 @@ class HouseAiRepository {
         energy: EnergySmartState,
         connected: Boolean,
         climate: ClimateSmartState = ClimateSmartState(),
+        lights: AiSmartState = AiSmartState(),
         context: AssistantContext? = null,
     ): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
         val base = validatedBase(baseUrl)
@@ -151,6 +152,14 @@ class HouseAiRepository {
         }
         body.put("current_climate", JSONObject().put("schema", "house_ai.current_climate_input.v1")
             .put("connected", connected).put("observations", climateObservations))
+        val lightObservations = JSONObject()
+        lights.validLightObservations().forEach { (light, observation) ->
+            lightObservations.put(light, JSONObject().put("value", observation.payload.toBooleanStrict())
+                .put("received_at_ms", observation.receivedAtMs).put("retained", observation.retained)
+                .put("source_topic", observation.sourceTopic))
+        }
+        body.put("current_lights", JSONObject().put("schema", "house_ai.current_lights_input.v1")
+            .put("connected", connected).put("observations", lightObservations))
         context?.let { body.put("conversation_context", JSONObject()
             .put("domain", it.domain).put("focus", it.focus)) }
         val requestBody = body.toString()

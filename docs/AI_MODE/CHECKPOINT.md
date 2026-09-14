@@ -1,13 +1,20 @@
 # Checkpoint — 12 settembre 2026
 
-## Preparazione controlli Clima e Impianti — 13 settembre 2026
+## Audit dominio luci — 14 settembre 2026
 
-Catalogati e rappresentati in Smart tutti i 23 controlli già presenti nelle
-schede dashboard Clima e Impianti: 9 e 14 rispettivamente. La nuova schermata
-legge esclusivamente i topic `/stat`; non riceve `MqttManager`, non contiene
-callback operative e lascia sconosciuti gli stati non ricevuti. Strategia,
-copertura e requisiti per una futura attivazione in
-[`PREPARAZIONE_CONTROLLI_SMART.md`](PREPARAZIONE_CONTROLLI_SMART.md).
+Gli otto stati luce del registry entrano nel gateway come snapshot separato e
+sono consultati dal tool deterministico `current_lights`. Rimossi pubblicazione
+MQTT dalla UI Smart, alias di comando non validati e deduzioni di durata/autore
+basate sul solo messaggio `/stat`. La fase resta integralmente read-only.
+
+## Home Smart e azioni via query — 13 settembre 2026
+
+La home Smart è organizzata nei soli tre riquadri stato, query e risposta.
+Configurazione, diagnostica e storico sono nel menu ausiliario; i widget di
+controllo Clima/Impianti del prototipo precedente sono stati rimossi. Le future
+azioni saranno espresse soltanto tramite query e restano disabilitate in questa
+fase read-only. Decisioni in
+[`INTERAZIONE_QUERY_SMART.md`](INTERAZIONE_QUERY_SMART.md).
 
 ## Primo incremento climatizzazione — 13 settembre 2026
 

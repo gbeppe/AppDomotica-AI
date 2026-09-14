@@ -11,12 +11,18 @@ import android.speech.tts.UtteranceProgressListener
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -32,6 +38,7 @@ import com.domopi.app.ui.components.StackStatusIcon
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 /** Uses the existing state observer. This screen has no command or MQTT client capability. */
 @Composable
@@ -42,7 +49,6 @@ fun AiSmartScreen(
     connected: Boolean,
     onClassic: () -> Unit,
     onHistory: () -> Unit,
-    onControls: () -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -147,11 +153,11 @@ fun AiSmartScreen(
         onQuestionChange = { question = it },
         onClassic = onClassic,
         onHistory = onHistory,
-        onControls = onControls,
         voiceNotice = voiceNotice,
         speechReady = speechReady,
         dynamicMode = true,
         energyState = energyState,
+        climateState = climateState,
         serviceUrl = serviceUrl,
         serviceToken = serviceToken,
         onServiceUrlChange = { serviceUrl = it; dynamicError = null; response = null },
@@ -170,34 +176,34 @@ fun AiSmartScreen(
         },
         onAskDynamic = { text ->
             scope.launch {
-                loading = true
-                dynamicError = null
-                response = null
-                try {
-                    val started = System.currentTimeMillis()
-                    val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
-                        climateState, assistantContext)
-                    response = result
-                    assistantContext = result.context ?: assistantContext
-                    stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
-                        statusCode = 200, latencyMs = System.currentTimeMillis() - started,
-                        details = "Richiesta completata"))
-                    healthRefresh++
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: IllegalStateException) {
-                    dynamicError = e.message ?: "Risposta del backend non valida."
-                    stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
-                        details = "Risposta backend non valida", isError = true))
-                    healthRefresh++
-                } catch (_: Exception) {
-                    dynamicError = "Assistente energia non raggiungibile o risposta non valida. Verifica indirizzo e connessione, poi riprova."
-                    stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
-                        details = "Richiesta non riuscita", isError = true))
-                    healthRefresh++
-                } finally {
-                    loading = false
-                }
+                    loading = true
+                    dynamicError = null
+                    response = null
+                    try {
+                        val started = System.currentTimeMillis()
+                        val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
+                            climateState, state, assistantContext)
+                        response = result
+                        assistantContext = result.context ?: assistantContext
+                        stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
+                            statusCode = 200, latencyMs = System.currentTimeMillis() - started,
+                            details = "Richiesta completata"))
+                        healthRefresh++
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: IllegalStateException) {
+                        dynamicError = e.message ?: "Risposta del backend non valida."
+                        stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
+                            details = "Risposta backend non valida", isError = true))
+                        healthRefresh++
+                    } catch (_: Exception) {
+                        dynamicError = "Assistente energia non raggiungibile o risposta non valida. Verifica indirizzo e connessione, poi riprova."
+                        stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
+                            details = "Richiesta non riuscita", isError = true))
+                        healthRefresh++
+                    } finally {
+                        loading = false
+                    }
             }
         },
         onDictate = {
@@ -238,7 +244,6 @@ internal fun AiSmartContent(
     onQuestionChange: (String) -> Unit,
     onClassic: () -> Unit,
     onHistory: () -> Unit,
-    onControls: () -> Unit = {},
     voiceNotice: String? = null,
     speechReady: Boolean = false,
     onDictate: () -> Unit = {},
@@ -246,6 +251,7 @@ internal fun AiSmartContent(
     onStopSpeaking: () -> Unit = {},
     dynamicMode: Boolean = false,
     energyState: EnergySmartState = EnergySmartState(),
+    climateState: ClimateSmartState = ClimateSmartState(),
     dynamicResponse: EnergyAssistantAnswer? = null,
     serviceUrl: String = "",
     serviceToken: String = "",
@@ -264,8 +270,18 @@ internal fun AiSmartContent(
     var submittedQuestion by rememberSaveable { mutableStateOf<String?>(null) }
     var showSources by rememberSaveable { mutableStateOf(false) }
     var showStackSheet by rememberSaveable { mutableStateOf(false) }
+    var showAuxiliaryMenu by remember { mutableStateOf(false) }
+    var showConfiguration by rememberSaveable { mutableStateOf(false) }
+    var summaryExpanded by rememberSaveable { mutableStateOf(true) }
 
-    val summary = if (dynamicMode) energyState.summary(connected) else state.summary(connected)
+    val active = state.activeDeviceLabels() + listOfNotNull(climateState.declaredActiveLabel())
+    val summary = if (dynamicMode) listOf(
+        if (connected) "Collegamento attivo." else "Collegamento assente: mostro gli ultimi dati ricevuti.",
+        if (active.isEmpty()) "Nessun dispositivo attivo rilevato tra quelli mappati."
+        else "Dispositivi attivi dichiarati: ${active.joinToString(", ")}.",
+        state.environmentalMeasuresText(),
+        AiSmartState.freshnessText,
+    ).joinToString(" ") else state.summary(connected)
     // Re-evaluate against the latest observations so a cached answer cannot hide a disconnection.
     val answer = if (dynamicMode) dynamicAnswer else submittedQuestion?.let { state.answer(it, connected) }
     Scaffold(
@@ -281,6 +297,23 @@ internal fun AiSmartContent(
                         isChecking = stackHealthState.isChecking,
                         onClick = { showStackSheet = true }
                     )
+                    Box {
+                        IconButton(onClick = { showAuxiliaryMenu = true }) {
+                            Icon(Icons.Default.MoreVert, "Menu configurazione e diagnostica")
+                        }
+                        DropdownMenu(expanded = showAuxiliaryMenu,
+                            onDismissRequest = { showAuxiliaryMenu = false }) {
+                            DropdownMenuItem(text = { Text("Configurazione assistente") }, onClick = {
+                                showAuxiliaryMenu = false; showConfiguration = true
+                            })
+                            DropdownMenuItem(text = { Text("Diagnostica stack") }, onClick = {
+                                showAuxiliaryMenu = false; showStackSheet = true
+                            })
+                            DropdownMenuItem(text = { Text("Storico e motivazioni") }, onClick = {
+                                showAuxiliaryMenu = false; onHistory()
+                            })
+                        }
+                    }
                 }
             )
         }
@@ -294,6 +327,22 @@ internal fun AiSmartContent(
                 onClearLogs = onClearTrafficLogs
             )
         }
+        if (showConfiguration) {
+            AlertDialog(onDismissRequest = { showConfiguration = false },
+                title = { Text("Configurazione assistente") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedTextField(serviceUrl, onServiceUrlChange,
+                            label = { Text("Indirizzo backend AI") }, singleLine = true)
+                        OutlinedTextField(serviceToken, onServiceTokenChange,
+                            label = { Text("Token backend") }, singleLine = true,
+                            visualTransformation = PasswordVisualTransformation())
+                        Text("Il token resta in memoria e non viene salvato nell’app.",
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                },
+                confirmButton = { TextButton(onClick = { showConfiguration = false }) { Text("Chiudi") } })
+        }
 
         Column(
             Modifier
@@ -303,51 +352,72 @@ internal fun AiSmartContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(if (dynamicMode) "Casa Smart" else "La casa, dai dati disponibili", style = MaterialTheme.typography.headlineSmall)
-            Text(if (connected) "Collegamento attivo · età delle misure ignota" else "Collegamento assente · dati non aggiornabili",
-                color = if (connected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
-            Card(Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("smart-home-summary")
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(if (dynamicMode) "Ultime letture energetiche" else "Ultimi stati ricevuti", style = MaterialTheme.typography.titleMedium)
-                    Text(summary, Modifier.testTag("smart-summary"))
-                    TextButton(enabled = speechReady, onClick = { onSpeak(summary) }) { Text("Leggi riepilogo") }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { summaryExpanded = !summaryExpanded },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Stato della domotica", style = MaterialTheme.typography.titleMedium)
+                            if (!summaryExpanded) {
+                                Text(
+                                    "Minimizzato · tocca per espandere",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        IconButton(onClick = { summaryExpanded = !summaryExpanded }) {
+                            Icon(
+                                imageVector = if (summaryExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (summaryExpanded) "Minimizza riquadro" else "Espandi riquadro"
+                            )
+                        }
+                    }
+                    if (summaryExpanded) {
+                        Text(summary, Modifier.testTag("smart-summary"))
+                        TextButton(enabled = speechReady, onClick = { onSpeak(summary) }) { Text("Leggi riepilogo") }
+                    }
                 }
             }
-            Text("Chiedi alla casa", style = MaterialTheme.typography.titleLarge)
-            Text(if (dynamicMode) "Puoi fare domande libere su energia e climatizzazione. Lo stato corrente arriva dal Digital Twin; lo storico da EmonCMS; previsioni e decisioni registrate dai log Node-RED."
-                 else "Puoi chiedere quante luci risultano accese e le temperature di living e acqua sanitaria ACS, anche insieme.")
-            if (dynamicMode) {
-                OutlinedTextField(serviceUrl, onServiceUrlChange,
-                    label = { Text("Indirizzo backend AI") }, placeholder = { Text("https://…") },
-                    singleLine = true, enabled = !loading, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(serviceToken, onServiceTokenChange,
-                    label = { Text("Token backend") }, singleLine = true, enabled = !loading,
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth())
-                Text("Il token resta in memoria per questa schermata e non viene salvato nell’app.",
-                    style = MaterialTheme.typography.bodySmall)
+            Card(Modifier.fillMaxWidth().testTag("smart-query-card")) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Chiedi alla casa", style = MaterialTheme.typography.titleMedium)
+                    Text(if (dynamicMode) "Scrivi o detta una query su stato, energia e climatizzazione. Le azioni via query non sono ancora abilitate."
+                        else "Puoi chiedere luci e temperature disponibili.", style = MaterialTheme.typography.bodySmall)
+                    OutlinedTextField(question, onQuestionChange, label = { Text("La tua query") },
+                        modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 5, enabled = !loading)
+                    if (question.length > 1000) Text("La query può contenere al massimo 1000 caratteri.", color = MaterialTheme.colorScheme.error)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(enabled = question.isNotBlank() && question.length <= 1000 && !loading &&
+                            (!dynamicMode || serviceUrl.isNotBlank() && serviceToken.isNotBlank()), onClick = {
+                            onStopSpeaking()
+                            submittedQuestion = question.trim()
+                            if (dynamicMode) onAskDynamic(question.trim())
+                        }) { Text("Chiedi") }
+                        OutlinedButton(enabled = !loading, onClick = onDictate) { Text("Detta") }
+                    }
+                    if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text("Controlla la trascrizione prima di inviarla.", style = MaterialTheme.typography.bodySmall)
+                    voiceNotice?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                }
             }
-            OutlinedTextField(question, onQuestionChange, label = { Text("La tua domanda") },
-                modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 5, enabled = !loading)
-            if (question.length > 1000) Text("La domanda può contenere al massimo 1000 caratteri.", color = MaterialTheme.colorScheme.error)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(enabled = question.isNotBlank() && question.length <= 1000 && !loading &&
-                    (!dynamicMode || serviceUrl.isNotBlank() && serviceToken.isNotBlank()), onClick = {
-                    onStopSpeaking()
-                    submittedQuestion = question.trim()
-                    if (dynamicMode) onAskDynamic(question.trim())
-                }) { Text("Chiedi") }
-                OutlinedButton(enabled = !loading, onClick = onDictate) { Text("Detta domanda") }
-            }
-            if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-            Text("La dettatura usa il servizio vocale del dispositivo, che può elaborare l’audio online. Controlla la trascrizione prima di inviarla.",
-                style = MaterialTheme.typography.bodySmall)
-            voiceNotice?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-            dynamicError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            answer?.let { text ->
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Risposta", style = MaterialTheme.typography.titleMedium)
+            Card(Modifier.fillMaxWidth().testTag("smart-response-card")) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Risposta", style = MaterialTheme.typography.titleMedium)
+                    dynamicError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    if (answer == null && dynamicError == null && !loading) {
+                        Text("La risposta apparirà qui.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    answer?.let { text ->
                         Text("Domanda: ${dynamicResponse?.question?.takeIf { it.isNotBlank() } ?: submittedQuestion.orEmpty()}", style = MaterialTheme.typography.bodySmall)
                         dynamicResponse?.let { result ->
                             Text(result.statusLabel, style = MaterialTheme.typography.labelLarge)
@@ -357,61 +427,43 @@ internal fun AiSmartContent(
                         Text(text, Modifier.testTag("smart-answer"))
                         TextButton(enabled = speechReady, onClick = { onSpeak(text) }) { Text("Leggi risposta") }
                     }
-                }
-            }
-            TextButton(enabled = speechReady, onClick = onStopSpeaking) { Text("Ferma lettura") }
-            TextButton(onClick = { showSources = !showSources }) {
-                Text(if (showSources) "Nascondi provenienza" else "Mostra provenienza e limiti")
-            }
-            if (!dynamicMode) Text("Copertura parziale: otto punti luce, living e ACS. Prolunga / Allarme è escluso in attesa di classificazione; lavanderia, portico, cucina ed esterno non sono mappati.",
-                style = MaterialTheme.typography.bodySmall)
-            if (showSources) {
-                Text("Provenienza delle letture", style = MaterialTheme.typography.titleLarge)
-                if (dynamicMode) {
-                    dynamicResponse?.evidence?.forEachIndexed { index, detail ->
-                        Card(Modifier.fillMaxWidth().testTag("energy-evidence-$index")) {
-                            Column(Modifier.padding(12.dp)) {
-                                Text(detail, style = MaterialTheme.typography.bodySmall)
+                    TextButton(enabled = speechReady, onClick = onStopSpeaking) { Text("Ferma lettura") }
+                    TextButton(onClick = { showSources = !showSources }) {
+                        Text(if (showSources) "Nascondi provenienza" else "Mostra provenienza e limiti")
+                    }
+                    if (showSources) {
+                        HorizontalDivider()
+                        Text("Provenienza e limiti", style = MaterialTheme.typography.titleSmall)
+                        if (dynamicMode) {
+                            dynamicResponse?.evidence?.forEachIndexed { index, detail ->
+                                Text(detail, Modifier.testTag("energy-evidence-$index"), style = MaterialTheme.typography.bodySmall)
+                            }
+                            EnergySmartState.topics.entries.map { it.value to it.key }.forEach { (metric, topic) ->
+                                val observation = energyState.reading(metric)
+                                Column(Modifier.testTag("energy-source-$metric")) {
+                                    Text(energyState.readingText(metric), style = MaterialTheme.typography.bodySmall)
+                                    Text(observation?.sourceTopic ?: "Topic atteso: $topic", style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        if (observation == null) "Nessun messaggio ricevuto. Età della misura ignota."
+                                        else "Ricezione: ${Instant.ofEpochMilli(observation.receivedAtMs)} · retained: ${observation.retained}. Età della misura ignota.",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
                             }
                         }
-                    }
-                    EnergySmartState.topics.entries.map { it.value to it.key }.forEach { (metric, topic) ->
-                        val observation = energyState.reading(metric)
-                        Card(Modifier.fillMaxWidth().testTag("energy-source-$metric")) {
-                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(energyState.readingText(metric))
-                                Text(observation?.sourceTopic ?: "Topic atteso: $topic", style = MaterialTheme.typography.bodySmall)
-                                Text(if (observation == null) "Nessun messaggio ricevuto." else
-                                    "Ricezione: ${java.time.Instant.ofEpochMilli(observation.receivedAtMs)} · retained: ${observation.retained}",
+                        if (!dynamicMode) state.readings().forEach { reading ->
+                            Column(Modifier.testTag("source-${reading.entity.topic}")) {
+                                Text("${reading.entity.label}: ${reading.value}", style = MaterialTheme.typography.bodySmall)
+                                Text(reading.observation?.sourceTopic ?: "Topic atteso: ${reading.entity.topic}",
                                     style = MaterialTheme.typography.bodySmall)
-                                Text("Età della misura sorgente ignota.", style = MaterialTheme.typography.bodySmall)
+                                Text(reading.provenance(), style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
-                }
-                if (!dynamicMode) state.readings().forEach { reading ->
-                    Card(Modifier.fillMaxWidth().testTag("source-${reading.entity.topic}")) {
-                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(reading.entity.label, style = MaterialTheme.typography.titleMedium)
-                            Text(reading.value)
-                            Text(reading.provenance(), style = MaterialTheme.typography.bodySmall)
-                            Text(reading.observation?.sourceTopic ?: "Topic relativo atteso: ${reading.entity.topic}",
-                                style = MaterialTheme.typography.bodySmall)
-                            if (reading.entity.isLight) Text("Stato dichiarato; conferma fisica non verificata.",
-                                style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
+                    Text("Modalità Smart in sola lettura: nessun comando viene inviato ai dispositivi.",
+                        style = MaterialTheme.typography.bodySmall)
                 }
             }
-            HorizontalDivider()
-            Text(if (dynamicMode) "Consultazione Smart di sola lettura. Il pianificatore sceglie strumenti validati; non può inviare comandi ai dispositivi."
-                 else "Consultazione di luci, living e ACS. Le risposte sono preparate dai dati mappati; le altre richieste non sono ancora disponibili.",
-                style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = onHistory, modifier = Modifier.fillMaxWidth()) { Text("Storico e motivazioni") }
-            if (dynamicMode) OutlinedButton(onClick = onControls, modifier = Modifier.fillMaxWidth()) {
-                Text("Controlli Clima e Impianti · sola lettura")
-            }
-            TextButton(onClick = onClassic, modifier = Modifier.fillMaxWidth()) { Text("Apri app classica") }
         }
     }
 }

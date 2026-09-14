@@ -2,7 +2,7 @@ import unittest
 from datetime import date
 
 from assistant import ask
-from energy_tools import execute, validate_plan
+from energy_tools import execute, validate_lights_snapshot, validate_plan
 
 
 class Planner:
@@ -163,3 +163,20 @@ class AssistantTests(unittest.TestCase):
         for snapshot in invalid:
             with self.assertRaises(ValueError):
                 execute(None, operation, climate_snapshot=snapshot)
+
+    def test_current_lights_are_read_only_declared_states(self):
+        plan = {"operations": [{"id": "luci", "tool": "current_lights", "light": "all"}]}
+        snapshot = {"schema": "house_ai.current_lights_input.v1", "connected": True,
+                    "observations": {"lights_libreria": {"value": True,
+                        "received_at_ms": 1789200000000, "retained": True,
+                        "source_topic": "zara/interface/lights/libreria/power/stat"}}}
+        result = ask(None, Planner(plan), "Quali luci sono accese?", date(2026, 9, 12),
+                     lights_snapshot=snapshot)
+        self.assertIn("risultano accesi 1", result["answer"])
+        self.assertIn("Libreria", result["answer"])
+        self.assertIn("non prova freschezza, durata, autore", result["answer"])
+
+        invalid = {**snapshot, "observations": {"lights_libreria": {
+            **snapshot["observations"]["lights_libreria"], "source_topic": "lights/libreria/power/cmnd"}}}
+        with self.assertRaises(ValueError):
+            validate_lights_snapshot(invalid)

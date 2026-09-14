@@ -3,8 +3,10 @@ package com.domopi.app.ui.screens
 import androidx.compose.runtime.*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.espresso.Espresso
 import androidx.test.platform.app.InstrumentationRegistry
 import com.domopi.app.data.AiSmartState
+import com.domopi.app.data.ClimateSmartState
 import com.domopi.app.data.EnergySmartState
 import com.domopi.app.data.EnergyAssistantAnswer
 import com.domopi.app.data.StackHealthState
@@ -28,6 +30,29 @@ class AiSmartScreenTest {
             .observe(AiSmartState.acsTopic, "41.1", 1789154430000, false)
     }
 
+    @Test fun smartHomeHasThreeCardsAndAuxiliaryMenuWithoutControlWidgets() {
+        val climate = com.domopi.app.data.ClimateSmartState().observe(
+            "stato_condizionatore/stato_attuale/stat", "COOLING_ON", 1789200000000, true,
+            "zara/interface/stato_condizionatore/stato_attuale/stat")
+        compose.setContent {
+            DomoPiTheme(darkTheme = true) {
+                AiSmartContent(state(), true, "", {}, {}, {}, dynamicMode = true,
+                    climateState = climate, serviceUrl = "https://example.test", serviceToken = "fixture")
+            }
+        }
+        compose.onNodeWithTag("smart-home-summary").assertIsDisplayed()
+        compose.onNodeWithTag("smart-query-card").assertIsDisplayed()
+        compose.onNodeWithTag("smart-response-card").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("smart-summary")
+            .assertTextContains("Condizionatore: COOLING_ON", substring = true)
+        compose.onNodeWithText("spenti", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("La risposta apparirà qui.").assertIsDisplayed()
+        compose.onNodeWithText("Controlli Clima e Impianti · sola lettura").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Menu configurazione e diagnostica").performClick()
+        compose.onNodeWithText("Configurazione assistente").assertIsDisplayed()
+        compose.onNodeWithText("Diagnostica stack").assertIsDisplayed()
+    }
+
     @Test fun compoundAnswerMatchesSpokenTextAndChangesOnDisconnection() {
         var connected by mutableStateOf(true)
         var spoken = ""
@@ -39,7 +64,7 @@ class AiSmartScreenTest {
             }
         }
         compose.onNodeWithText("Chiedi").assertIsNotEnabled()
-        compose.onNodeWithText("La tua domanda").performScrollTo()
+        compose.onNodeWithText("La tua query").performScrollTo()
             .performTextInput("Quante luci sono accese e quali sono le temperature living e ACS?")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.onNodeWithText("Chiedi").performScrollTo().performClick()
@@ -66,10 +91,10 @@ class AiSmartScreenTest {
         screenshot("smart-light-summary.png")
         compose.onNodeWithText("Mostra provenienza e limiti").performScrollTo().performClick()
         compose.onNodeWithTag("source-lights/hifi/power/stat").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Dato non ricevuto").assertIsDisplayed()
+        compose.onNodeWithText("Dato non ricevuto", substring = true).performScrollTo().assertIsDisplayed()
         screenshot("smart-light-provenance.png")
         compose.onNodeWithText("zara/interface/energy/puffer_acs/stat").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Messaggio non retained.", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Messaggio non retained.", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test fun missingDataAndVoiceUnavailableKeepTextAndNavigationUsable() {
@@ -88,8 +113,9 @@ class AiSmartScreenTest {
             .assertTextContains("Temperatura living: dato non disponibile", substring = true)
             .assertTextContains("Acqua sanitaria ACS: dato non disponibile", substring = true)
         compose.onNodeWithText("Leggi risposta").performScrollTo().assertIsNotEnabled()
-        compose.onNodeWithText("Storico e motivazioni").performScrollTo().performClick()
-        compose.onNodeWithText("Apri app classica").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Menu configurazione e diagnostica").performClick()
+        compose.onNodeWithText("Storico e motivazioni").performClick()
+        compose.onNodeWithText("Indietro").performClick()
         compose.runOnIdle { assertTrue(classic); assertTrue(history) }
         screenshot("smart-dark-missing.png")
     }
@@ -103,9 +129,9 @@ class AiSmartScreenTest {
                     onDictate = { question = "Temperatura camera" }, onStopSpeaking = { stopped = true })
             }
         }
-        compose.onNodeWithText("Detta domanda").performScrollTo().performClick()
+        compose.onNodeWithText("Detta").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").assertDoesNotExist()
-        compose.onNodeWithText("La tua domanda").performScrollTo().performTextReplacement("Temperatura living e ACS")
+        compose.onNodeWithText("La tua query").performScrollTo().performTextReplacement("Temperatura living e ACS")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.onNodeWithText("Chiedi").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo().assertTextContains("41,1 gradi", substring = true)
@@ -131,9 +157,12 @@ class AiSmartScreenTest {
             }
         }
         compose.onNodeWithText("Chiedi").assertIsNotEnabled()
-        compose.onNodeWithText("Indirizzo backend AI").performScrollTo().performTextInput("http://10.0.2.2:8765")
-        compose.onNodeWithText("Token backend").performScrollTo().performTextInput("token-di-test-abbastanza-lungo")
+        compose.onNodeWithContentDescription("Menu configurazione e diagnostica").performClick()
+        compose.onNodeWithText("Configurazione assistente").performClick()
+        compose.onNodeWithText("Indirizzo backend AI").performTextInput("http://10.0.2.2:8765")
+        compose.onNodeWithText("Token backend").performTextInput("token-di-test-abbastanza-lungo")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.onNodeWithText("Chiudi").performClick()
         compose.onNodeWithText("Chiedi").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo()
             .assertTextContains("12,50 kWh", substring = true)
@@ -157,7 +186,7 @@ class AiSmartScreenTest {
                     dynamicAnswer = response.text, speechReady = true, onSpeak = { spoken = it })
             }
         }
-        compose.onNodeWithTag("smart-summary").assertTextContains("Immissione rete: 450,0 W", substring = true)
+        compose.onNodeWithTag("smart-summary").assertTextContains("Dispositivi attivi dichiarati", substring = true)
         screenshot("energy-light-summary.png")
         compose.onNodeWithTag("smart-answer").performScrollTo().assertTextEquals(response.text)
         compose.onNodeWithText("Leggi risposta").performScrollTo().performClick()
@@ -166,8 +195,7 @@ class AiSmartScreenTest {
         compose.onNodeWithText("Mostra provenienza e limiti").performScrollTo().performClick()
         compose.onNodeWithTag("energy-evidence-0").performScrollTo().assertIsDisplayed()
         screenshot("energy-light-evidence.png")
-        compose.onNodeWithTag("energy-source-grid_power_w").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Apri app classica").performScrollTo().performClick()
+        compose.onNodeWithText("Indietro").performClick()
         compose.runOnIdle { assertTrue(classic) }
     }
 
@@ -186,13 +214,13 @@ class AiSmartScreenTest {
                     })
             }
         }
-        compose.onNodeWithText("Detta domanda").performScrollTo().performClick()
+        compose.onNodeWithText("Detta").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("", asked) }
         compose.onNodeWithTag("smart-answer").assertDoesNotExist()
         compose.onNodeWithText("Chiedi").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo().assertTextContains("Intendi il livello medio", substring = true)
         screenshot("energy-dark-clarification.png")
-        compose.onNodeWithText("La tua domanda").performScrollTo().performTextReplacement("SOC medio dal 1 al 7 settembre inclusi")
+        compose.onNodeWithText("La tua query").performScrollTo().performTextReplacement("SOC medio dal 1 al 7 settembre inclusi")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.onNodeWithText("Chiedi").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("SOC medio dal 1 al 7 settembre inclusi", asked) }
@@ -220,6 +248,30 @@ class AiSmartScreenTest {
         compose.onNodeWithText("Stato Stack & Traffico").assertIsDisplayed()
         compose.onNodeWithText("Stack Completamente Operativo").assertIsDisplayed()
         screenshot("smart-stack-status.png")
+    }
+
+    @Test fun summaryCardCanBeCollapsedAndReExpanded() {
+        compose.setContent {
+            DomoPiTheme(darkTheme = true) {
+                AiSmartContent(
+                    state = state(),
+                    connected = true,
+                    question = "",
+                    onQuestionChange = {},
+                    onClassic = {},
+                    onHistory = {}
+                )
+            }
+        }
+        compose.onNodeWithTag("smart-summary").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Minimizza riquadro").performClick()
+        compose.onNodeWithTag("smart-summary").assertDoesNotExist()
+        compose.onNodeWithText("Minimizzato · tocca per espandere").assertIsDisplayed()
+        screenshot("smart-summary-collapsed.png")
+
+        compose.onNodeWithContentDescription("Espandi riquadro").performClick()
+        compose.onNodeWithTag("smart-summary").assertIsDisplayed()
+        compose.onNodeWithText("Minimizzato · tocca per espandere").assertDoesNotExist()
     }
 
     private fun screenshot(name: String) {

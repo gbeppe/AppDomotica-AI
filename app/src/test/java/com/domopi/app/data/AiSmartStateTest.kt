@@ -73,11 +73,30 @@ class AiSmartStateTest {
         assertTrue(all.contains("41,1"))
     }
 
+    @Test fun homeSummaryPartsContainOnlyActiveDevicesAndValidMeasures() {
+        val state = sample()
+        assertEquals(6, state.activeDeviceLabels().size)
+        assertFalse(state.activeDevicesText().contains("spenti"))
+        assertTrue(state.environmentalMeasuresText().contains("living 24,2 °C"))
+        assertFalse(state.environmentalMeasuresText().contains("ACS"))
+        assertEquals("Misure ambientali non disponibili.", AiSmartState().environmentalMeasuresText())
+    }
+
     @Test fun unsupportedQuestionsAndCommandsDoNotInventAnswers() {
         val state = sample()
-        assertTrue(state.answer("Apri il cancello e dimmi la temperatura living", true).contains("app classica"))
+        assertTrue(state.answer("Apri il cancello e dimmi la temperatura living", true).contains("sola lettura"))
         assertTrue(state.answer("Quanto consuma il forno?", true).contains("non sono ancora disponibili"))
         assertTrue(AiSmartState().answer("Temperatura ACS?", true).contains("dato non disponibile"))
+    }
+
+    @Test fun lightSnapshotIncludesOnlyValidStatesAndNeverCreatesCommands() {
+        val state = AiSmartState()
+            .observe("lights/libreria/power/stat", "ON", 1789200000000L, true)
+            .observe("lights/hifi/power/stat", "unknown", 1789200000000L, true)
+        val lights = state.validLightObservations()
+        assertEquals(setOf("lights_libreria"), lights.keys)
+        assertEquals("true", lights["lights_libreria"]?.payload)
+        assertTrue(state.answer("Accendi la luce libreria", true).contains("sola lettura"))
     }
 
     @Test fun provenanceKeepsActualPrefixRetainAndReceptionSeparateFromMeasurementAge() {

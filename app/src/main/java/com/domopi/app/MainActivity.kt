@@ -121,13 +121,9 @@ class MainActivity : ComponentActivity() {
                             val energyState by mqttManager.energySmartState.collectAsState()
                             val climateState by mqttManager.climateSmartState.collectAsState()
                             val connected by mqttManager.isConnected.collectAsState()
-                            AiSmartScreen(state, energyState, climateState, connected, onClassic = { currentScreen = "home" },
-                                onHistory = { currentScreen = "house_ai" },
-                                onControls = { currentScreen = "ai_smart_controls" })
-                        }
-                        "ai_smart_controls" -> {
-                            val controls by mqttManager.smartControlState.collectAsState()
-                            SmartControlsScreen(controls, onBack = { currentScreen = "ai_smart" })
+                            AiSmartScreen(state, energyState, climateState, connected,
+                                onClassic = { currentScreen = "home" },
+                                onHistory = { currentScreen = "house_ai" })
                         }
                         "house_ai" -> HouseAiScreen(onBack = { currentScreen = "ai_smart" })
                         "lights" -> LightsScreen(

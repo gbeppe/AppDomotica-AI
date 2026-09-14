@@ -19,6 +19,15 @@ data class ClimateSmartState(private val observations: Map<String, ClimateSmartO
 
     fun validObservations(): Map<String, ClimateSmartObservation> = observations
 
+    fun declaredActiveText(): String? {
+        val state = observations["current_state"]?.value?.trim() ?: return null
+        val normalized = state.uppercase()
+        return if (normalized == "ON" || normalized == "ACCESO" || normalized.endsWith("_ON"))
+            "Condizionatore: $state (stato dichiarato)." else null
+    }
+
+    fun declaredActiveLabel(): String? = declaredActiveText()?.removeSuffix(".")
+
     companion object {
         val topics = mapOf(
             "stato_condizionatore/stato_attuale/stat" to "current_state",

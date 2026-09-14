@@ -1,16 +1,18 @@
 """Dynamic interpretation followed by validated tools and deterministic answers."""
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from energy_tools import catalog, execute, validate_climate_snapshot, validate_current_snapshot
+from energy_tools import (catalog, execute, validate_climate_snapshot, validate_current_snapshot,
+                          validate_lights_snapshot)
 from energy_presenter import describe
 
 
-def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None,
+def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
         conversation_context=None, log_root=None):
     if not isinstance(question, str) or not question.strip() or len(question) > 1000:
         raise ValueError('Invalid question')
     validate_current_snapshot(current_snapshot)
     validate_climate_snapshot(climate_snapshot)
+    validate_lights_snapshot(lights_snapshot)
     if conversation_context is not None and conversation_context != {
             'domain': 'climate', 'focus': 'air_conditioner'}:
         raise ValueError('Invalid conversation context')
@@ -31,7 +33,8 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
         raise RuntimeError('Planner unavailable or invalid response') from None
     try:
         execution = execute(client, proposed, current_snapshot=current_snapshot,
-                            climate_snapshot=climate_snapshot, log_root=log_root)
+                            climate_snapshot=climate_snapshot, lights_snapshot=lights_snapshot,
+                            log_root=log_root)
     except (ValueError, TypeError, OverflowError):
         raise RuntimeError('Planner returned an invalid plan') from None
     if execution['clarification']:

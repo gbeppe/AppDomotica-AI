@@ -11,6 +11,12 @@ LABELS = {
     "home_consumption_w": "Consumo della casa", "grid_power_w": "Scambio con la rete",
     "battery_power_w": "Potenza della batteria", "battery_soc_percent": "Carica della batteria Tesla",
 }
+LIGHT_LABELS = {
+    "lights_living": "Soggiorno", "lights_libreria": "Libreria",
+    "lights_tv": "Lampada TV", "lights_reading": "Tavolino lettura",
+    "lights_bedroom": "Luce camera", "lights_hifi": "Lampada HiFi",
+    "pool_water": "Luci piscina", "pool_deck": "Luci pedana piscina",
+}
 
 
 def number(value, digits=2):
@@ -166,6 +172,27 @@ def describe(item):
             qualifiers.append('Uno o più messaggi sono retained.')
         qualifiers.append('Il motivo è il testo pubblicato da Node-RED, non una deduzione né una conferma fisica; età delle misure sorgente ignota.')
         return ' '.join(parts + qualifiers)
+    if schema == 'house_ai.current_lights.v1':
+        observations = r['observations']
+        if not observations:
+            return 'Luci: nessuno stato valido disponibile nel Digital Twin al momento della richiesta.'
+        if item['light'] == 'all':
+            on = [LIGHT_LABELS[key] for key, obs in observations.items() if obs['value']]
+            off = sum(not obs['value'] for obs in observations.values())
+            missing = r['mapped_count'] - len(observations)
+            text = (f"Tra gli {r['mapped_count']} punti luce mappati, risultano accesi {len(on)}, "
+                    f"spenti {off} e senza dato valido {missing}.")
+            if on:
+                text += ' Accesi dichiarati: ' + ', '.join(on) + '.'
+        else:
+            observation = observations[item['light']]
+            text = f"{LIGHT_LABELS[item['light']]}: {'accesa' if observation['value'] else 'spenta'} dichiarata."
+        if not r['connected']:
+            text += ' Digital Twin disconnesso al momento della richiesta.'
+        if any(obs['retained'] for obs in observations.values()):
+            text += ' Uno o più messaggi sono retained.'
+        return text + (' Il timestamp indica la ricezione Android, non il cambio stato; '
+                       'non prova freschezza, durata, autore o stato fisico.')
     if r['value'] is None:
         return f"{label}: dati insufficienti dal {r['period']['start']} al {r['period']['end_exclusive']} escluso."
     return (f"{label}: {number(r['value'])} {r['unit']} dal {r['period']['start']} "

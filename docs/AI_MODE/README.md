@@ -25,8 +25,8 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
   motivazione registrata e seguito contestuale «perché?».
 - [Verifica reale climatizzazione](VERIFICA_CLIMATIZZAZIONE_2026-09-13.md):
   deployment `.20`, record MQTT e doppia domanda via TLS/Groq.
-- [Preparazione controlli Smart](PREPARAZIONE_CONTROLLI_SMART.md): 23 controlli
-  Clima/Impianti predisposti con stato reale e invio comandi bloccato.
+- [Home e interazione Smart](INTERAZIONE_QUERY_SMART.md): tre riquadri,
+  configurazione/diagnostica ausiliaria e future azioni esclusivamente via query.
 
 ## Vincoli concordati
 

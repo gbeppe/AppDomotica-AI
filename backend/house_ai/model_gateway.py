@@ -38,6 +38,9 @@ energy_daily_extreme; non creare una energy_metric separata per ogni giorno.
 Per stato attuale, modalità, temperatura impostata o motivo per cui il condizionatore
 risulta acceso o spento usa current_air_conditioner. Il motivo è quello registrato dal
 controller: non aggiungere cause o deduzioni.
+Per stato o conteggio delle luci usa current_lights. I dati non permettono di sapere
+chi ha azionato una luce o da quanto dura lo stato: per queste domande chiedi di
+consultare uno storico eventi con transizioni e autore, che non è ancora disponibile.
 Ogni sotto-domanda supportata deve avere la propria operazione: non omettere parti di
 una richiesta composta. Rete e batteria sono due flussi distinti, usa entrambi i tool
 quando richiesti. Usa gli intervalli del calendario fornito per i periodi relativi:
