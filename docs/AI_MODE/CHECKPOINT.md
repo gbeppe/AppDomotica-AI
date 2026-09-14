@@ -2,18 +2,19 @@
 
 ## Audit dominio luci — 14 settembre 2026
 
-Gli otto stati luce del registry entrano nel gateway come snapshot separato e
-sono consultati dal tool deterministico `current_lights`. Rimossi pubblicazione
-MQTT dalla UI Smart, alias di comando non validati e deduzioni di durata/autore
-basate sul solo messaggio `/stat`. La fase resta integralmente read-only.
+Gli otto stati luce del registry entrano nel gateway come snapshot separato.
+`current_lights` consulta stato e ultima attribuzione osservata;
+`set_light_state` accetta un solo ID mappato e `on`/`off`. Il backend non genera
+topic: Android risolve l'unico `/cmd` dal registry e attende il successivo
+`/stat`. Le altre capacità Smart restano in consultazione.
 
 ## Home Smart e azioni via query — 13 settembre 2026
 
 La home Smart è organizzata nei soli tre riquadri stato, query e risposta.
 Configurazione, diagnostica e storico sono nel menu ausiliario; i widget di
 controllo Clima/Impianti del prototipo precedente sono stati rimossi. Le future
-azioni saranno espresse soltanto tramite query e restano disabilitate in questa
-fase read-only. Decisioni in
+azioni sono espresse soltanto tramite query; ON/OFF è ora abilitato per gli otto
+punti luce mappati. Decisioni in
 [`INTERAZIONE_QUERY_SMART.md`](INTERAZIONE_QUERY_SMART.md).
 
 ## Primo incremento climatizzazione — 13 settembre 2026

@@ -10,6 +10,7 @@ data class EnergyAssistantAnswer(
     val generatedAt: String,
     val evidence: List<String>,
     val context: AssistantContext? = null,
+    val lightCommands: List<LightCommand> = emptyList(),
 ) {
     val statusLabel: String get() = when (status) {
         "complete" -> "Periodo coperto"
@@ -28,6 +29,7 @@ data class EnergyAssistantAnswer(
             val status = body.getString("status")
             require(status in setOf("complete", "partial", "insufficient_data", "clarification_required", "not_configured"))
             val sources = mutableListOf<String>()
+            val lightCommands = mutableListOf<LightCommand>()
             val results = body.optJSONArray("results")
             require((results?.length() ?: 0) <= 6)
             for (i in 0 until (results?.length() ?: 0)) {
@@ -69,6 +71,13 @@ data class EnergyAssistantAnswer(
                         }.toList().sorted()
                         detail += topics
                     }
+                    "house_ai.light_command.v1" -> {
+                        val light = result.getString("light")
+                        val state = result.getString("state")
+                        require(light in AiSmartState.lightIdToTopic && state in setOf("on", "off"))
+                        lightCommands += LightCommand(light, state == "on")
+                        detail += "Comando luci validato · $light · $state"
+                    }
                     "house_ai.backend_log_evidence.v1" -> {
                         detail += "Node-RED · ${result.getString("file")} · ${result.getString("day")}"
                         detail += "Tipo: ${result.getString("evidence_type")} · record trovati: ${result.getInt("matched_records")}"
@@ -94,9 +103,10 @@ data class EnergyAssistantAnswer(
                 require(parsed == AssistantContext("climate", "air_conditioner"))
                 parsed
             }
-            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context)
+            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands)
         }
     }
 }
 
 data class AssistantContext(val domain: String, val focus: String)
+data class LightCommand(val lightId: String, val state: Boolean)

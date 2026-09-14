@@ -120,7 +120,7 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(checked_request(envelope())['calendar']['previous_week'],
                          {'start': '2026-08-31', 'end_exclusive': '2026-09-07'})
         variants = plan_schema()['properties']['operations']['items']['anyOf']
-        self.assertEqual(len(variants), 7)
+        self.assertEqual(len(variants), 8)
         for variant in variants:
             self.assertFalse(variant['additionalProperties'])
             self.assertEqual(set(variant['properties']), set(variant['required']))

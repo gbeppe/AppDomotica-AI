@@ -661,7 +661,7 @@ class MqttManager {
     }
 
     fun toggleLight(lightId: String, currentState: Boolean) {
-        val stringState = if (!currentState) "true" else "false"
+        val targetState = !currentState
         val cleanId = lightId.lowercase()
         val (domain, device) = when (cleanId) {
             "pompapiscina" -> "pool" to "pump"
@@ -675,7 +675,19 @@ class MqttManager {
             "tavolinolettura" -> "lights" to "reading"
             else -> "lights" to cleanId
         }
-        publish("zara/interface/$domain/$device/power/cmd", stringState)
+        val relativeStateTopic = "$domain/$device/power/stat"
+        AiSmartState.lightEntities.firstOrNull { it.topic == relativeStateTopic }?.let { entity ->
+            _aiSmartState.update { it.markUserLightCommand(entity.id, targetState) }
+        }
+        publish("zara/interface/$domain/$device/power/cmd", targetState.toString())
+    }
+
+    /** Closed command surface used by Smart: IDs come from the validated registry mapping. */
+    fun setSmartLightState(lightId: String, state: Boolean): Boolean {
+        val relativeStateTopic = AiSmartState.lightIdToTopic[lightId] ?: return false
+        _aiSmartState.update { it.markUserLightCommand(lightId, state) }
+        publish("zara/interface/${relativeStateTopic.removeSuffix("stat")}cmd", state.toString())
+        return true
     }
 
     fun sendLightScene(scene: String) {

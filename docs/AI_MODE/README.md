@@ -26,7 +26,9 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
 - [Verifica reale climatizzazione](VERIFICA_CLIMATIZZAZIONE_2026-09-13.md):
   deployment `.20`, record MQTT e doppia domanda via TLS/Groq.
 - [Home e interazione Smart](INTERAZIONE_QUERY_SMART.md): tre riquadri,
-  configurazione/diagnostica ausiliaria e future azioni esclusivamente via query.
+  configurazione/diagnostica ausiliaria e azioni luci esclusivamente via query.
+- [Dominio luci Smart](SMART_LUCI.md): letture, ON/OFF validato, attribuzione
+  utente/automazione, tendina del riepilogo, replica e rollback.
 
 ## Vincoli concordati
 

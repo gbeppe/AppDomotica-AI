@@ -187,12 +187,22 @@ def describe(item):
         else:
             observation = observations[item['light']]
             text = f"{LIGHT_LABELS[item['light']]}: {'accesa' if observation['value'] else 'spenta'} dichiarata."
+            actor = observation.get('last_actor')
+            if actor:
+                occurred = datetime.fromtimestamp(observation['action_at_ms']/1000, ZoneInfo('Europe/Rome')).isoformat()
+                text += f" Ultima transizione osservata attribuita a {actor}, il {occurred}."
+            else:
+                text += " Autore dell'ultima transizione non disponibile in questa sessione."
         if not r['connected']:
             text += ' Digital Twin disconnesso al momento della richiesta.'
         if any(obs['retained'] for obs in observations.values()):
             text += ' Uno o più messaggi sono retained.'
-        return text + (' Il timestamp indica la ricezione Android, non il cambio stato; '
-                       'non prova freschezza, durata, autore o stato fisico.')
+        return text + (' Il timestamp dello stato indica la ricezione Android; '
+                       'non prova freschezza, durata o stato fisico.')
+    if schema == 'house_ai.light_command.v1':
+        return (f"Comando pronto: {'accensione' if r['state'] == 'on' else 'spegnimento'} "
+                f"di {LIGHT_LABELS[r['light']]}. L'app lo invia sul topic validato del registry; "
+                "il nuovo stato sarà confermato dal successivo messaggio /stat.")
     if r['value'] is None:
         return f"{label}: dati insufficienti dal {r['period']['start']} al {r['period']['end_exclusive']} escluso."
     return (f"{label}: {number(r['value'])} {r['unit']} dal {r['period']['start']} "

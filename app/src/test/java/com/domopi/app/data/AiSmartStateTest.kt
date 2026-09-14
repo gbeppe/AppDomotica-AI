@@ -99,6 +99,17 @@ class AiSmartStateTest {
         assertTrue(state.answer("Accendi la luce libreria", true).contains("sola lettura"))
     }
 
+    @Test fun lightTransitionsAttributeDashboardOrAutomationWithoutGuessingInitialState() {
+        val topic = "lights/libreria/power/stat"
+        val initial = AiSmartState().observe(topic, "OFF", 1000, true)
+        assertNull(initial.lastLightAction("lights_libreria"))
+        val user = initial.markUserLightCommand("lights_libreria", true, 2000)
+            .observe(topic, "ON", 2500, false)
+        assertEquals("utente", user.lastLightAction("lights_libreria")?.actor)
+        val automated = user.observe(topic, "OFF", 4000, false)
+        assertEquals("automazione", automated.lastLightAction("lights_libreria")?.actor)
+    }
+
     @Test fun provenanceKeepsActualPrefixRetainAndReceptionSeparateFromMeasurementAge() {
         val state = AiSmartState().observe(AiSmartState.livingTopic, "24.2", 0, true,
             "custom/house/env/living/temperature/stat")

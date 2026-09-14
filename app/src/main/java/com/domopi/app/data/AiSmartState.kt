@@ -10,6 +10,8 @@ data class SmartObservation(
     val payload: String, val receivedAtMs: Long, val retained: Boolean,
     val sourceTopic: String
 )
+data class LightAction(val state: Boolean, val actor: String, val occurredAtMs: Long)
+data class PendingLightAction(val state: Boolean, val requestedAtMs: Long)
 
 data class SmartEntity(val topic: String, val label: String, val isLight: Boolean) {
     val id: String get() = topic.substringBefore("/power/stat").replace('/', '_')
@@ -30,21 +32,45 @@ data class SmartReading(
 }
 
 /** Only the validated read-only subset. Missing and invalid values never become OFF/zero. */
-data class AiSmartState(val observations: Map<String, SmartObservation> = emptyMap()) {
+data class AiSmartState(
+    val observations: Map<String, SmartObservation> = emptyMap(),
+    private val pendingLightActions: Map<String, PendingLightAction> = emptyMap(),
+    private val lightActions: Map<String, LightAction> = emptyMap(),
+) {
     fun observe(
         topic: String, payload: String, receivedAtMs: Long, retained: Boolean,
         sourceTopic: String = "zara/interface/$topic"
     ): AiSmartState {
         if (topic !in topics || receivedAtMs < 0) return this
         if ((observations[topic]?.receivedAtMs ?: Long.MIN_VALUE) > receivedAtMs) return this
-        return copy(observations = observations + (topic to SmartObservation(payload, receivedAtMs, retained, sourceTopic)))
+        val previous = light(topic)
+        val current = parseLight(payload)
+        val pending = pendingLightActions[topic]
+        val transition = if (topic in lightTopics && current != null && current != previous &&
+            (previous != null || pending?.state == current)) {
+            val actor = if (pending?.state == current && receivedAtMs - pending.requestedAtMs in 0..30_000) "utente" else "automazione"
+            LightAction(current, actor, receivedAtMs)
+        } else null
+        return copy(
+            observations = observations + (topic to SmartObservation(payload, receivedAtMs, retained, sourceTopic)),
+            pendingLightActions = if (transition != null) pendingLightActions - topic else pendingLightActions,
+            lightActions = if (transition != null) lightActions + (topic to transition) else lightActions,
+        )
     }
 
-    private fun light(topic: String): Boolean? = when (observations[topic]?.payload?.trim()?.lowercase(Locale.ROOT)) {
+    private fun parseLight(payload: String): Boolean? = when (payload.trim().lowercase(Locale.ROOT)) {
         "true", "on", "1" -> true
         "false", "off", "0" -> false
         else -> null
     }
+    private fun light(topic: String): Boolean? = observations[topic]?.payload?.let(::parseLight)
+
+    fun markUserLightCommand(lightId: String, state: Boolean, requestedAtMs: Long = System.currentTimeMillis()): AiSmartState {
+        val topic = lightIdToTopic[lightId] ?: return this
+        return copy(pendingLightActions = pendingLightActions + (topic to PendingLightAction(state, requestedAtMs)))
+    }
+
+    fun lastLightAction(lightId: String): LightAction? = lightIdToTopic[lightId]?.let(lightActions::get)
 
     fun temperature(topic: String): Double? = observations[topic]?.payload?.trim()
         ?.replace(',', '.')?.toDoubleOrNull()?.takeIf { it.isFinite() }
@@ -135,6 +161,7 @@ data class AiSmartState(val observations: Map<String, SmartObservation> = emptyM
         val lightEntities = lightTopics.zip(listOf("Soggiorno", "Libreria", "Lampada TV", "Tavolino lettura",
             "Luce camera", "Lampada HiFi", "Luci piscina", "Luci pedana piscina"))
             .map { (topic, label) -> SmartEntity(topic, label, true) }
+        val lightIdToTopic = lightEntities.associate { it.id to it.topic }
         val entities = lightEntities + listOf(
                 SmartEntity(livingTopic, "Temperatura living", false),
                 SmartEntity(acsTopic, "Acqua sanitaria ACS", false)

@@ -49,6 +49,7 @@ fun AiSmartScreen(
     connected: Boolean,
     onClassic: () -> Unit,
     onHistory: () -> Unit,
+    onLightCommand: (String, Boolean) -> Boolean = { _, _ -> false },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -183,6 +184,11 @@ fun AiSmartScreen(
                         val started = System.currentTimeMillis()
                         val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
                             climateState, state, assistantContext)
+                        result.lightCommands.forEach { command ->
+                            check(connected && onLightCommand(command.lightId, command.state)) {
+                                "Comando luce non inviato: connessione o target non valido."
+                            }
+                        }
                         response = result
                         assistantContext = result.context ?: assistantContext
                         stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
@@ -391,7 +397,7 @@ internal fun AiSmartContent(
             Card(Modifier.fillMaxWidth().testTag("smart-query-card")) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Chiedi alla casa", style = MaterialTheme.typography.titleMedium)
-                    Text(if (dynamicMode) "Scrivi o detta una query su stato, energia e climatizzazione. Le azioni via query non sono ancora abilitate."
+                    Text(if (dynamicMode) "Scrivi o detta una query. Puoi anche accendere o spegnere una luce mappata."
                         else "Puoi chiedere luci e temperature disponibili.", style = MaterialTheme.typography.bodySmall)
                     OutlinedTextField(question, onQuestionChange, label = { Text("La tua query") },
                         modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 5, enabled = !loading)
@@ -460,7 +466,7 @@ internal fun AiSmartContent(
                             }
                         }
                     }
-                    Text("Modalità Smart in sola lettura: nessun comando viene inviato ai dispositivi.",
+                    Text("I comandi ON/OFF sono abilitati solo per le luci mappate; gli altri domini restano in consultazione.",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }

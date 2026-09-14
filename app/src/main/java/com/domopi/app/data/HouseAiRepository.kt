@@ -154,9 +154,13 @@ class HouseAiRepository {
             .put("connected", connected).put("observations", climateObservations))
         val lightObservations = JSONObject()
         lights.validLightObservations().forEach { (light, observation) ->
-            lightObservations.put(light, JSONObject().put("value", observation.payload.toBooleanStrict())
+            val item = JSONObject().put("value", observation.payload.toBooleanStrict())
                 .put("received_at_ms", observation.receivedAtMs).put("retained", observation.retained)
-                .put("source_topic", observation.sourceTopic))
+                .put("source_topic", observation.sourceTopic)
+            lights.lastLightAction(light)?.let { action ->
+                item.put("last_actor", action.actor).put("action_at_ms", action.occurredAtMs)
+            }
+            lightObservations.put(light, item)
         }
         body.put("current_lights", JSONObject().put("schema", "house_ai.current_lights_input.v1")
             .put("connected", connected).put("observations", lightObservations))

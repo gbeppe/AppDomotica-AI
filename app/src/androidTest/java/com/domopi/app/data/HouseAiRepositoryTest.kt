@@ -79,6 +79,15 @@ class HouseAiRepositoryTest {
         }
     }
 
+    @Test fun parsesOnlyValidatedLightCommandIdentifiers() {
+        val body = """{"schema":"house_ai.assistant_answer.v1","status":"complete","question":"Accendi libreria","answer":"Comando pronto.","generated_at":"2026-09-14T12:00:00+02:00","results":[{"id":"cmd","result":{"schema":"house_ai.light_command.v1","status":"command_ready","light":"lights_libreria","state":"on","limitations":[]}}],"limitations":[]}"""
+        exchange(body = body) { url ->
+            val result = runBlocking { HouseAiRepository().assistant(url, "test-token",
+                "Accendi libreria", EnergySmartState(), true) }
+            assertEquals(listOf(LightCommand("lights_libreria", true)), result.lightCommands)
+        }
+    }
+
     @Test fun serializesClimateEvidenceAndKeepsBoundedConversationContext() {
         val body = """{"schema":"house_ai.assistant_answer.v1","status":"partial","question":"Perche?","answer":"Motivo registrato dal controller: humidex alto.","generated_at":"2026-09-13T10:00:00+02:00","results":[{"id":"clima","result":{"schema":"house_ai.current_air_conditioner.v1","status":"available","connected":true,"observations":{"recorded_reason":{"value":"humidex alto","received_at_ms":1789200000000,"retained":true,"source_topic":"zara/interface/stato_condizionatore/motivo_logica/stat"}},"limitations":[]}}],"conversation_context":{"domain":"climate","focus":"air_conditioner"},"limitations":[]}"""
         val climate = ClimateSmartState().observe("stato_condizionatore/motivo_logica/stat",

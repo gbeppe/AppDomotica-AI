@@ -33,16 +33,16 @@ freschezza della sorgente o stato fisico. Il riepilogo lo dichiara esplicitament
 
 ## Azioni via query
 
-Attivazioni, disattivazioni e selezioni future verranno richieste scrivendo o
-dettando una query. In questa fase rimangono disabilitate: il backend e l'app
-sono read-only e nessun comando MQTT viene pubblicato.
+La modalità Smart accetta ON/OFF per una singola luce mappata. Groq seleziona
+`set_light_state` con un ID chiuso e `on`/`off`; il validatore rifiuta campi,
+target o stati estranei al catalogo. Il backend non restituisce topic o payload.
+Android risolve l'ID nell'allowlist locale e pubblica una sola volta sul topic
+pubblico `zara/interface/.../power/cmd`, con payload booleano. Tutti gli altri
+comandi restano non disponibili.
 
-La futura implementazione dovrà trasformare il testo in un'intenzione
-strutturata validata contro una allowlist derivata dal registry. Il modello non
-potrà produrre direttamente topic o payload. Prima dell'esecuzione l'app dovrà
-mostrare azione, destinazione e valore e richiedere conferma esplicita. Dopo la
-pubblicazione, il risultato dovrà distinguere comando inviato, `/stat`
-convergente, timeout e stato fisico non verificato.
+La risposta distingue comando pronto dall'esito fisico: la pubblicazione MQTT
+non dimostra che la lampada abbia cambiato stato. Il successivo `/stat` aggiorna
+lo stato dichiarato e l'attribuzione dell'evento osservato.
 
 ## Correzione del prototipo precedente
 
@@ -64,14 +64,26 @@ da energia e climatizzazione. Sono ammessi soltanto gli otto identificativi del
 registry e i rispettivi topic pubblici `zara/interface/.../stat`; valori mancanti
 o non interpretabili non diventano `OFF`.
 
-Il planner può scegliere soltanto lo strumento deterministico `current_lights`,
-per un punto luce o per tutti quelli mappati. La risposta riporta stati
-dichiarati dal Digital Twin. Il timestamp è l'istante di ricezione Android e un
-messaggio retained non dimostra freschezza, durata dello stato, autore della
-transizione o stato fisico. Domande come «chi ha acceso?» e «da quanto è
-accesa?» richiedono uno storico eventi con transizioni e autore, oggi assente.
+Il planner usa `current_lights` per un punto luce o per tutti quelli mappati. La
+risposta riporta stati dichiarati dal Digital Twin. Il timestamp è l'istante di
+ricezione Android e un messaggio retained non dimostra freschezza, durata o
+stato fisico.
 
-L'audit ha rimosso dalla UI Smart la pubblicazione diretta su topic `/cmd` o
-`/cmnd` e il riconoscimento locale di frasi di comando. Le future azioni
-passeranno da strumenti chiusi, validazione del target e riscontro del nuovo
-stato, senza affidare al modello topic o payload arbitrari.
+Per «chi ha acceso/spento?» Android registra le transizioni osservate durante
+la sessione. Se una transizione coincide entro 30 secondi con un comando inviato
+dall'app, il responsabile è `utente`; ogni altra transizione successiva a uno
+stato iniziale valido è `automazione`. Il primo stato ricevuto, incluso retained,
+non viene scambiato per una transizione e resta senza autore. Il registro è di
+sessione: dopo il riavvio serve osservare una nuova transizione.
+
+L'audit ha eliminato alias `/cmnd`, topic duplicati e riconoscimento locale di
+frasi. L'abilitazione successiva usa invece uno strumento chiuso, una sola
+allowlist e il riscontro separato del nuovo stato, senza affidare al modello
+topic o payload arbitrari.
+
+## Riquadro riepilogo a tendina
+
+All'ingresso il riepilogo è espanso. L'intera intestazione e l'icona a freccia
+lo richiudono; quando è minimizzato resta una barra compatta che può essere
+toccata per riaprirlo. Lo stato usa `rememberSaveable`, quindi sopravvive alle
+ricomposizioni e lascia spazio verticale ai riquadri query e risposta.

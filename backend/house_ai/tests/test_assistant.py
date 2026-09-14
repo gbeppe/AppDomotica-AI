@@ -174,9 +174,20 @@ class AssistantTests(unittest.TestCase):
                      lights_snapshot=snapshot)
         self.assertIn("risultano accesi 1", result["answer"])
         self.assertIn("Libreria", result["answer"])
-        self.assertIn("non prova freschezza, durata, autore", result["answer"])
+        self.assertIn("non prova freschezza, durata o stato fisico", result["answer"])
 
         invalid = {**snapshot, "observations": {"lights_libreria": {
             **snapshot["observations"]["lights_libreria"], "source_topic": "lights/libreria/power/cmnd"}}}
         with self.assertRaises(ValueError):
             validate_lights_snapshot(invalid)
+
+    def test_light_command_is_closed_and_contains_no_topic(self):
+        plan = {"operations": [{"id": "cmd", "tool": "set_light_state",
+                                "light": "lights_libreria", "state": "on"}]}
+        result = ask(None, Planner(plan), "Accendi la libreria", date(2026, 9, 12))
+        command = result["results"][0]["result"]
+        self.assertEqual(command["schema"], "house_ai.light_command.v1")
+        self.assertNotIn("topic", command)
+        self.assertEqual(result["status"], "complete")
+        with self.assertRaises(ValueError):
+            validate_plan({"operations": [{**plan["operations"][0], "light": "inventata"}]})

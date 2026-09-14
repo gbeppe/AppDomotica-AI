@@ -55,6 +55,10 @@ def catalog(path=CATALOG_PATH):
             "description": "Read declared current states for one or all mapped lights",
             "parameters": {"light": ["all"] + sorted(LIGHT_TOPICS)}
         }, {
+            "name": "set_light_state",
+            "description": "Request ON or OFF for one mapped light",
+            "parameters": {"light": sorted(LIGHT_TOPICS), "state": ["on", "off"]}
+        }, {
             "name": "current_air_conditioner",
             "description": "Read current declared air-conditioner state, mode, setpoint and recorded controller reason",
             "parameters": {}
@@ -112,7 +116,8 @@ def validate_plan(plan, sources=None):
                     if tool == "energy_metric" else {"id", "tool", "metric", "start", "end", "extremum"}
                     if tool == "energy_daily_extreme" else {"id", "tool"}
                     if tool == "current_air_conditioner" else {"id", "tool", "light"}
-                    if tool == "current_lights" else {"id", "tool", "metric"}
+                    if tool == "current_lights" else {"id", "tool", "light", "state"}
+                    if tool == "set_light_state" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
                     if tool == "energy_comparison" else None)
@@ -129,6 +134,9 @@ def validate_plan(plan, sources=None):
             raise ValueError("Unknown tool or metric")
         if tool == "current_lights" and operation["light"] not in (["all"] + sorted(LIGHT_TOPICS)):
             raise ValueError("Unknown light")
+        if tool == "set_light_state" and (operation["light"] not in LIGHT_TOPICS
+                                           or operation["state"] not in ("on", "off")):
+            raise ValueError("Unknown light command")
         if tool == "energy_daily_extreme" and (operation["metric"] not in DAILY_EXTREME_METRICS
                                                 or operation["extremum"] not in ("maximum", "minimum")):
             raise ValueError("Unknown daily extreme metric or mode")
@@ -177,8 +185,10 @@ def validate_current_snapshot(snapshot):
         raise ValueError("Invalid current energy snapshot")
     clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
     for metric, observation in snapshot["observations"].items():
+        keys = set(observation) if isinstance(observation, dict) else set()
         if (not isinstance(observation, dict)
-                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or keys not in ({"value", "received_at_ms", "retained", "source_topic"},
+                                {"value", "received_at_ms", "retained", "source_topic", "last_actor", "action_at_ms"})
                 or not finite_number(observation["value"])
                 or type(observation["received_at_ms"]) is not int
                 or not 0 <= observation["received_at_ms"] <= 253402214400000
@@ -228,14 +238,20 @@ def validate_lights_snapshot(snapshot):
         raise ValueError("Invalid current lights snapshot")
     clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
     for light, observation in snapshot["observations"].items():
+        keys = set(observation) if isinstance(observation, dict) else set()
         if (not isinstance(observation, dict)
-                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or keys not in ({"value", "received_at_ms", "retained", "source_topic"},
+                                {"value", "received_at_ms", "retained", "source_topic", "last_actor", "action_at_ms"})
                 or type(observation["value"]) is not bool
                 or type(observation["received_at_ms"]) is not int
                 or not 0 <= observation["received_at_ms"] <= 253402214400000
                 or type(observation["retained"]) is not bool
                 or observation["source_topic"] != LIGHT_TOPICS[light]):
             raise ValueError("Invalid light observation")
+        if ("last_actor" in observation and (observation["last_actor"] not in ("utente", "automazione")
+                or type(observation["action_at_ms"]) is not int
+                or not 0 <= observation["action_at_ms"] <= observation["received_at_ms"])):
+            raise ValueError("Invalid light actor evidence")
         clean["observations"][light] = dict(observation)
     return clean
 
@@ -321,6 +337,13 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "limitations": ["Stati dichiarati dal Digital Twin; non conferma fisica.",
                     "Timestamp di ricezione Android, non istante del cambio stato.",
                     "Retained non dimostra freschezza, durata o autore dell'azione."]}})
+            continue
+        if operation["tool"] == "set_light_state":
+            results.append({"id": operation["id"], "light": operation["light"], "result": {
+                "schema": "house_ai.light_command.v1", "status": "command_ready",
+                "light": operation["light"], "state": operation["state"],
+                "limitations": ["Il backend seleziona solo ID e stato; topic e payload sono risolti dall'app.",
+                                "L'esito fisico richiede il successivo stato /stat."]}})
             continue
         source = sources[operation["metric"]]
         sign = source.get("import_sign", source.get("direction_sign"))
