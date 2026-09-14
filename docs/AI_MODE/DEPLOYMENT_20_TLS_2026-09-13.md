@@ -55,6 +55,12 @@ Le domande reali «Perché il condizionatore è acceso?» e «Perché?» sono ri
 tramite TLS, gateway Groq e record MQTT retained. Evidenza in
 [`VERIFICA_CLIMATIZZAZIONE_2026-09-13.md`](VERIFICA_CLIMATIZZAZIONE_2026-09-13.md).
 
+La release `20260914-smart-lights`, revisione `b41bf2a`, aggiunge i tool chiusi
+`current_lights` e `set_light_state`. Ha superato 71 test su Python 3.9.2; una
+prova autenticata ha verificato il piano ON della libreria senza pubblicare MQTT,
+e una fixture di transizione ha verificato l'attribuzione `automazione`. Dettagli
+in [`SMART_LUCI.md`](SMART_LUCI.md).
+
 L'app precompila questo URL e `HouseAiRepository` accetta HTTP soltanto per
 loopback di test. Il token non è incorporato nell'APK e resta in memoria nella
 schermata. Sul telefono connesso alla stessa tailnet, copiare privatamente il

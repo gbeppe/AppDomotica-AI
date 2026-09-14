@@ -81,3 +81,24 @@ Rimuovere `set_light_state` dal catalogo e dal prompt disabilita la generazione
 di nuovi comandi. Sul client, non collegare `onLightCommand` oppure tornare al
 commit precedente impedisce la pubblicazione Smart senza modificare dashboard,
 Digital Twin Router o topic `/stat`.
+
+## Deployment verificato su `.20`
+
+La release `/opt/domopi-house-ai/releases/20260914-smart-lights`, revisione
+`b41bf2af49c5548b7dd678742452c3589639c7f1`, è attiva tramite il symlink
+`/opt/domopi-house-ai/current`. Su Python 3.9.2 ha superato 71 test `unittest`;
+gateway e backend risultano `active` dopo il riavvio.
+
+Una richiesta locale autenticata, senza client MQTT e quindi senza attuazione,
+ha fatto selezionare a Groq:
+
+```json
+{"id":"op1","tool":"set_light_state","light":"lights_libreria","state":"on"}
+```
+
+Il risultato `house_ai.light_command.v1` non contiene un topic. Una seconda
+richiesta «Chi ha acceso la luce libreria?» con evidenza di fixture ha scelto
+`current_lights` e ha restituito `automazione`. Queste prove certificano planner,
+validazione e presentazione; non certificano ancora pubblicazione dall'app né
+commutazione fisica. La release precedente per rollback è
+`/opt/domopi-house-ai/releases/20260913-climate-reason`.
