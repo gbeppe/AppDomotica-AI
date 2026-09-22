@@ -6,6 +6,11 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
 
 ## Documenti
 
+- [Artefatto passivo Digital Twin Bridge](../../backend/nodered/semantic_bridge/README.md): primo incremento semantico, limiti e procedura di validazione; non distribuito.
+
+- [Nuova architettura del registry semantico](ARCHITETTURA_REGISTRY_SEMANTICO.md):
+  decisioni concordate, responsabilità Node-RED/House AI/Android, domini,
+  migrazione e validazione; architettura obiettivo ancora da implementare.
 - [Analisi e architettura](ANALISI_ARCHITETTURA.md): obiettivi, componenti e confini.
 - [Audit delle evidenze](AUDIT_EVIDENZE.md): verifiche eseguite, risultati e limiti.
 - [Piano di lavoro](PIANO_DI_LAVORO.md): fasi, responsabilità e criteri di completamento.
@@ -29,6 +34,7 @@ Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con bac
   configurazione/diagnostica ausiliaria e azioni luci esclusivamente via query.
 - [Dominio luci Smart](SMART_LUCI.md): letture, ON/OFF validato, attribuzione
   utente/automazione, tendina del riepilogo, replica e rollback.
+- [AC Explainability Matrix](../Architecture/AC_EXPLAINABILITY_MATRIX.md): final authoritative Humidex architecture, explainability matrix, and Node-RED production snapshots (`../../backend/nodered/production/README.md`).
 
 ## Vincoli concordati
 
@@ -62,3 +68,10 @@ Dettagli e ripresa nel [checkpoint](CHECKPOINT.md).
 
 Stato aggiornato del dominio energia, istruzioni e limiti:
 [SMART_ENERGIA.md](SMART_ENERGIA.md).
+
+- [Strumentazione Broadlink TV](../../backend/nodered/semantic_bridge/rm_receipt/README.md):
+  provenienza del comando fino all'uscita software RM, installazione e rollback;
+  patch locale da validare con deploy utente, non conferma fisica della luce.
+
+- [Estensione Broadlink libreria/lettura](../../backend/nodered/semantic_bridge/rm_extension/README.md):
+  patch successiva alla validazione TV, installazione e rollback separati.
