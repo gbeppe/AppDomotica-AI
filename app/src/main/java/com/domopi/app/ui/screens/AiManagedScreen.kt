@@ -2,7 +2,6 @@ package com.domopi.app.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -100,8 +99,8 @@ fun AiManagedScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // Allarme Sistema (se presente)
             if (aiSettings.alarm != null) {
@@ -135,66 +134,93 @@ fun AiManagedScreen(
                 }
             }
 
-            // 0. Predictive Reserve (In cima)
+            // 0 & 1. Abilitazioni Sistema (I due switch ricompattati)
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(44.dp),
-                            shape = MaterialTheme.shapes.medium,
-                            color = if (aiSettings.predictiveReserveEnabled) SolarGreen.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
+                        // Switch 1: AI abilitato
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.NightsStay,
-                                    contentDescription = null,
-                                    tint = if (aiSettings.predictiveReserveEnabled) SolarGreen else Color.Gray
-                                )
+                            Surface(
+                                modifier = Modifier.size(36.dp),
+                                shape = MaterialTheme.shapes.medium,
+                                color = if (aiSettings.systemEnabled) SolarGreen.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = if (aiSettings.systemEnabled) SolarGreen else Color.Gray,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
-                        }
 
-                        Spacer(Modifier.width(16.dp))
+                            Spacer(Modifier.width(12.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Predictive Reserve notturno",
+                                "AI abilitato",
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
                             )
-                            Text(
-                                if (aiSettings.predictiveReserveEnabled) "Consente al PR di influenzare AI Climate" else "Vieta al PR di influenzare AI Climate",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (aiSettings.predictiveReserveEnabled) SolarGreen else MaterialTheme.colorScheme.onSurfaceVariant
+
+                            Switch(
+                                checked = aiSettings.systemEnabled,
+                                onCheckedChange = { enabled ->
+                                    mqttManager.publish("zara/interface/ai/system_enabled/cmd", if (enabled) "true" else "false")
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = SolarGreen,
+                                    checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                                )
                             )
                         }
 
-                        Spacer(Modifier.width(8.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp), thickness = 0.5.dp)
 
-                        Switch(
-                            checked = aiSettings.predictiveReserveEnabled,
-                            onCheckedChange = { showPrDialog = true },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = SolarGreen,
-                                checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                        // Switch 2: Predictive Reserve
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(36.dp),
+                                shape = MaterialTheme.shapes.medium,
+                                color = if (aiSettings.predictiveReserveEnabled) SolarGreen.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.NightsStay,
+                                        contentDescription = null,
+                                        tint = if (aiSettings.predictiveReserveEnabled) SolarGreen else Color.Gray,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.width(12.dp))
+
+                            Text(
+                                "Predictive Reserve",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
                             )
-                        )
+
+                            Switch(
+                                checked = aiSettings.predictiveReserveEnabled,
+                                onCheckedChange = { showPrDialog = true },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = SolarGreen,
+                                    checkedTrackColor = SolarGreen.copy(alpha = 0.3f)
+                                )
+                            )
+                        }
                     }
                 }
-            }
-
-            // 1. Sistema Abilitato (In alto)
-            item {
-                ControlCard(
-                    title = "AI abilitato",
-                    icon = Icons.Default.AutoAwesome,
-                    isEnabled = aiSettings.systemEnabled,
-                    onEnabledChange = { enabled ->
-                        mqttManager.publish("zara/interface/ai/system_enabled/cmd", if (enabled) "true" else "false")
-                    }
-                )
             }
 
             // 2. Stato Operativo
@@ -230,9 +256,21 @@ fun AiManagedScreen(
                         Text("Comfort Notturno", style = MaterialTheme.typography.titleMedium)
                         
                         NumericStepper(
-                            label = "Soglia Humidex Notte",
+                            label = "Humidex impostato",
                             value = aiSettings.nightHumidexThreshold,
                             onValueChange = { mqttManager.publish("zara/interface/ai/night_humidex_threshold/cmd", it.toString()) }
+                        )
+
+                        NumericStepper(
+                            label = "Isteresi comfort Humidex",
+                            value = aiData.logicaControllo.ampiezzaIsteresiHumidex,
+                            onValueChange = { mqttManager.publish("zara/interface/ai/humidex_comfort_hysteresis/cmd", it.toString()) }
+                        )
+
+                        NumericStepper(
+                            label = "Margine di attivazione NIGHT_DRY",
+                            value = aiData.logicaControllo.nightDryHumidexMargin,
+                            onValueChange = { mqttManager.publish("zara/interface/ai/night_dry_humidex_margin/cmd", it.toString()) }
                         )
                         
                         Column {
@@ -283,7 +321,7 @@ fun AiManagedScreen(
                         }
                         
                         NumericStepper(
-                            label = "Soglia Emergenza Humidex",
+                            label = "Humidex emergenza",
                             value = aiSettings.morningHumidexEmergency,
                             onValueChange = { mqttManager.publish("zara/interface/ai/morning_humidex_emergency/cmd", it.toString()) }
                         )
@@ -417,25 +455,60 @@ fun StatusCard(
                             AcReasonCategory.NORMAL -> Icons.Default.CheckCircle
                             AcReasonCategory.UNKNOWN -> Icons.Default.Info
                         }
-                        Icon(icon, contentDescription = null, tint = categoryColor, modifier = Modifier.size(18.dp))
+                        Icon(icon, contentDescription = null, tint = categoryColor, modifier = Modifier.size(20.dp))
                         Text(
-                            text = reasonInfo.code,
-                            style = MaterialTheme.typography.labelLarge,
+                            text = reasonInfo.userTitle.ifEmpty { reasonInfo.code },
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = categoryColor
                         )
                     }
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
-                    Text(
-                        text = reasonInfo.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+
+                    if (reasonInfo.userExplanation.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = reasonInfo.userExplanation,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    reasonInfo.remainingTimerMinutes?.let { remMin ->
+                        if (remMin > 0) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                color = categoryColor.copy(alpha = 0.15f),
+                                shape = MaterialTheme.shapes.extraSmall,
+                                border = BorderStroke(0.5.dp, categoryColor.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = "⏱️ Tempo residuo: $remMin min",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = categoryColor
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (reasonInfo.description.isNotEmpty() && reasonInfo.description != reasonInfo.userExplanation) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = reasonInfo.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     if (reasonInfo.quandoCompare.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "📌 Quando compare: ${reasonInfo.quandoCompare}",
                             style = MaterialTheme.typography.bodySmall,
@@ -455,7 +528,7 @@ fun StatusCard(
                     if (reasonInfo.soglieCostanti.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "📐 Soglia Attualizzata: ${reasonInfo.soglieCostanti}",
+                            text = "📐 ${reasonInfo.soglieCostanti}",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = categoryColor
@@ -463,7 +536,7 @@ fun StatusCard(
                     }
 
                     if (reasonInfo.metrics.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -497,6 +570,14 @@ fun StatusCard(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Codice logica: ${reasonInfo.code}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontSize = 10.sp
+                    )
                 }
             }
 
@@ -525,6 +606,15 @@ fun SystemDetailsCard(data: AiManagedData) {
             
             DetailRow("SOC Minimo Applicato", "%.1f%%".format(locale, data.logicaControllo.socMinimoApplied))
             DetailRow("Soglia Humidex Reale", "%.1f".format(locale, data.logicaControllo.sogliaAttivazioneApplicata))
+            DetailRow(
+                "Humidex Comfort",
+                "%.1f (%.1f - %.1f)".format(
+                    locale,
+                    data.logicaControllo.sogliaSpegnimentoComfort,
+                    data.logicaControllo.sogliaAttivazioneApplicata,
+                    data.logicaControllo.ampiezzaIsteresiHumidex
+                )
+            )
             DetailRow("Timer Anticiclo", "${data.logicaControllo.tempoMancanteAnticicloMinuti} min")
             DetailRow("Batteria Stimata", "%.1f kWh".format(locale, data.logicaControllo.kwhStimatiInBatteria))
             DetailRow("Previsione Ricarica", "${data.logicaControllo.previsioneRicaricaBatteryPercent}%")
@@ -539,6 +629,22 @@ fun SystemDetailsCard(data: AiManagedData) {
             DetailRow("Stanza Rilevamento VMC", data.logicaControllo.stanzaRilevamentoVmc.ifEmpty { "N/D" })
             
             DetailRow("Blocco Emergenza", if (data.logicaControllo.bloccoEmergenzaAttivo) "ATTIVO" else "Disattivo")
+
+            data.logicaControllo.diagnosticaAc.timerTipo?.let { tipo ->
+                DetailRow("Tipo Timer", tipo)
+            }
+            data.logicaControllo.diagnosticaAc.timerResiduoMinuti?.let { rem ->
+                if (rem > 0) DetailRow("Timer Residuo", "$rem min")
+            }
+            data.logicaControllo.diagnosticaAc.pausaNotturnaResiduoMinuti?.let { rem ->
+                if (rem > 0) DetailRow("Pausa Notturna Residua", "$rem min")
+            }
+            data.logicaControllo.diagnosticaAc.deficitResiduoMinuti?.let { rem ->
+                if (rem > 0) DetailRow("Deficit Residuo", "$rem min")
+            }
+            data.logicaControllo.diagnosticaAc.causaTransizione?.let { causa ->
+                DetailRow("Causa Transizione", causa)
+            }
         }
     }
 }

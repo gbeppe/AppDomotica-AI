@@ -68,6 +68,24 @@ data class MetricheAmbientali(
 )
 
 @Serializable
+data class DiagnosticaAc(
+    @SerialName("timer_tipo")
+    val timerTipo: String? = null,
+    @SerialName("timer_residuo_minuti")
+    val timerResiduoMinuti: Int? = null,
+    @SerialName("timer_durata_minuti")
+    val timerDurataMinuti: Int? = null,
+    @SerialName("deficit_tolleranza_minuti")
+    val deficitTolleranzaMinuti: Int? = null,
+    @SerialName("deficit_residuo_minuti")
+    val deficitResiduoMinuti: Int? = null,
+    @SerialName("pausa_notturna_residuo_minuti")
+    val pausaNotturnaResiduoMinuti: Int? = null,
+    @SerialName("causa_transizione")
+    val causaTransizione: String? = null,
+)
+
+@Serializable
 data class LogicaControllo(
     @SerialName("vmc_portata_stimata_m3h")
     val vmcPortataStimataM3h: Int = 0,
@@ -75,6 +93,14 @@ data class LogicaControllo(
     val stanzaRilevamentoVmc: String = "",
     @SerialName("soglia_attivazione_applicata")
     val sogliaAttivazioneApplicata: Float = 0f,
+    @SerialName("soglia_spegnimento_comfort")
+    val sogliaSpegnimentoComfort: Float = 0f,
+    @SerialName("ampiezza_isteresi_humidex")
+    val ampiezzaIsteresiHumidex: Float = 0f,
+    @SerialName("soglia_temperatura_avvio_cooling_c")
+    val sogliaTemperaturaAvvioCoolingC: Float? = null,
+    @SerialName("soglia_temperatura_off_comfort_c")
+    val sogliaTemperaturaOffComfortC: Float? = null,
     @SerialName("soc_minimo_applied")
     val socMinimoApplied: Float = 0f,
     @SerialName("tempo_mancante_anticiclo_minuti")
@@ -95,6 +121,12 @@ data class LogicaControllo(
     val cuscinettoRichiestoKwh: Float = 0f,
     @SerialName("stagione_attuale")
     val stagioneAttuale: String = "",
+    @SerialName("night_dry_humidex_margin")
+    val nightDryHumidexMargin: Float = 0f,
+    @SerialName("night_dry_humidex_threshold")
+    val nightDryHumidexThreshold: Float = 0f,
+    @SerialName("diagnostica_ac")
+    val diagnosticaAc: DiagnosticaAc = DiagnosticaAc(),
 )
 
 @Serializable

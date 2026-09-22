@@ -272,7 +272,7 @@ class MqttManager {
 
         when (domain) {
             "energy" -> handleEnergyDomain(device, property, rounded)
-            "logica_controllo" -> handleLogicControlDomain(property, rounded, payload, isOn)
+            "logica_controllo" -> handleLogicControlDomain(device, property, rounded, payload, isOn)
             "stato_condizionatore" -> handleAcStateDomain(property, payload, rounded)
             "lights", "pool" -> handleLightsDomain(device, isOn)
             "env" -> handleEnvDomain(device, property, rounded)
@@ -386,19 +386,42 @@ class MqttManager {
         }
     }
 
-    private fun handleLogicControlDomain(prop: String, value: Float, raw: String, isOn: Boolean) {
-        val floatVal = raw.toFloatOrNull() ?: 0f
-        val intVal = floatVal.toInt()
+    private fun handleLogicControlDomain(device: String, prop: String, value: Float, raw: String, isOn: Boolean) {
+        val cleanRaw = raw.trim()
+        val parsedFloatOrNull = cleanRaw.replace(",", ".").toFloatOrNull()
+        val parsedFloat = parsedFloatOrNull ?: value
+        val parsedIntOrNull = parsedFloatOrNull?.toInt()
+        val intVal = parsedIntOrNull ?: value.toInt()
+
         _aiManagedData.update { current ->
-            if (prop == "stagione_attuale") {
+            if (device == "diagnostica_ac") {
+                val currentDiag = current.logicaControllo.diagnosticaAc
+                val updatedDiag = when (prop) {
+                    "causa_transizione" -> currentDiag.copy(causaTransizione = cleanRaw.ifEmpty { null })
+                    "timer_tipo" -> currentDiag.copy(timerTipo = cleanRaw.ifEmpty { null })
+                    "timer_residuo_minuti" -> currentDiag.copy(timerResiduoMinuti = parsedIntOrNull)
+                    "timer_durata_minuti" -> currentDiag.copy(timerDurataMinuti = parsedIntOrNull)
+                    "deficit_tolleranza_minuti" -> currentDiag.copy(deficitTolleranzaMinuti = parsedIntOrNull)
+                    "deficit_residuo_minuti" -> currentDiag.copy(deficitResiduoMinuti = parsedIntOrNull)
+                    "pausa_notturna_residuo_minuti" -> currentDiag.copy(pausaNotturnaResiduoMinuti = parsedIntOrNull)
+                    else -> currentDiag
+                }
+                current.copy(logicaControllo = current.logicaControllo.copy(diagnosticaAc = updatedDiag))
+            } else if (prop == "stagione_attuale") {
                 current.copy(
                     stagioneAttiva = raw,
                     logicaControllo = current.logicaControllo.copy(stagioneAttuale = raw)
                 )
             } else {
                 val updatedLogic = when (prop) {
-                    "soc_minimo_applied" -> current.logicaControllo.copy(socMinimoApplied = value)
-                    "soglia_attivazione_applicata" -> current.logicaControllo.copy(sogliaAttivazioneApplicata = value)
+                    "soc_minimo_applied" -> current.logicaControllo.copy(socMinimoApplied = parsedFloat)
+                    "soglia_attivazione_applicata" -> current.logicaControllo.copy(sogliaAttivazioneApplicata = parsedFloat)
+                    "soglia_spegnimento_comfort" -> current.logicaControllo.copy(sogliaSpegnimentoComfort = parsedFloat)
+                    "ampiezza_isteresi_humidex" -> current.logicaControllo.copy(ampiezzaIsteresiHumidex = parsedFloat)
+                    "night_dry_humidex_margin" -> current.logicaControllo.copy(nightDryHumidexMargin = parsedFloat)
+                    "night_dry_humidex_threshold" -> current.logicaControllo.copy(nightDryHumidexThreshold = parsedFloat)
+                    "soglia_temperatura_avvio_cooling_c" -> current.logicaControllo.copy(sogliaTemperaturaAvvioCoolingC = parsedFloatOrNull)
+                    "soglia_temperatura_off_comfort_c" -> current.logicaControllo.copy(sogliaTemperaturaOffComfortC = parsedFloatOrNull)
                     "tempo_mancante_anticiclo_minuti" -> current.logicaControllo.copy(tempoMancanteAnticicloMinuti = intVal)
                     "kwh_stimati_in_batteria" -> current.logicaControllo.copy(kwhStimatiInBatteria = value)
                     "previsione_ricarica_batteria_percent" -> current.logicaControllo.copy(previsioneRicaricaBatteryPercent = intVal)
@@ -465,11 +488,15 @@ class MqttManager {
             "pump" -> "pompapiscina"
             "skimmer" -> "skimmerpiscina"
             "hifi" -> "lampadahifi"
+            "laundry", "lavanderia" -> "lavanderia"
+            "porch_entrance", "porch", "portico", "portico_ingresso" -> "portico_ingresso"
+            "service_entrance", "ingressoservizio", "ingresso_servizio" -> "ingressoservizio"
             else -> device
         }
         _lightStates.update { current ->
             val newList = current.toMutableMap()
             newList[internalId] = isOn
+            newList[device] = isOn
             newList
         }
     }
@@ -668,14 +695,21 @@ class MqttManager {
             "skimmerpiscina" -> "pool" to "skimmer"
             "lucipiscina" -> "pool" to "water"
             "lucipedanapiscina" -> "pool" to "deck"
-            "lucecamera" -> "lights" to "bedroom"
-            "lampadahifi" -> "lights" to "hifi"
             "televisione" -> "lights" to "tv"
             "sala" -> "lights" to "living"
             "tavolinolettura" -> "lights" to "reading"
+            "lavanderia", "laundry" -> "lights" to "laundry"
+            "portico", "portico_ingresso", "porticoingresso", "porch_entrance" -> "lights" to "porch_entrance"
+            "ingressoservizio", "ingresso_servizio", "service_entrance" -> "lights" to "service_entrance"
             else -> "lights" to cleanId
         }
         val relativeStateTopic = "$domain/$device/power/stat"
+        _lightStates.update { current ->
+            val newList = current.toMutableMap()
+            newList[cleanId] = targetState
+            newList[device] = targetState
+            newList
+        }
         AiSmartState.lightEntities.firstOrNull { it.topic == relativeStateTopic }?.let { entity ->
             _aiSmartState.update { it.markUserLightCommand(entity.id, targetState) }
         }

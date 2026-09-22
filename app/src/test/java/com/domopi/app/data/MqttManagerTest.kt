@@ -179,6 +179,16 @@ class MqttManagerTest {
     }
 
     @Test
+    fun testNightDryHumidexParametersIngestion() {
+        processMessage("zara/interface/logica_controllo/night_dry_humidex_margin/stat", "0.7")
+        processMessage("zara/interface/logica_controllo/night_dry_humidex_threshold/stat", "30.5")
+
+        val logic = mqttManager.aiManagedData.value.logicaControllo
+        assertEquals(0.7f, logic.nightDryHumidexMargin, 0.1f)
+        assertEquals(30.5f, logic.nightDryHumidexThreshold, 0.1f)
+    }
+
+    @Test
     fun testSeasonSynchronization() {
         processMessage("zara/interface/logica_controllo/stagione_attuale/stat", "ESTATE")
 
@@ -186,6 +196,16 @@ class MqttManagerTest {
 
         assertEquals("ESTATE", aiData.stagioneAttiva)
         assertEquals("ESTATE", aiData.logicaControllo.stagioneAttuale)
+    }
+
+    @Test
+    fun testHumidexComfortParametersMapping() {
+        processMessage("zara/interface/logica_controllo/soglia_spegnimento_comfort/stat", "29.0")
+        processMessage("zara/interface/logica_controllo/ampiezza_isteresi_humidex/stat", "2.0")
+
+        val logica = mqttManager.aiManagedData.value.logicaControllo
+        assertEquals(29.0f, logica.sogliaSpegnimentoComfort, 0.1f)
+        assertEquals(2.0f, logica.ampiezzaIsteresiHumidex, 0.1f)
     }
 
     @Test
@@ -275,15 +295,32 @@ class MqttManagerTest {
         assertEquals("zara/interface/lights/reading/power/cmd", readingMsg.topic)
         assertEquals("true", readingMsg.payload)
 
-        mqttManager.toggleLight("lucecamera", true)
-        val bedMsg = getQueuedMessages().first()
-        assertEquals("zara/interface/lights/bedroom/power/cmd", bedMsg.topic)
-        assertEquals("false", bedMsg.payload)
+        mqttManager.toggleLight("lavanderia", false)
+        val laundryMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/laundry/power/cmd", laundryMsg.topic)
+        assertEquals("true", laundryMsg.payload)
 
-        mqttManager.toggleLight("lampadahifi", false)
-        val hifiMsg = getQueuedMessages().first()
-        assertEquals("zara/interface/lights/hifi/power/cmd", hifiMsg.topic)
-        assertEquals("true", hifiMsg.payload)
+        mqttManager.toggleLight("portico_ingresso", false)
+        val porchMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/porch_entrance/power/cmd", porchMsg.topic)
+        assertEquals("true", porchMsg.payload)
+
+        mqttManager.toggleLight("ingressoservizio", false)
+        val serviceMsg = getQueuedMessages().first()
+        assertEquals("zara/interface/lights/service_entrance/power/cmd", serviceMsg.topic)
+        assertEquals("true", serviceMsg.payload)
+    }
+
+    @Test
+    fun testIncomingLightStateUpdatesUiKeys() {
+        processMessage("zara/interface/lights/laundry/power/stat", "true")
+        assertEquals(true, mqttManager.lightStates.value["lavanderia"])
+
+        processMessage("zara/interface/lights/porch_entrance/power/stat", "true")
+        assertEquals(true, mqttManager.lightStates.value["portico_ingresso"])
+
+        processMessage("zara/interface/lights/service_entrance/power/stat", "true")
+        assertEquals(true, mqttManager.lightStates.value["ingressoservizio"])
     }
 
     @Test

@@ -116,5 +116,30 @@ class OutgoingMqttContractSourceTest {
         assertTrue(content.contains("zara/interface/ai/deficit_tolerance_min/cmd"))
         assertTrue(content.contains("zara/interface/ai/morning_ac_management/cmd"))
         assertTrue(content.contains("zara/interface/ai/morning_humidex_emergency/cmd"))
+        assertTrue(content.contains("zara/interface/ai/humidex_comfort_hysteresis/cmd"))
+        assertTrue(content.contains("zara/interface/ai/night_dry_humidex_margin/cmd"))
+    }
+
+    @Test
+    fun testFloatHumidexControlsPreserveDecimalsWithoutToInt() {
+        val content = getScreenFile("AiManagedScreen.kt").readText()
+
+        val hysteresisRegex = Regex("""publish\(\s*"zara/interface/ai/humidex_comfort_hysteresis/cmd"\s*,\s*it\.toString\(\)\s*\)""")
+        val marginRegex = Regex("""publish\(\s*"zara/interface/ai/night_dry_humidex_margin/cmd"\s*,\s*it\.toString\(\)\s*\)""")
+
+        assertTrue(
+            "Hysteresis control must publish using it.toString() without integer conversion",
+            hysteresisRegex.containsMatchIn(content)
+        )
+        assertTrue(
+            "Margin control must publish using it.toString() without integer conversion",
+            marginRegex.containsMatchIn(content)
+        )
+
+        val hysteresisBlock = content.substringAfter("humidex_comfort_hysteresis/cmd").substringBefore(")")
+        val marginBlock = content.substringAfter("night_dry_humidex_margin/cmd").substringBefore(")")
+
+        assertFalse("Hysteresis command block must not call toInt()", hysteresisBlock.contains("toInt()"))
+        assertFalse("Margin command block must not call toInt()", marginBlock.contains("toInt()"))
     }
 }
