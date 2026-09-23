@@ -32,7 +32,6 @@ import com.domopi.app.data.AcReasonCategory
 import com.domopi.app.data.AcReasonMapper
 import com.domopi.app.data.AcReasonMetric
 import com.domopi.app.data.AiManagedData
-import com.domopi.app.data.ConnectionMode
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.GithubStatus
 import com.domopi.app.data.GithubVersionChecker
@@ -60,7 +59,6 @@ fun MainDashboard(
     onNavigate: (String) -> Unit
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()
-    val connectionMode by connectivityManager.connectionMode.collectAsState()
     val isAdminMode by settingsManager.isAdminMode.collectAsState(initial = false)
     val adminPin by settingsManager.adminPin.collectAsState(initial = "1234")
     val githubStatus by GithubVersionChecker.status.collectAsState()
@@ -399,12 +397,6 @@ fun MainDashboard(
                             .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = if (connectionMode == ConnectionMode.LOCAL) "LOCALE" else "REMOTO",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (connectionMode == ConnectionMode.LOCAL) SolarGreen else Color.Cyan
-                        )
-                        Spacer(Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
                                 .size(10.dp)
@@ -777,14 +769,11 @@ fun DomainCard(
     val envState by mqttManager.environmentState.collectAsState()
     val domoticaSettings by mqttManager.domoticaSettings.collectAsState()
     
-    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("")
-    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("")
+    val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
     val tcUser by settingsManager.tinycamUser.collectAsState("admin")
     val tcPass by settingsManager.tinycamPass.collectAsState("password")
     
-    val connectionMode by connectivityManager.connectionMode.collectAsState()
-    val tcIp = if (connectionMode == ConnectionMode.LOCAL) tcLocalIp else tcRemoteIp
     
     val title = when(page) {
         0 -> "ENERGIA"

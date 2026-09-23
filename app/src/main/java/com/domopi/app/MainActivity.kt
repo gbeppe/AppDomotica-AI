@@ -1,7 +1,6 @@
 package com.domopi.app
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.*
@@ -12,7 +11,6 @@ import com.domopi.app.ui.screens.*
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.MqttManager
-import com.domopi.app.data.ConnectionMode
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -43,19 +41,17 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             combine(
                 settingsManager.domopiIp,
-                settingsManager.domopiRemoteIp,
                 settingsManager.domopiPort,
                 settingsManager.domopiUser,
                 settingsManager.domopiPass,
             ) { args -> args.copyOf() }
                 .distinctUntilChanged { old, new -> old.contentEquals(new) }
                 .collectLatest { params ->
-                    val localIp = params[0]
-                    val remoteIp = params[1]
-                    val port = params[2]
-                    val user = params[3]
-                    val pass = params[4]
-                    val portInt = port.toIntOrNull() ?: 1883
+                    // The configured LAN host is canonical; Android/Tailscale handles routing.
+                    val host = params[0]
+                    val port = params[1]
+                    val user = params[2]
+                    val pass = params[3]
 
                     // Ciclo di riconnessione se fallisce
                     while (true) {
@@ -64,33 +60,7 @@ class MainActivity : ComponentActivity() {
                             continue
                         }
 
-                        val isSubnetLocal = connectivityManager.isOnLocalSubnet()
-                        val isLocalAvailable = connectivityManager.checkServiceReachable(localIp, portInt)
-                        
-                        Log.d("MQTT_DEBUG", "Subnet: ${if(isSubnetLocal) "LOCAL" else "OTHER"}, Available: $isLocalAvailable")
-
-                        val ipToUse = if (isSubnetLocal) {
-                            if (isLocalAvailable) {
-                                connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
-                                localIp
-                            } else if (remoteIp.isNotEmpty() && (remoteIp != "100.x.x.x")) {
-                                connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
-                                remoteIp
-                            } else {
-                                connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
-                                localIp
-                            }
-                        } else {
-                            if (remoteIp.isNotEmpty() && (remoteIp != "100.x.x.x")) {
-                                connectivityManager.updateConnectionMode(ConnectionMode.REMOTE)
-                                remoteIp
-                            } else {
-                                connectivityManager.updateConnectionMode(ConnectionMode.LOCAL)
-                                localIp
-                            }
-                        }
-
-                        mqttManager.connect("tcp://$ipToUse:$port", user, pass)
+                        mqttManager.connect("tcp://$host:$port", user, pass)
                         delay(8.seconds)
                     }
                 }
@@ -141,10 +111,7 @@ class MainActivity : ComponentActivity() {
                             onBack = { currentScreen = "home" }
                         )
                         "energy_detail" -> {
-                            val mode by connectivityManager.connectionMode.collectAsState()
-                            val epLocalIp by settingsManager.emoncmsIp.collectAsState(initial = "192.168.1.15")
-                            val epRemoteIp by settingsManager.emoncmsRemoteIp.collectAsState(initial = "")
-                            val epIp = if (mode == ConnectionMode.LOCAL) epLocalIp else epRemoteIp
+                            val epIp by settingsManager.emoncmsIp.collectAsState(initial = "")
                             EnergyDetailScreen(emoncmsIp = epIp, onBack = { currentScreen = "home" })
                         }
                         "diagnosis" -> DiagnosisScreen(
