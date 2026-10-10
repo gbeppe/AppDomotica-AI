@@ -77,6 +77,21 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — termostati riscaldamento (fase 3.2)
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-thermostats`, commit
+`4c026b8`; `PREVIOUS_RELEASE` = `20261010-predictive-reserve`. 95 test superati su
+`.20` (Python 3.9.2, utente `house-ai`), controllo AST, symlink atomico, servizi
+`active`, catalogo con `current_thermostats` e `set_thermostat_target`. Prova
+reale con Groq e snapshot dei termostati letto dal broker: 7 domande su 7 con
+piano atteso (due letture, due setpoint 20,0 e 19,5 °C, chiarimento per 25 °C,
+per «alza un po'» e per il condizionatore). Il backend non pubblica su MQTT:
+nessun comando è arrivato ai termostati. Limite osservato: il piano gratuito
+Groq consente 8000 token/minuto e ogni domanda ne usa circa 3500, quindi più di
+due domande al minuto ricevono HTTP 502 (429 dal provider). App
+`bld_9eb70b87` (`9ffd069`) pubblicata; prima il backend, perché le release
+precedenti rifiutano il campo `current_thermostats` (HTTP 400).
+
 ## Release del 10 ottobre 2026 — stato del Predictive Reserve (fase 3.1)
 
 Release attiva: `/opt/domopi-house-ai/releases/20261010-predictive-reserve`, commit
