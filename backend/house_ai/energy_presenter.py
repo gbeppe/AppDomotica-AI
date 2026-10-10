@@ -19,6 +19,8 @@ LIGHT_LABELS = {
     "pool_water": "Luci piscina", "pool_deck": "Luci pedana piscina",
 }
 
+THERMOSTAT_LABELS = {"thermostat_living": "Termostato soggiorno", "thermostat_bath": "Termostato bagno"}
+
 
 def number(value, digits=2):
     return f"{value:.{digits}f}".replace('.', ',')
@@ -71,6 +73,37 @@ def predictive_reserve_text(r):
     if not r['connected']:
         parts.append('Digital Twin disconnesso.')
     parts.append('Lo stato attuale non spiega le decisioni di notti passate: il PR non le registra.')
+    return ' '.join(parts)
+
+
+def thermostats_text(item):
+    r = item['result']
+    observations = r['observations']
+    selected = list(THERMOSTAT_LABELS) if item['thermostat'] == 'all' else [item['thermostat']]
+    parts = []
+    for thermostat in selected:
+        value = lambda metric: observations.get(f'{thermostat}.{metric}', {}).get('value')
+        if not any(key.startswith(thermostat + '.') for key in observations):
+            parts.append(f'{THERMOSTAT_LABELS[thermostat]}: dati non disponibili nel Digital Twin.')
+            continue
+        facts = []
+        if value('current_temperature') is not None:
+            facts.append(f"temperatura ambiente {number(value('current_temperature'), 1)} °C")
+        if value('target_temperature') is not None:
+            facts.append(f"setpoint {number(value('target_temperature'), 1)} °C")
+        if value('power') is not None:
+            facts.append('riscaldamento ' + ('acceso' if value('power') else 'spento'))
+        if value('min_temperature') is not None and value('max_temperature') is not None:
+            facts.append(f"timer delle fasce orarie {number(value('max_temperature'), 1)} °C in fascia e "
+                         f"{number(value('min_temperature'), 1)} °C fuori fascia")
+        parts.append(f'{THERMOSTAT_LABELS[thermostat]}: ' + ', '.join(facts) + '.')
+    if observations:
+        received = max(observation['received_at_ms'] for observation in observations.values())
+        parts.append('Ultimo dato ricevuto il {}.'.format(
+            datetime.fromtimestamp(received / 1000, ZoneInfo('Europe/Rome')).isoformat()))
+        parts.append("Il setpoint è l'ultimo valore comandato, non una lettura del termostato.")
+    if not r['connected']:
+        parts.append('Digital Twin disconnesso.')
     return ' '.join(parts)
 
 
@@ -192,6 +225,13 @@ def describe(item):
                 ' Età della misura sorgente ignota; non è una conferma fisica in tempo reale.')
     if schema == 'house_ai.current_predictive_reserve.v1':
         return predictive_reserve_text(r)
+    if schema == 'house_ai.current_thermostats.v1':
+        return thermostats_text(item)
+    if schema == 'house_ai.thermostat_command.v1':
+        return (f"Comando pronto: setpoint di {THERMOSTAT_LABELS[r['thermostat']].lower()} a "
+                f"{number(float(r['target_c']), 1)} °C. Resta valido fino al prossimo intervento del timer delle "
+                "fasce orarie (cambio fascia, modifica dei valori in/fuori fascia o ripristino ogni 8 ore) "
+                "o della modalità vacanza; il successivo /stat è l'eco del comando, non una conferma del termostato.")
     if schema == 'house_ai.current_air_conditioner.v1':
         observations = r['observations']
         if not observations:

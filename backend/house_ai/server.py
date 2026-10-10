@@ -130,7 +130,8 @@ def handler(client, token, log_path, planner=None, log_root=None):
                 body = json.loads(self.rfile.read(length))
                 if (not isinstance(body, dict)
                         or set(body) - {"question", "current_energy", "current_climate", "current_lights",
-                                        "current_predictive_reserve", "conversation_context"}
+                                        "current_predictive_reserve", "current_thermostats",
+                                        "conversation_context"}
                         or "question" not in body):
                     raise ValueError("Invalid body")
                 self.send_json(200, assistant_ask(client, planner, body["question"],
@@ -139,6 +140,7 @@ def handler(client, token, log_path, planner=None, log_root=None):
                                                   lights_snapshot=body.get("current_lights"),
                                                   conversation_context=body.get("conversation_context"),
                                                   pr_snapshot=body.get("current_predictive_reserve"),
+                                                  thermostats_snapshot=body.get("current_thermostats"),
                                                   log_root=log_root))
             except (ValueError, json.JSONDecodeError):
                 self.send_json(400, {"error": "Invalid request"})

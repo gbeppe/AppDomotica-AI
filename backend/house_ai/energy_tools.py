@@ -34,6 +34,16 @@ PR_VALUES = {
     "operating_mode": {"SHADOW", "ACTIVE"},
     "ready": {"true", "false"},
 }
+# Heating thermostats (fase 3.2): Tasmota TEMPTARGETSET routed by the Digital Twin Router.
+THERMOSTATS = ("thermostat_living", "thermostat_bath")
+THERMOSTAT_METRICS = {
+    "current_temperature": "number", "target_temperature": "number", "power": "bool",
+    "min_temperature": "number", "max_temperature": "number",
+}
+THERMOSTAT_TOPICS = {f"{t}.{m}": f"zara/interface/climate/{t}/{m}/stat"
+                     for t in THERMOSTATS for m in THERMOSTAT_METRICS}
+# Same bounds and 0.5 °C step as the app slider; strings so the planner schema is a closed enum.
+THERMOSTAT_TARGETS = [f"{x / 2:.1f}" for x in range(32, 45)]
 LIGHT_TOPICS = {
     "lights_living": "zara/interface/lights/living/power/stat",
     "lights_libreria": "zara/interface/lights/libreria/power/stat",
@@ -77,6 +87,14 @@ def catalog(path=CATALOG_PATH):
             "description": "Request ON or OFF for one mapped light",
             "parameters": {"light": sorted(LIGHT_TOPICS), "state": ["on", "off"]}
         }, {
+            "name": "current_thermostats",
+            "description": "Read room temperature, heating setpoint, heating on/off and the time-slot timer setpoints (max inside the slot, min outside) for the living-room or bathroom thermostat",
+            "parameters": {"thermostat": ["all", *THERMOSTATS]}
+        }, {
+            "name": "set_thermostat_target",
+            "description": "Set the heating setpoint of one thermostat, 16.0-22.0 °C in 0.5 steps",
+            "parameters": {"thermostat": list(THERMOSTATS), "target_c": THERMOSTAT_TARGETS}
+        }, {
             "name": "current_air_conditioner",
             "description": "Read current declared air-conditioner state, mode, setpoint and recorded controller reason",
             "parameters": {}
@@ -111,7 +129,8 @@ def catalog(path=CATALOG_PATH):
             "Today and the current month/week may be incomplete. End date is exclusive.",
             "Use backend_log_day for forecasts, recorded reasons, learning or SHADOW evidence. Never infer actions from SHADOW.",
             "Use current_predictive_reserve for the current Predictive Reserve state; it cannot explain past nights.",
-            "No control, cost, tariffs, unsupported metrics or causal speculation; clarify unsupported requests."
+            "The thermostats heat; the air conditioner is driven only by the AI Climate controller and cannot be commanded.",
+            "No other control, cost, tariffs, unsupported metrics or causal speculation; clarify unsupported requests."
         ]
     }
 
@@ -140,7 +159,9 @@ def validate_plan(plan, sources=None):
                     if tool == "energy_daily_extreme" else {"id", "tool"}
                     if tool in ("current_air_conditioner", "current_predictive_reserve") else {"id", "tool", "light"}
                     if tool == "current_lights" else {"id", "tool", "light", "state"}
-                    if tool == "set_light_state" else {"id", "tool", "metric"}
+                    if tool == "set_light_state" else {"id", "tool", "thermostat"}
+                    if tool == "current_thermostats" else {"id", "tool", "thermostat", "target_c"}
+                    if tool == "set_thermostat_target" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
                     if tool == "energy_comparison" else None)
@@ -160,6 +181,11 @@ def validate_plan(plan, sources=None):
         if tool == "set_light_state" and (operation["light"] not in LIGHT_TOPICS
                                            or operation["state"] not in ("on", "off")):
             raise ValueError("Unknown light command")
+        if tool == "current_thermostats" and operation["thermostat"] not in ("all", *THERMOSTATS):
+            raise ValueError("Unknown thermostat")
+        if tool == "set_thermostat_target" and (operation["thermostat"] not in THERMOSTATS
+                                                 or operation["target_c"] not in THERMOSTAT_TARGETS):
+            raise ValueError("Unknown thermostat command")
         if tool == "energy_daily_extreme" and (operation["metric"] not in DAILY_EXTREME_METRICS
                                                 or operation["extremum"] not in ("maximum", "minimum")):
             raise ValueError("Unknown daily extreme metric or mode")
@@ -307,14 +333,40 @@ def validate_predictive_reserve_snapshot(snapshot):
     return clean
 
 
+def validate_thermostats_snapshot(snapshot):
+    if snapshot is None:
+        return None
+    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema", "connected", "observations"}
+            or snapshot["schema"] != "house_ai.current_thermostats_input.v1"
+            or type(snapshot["connected"]) is not bool or not isinstance(snapshot["observations"], dict)
+            or set(snapshot["observations"]) - set(THERMOSTAT_TOPICS)):
+        raise ValueError("Invalid current thermostats snapshot")
+    clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
+    for key, observation in snapshot["observations"].items():
+        kind = THERMOSTAT_METRICS[key.split(".", 1)[1]]
+        if (not isinstance(observation, dict)
+                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or (kind == "bool" and type(observation["value"]) is not bool)
+                or (kind == "number" and (not finite_number(observation["value"])
+                                          or not -30 <= observation["value"] <= 60))
+                or type(observation["received_at_ms"]) is not int
+                or not 0 <= observation["received_at_ms"] <= 253402214400000
+                or type(observation["retained"]) is not bool
+                or observation["source_topic"] != THERMOSTAT_TOPICS[key]):
+            raise ValueError("Invalid thermostat observation")
+        clean["observations"][key] = dict(observation)
+    return clean
+
+
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
-            lights_snapshot=None, log_root=None, pr_snapshot=None):
+            lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     current = validate_current_snapshot(current_snapshot)
     climate = validate_climate_snapshot(climate_snapshot)
     lights = validate_lights_snapshot(lights_snapshot)
     reserve = validate_predictive_reserve_snapshot(pr_snapshot)
+    thermostats = validate_thermostats_snapshot(thermostats_snapshot)
     if checked["clarification"]:
         return checked
     results = []
@@ -374,6 +426,26 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "limitations": ["Stato dichiarato dal Digital Twin; la modalità si cambia solo dall'editor Node-RED.",
                     "Lo stato attuale non spiega decisioni di notti passate: il PR non registra le sue decisioni.",
                     "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
+            continue
+        if operation["tool"] == "current_thermostats":
+            selected = THERMOSTATS if operation["thermostat"] == "all" else (operation["thermostat"],)
+            observations = {key: value for key, value in (thermostats["observations"] if thermostats else {}).items()
+                            if key.split(".", 1)[0] in selected}
+            results.append({"id": operation["id"], "thermostat": operation["thermostat"], "result": {
+                "schema": "house_ai.current_thermostats.v1",
+                "status": "available" if observations else "missing",
+                "connected": thermostats["connected"] if thermostats else False,
+                "observations": observations,
+                "limitations": ["Stati dichiarati dal Digital Twin; il setpoint è l'ultimo comando inviato, non una lettura del termostato.",
+                    "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
+            continue
+        if operation["tool"] == "set_thermostat_target":
+            results.append({"id": operation["id"], "thermostat": operation["thermostat"], "result": {
+                "schema": "house_ai.thermostat_command.v1", "status": "command_ready",
+                "thermostat": operation["thermostat"], "target_c": operation["target_c"],
+                "limitations": ["Il backend seleziona solo termostato e setpoint; topic e payload sono risolti dall'app.",
+                                "Il timer delle fasce orarie (Node-RED .15) e la modalità vacanza possono reimpostare il setpoint.",
+                                "Il successivo /stat è l'eco del comando, non una conferma del termostato."]}})
             continue
         if operation["tool"] == "current_air_conditioner":
             observations = climate["observations"] if climate else {}

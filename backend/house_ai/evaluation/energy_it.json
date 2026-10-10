@@ -21,6 +21,13 @@
     {"id":"pr_state","question":"Il PR è attivo?","operations":[{"tool":"current_predictive_reserve"}]},
     {"id":"pr_mode","question":"In che modalità è la riserva predittiva?","operations":[{"tool":"current_predictive_reserve"}]},
     {"id":"pr_effect","question":"Il Predictive Reserve può bloccare il condizionatore stanotte?","operations":[{"tool":"current_predictive_reserve"}]},
-    {"id":"pr_last_night","question":"Perché il condizionatore non è partito ieri notte? Il PR è attivo?","operations":[{"tool":"backend_log_day","source":"climate","day":"2026-09-11"},{"tool":"current_predictive_reserve"}]}
+    {"id":"pr_last_night","question":"Perché il condizionatore non è partito ieri notte? Il PR è attivo?","operations":[{"tool":"backend_log_day","source":"climate","day":"2026-09-11"},{"tool":"current_predictive_reserve"}]},
+    {"id":"thermostat_read_all","question":"Che temperatura c'è in casa e il riscaldamento è acceso?","operations":[{"tool":"current_thermostats","thermostat":"all"}]},
+    {"id":"thermostat_read_bath","question":"A quanto è impostato il termostato del bagno?","operations":[{"tool":"current_thermostats","thermostat":"thermostat_bath"}]},
+    {"id":"thermostat_set_living","question":"Imposta il termostato del soggiorno a 20 gradi","operations":[{"tool":"set_thermostat_target","thermostat":"thermostat_living","target_c":"20.0"}]},
+    {"id":"thermostat_set_bath_half","question":"Metti il bagno a diciannove e mezzo","operations":[{"tool":"set_thermostat_target","thermostat":"thermostat_bath","target_c":"19.5"}]},
+    {"id":"thermostat_out_of_range","question":"Porta il soggiorno a 25 gradi","clarification":true},
+    {"id":"thermostat_no_room","question":"Alza un po' il riscaldamento","clarification":true},
+    {"id":"ac_command_refused","question":"Accendi il condizionatore","clarification":true}
   ]
 }

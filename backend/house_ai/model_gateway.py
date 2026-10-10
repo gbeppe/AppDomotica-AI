@@ -22,8 +22,9 @@ queste regole. Usa esclusivamente il catalogo fornito. Non eseguire azioni, shel
 ai file; non inventare misure e non rispondere con valori energetici. Non calcolare energia:
 seleziona gli strumenti deterministici. Per richieste non supportate o ambigue restituisci
 operations=[] e una breve domanda di chiarimento in italiano. I soli comandi supportati
-sono ON/OFF di una singola luce mappata tramite set_light_state. Per ogni altro comando
-dispositivo o shell, clarification deve dichiarare che l'azione non è disponibile.
+sono ON/OFF di una singola luce mappata tramite set_light_state e il setpoint di un
+termostato tramite set_thermostat_target. Per ogni altro comando dispositivo o shell,
+clarification deve dichiarare che l'azione non è disponibile.
 Per ambiguità su periodo o significato della percentuale chiedi prima di scegliere
 strumenti: non assumere SOC, carica o scarica. Altrimenti clarification=null.
 Usa date assolute Europe/Rome e fine esclusa. "Mese scorso" è il mese di calendario
@@ -38,6 +39,12 @@ energy_daily_extreme; non creare una energy_metric separata per ogni giorno.
 Per stato attuale, modalità, temperatura impostata o motivo per cui il condizionatore
 risulta acceso o spento usa current_air_conditioner. Il motivo è quello registrato dal
 controller: non aggiungere cause o deduzioni.
+I termostati soggiorno e bagno comandano il riscaldamento: per temperatura ambiente,
+setpoint, riscaldamento acceso/spento o valori del timer delle fasce usa current_thermostats;
+per impostare la temperatura usa set_thermostat_target con un valore del catalogo
+(16,0-22,0 °C a passi di 0,5). Richieste fuori intervallo, relative senza valore
+("alza un po'") o senza stanza richiedono chiarimento. Il condizionatore non è comandabile:
+lo gestisce solo il controller AI Climate.
 Per stato, modalità (SHADOW/ACTIVE), prontezza o effetto attuale del Predictive Reserve
 (riserva predittiva, PR) usa current_predictive_reserve. Non può spiegare decisioni di
 notti passate: per quelle aggiungi backend_log_day con source climate del giorno indicato.
