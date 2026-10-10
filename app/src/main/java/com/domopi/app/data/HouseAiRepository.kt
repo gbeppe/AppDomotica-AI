@@ -127,6 +127,7 @@ class HouseAiRepository {
         climate: ClimateSmartState = ClimateSmartState(),
         lights: AiSmartState = AiSmartState(),
         context: AssistantContext? = null,
+        reserve: PredictiveReserveSmartState = PredictiveReserveSmartState(),
     ): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
         val base = validatedBase(baseUrl)
         require(token.isNotBlank() && question.isNotBlank() && question.length <= 1000)
@@ -152,6 +153,15 @@ class HouseAiRepository {
         }
         body.put("current_climate", JSONObject().put("schema", "house_ai.current_climate_input.v1")
             .put("connected", connected).put("observations", climateObservations))
+        val reserveObservations = JSONObject()
+        reserve.validObservations().forEach { (metric, observation) ->
+            reserveObservations.put(metric, JSONObject().put("value", observation.value)
+                .put("received_at_ms", observation.receivedAtMs).put("retained", observation.retained)
+                .put("source_topic", observation.sourceTopic))
+        }
+        body.put("current_predictive_reserve", JSONObject()
+            .put("schema", "house_ai.current_predictive_reserve_input.v1")
+            .put("connected", connected).put("observations", reserveObservations))
         val lightObservations = JSONObject()
         lights.validLightObservations().forEach { (light, observation) ->
             val item = JSONObject().put("value", observation.payload.toBooleanStrict())

@@ -80,6 +80,9 @@ class MqttManager {
     private val _climateSmartState = MutableStateFlow(ClimateSmartState())
     val climateSmartState: StateFlow<ClimateSmartState> = _climateSmartState
 
+    private val _predictiveReserveSmartState = MutableStateFlow(PredictiveReserveSmartState())
+    val predictiveReserveSmartState: StateFlow<PredictiveReserveSmartState> = _predictiveReserveSmartState
+
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
     
@@ -193,6 +196,7 @@ class MqttManager {
                     _aiSmartState.value = AiSmartState()
                     _energySmartState.value = EnergySmartState()
                     _climateSmartState.value = ClimateSmartState()
+                    _predictiveReserveSmartState.value = PredictiveReserveSmartState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     subscribeToBuildIdentity()
@@ -216,6 +220,7 @@ class MqttManager {
                             _aiSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, sourceTopic = topic) }
                             _energySmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                             _climateSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
+                            _predictiveReserveSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                         }
                         handleIncomingMessage(topic ?: "", message?.toString() ?: "")
                     }
@@ -246,6 +251,7 @@ class MqttManager {
             _aiSmartState.value = AiSmartState()
             _energySmartState.value = EnergySmartState()
             _climateSmartState.value = ClimateSmartState()
+                    _predictiveReserveSmartState.value = PredictiveReserveSmartState()
             digitalTwinPrefix = clean
             if (mqttClient?.isConnected == true) {
                 subscribeToUnifiedTopics()
