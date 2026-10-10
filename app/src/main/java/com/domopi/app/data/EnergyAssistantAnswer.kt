@@ -11,6 +11,7 @@ data class EnergyAssistantAnswer(
     val evidence: List<String>,
     val context: AssistantContext? = null,
     val lightCommands: List<LightCommand> = emptyList(),
+    val thermostatCommands: List<ThermostatCommand> = emptyList(),
 ) {
     val statusLabel: String get() = when (status) {
         "complete" -> "Periodo coperto"
@@ -30,6 +31,7 @@ data class EnergyAssistantAnswer(
             require(status in setOf("complete", "partial", "insufficient_data", "clarification_required", "not_configured"))
             val sources = mutableListOf<String>()
             val lightCommands = mutableListOf<LightCommand>()
+            val thermostatCommands = mutableListOf<ThermostatCommand>()
             val results = body.optJSONArray("results")
             require((results?.length() ?: 0) <= 6)
             for (i in 0 until (results?.length() ?: 0)) {
@@ -90,6 +92,22 @@ data class EnergyAssistantAnswer(
                         lightCommands += LightCommand(light, state == "on")
                         detail += "Comando luci validato · $light · $state"
                     }
+                    "house_ai.current_thermostats.v1" -> {
+                        detail += "Digital Twin · termostati riscaldamento · " +
+                            if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
+                        val observations = result.getJSONObject("observations")
+                        detail += observations.keys().asSequence().sorted().map {
+                            val observation = observations.getJSONObject(it)
+                            "${observation.getString("source_topic")} = ${observation.get("value")}"
+                        }.toList()
+                    }
+                    "house_ai.thermostat_command.v1" -> {
+                        val thermostat = result.getString("thermostat")
+                        val target = result.getString("target_c")
+                        require(thermostat in ThermostatSmartState.THERMOSTATS && target in ThermostatSmartState.TARGETS)
+                        thermostatCommands += ThermostatCommand(thermostat, target)
+                        detail += "Comando setpoint validato · $thermostat · $target °C"
+                    }
                     "house_ai.backend_log_evidence.v1" -> {
                         detail += "Node-RED · ${result.getString("file")} · ${result.getString("day")}"
                         detail += "Tipo: ${result.getString("evidence_type")} · record trovati: ${result.getInt("matched_records")}"
@@ -132,10 +150,12 @@ data class EnergyAssistantAnswer(
                 require(parsed == AssistantContext("climate", "air_conditioner"))
                 parsed
             }
-            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands)
+            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands,
+                thermostatCommands)
         }
     }
 }
 
 data class AssistantContext(val domain: String, val focus: String)
 data class LightCommand(val lightId: String, val state: Boolean)
+data class ThermostatCommand(val thermostat: String, val targetC: String)

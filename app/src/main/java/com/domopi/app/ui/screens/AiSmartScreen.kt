@@ -54,6 +54,8 @@ fun AiSmartScreen(
     settingsManager: SettingsManager? = null,
     credentialStore: CredentialStore? = null,
     reserveState: PredictiveReserveSmartState = PredictiveReserveSmartState(),
+    thermostatState: ThermostatSmartState = ThermostatSmartState(),
+    onThermostatCommand: (String, String) -> Boolean = { _, _ -> false },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -202,10 +204,16 @@ fun AiSmartScreen(
                     try {
                         val started = System.currentTimeMillis()
                         val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
-                            climateState, state, assistantContext, reserve = reserveState)
+                            climateState, state, assistantContext, reserve = reserveState,
+                            thermostats = thermostatState)
                         result.lightCommands.forEach { command ->
                             check(connected && onLightCommand(command.lightId, command.state)) {
                                 "Comando luce non inviato: connessione o target non valido."
+                            }
+                        }
+                        result.thermostatCommands.forEach { command ->
+                            check(connected && onThermostatCommand(command.thermostat, command.targetC)) {
+                                "Comando termostato non inviato: connessione o valore non valido."
                             }
                         }
                         response = result

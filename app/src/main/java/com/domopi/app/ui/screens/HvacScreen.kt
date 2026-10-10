@@ -393,7 +393,11 @@ fun ThermostatCard(
                     )
                 }
 
-                // Slider Target
+                // Slider Target: while dragging only the local value moves; one command on release.
+                // The pending value is dropped when the thermostat state changes (the /stat echo).
+                var pendingTarget by remember(deviceId) { mutableStateOf<Float?>(null) }
+                LaunchedEffect(state.targetTemp) { pendingTarget = null }
+                val shownTarget = pendingTarget ?: state.targetTemp
                 Column(modifier = Modifier.weight(1f).padding(start = 24.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -402,16 +406,19 @@ fun ThermostatCard(
                     ) {
                         Text("SETPOINT", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(
-                            "${"%.1f".format(locale, state.targetTemp)}°C",
+                            "${"%.1f".format(locale, shownTarget)}°C",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                     Slider(
-                        value = state.targetTemp.coerceIn(16f, 22f),
-                        onValueChange = {
-                            mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(Locale.US, it))
+                        value = shownTarget.coerceIn(16f, 22f),
+                        onValueChange = { pendingTarget = it },
+                        onValueChangeFinished = {
+                            pendingTarget?.let {
+                                mqttManager.publish("zara/interface/climate/$deviceId/target_temperature/cmd", "%.1f".format(Locale.US, it))
+                            }
                         },
                         valueRange = 16f..22f,
                         steps = 11,

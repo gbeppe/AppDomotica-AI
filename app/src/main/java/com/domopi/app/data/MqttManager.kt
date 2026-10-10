@@ -84,6 +84,8 @@ class MqttManager {
 
     private val _predictiveReserveSmartState = MutableStateFlow(PredictiveReserveSmartState())
     val predictiveReserveSmartState: StateFlow<PredictiveReserveSmartState> = _predictiveReserveSmartState
+    private val _thermostatSmartState = MutableStateFlow(ThermostatSmartState())
+    val thermostatSmartState: StateFlow<ThermostatSmartState> = _thermostatSmartState
 
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
@@ -199,6 +201,7 @@ class MqttManager {
                     _energySmartState.value = EnergySmartState()
                     _climateSmartState.value = ClimateSmartState()
                     _predictiveReserveSmartState.value = PredictiveReserveSmartState()
+                    _thermostatSmartState.value = ThermostatSmartState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     subscribeToBuildIdentity()
@@ -223,6 +226,7 @@ class MqttManager {
                             _energySmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                             _climateSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                             _predictiveReserveSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
+                            _thermostatSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                         }
                         handleIncomingMessage(topic ?: "", message?.toString() ?: "")
                     }
@@ -253,7 +257,8 @@ class MqttManager {
             _aiSmartState.value = AiSmartState()
             _energySmartState.value = EnergySmartState()
             _climateSmartState.value = ClimateSmartState()
-                    _predictiveReserveSmartState.value = PredictiveReserveSmartState()
+            _predictiveReserveSmartState.value = PredictiveReserveSmartState()
+            _thermostatSmartState.value = ThermostatSmartState()
             digitalTwinPrefix = clean
             if (mqttClient?.isConnected == true) {
                 subscribeToUnifiedTopics()
@@ -780,6 +785,13 @@ class MqttManager {
     fun setSmartLightState(lightId: String, state: Boolean): Boolean {
         val relativeStateTopic = AiSmartState.lightIdToTopic[lightId] ?: return false
         publish("zara/interface/${relativeStateTopic.removeSuffix("stat")}cmd", state.toString())
+        return true
+    }
+
+    /** Only the closed thermostat/setpoint set validated by the backend and the answer parser. */
+    fun setSmartThermostatTarget(thermostat: String, targetC: String): Boolean {
+        if (thermostat !in ThermostatSmartState.THERMOSTATS || targetC !in ThermostatSmartState.TARGETS) return false
+        publish("zara/interface/climate/$thermostat/target_temperature/cmd", targetC)
         return true
     }
 
