@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — date leggibili nelle risposte
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-spoken-dates`, commit
+`677389e`; `PREVIOUS_RELEASE` = `20261011-thermostats`. 98 test superati su `.20`,
+servizi `active`. Le risposte usano «gg/mm alle hh:mm» e periodi «dal gg/mm al
+gg/mm» (ultimo giorno compreso) invece di timestamp ISO; anno solo se diverso da
+quello corrente. App `bld_112565b0` (`5237ff6`) installata con lo stesso formato
+per riepilogo e provenienza. Compatibile in entrambi gli ordini di rilascio.
+
 ## Release dell'11 ottobre 2026 — termostati riscaldamento (fase 3.2)
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-thermostats`, commit
