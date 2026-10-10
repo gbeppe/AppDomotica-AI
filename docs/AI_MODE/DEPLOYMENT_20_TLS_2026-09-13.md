@@ -61,6 +61,25 @@ prova autenticata ha verificato il piano ON della libreria senza pubblicare MQTT
 e una fixture di transizione ha verificato l'attribuzione `automazione`. Dettagli
 in [`SMART_LUCI.md`](SMART_LUCI.md).
 
+## Release del 10 ottobre 2026 — freschezza dei log
+
+Release attiva: `/opt/domopi-house-ai/releases/20261010-log-freshness`, commit
+`ce69838` (branch `feature/ui-topbar`); `PREVIOUS_RELEASE` =
+`20260922-smart-light-semantics-r2` (rollback: ripuntare `current` e riavviare
+i due servizi). Prima del deploy verificato che i 41 file della release r2
+coincidessero con il codice committato. 82 test superati su `.20` con Python
+3.9.2 come utente `house-ai`, controllo sintattico AST, symlink spostato in modo
+atomico, servizi `active`.
+
+Novità: freschezza per fonte dei log Node-RED (apprendimento orario, previsione
+giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
+06/09/2026). Health `logs`: `online`/`degraded`/`offline` con dettaglio per file.
+Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
+ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
+
+Dal 10/10/2026 l'app salva il token cifrato (Android Keystore): va inserito una
+sola volta, copiandolo privatamente da `/home/pi/.config/house-ai/android.token`.
+
 L'app precompila questo URL e `HouseAiRepository` accetta HTTP soltanto per
 loopback di test. Il token non è incorporato nell'APK e resta in memoria nella
 schermata. Sul telefono connesso alla stessa tailnet, copiare privatamente il
