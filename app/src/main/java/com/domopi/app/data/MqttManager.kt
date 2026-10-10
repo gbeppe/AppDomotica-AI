@@ -795,6 +795,13 @@ class MqttManager {
         return true
     }
 
+    /** Only the scenes accepted by the Node-RED Scene Dispatcher. */
+    fun setSmartLightScene(scene: String): Boolean {
+        if (scene !in AiSmartState.lightScenes) return false
+        sendLightScene(scene)
+        return true
+    }
+
     fun sendLightScene(scene: String) {
         publish("zara/interface/lights/scene/cmd", scene)
     }

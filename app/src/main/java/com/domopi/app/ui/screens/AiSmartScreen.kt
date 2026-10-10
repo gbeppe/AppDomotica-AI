@@ -55,6 +55,7 @@ fun AiSmartScreen(
     reserveState: PredictiveReserveSmartState = PredictiveReserveSmartState(),
     thermostatState: ThermostatSmartState = ThermostatSmartState(),
     onThermostatCommand: (String, String) -> Boolean = { _, _ -> false },
+    onSceneCommand: (String) -> Boolean = { false },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -213,6 +214,11 @@ fun AiSmartScreen(
                         result.thermostatCommands.forEach { command ->
                             check(connected && onThermostatCommand(command.thermostat, command.targetC)) {
                                 "Comando termostato non inviato: connessione o valore non valido."
+                            }
+                        }
+                        result.sceneCommands.forEach { scene ->
+                            check(connected && onSceneCommand(scene)) {
+                                "Scena luci non inviata: connessione o scena non valida."
                             }
                         }
                         response = result
@@ -423,7 +429,7 @@ internal fun AiSmartContent(
             Card(Modifier.fillMaxWidth().testTag("smart-query-card")) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Chiedi alla casa", style = MaterialTheme.typography.titleMedium)
-                    Text(if (dynamicMode) "Scrivi o detta una query. Puoi anche accendere o spegnere una luce mappata."
+                    Text(if (dynamicMode) "Scrivi o detta una query. Puoi anche comandare luci, scene luci e termostati."
                         else "Puoi chiedere luci e temperature disponibili.", style = MaterialTheme.typography.bodySmall)
                     OutlinedTextField(question, onQuestionChange, label = { Text("La tua query") },
                         modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 5, enabled = !loading)

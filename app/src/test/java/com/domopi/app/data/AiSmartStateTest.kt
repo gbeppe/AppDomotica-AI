@@ -17,7 +17,7 @@ class AiSmartStateTest {
 
     @Test fun mappedSnapshotDoesNotImplyPhysicalStateOrFreshness() {
         val text = sample().summary(true)
-        assertTrue(text.contains("7 punti luce accesi, 1 spenti e 1 senza un dato valido, su 9"))
+        assertTrue(text.contains("8 punti luce accesi, 1 spenti e 1 senza un dato valido, su 10"))
         assertTrue(text.contains("24,2 gradi"))
         assertTrue(text.contains("41,1 gradi"))
         assertTrue(text.contains("non conferma l'accensione fisica"))
@@ -27,7 +27,7 @@ class AiSmartStateTest {
     @Test fun missingAndInvalidAreDistinctFromOffAndZero() {
         val initial = AiSmartState()
         assertTrue(initial.readings().all { it.quality == "missing" })
-        assertTrue(initial.lightsText().contains("0 spenti e 9 senza un dato valido"))
+        assertTrue(initial.lightsText().contains("0 spenti e 10 senza un dato valido"))
         val state = initial.observe(AiSmartState.lightTopics[0], "broken", 1, false)
             .observe(AiSmartState.lightTopics[1], "off", 2, false)
             .observe(AiSmartState.livingTopic, "0", 3, false)
@@ -48,7 +48,7 @@ class AiSmartStateTest {
 
     @Test fun commandsUnmappedLightsPumpsAndLegacyTopicsAreIgnored() {
         val state = sample()
-        listOf("lights/living/power/cmd", "lights/prolunga/power/stat", "lights/cucina/power/stat",
+        listOf("lights/living/power/cmd", "lights/bedroom/power/stat", "lights/cucina/power/stat",
             "pool/pump/power/stat", "pool/skimmer/power/stat", "emon/shellyACS/tempACS")
             .forEach { assertSame(state, state.observe(it, "true", 2000, true)) }
     }
@@ -57,7 +57,7 @@ class AiSmartStateTest {
         val state = sample()
         val repeated = state.observe(AiSmartState.lightTopics[0], "true", 2000, false)
         assertEquals(state.lightsText(), repeated.lightsText())
-        assertEquals(11, repeated.readings().size)
+        assertEquals(12, repeated.readings().size)
     }
 
     @Test fun compoundQuestionsReturnBothTemperaturesWithLimits() {
@@ -65,17 +65,17 @@ class AiSmartStateTest {
         assertTrue(text.contains("Temperatura living: 24,2"))
         assertTrue(text.contains("Acqua sanitaria ACS: 41,1"))
         assertTrue(text.contains(AiSmartState.freshnessText))
-        assertTrue(sample().answer("Quante luci sono accese?", true).contains("7 punti luce accesi"))
+        assertTrue(sample().answer("Quante luci sono accese?", true).contains("8 punti luce accesi"))
         val all = sample().answer("Quante luci e quali temperature in soggiorno e ACS?", false)
         assertTrue(all.contains("Connessione assente"))
-        assertTrue(all.contains("7 punti luce accesi"))
+        assertTrue(all.contains("8 punti luce accesi"))
         assertTrue(all.contains("24,2"))
         assertTrue(all.contains("41,1"))
     }
 
     @Test fun homeSummaryPartsContainOnlyActiveDevicesAndValidMeasures() {
         val state = sample()
-        assertEquals(7, state.activeDeviceLabels().size)
+        assertEquals(8, state.activeDeviceLabels().size)
         assertFalse(state.activeDevicesText().contains("spenti"))
         assertTrue(state.environmentalMeasuresText().contains("living 24,2 °C"))
         assertFalse(state.environmentalMeasuresText().contains("ACS"))

@@ -144,7 +144,8 @@ data class AiSmartState(
             "lights/porch_entrance/power/stat",
             "lights/service_entrance/power/stat",
             "pool/water/power/stat",
-            "pool/deck/power/stat"
+            "pool/deck/power/stat",
+            "lights/prolunga/power/stat"
         )
         const val livingTopic = "env/living/temperature/stat"
         const val acsTopic = "energy/puffer_acs/stat"
@@ -157,9 +158,12 @@ data class AiSmartState(
             "Portico ingresso",
             "Ingresso servizio",
             "Luci piscina",
-            "Luci pedana piscina"
+            "Luci pedana piscina",
+            "Prolunga"
         )).map { (topic, label) -> SmartEntity(topic, label, true) }
         val lightIdToTopic = lightEntities.associate { it.id to it.topic }
+        /** Payloads accepted by the Node-RED Scene Dispatcher on lights/scene/cmd. */
+        val lightScenes = setOf("tv", "sleep", "all_on", "all_off")
         val entities = lightEntities + listOf(
             SmartEntity(livingTopic, "Temperatura living", false),
             SmartEntity(acsTopic, "Acqua sanitaria ACS", false)

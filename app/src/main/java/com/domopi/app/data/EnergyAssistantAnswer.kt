@@ -12,6 +12,7 @@ data class EnergyAssistantAnswer(
     val context: AssistantContext? = null,
     val lightCommands: List<LightCommand> = emptyList(),
     val thermostatCommands: List<ThermostatCommand> = emptyList(),
+    val sceneCommands: List<String> = emptyList(),
 ) {
     val statusLabel: String get() = when (status) {
         "complete" -> "Periodo coperto"
@@ -32,6 +33,7 @@ data class EnergyAssistantAnswer(
             val sources = mutableListOf<String>()
             val lightCommands = mutableListOf<LightCommand>()
             val thermostatCommands = mutableListOf<ThermostatCommand>()
+            val sceneCommands = mutableListOf<String>()
             val results = body.optJSONArray("results")
             require((results?.length() ?: 0) <= 6)
             for (i in 0 until (results?.length() ?: 0)) {
@@ -92,6 +94,12 @@ data class EnergyAssistantAnswer(
                         lightCommands += LightCommand(light, state == "on")
                         detail += "Comando luci validato · $light · $state"
                     }
+                    "house_ai.light_scene_command.v1" -> {
+                        val scene = result.getString("scene")
+                        require(scene in AiSmartState.lightScenes)
+                        sceneCommands += scene
+                        detail += "Comando scena luci validato · $scene"
+                    }
                     "house_ai.current_thermostats.v1" -> {
                         detail += "Digital Twin · termostati riscaldamento · " +
                             if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
@@ -151,7 +159,7 @@ data class EnergyAssistantAnswer(
                 parsed
             }
             return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands,
-                thermostatCommands)
+                thermostatCommands, sceneCommands)
         }
     }
 }
