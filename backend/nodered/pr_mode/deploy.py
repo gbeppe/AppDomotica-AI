@@ -31,7 +31,10 @@ def call(path, body=None, method=None, deploy=False):
                                  headers=h, method=method)
     with urllib.request.urlopen(req, timeout=60) as response:
         text = response.read()
-        return json.loads(text) if text.strip() else None
+        try:
+            return json.loads(text) if text.strip() else None
+        except ValueError:
+            return text.decode(errors='replace').strip()  # e.g. POST /inject answers plain "OK"
 
 
 def digest(value):
