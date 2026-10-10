@@ -25,6 +25,7 @@ class SettingsManager(private val context: Context) {
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
         val HOME_NETWORK_DOMAIN = stringPreferencesKey("home_network_domain")
         val HOME_NETWORK_SUBNET = stringPreferencesKey("home_network_subnet")
+        val HOUSE_AI_URL = stringPreferencesKey("house_ai_url")
         val DIGITAL_TWIN_PREFIX = stringPreferencesKey("digital_twin_prefix")
 
         val DOMOPI_BROKER_IP = stringPreferencesKey("domopi_broker_ip")
@@ -63,6 +64,8 @@ class SettingsManager(private val context: Context) {
     val darkMode: Flow<Boolean?> = context.dataStore.data.map { it[DARK_MODE] }.distinctUntilChanged()
     val isAdminMode: Flow<Boolean> = context.dataStore.data.map { it[IS_ADMIN_MODE] ?: false }.distinctUntilChanged()
     val adminPin: Flow<String> = context.dataStore.data.map { it[ADMIN_PIN] ?: "1234" }.distinctUntilChanged()
+    val houseAiUrl: Flow<String> = context.dataStore.data.map { it[HOUSE_AI_URL] ?: HouseAiRepository.DEFAULT_BASE_URL }.distinctUntilChanged()
+
     val homeNetwork: Flow<HomeNetworkSettings> = context.dataStore.data.map {
         HomeNetworkSettings(
             domain = it[HOME_NETWORK_DOMAIN] ?: HomeNetworkSettings.DEFAULT_DOMAIN,
@@ -116,6 +119,12 @@ class SettingsManager(private val context: Context) {
             it[HOME_NETWORK_SUBNET] = subnet
         }
         return true
+    }
+
+    suspend fun saveHouseAiUrl(url: String) {
+        context.dataStore.edit {
+            it[HOUSE_AI_URL] = url.trim()
+        }
     }
 
     suspend fun saveDigitalTwinPrefix(prefix: String) {

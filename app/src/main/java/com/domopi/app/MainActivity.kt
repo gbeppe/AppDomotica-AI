@@ -11,6 +11,7 @@ import com.domopi.app.ui.screens.*
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.MqttManager
+import com.domopi.app.data.CredentialStore
 import com.domopi.app.data.BuildAlignment
 import com.domopi.app.data.BuildIdentity
 import com.domopi.app.network.AccessPathClassifier
@@ -40,6 +41,7 @@ class MainActivity : ComponentActivity() {
         settingsManager = SettingsManager(this)
         val connectivityManager = ZaiConnectivityManager(this)
         mqttManager = MqttManager()
+        val credentialStore = CredentialStore(this)
 
         // Sync prefisso Digital Twin
         lifecycleScope.launch {
@@ -152,7 +154,9 @@ class MainActivity : ComponentActivity() {
                             AiSmartScreen(state, energyState, climateState, connected,
                                 onClassic = { currentScreen = "home" },
                                 onHistory = { currentScreen = "house_ai" },
-                                onLightCommand = mqttManager::setSmartLightState)
+                                onLightCommand = mqttManager::setSmartLightState,
+                                settingsManager = settingsManager,
+                                credentialStore = credentialStore)
                         }
                         "house_ai" -> HouseAiScreen(onBack = { currentScreen = "ai_smart" })
                         "lights" -> LightsScreen(

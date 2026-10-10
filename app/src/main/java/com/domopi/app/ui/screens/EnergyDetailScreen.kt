@@ -21,7 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.EnergyHistory
+import com.domopi.app.data.EnergyFetchError
 import com.domopi.app.data.EnergyRepository
+import com.domopi.app.data.EnergyResult
+import com.domopi.app.data.describeEnergyError
 import com.domopi.app.data.HistoryPoint
 import com.domopi.app.ui.theme.ConsumptionYellow
 import com.domopi.app.ui.theme.GridBlue
@@ -33,16 +36,18 @@ val BatteryMagenta = Color(0xFFE040FB)
 @Composable
 fun EnergyDetailScreen(emoncmsIp: String, onBack: () -> Unit) {
     var history by remember { mutableStateOf<EnergyHistory?>(null) }
+    var error by remember { mutableStateOf<EnergyFetchError?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var selectedHours by remember { mutableIntStateOf(24) }
+    var reload by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(selectedHours, emoncmsIp) {
-        if (emoncmsIp.isNotEmpty()) {
-            val repository = EnergyRepository(emoncmsIp)
-            isLoading = true
-            history = repository.fetchHistory(selectedHours)
-            isLoading = false
+    LaunchedEffect(selectedHours, emoncmsIp, reload) {
+        isLoading = true
+        when (val result = EnergyRepository(emoncmsIp).fetchHistory(selectedHours)) {
+            is EnergyResult.Success -> { history = result.value; error = null }
+            is EnergyResult.Failure -> { history = null; error = result.error }
         }
+        isLoading = false
     }
 
     Scaffold(
@@ -79,9 +84,17 @@ fun EnergyDetailScreen(emoncmsIp: String, onBack: () -> Unit) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (history == null || history!!.solar.isEmpty()) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Dati non disponibili.")
+            } else if (history == null) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            describeEnergyError(error ?: EnergyFetchError.NoData),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        TextButton(onClick = { reload++ }) { Text("Riprova") }
+                    }
                 }
             } else {
                 LazyColumn(

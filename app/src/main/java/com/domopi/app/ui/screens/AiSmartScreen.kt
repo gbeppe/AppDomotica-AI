@@ -37,6 +37,7 @@ import com.domopi.app.ui.components.StackStatusBottomSheet
 import com.domopi.app.ui.components.StackStatusIcon
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -50,6 +51,8 @@ fun AiSmartScreen(
     onClassic: () -> Unit,
     onHistory: () -> Unit,
     onLightCommand: (String, Boolean) -> Boolean = { _, _ -> false },
+    settingsManager: SettingsManager? = null,
+    credentialStore: CredentialStore? = null,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -59,6 +62,21 @@ fun AiSmartScreen(
     var speech by remember { mutableStateOf<TextToSpeech?>(null) }
     var serviceUrl by rememberSaveable { mutableStateOf(HouseAiRepository.DEFAULT_BASE_URL) }
     var serviceToken by remember { mutableStateOf("") }
+    // Indirizzo nelle impostazioni, token cifrato con Android Keystore; salvati dopo ogni modifica.
+    var credentialsLoaded by remember { mutableStateOf(settingsManager == null && credentialStore == null) }
+    LaunchedEffect(Unit) {
+        settingsManager?.let { serviceUrl = it.houseAiUrl.first() }
+        (credentialStore?.get(Credential.HOUSE_AI_TOKEN) as? CredentialResult.Present)?.let { serviceToken = it.value }
+        credentialsLoaded = true
+    }
+    LaunchedEffect(serviceUrl, serviceToken, credentialsLoaded) {
+        if (!credentialsLoaded) return@LaunchedEffect
+        delay(800)
+        settingsManager?.saveHouseAiUrl(serviceUrl)
+        credentialStore?.let {
+            if (serviceToken.isBlank()) it.clear(Credential.HOUSE_AI_TOKEN) else it.set(Credential.HOUSE_AI_TOKEN, serviceToken)
+        }
+    }
     var response by remember { mutableStateOf<EnergyAssistantAnswer?>(null) }
     var assistantContext by remember { mutableStateOf<AssistantContext?>(null) }
     var dynamicError by remember { mutableStateOf<String?>(null) }
@@ -343,7 +361,7 @@ internal fun AiSmartContent(
                         OutlinedTextField(serviceToken, onServiceTokenChange,
                             label = { Text("Token backend") }, singleLine = true,
                             visualTransformation = PasswordVisualTransformation())
-                        Text("Il token resta in memoria e non viene salvato nell’app.",
+                        Text("Il token è salvato cifrato sul telefono (Android Keystore). Svuota il campo per cancellarlo.",
                             style = MaterialTheme.typography.bodySmall)
                     }
                 },

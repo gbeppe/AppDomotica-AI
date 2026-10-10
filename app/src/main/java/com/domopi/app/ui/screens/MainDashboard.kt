@@ -33,6 +33,7 @@ import com.domopi.app.data.AcReasonMapper
 import com.domopi.app.data.AcReasonMetric
 import com.domopi.app.data.AiManagedData
 import com.domopi.app.data.EnergyRepository
+import com.domopi.app.data.EnergyResult
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.AppAlignmentStatus
 import com.domopi.app.network.AccessPathState
@@ -72,8 +73,10 @@ fun MainDashboard(
         if (epIp.isNotEmpty()) {
             try {
                 val repo = EnergyRepository(epIp)
-                val (kwhIeri, kwhOggi) = repo.fetchGridImportSummary()
-                if (kwhIeri > 0f || kwhOggi > 0f) {
+                // On failure keep the values already shown instead of overwriting them with zeros.
+                val summary = repo.fetchGridImportSummary()
+                if (summary is EnergyResult.Success) {
+                    val (kwhIeri, kwhOggi) = summary.value
                     mqttManager.updateGridImportKwhSummary(kwhOggi, kwhIeri)
                 }
             } catch (_: Exception) {}

@@ -1,11 +1,10 @@
 package com.domopi.app.data
 
 import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.statement.*
 import kotlinx.serialization.json.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.util.Log
@@ -22,123 +21,141 @@ data class EnergyHistory(
     val soc: List<HistoryPoint> = emptyList()
 )
 
-class EnergyRepository(private val emoncmsIp: String) {
-    private val client = HttpClient {
-        install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+/** Why EmonCMS data could not be shown: never rendered as an empty or zero chart. */
+sealed interface EnergyFetchError {
+    data object NotConfigured : EnergyFetchError
+    data object Unreachable : EnergyFetchError
+    data class Http(val status: Int) : EnergyFetchError
+    data class Rejected(val message: String) : EnergyFetchError
+    data object InvalidResponse : EnergyFetchError
+    data object NoData : EnergyFetchError
+}
+
+sealed interface EnergyResult<out T> {
+    data class Success<T>(val value: T) : EnergyResult<T>
+    data class Failure(val error: EnergyFetchError) : EnergyResult<Nothing>
+}
+
+/** One EmonCMS sample; null value = no measurement stored for that slot (a gap, not zero). */
+data class FeedSample(val timestamp: Long, val value: Float?)
+
+fun describeEnergyError(error: EnergyFetchError): String = when (error) {
+    EnergyFetchError.NotConfigured -> "EmonCMS non configurato: imposta l'indirizzo in Configurazione."
+    EnergyFetchError.Unreachable -> "EmonCMS non raggiungibile: verifica Wi-Fi o VPN."
+    is EnergyFetchError.Http -> "EmonCMS ha risposto con errore HTTP ${error.status}."
+    is EnergyFetchError.Rejected -> "EmonCMS ha rifiutato la richiesta: ${error.message}"
+    EnergyFetchError.InvalidResponse -> "Risposta di EmonCMS non riconosciuta."
+    EnergyFetchError.NoData -> "Nessun dato registrato da EmonCMS nel periodo."
+}
+
+object EmonCmsParser {
+    /** Classifies an HTTP answer of feed/data.json without coercing missing values to zero. */
+    fun parseFeed(status: Int, body: String): EnergyResult<List<FeedSample>> {
+        if (status !in 200..299) return EnergyResult.Failure(EnergyFetchError.Http(status))
+        val element = try {
+            Json.parseToJsonElement(body)
+        } catch (_: Exception) {
+            return EnergyResult.Failure(EnergyFetchError.InvalidResponse)
         }
+        if (element is JsonObject) {
+            val message = (element["message"] as? JsonPrimitive)?.contentOrNull
+            return EnergyResult.Failure(
+                if (message.isNullOrBlank()) EnergyFetchError.InvalidResponse
+                else EnergyFetchError.Rejected(message.take(120))
+            )
+        }
+        if (element !is JsonArray) return EnergyResult.Failure(EnergyFetchError.InvalidResponse)
+        return EnergyResult.Success(element.mapNotNull { item ->
+            val pair = item as? JsonArray ?: return@mapNotNull null
+            val ts = (pair.getOrNull(0) as? JsonPrimitive)?.longOrNull ?: return@mapNotNull null
+            FeedSample(ts, (pair.getOrNull(1) as? JsonPrimitive)?.floatOrNull)
+        })
     }
-    
+
+    /** Normalizes EmonCMS millisecond timestamps to seconds. */
+    fun seconds(timestamp: Long): Long = if (timestamp > 2_000_000_000L) timestamp / 1000 else timestamp
+
+    /**
+     * Grid import in kWh split at [todayStartSec]. A sample contributes only up to the
+     * next sample and only across one regular slot: gaps are never integrated.
+     */
+    fun gridImportKwh(samples: List<FeedSample>, todayStartSec: Long, intervalSec: Long): Pair<Float, Float> {
+        var kwhIeri = 0f
+        var kwhOggi = 0f
+        for (i in 0 until samples.size - 1) {
+            val value = samples[i].value ?: continue
+            val ptSec = seconds(samples[i].timestamp)
+            val dtSeconds = seconds(samples[i + 1].timestamp) - ptSec
+            if (value <= 0f || dtSeconds <= 0 || dtSeconds > 2 * intervalSec) continue
+            val kwh = (value * dtSeconds) / (3600f * 1000f)
+            if (ptSec < todayStartSec) kwhIeri += kwh else kwhOggi += kwh
+        }
+        return kwhIeri to kwhOggi
+    }
+}
+
+class EnergyRepository(private val emoncmsIp: String) {
+    private val client = HttpClient()
+
     private val apiKey = "e04a090163e34e823f1ae560859b1c47"
 
-    suspend fun fetchHistory(hours: Int): EnergyHistory = withContext(Dispatchers.IO) {
-        try {
-            val end = System.currentTimeMillis() / 1000
-            val start = end - (hours * 3600)
-            val interval = if (hours <= 6) 60 else 300 // 1 min for 6h, 5 min for 24h
+    suspend fun fetchHistory(hours: Int): EnergyResult<EnergyHistory> = withContext(Dispatchers.IO) {
+        val end = System.currentTimeMillis() / 1000
+        val start = end - (hours * 3600)
+        val interval = if (hours <= 6) 60 else 300 // 1 min for 6h, 5 min for 24h
 
-            // Feed IDs for Tesla Powerwall on EmonCMS (Node: TeslaPowerwall)
-            val feeds = mapOf(
-                "solar" to 307,
-                "consumption" to 303,
-                "grid" to 305,
-                "battery" to 306,
-                "soc" to 304
-            )
-
-            val results = feeds.mapValues { (_, id) ->
-                fetchFeedData(id, start, end, interval)
+        // Feed IDs for Tesla Powerwall on EmonCMS (Node: TeslaPowerwall)
+        val feeds = linkedMapOf("solar" to 307, "consumption" to 303, "grid" to 305, "battery" to 306, "soc" to 304)
+        val series = mutableMapOf<String, List<HistoryPoint>>()
+        for ((name, id) in feeds) {
+            when (val result = fetchFeedData(id, start, end, interval)) {
+                is EnergyResult.Failure -> return@withContext result
+                is EnergyResult.Success -> series[name] = result.value.mapNotNull { s -> s.value?.let { HistoryPoint(s.timestamp, it) } }
             }
+        }
+        if (series.getValue("solar").isEmpty() && series.getValue("consumption").isEmpty()) {
+            return@withContext EnergyResult.Failure(EnergyFetchError.NoData)
+        }
+        EnergyResult.Success(EnergyHistory(series.getValue("solar"), series.getValue("consumption"),
+            series.getValue("grid"), series.getValue("battery"), series.getValue("soc")))
+    }
 
-            EnergyHistory(
-                solar = results["solar"] ?: emptyList(),
-                consumption = results["consumption"] ?: emptyList(),
-                grid = results["grid"] ?: emptyList(),
-                battery = results["battery"] ?: emptyList(),
-                soc = results["soc"] ?: emptyList()
-            )
-        } catch (e: Exception) {
-            Log.e("EnergyRepo", "Error fetching history", e)
-            EnergyHistory()
+    /** Yesterday/today grid import (kWh), or the reason it cannot be computed. */
+    suspend fun fetchGridImportSummary(): EnergyResult<Pair<Float, Float>> = withContext(Dispatchers.IO) {
+        val nowZone = ZonedDateTime.now(ZoneId.systemDefault())
+        val todayStartSec = nowZone.toLocalDate().atStartOfDay(nowZone.zone).toEpochSecond()
+        val yesterdayStartSec = nowZone.toLocalDate().minusDays(1).atStartOfDay(nowZone.zone).toEpochSecond()
+        val interval = 300 // 5-minute sampling interval
+        when (val result = fetchFeedData(305, yesterdayStartSec, nowZone.toEpochSecond(), interval)) {
+            is EnergyResult.Failure -> result
+            is EnergyResult.Success ->
+                if (result.value.count { it.value != null } < 2) EnergyResult.Failure(EnergyFetchError.NoData)
+                else EnergyResult.Success(EmonCmsParser.gridImportKwh(result.value, todayStartSec, interval.toLong()))
         }
     }
 
-    suspend fun fetchGridImportSummary(): Pair<Float, Float> = withContext(Dispatchers.IO) {
-        try {
-            val nowZone = ZonedDateTime.now(ZoneId.systemDefault())
-            val todayStartSec = nowZone.toLocalDate().atStartOfDay(nowZone.zone).toEpochSecond()
-            val yesterdayStartSec = nowZone.toLocalDate().minusDays(1).atStartOfDay(nowZone.zone).toEpochSecond()
-            val endSec = nowZone.toEpochSecond()
-            val interval = 300 // 5-minute sampling interval
-
-            val gridPoints = fetchFeedData(305, yesterdayStartSec, endSec, interval)
-            if (gridPoints.size < 2) return@withContext Pair(0f, 0f)
-            
-            var kwhIeri = 0f
-            var kwhOggi = 0f
-
-            for (i in 0 until gridPoints.size - 1) {
-                val pt = gridPoints[i]
-                val nextPt = gridPoints[i + 1]
-
-                // Normalizziamo i timestamp in secondi (EmonCMS data.json restituisce ms 13 cifre)
-                val ptSec = if (pt.timestamp > 2000000000L) pt.timestamp / 1000 else pt.timestamp
-                val nextPtSec = if (nextPt.timestamp > 2000000000L) nextPt.timestamp / 1000 else nextPt.timestamp
-
-                val pWatts = pt.value.coerceAtLeast(0f)
-                val dtSeconds = (nextPtSec - ptSec).coerceAtLeast(0L)
-
-                if (pWatts > 0f && dtSeconds > 0) {
-                    val kwh = (pWatts * dtSeconds) / (3600f * 1000f)
-                    if (ptSec < todayStartSec) {
-                        kwhIeri += kwh
-                    } else {
-                        kwhOggi += kwh
-                    }
-                }
-            }
-
-            Log.d("EnergyRepo", "Grid import summary (00:00 window): Ieri = $kwhIeri kWh, Oggi = $kwhOggi kWh")
-            Pair(kwhIeri, kwhOggi)
-        } catch (e: Exception) {
-            Log.e("EnergyRepo", "Error calculating grid import summary", e)
-            Pair(0f, 0f)
-        }
+    private suspend fun fetchFeedData(feedId: Int, start: Long, end: Long, interval: Int): EnergyResult<List<FeedSample>> {
+        if (emoncmsIp.isEmpty()) return EnergyResult.Failure(EnergyFetchError.NotConfigured)
+        val query = "feed/data.json?id=$feedId&start=$start&end=$end&interval=$interval&apikey=$apiKey"
+        val primary = request("http://$emoncmsIp/emoncms/$query")
+        if (primary is EnergyResult.Success || primary.isFinal()) return primary
+        // Installations serving EmonCMS at the web root.
+        val fallback = request("http://$emoncmsIp/$query")
+        if (fallback is EnergyResult.Success) return fallback
+        val error = if ((primary as EnergyResult.Failure).error == EnergyFetchError.Http(404)) fallback else primary
+        Log.w("EnergyRepo", "Feed $feedId unavailable: ${(error as EnergyResult.Failure).error}")
+        return error
     }
 
-    private suspend fun fetchFeedData(feedId: Int, start: Long, end: Long, interval: Int): List<HistoryPoint> {
-        if (emoncmsIp.isEmpty()) return emptyList()
+    private fun EnergyResult<List<FeedSample>>.isFinal() =
+        this is EnergyResult.Failure && (error is EnergyFetchError.Rejected || error == EnergyFetchError.Unreachable)
 
-        val urlPrimary = "http://$emoncmsIp/emoncms/feed/data.json?id=$feedId&start=$start&end=$end&interval=$interval&apikey=$apiKey"
-        val urlFallback = "http://$emoncmsIp/feed/data.json?id=$feedId&start=$start&end=$end&interval=$interval&apikey=$apiKey"
-
-        val responseText = try {
-            client.get(urlPrimary).body<String>()
-        } catch (e: Exception) {
-            try {
-                client.get(urlFallback).body<String>()
-            } catch (e2: Exception) {
-                Log.e("EnergyRepo", "Error fetching feed $feedId from $emoncmsIp: ${e2.message}")
-                return emptyList()
-            }
-        }
-
-        return try {
-            val jsonArray = Json.parseToJsonElement(responseText).jsonArray
-            Log.d("EnergyRepo", "Feed $feedId: received ${jsonArray.size} points")
-            jsonArray.mapNotNull { element ->
-                try {
-                    val arr = element.jsonArray
-                    val ts = arr[0].jsonPrimitive.long
-                    val value = arr[1].jsonPrimitive.floatOrNull ?: 0f
-                    HistoryPoint(ts, value)
-                } catch (e: Exception) {
-                    null
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("EnergyRepo", "Error parsing feed $feedId response: $responseText", e)
-            emptyList()
-        }
+    private suspend fun request(url: String): EnergyResult<List<FeedSample>> = try {
+        val response = client.get(url)
+        EmonCmsParser.parseFeed(response.status.value, response.bodyAsText())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        EnergyResult.Failure(EnergyFetchError.Unreachable)
     }
 }
