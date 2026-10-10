@@ -70,6 +70,18 @@ data class EnergyAssistantAnswer(
                             observations.getJSONObject(it).getString("source_topic")
                         }.toList().sorted()
                         detail += topics
+                        val commands = result.optJSONObject("commands")
+                        require((commands?.length() ?: 0) <= AiSmartState.lightEntities.size)
+                        commands?.keys()?.asSequence()?.sorted()?.forEach { light ->
+                            val command = commands.getJSONObject(light)
+                            detail += "Node-RED · ${command.getString("entity_id")} · ${command.getString("stage")}"
+                            detail += "Comando: ${command.getString("command_id")}"
+                            detail += "Policy: ${command.getString("actor_policy")} · origine: ${command.getString("origin")}"
+                            detail += command.getString("source_topic")
+                            detail += "Evento: ${java.time.Instant.ofEpochMilli(command.getLong("observed_at_ms"))}"
+                            detail += "Ricezione Android: ${java.time.Instant.ofEpochMilli(command.getLong("received_at_ms"))}"
+                            detail += "Retained: ${command.getBoolean("retained")} · nessuna conferma fisica"
+                        }
                     }
                     "house_ai.light_command.v1" -> {
                         val light = result.getString("light")

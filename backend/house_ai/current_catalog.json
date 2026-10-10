@@ -35,19 +35,27 @@
       "physical_confirmation": "not_verified"
     },
     {
-      "id": "light.bedroom",
-      "label": "Luce camera",
+      "id": "light.laundry",
+      "label": "Lavanderia",
       "kind": "light",
-      "topic": "zara/interface/lights/bedroom/power/stat",
-      "android_id": "lucecamera",
+      "topic": "zara/interface/lights/laundry/power/stat",
+      "android_id": "lavanderia",
       "physical_confirmation": "not_verified"
     },
     {
-      "id": "light.hifi",
-      "label": "Lampada HiFi",
+      "id": "light.porch_entrance",
+      "label": "Portico ingresso",
       "kind": "light",
-      "topic": "zara/interface/lights/hifi/power/stat",
-      "android_id": "lampadahifi",
+      "topic": "zara/interface/lights/porch_entrance/power/stat",
+      "android_id": "portico_ingresso",
+      "physical_confirmation": "not_verified"
+    },
+    {
+      "id": "light.service_entrance",
+      "label": "Ingresso servizio",
+      "kind": "light",
+      "topic": "zara/interface/lights/service_entrance/power/stat",
+      "android_id": "ingressoservizio",
       "physical_confirmation": "not_verified"
     },
     {
@@ -97,12 +105,7 @@
       "reason": "skimmer_not_light"
     }
   ],
-  "unmapped_android_ids": [
-    "lavanderia",
-    "portico",
-    "cucina",
-    "esterno"
-  ],
+  "unmapped_android_ids": [],
   "limitations": [
     "No source measurement timestamps in mapped scalar payloads.",
     "Light states do not establish physical confirmation.",

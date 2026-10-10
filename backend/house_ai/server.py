@@ -121,7 +121,7 @@ def handler(client, token, log_path, planner=None, log_root=None):
                 return
             try:
                 length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= 8192 or self.headers.get("Transfer-Encoding") is not None:
+                if not 0 < length <= 32768 or self.headers.get("Transfer-Encoding") is not None:
                     raise ValueError("Invalid body size")
                 body = json.loads(self.rfile.read(length))
                 if (not isinstance(body, dict)

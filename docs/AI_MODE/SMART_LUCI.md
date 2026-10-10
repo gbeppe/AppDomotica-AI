@@ -1,10 +1,11 @@
 # Dominio luci della modalità Smart
 
-Stato architetturale del 14 settembre 2026.
+Stato aggiornato il 22 settembre 2026. Contratto e verifica:
+[Integrazione semantica Node-RED](INTEGRAZIONE_SEMANTICA_LUCI.md).
 
 ## Obiettivi
 
-Il dominio permette di consultare gli otto punti luce presenti nel registry,
+Il dominio permette di consultare i nove punti luce presenti nel registry,
 accendere o spegnere una singola luce tramite query e rispondere a domande come
 «chi ha acceso la libreria?». La home non espone widget: testo e voce restano
 l'unica interfaccia operativa Smart.
@@ -19,12 +20,12 @@ topic, tipi, timestamp e retained, quindi compone la risposta deterministicament
 ## Flusso di comando
 
 1. Groq può produrre solo `set_light_state(light, state)`.
-2. `light` appartiene all'allowlist degli otto ID; `state` è `on` oppure `off`.
+2. `light` appartiene all'allowlist dei nove ID; `state` è `on` oppure `off`.
 3. Il backend restituisce `house_ai.light_command.v1` senza topic MQTT.
 4. Il parser Android ricontrolla ID e stato.
 5. `MqttManager.setSmartLightState` risolve l'unico topic
    `zara/interface/{domain}/{device}/power/cmd` e pubblica `true` o `false`, QoS 1.
-6. Lo stato fisico non viene dichiarato confermato finché non arriva `/stat`.
+6. `/stat` è uno stato dichiarato: non conferma fisicamente il comando.
 
 Sono esclusi topic `/cmnd`, alias legacy, scene e target non presenti nel mapping.
 Una richiesta composta può contenere più operazioni, entro il limite generale di
@@ -32,22 +33,16 @@ sei, ma ciascuna resta validata separatamente.
 
 ## Attribuzione utente o automazione
 
-`AiSmartState` conserva lo stato valido precedente, i comandi app in attesa e
-l'ultima transizione osservata per luce. Dashboard e modalità Smart registrano
-il comando nello stesso tracker prima della pubblicazione.
+Node-RED costruisce l'attribuzione con policy `dashboard_only_v2`: dashboard app
+e dashboard Node-RED sono `utente`; le altre origini documentate sono
+`automazione`. I comandi manuali tramite inject editor appartengono ad automazione.
+Android non attribuisce più autori dalle transizioni o dai comandi locali.
 
-- se il nuovo `/stat` coincide con il target richiesto dall'app entro 30 secondi,
-  l'autore è `utente`;
-- se cambia rispetto a uno stato valido precedente senza tale corrispondenza,
-  l'autore è `automazione`;
-- il primo messaggio della sessione, soprattutto se retained, inizializza lo
-  stato e non viene attribuito.
-
-Questa è un'attribuzione della transizione osservata nella sessione Android. Non
-è uno storico persistente e non distingue più utenti. Per una cronologia che
-sopravviva a riavvii, Node-RED dovrà pubblicare o salvare un evento firmato con
-ID luce, stato, autore e timestamp. I quattro log attuali in `/home/pi/AI_climate`
-non contengono eventi delle luci.
+Le risposte usano l'ultimo comando documentato disponibile e distinguono
+`routed`, `dispatched`, `send_invoked` e `publisher_input`. Non provano la causa
+fisica dello stato né costituiscono una cronologia completa ON/OFF. I retained
+con policy precedente non forniscono un autore valido per la nuova catalogazione.
+Dettagli, replica e limiti nel [contratto semantico](INTEGRAZIONE_SEMANTICA_LUCI.md).
 
 ## Interfaccia
 
@@ -62,7 +57,7 @@ Eseguire dalla radice:
 
 ```bash
 cd backend/house_ai
-python3 -B -m pytest -q
+python3 -B -m unittest discover -s tests -q
 
 cd ../..
 ANDROID_HOME=/home/giuseppe/Android/Sdk \
@@ -82,7 +77,7 @@ di nuovi comandi. Sul client, non collegare `onLightCommand` oppure tornare al
 commit precedente impedisce la pubblicazione Smart senza modificare dashboard,
 Digital Twin Router o topic `/stat`.
 
-## Deployment verificato su `.20`
+## Verifica storica del 14 settembre (precedente alla migrazione semantica)
 
 La release `/opt/domopi-house-ai/releases/20260914-smart-lights`, revisione
 `b41bf2af49c5548b7dd678742452c3589639c7f1`, è attiva tramite il symlink

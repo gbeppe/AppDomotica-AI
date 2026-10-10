@@ -38,7 +38,9 @@ energy_daily_extreme; non creare una energy_metric separata per ogni giorno.
 Per stato attuale, modalità, temperatura impostata o motivo per cui il condizionatore
 risulta acceso o spento usa current_air_conditioner. Il motivo è quello registrato dal
 controller: non aggiungere cause o deduzioni.
-Per stato, conteggio o autore dell'ultima transizione delle luci usa current_lights.
+Per stato, conteggio o domande 'chi ha acceso/spento' le luci usa current_lights.
+Restituisce l'ultimo comando documentato disponibile: non uno storico completo né
+la causa fisica del cambio stato. Non usare set_light_state per domande su chi ha agito.
 Per accendere o spegnere una singola luce usa set_light_state. Il tool accetta solo
 gli ID chiusi del catalogo e on/off. Non generare mai topic MQTT o payload.
 Ogni sotto-domanda supportata deve avere la propria operazione: non omettere parti di

@@ -14,7 +14,8 @@ LABELS = {
 LIGHT_LABELS = {
     "lights_living": "Soggiorno", "lights_libreria": "Libreria",
     "lights_tv": "Lampada TV", "lights_reading": "Tavolino lettura",
-    "lights_bedroom": "Luce camera", "lights_hifi": "Lampada HiFi",
+    "lights_laundry": "Lavanderia", "lights_porch_entrance": "Portico ingresso",
+    "lights_service_entrance": "Ingresso servizio",
     "pool_water": "Luci piscina", "pool_deck": "Luci pedana piscina",
 }
 
@@ -174,8 +175,7 @@ def describe(item):
         return ' '.join(parts + qualifiers)
     if schema == 'house_ai.current_lights.v1':
         observations = r['observations']
-        if not observations:
-            return 'Luci: nessuno stato valido disponibile nel Digital Twin al momento della richiesta.'
+        commands = r.get('commands', {})
         if item['light'] == 'all':
             on = [LIGHT_LABELS[key] for key, obs in observations.items() if obs['value']]
             off = sum(not obs['value'] for obs in observations.values())
@@ -185,14 +185,30 @@ def describe(item):
             if on:
                 text += ' Accesi dichiarati: ' + ', '.join(on) + '.'
         else:
-            observation = observations[item['light']]
-            text = f"{LIGHT_LABELS[item['light']]}: {'accesa' if observation['value'] else 'spenta'} dichiarata."
-            actor = observation.get('last_actor')
-            if actor:
-                occurred = datetime.fromtimestamp(observation['action_at_ms']/1000, ZoneInfo('Europe/Rome')).isoformat()
-                text += f" Ultima transizione osservata attribuita a {actor}, il {occurred}."
-            else:
-                text += " Autore dell'ultima transizione non disponibile in questa sessione."
+            observation = observations.get(item['light'])
+            text = (f"{LIGHT_LABELS[item['light']]}: {'accesa' if observation['value'] else 'spenta'} dichiarata."
+                    if observation else f"{LIGHT_LABELS[item['light']]}: stato dichiarato non disponibile.")
+        for light, command in commands.items():
+            occurred = datetime.fromtimestamp(command['observed_at_ms']/1000, ZoneInfo('Europe/Rome')).isoformat()
+            stage = {
+                'routed': 'instradato dal router',
+                'dispatched': 'inoltrato al ramo di invio',
+                'send_invoked': 'invocata la funzione di invio Broadlink (sendData)',
+                'publisher_input': 'arrivato all’ingresso del publisher MQTT',
+            }[command['stage']]
+            text += (f" {LIGHT_LABELS[light]}, ultimo comando documentato disponibile: "
+                     f"{'accensione' if command['requested_state'] else 'spegnimento'}, "
+                     f"autore {command['actor']}, origine {command['origin']}. "
+                     f"Riscontro Node-RED del {occurred}: {stage}.")
+        if not commands:
+            text += " Autore non disponibile: nessun record Node-RED valido con la catalogazione corrente."
+        else:
+            text += (" L’autore riguarda il comando documentato, non la causa provata dello stato attuale. "
+                     "Questi record non sono uno storico completo delle accensioni e degli spegnimenti; "
+                     "un comando dell’altro tipo non identifica l’autore dell’azione richiesta. "
+                     "Nessuna conferma di esecuzione fisica o identità autenticata del mittente.")
+            if any(command['retained'] for command in commands.values()):
+                text += ' Record di comando retained: evidenza conservata, non un nuovo evento.'
         if not r['connected']:
             text += ' Digital Twin disconnesso al momento della richiesta.'
         if any(obs['retained'] for obs in observations.values()):
@@ -202,7 +218,7 @@ def describe(item):
     if schema == 'house_ai.light_command.v1':
         return (f"Comando pronto: {'accensione' if r['state'] == 'on' else 'spegnimento'} "
                 f"di {LIGHT_LABELS[r['light']]}. L'app lo invia sul topic validato del registry; "
-                "il nuovo stato sarà confermato dal successivo messaggio /stat.")
+                "il successivo messaggio /stat riporta uno stato dichiarato, non una conferma fisica.")
     if r['value'] is None:
         return f"{label}: dati insufficienti dal {r['period']['start']} al {r['period']['end_exclusive']} escluso."
     return (f"{label}: {number(r['value'])} {r['unit']} dal {r['period']['start']} "

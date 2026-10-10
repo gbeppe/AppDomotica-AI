@@ -7,6 +7,7 @@ from pathlib import Path
 from energy_history import daily_extreme_report, energy_report, period_bounds
 from log_tools import SOURCES as LOG_SOURCES, tool_catalog, read_day
 from evidence import day_bounds
+from light_semantics import validate_commands
 
 
 CATALOG_PATH = Path(__file__).with_name("energy_sources.json")
@@ -27,10 +28,16 @@ LIGHT_TOPICS = {
     "lights_libreria": "zara/interface/lights/libreria/power/stat",
     "lights_tv": "zara/interface/lights/tv/power/stat",
     "lights_reading": "zara/interface/lights/reading/power/stat",
-    "lights_bedroom": "zara/interface/lights/bedroom/power/stat",
-    "lights_hifi": "zara/interface/lights/hifi/power/stat",
+    "lights_laundry": "zara/interface/lights/laundry/power/stat",
+    "lights_porch_entrance": "zara/interface/lights/porch_entrance/power/stat",
+    "lights_service_entrance": "zara/interface/lights/service_entrance/power/stat",
     "pool_water": "zara/interface/pool/water/power/stat",
     "pool_deck": "zara/interface/pool/deck/power/stat",
+}
+# Retired state keys accepted only for old-client transport compatibility, never tool targets.
+LEGACY_LIGHT_TOPICS = {
+    "lights_bedroom": "zara/interface/lights/bedroom/power/stat",
+    "lights_hifi": "zara/interface/lights/hifi/power/stat",
 }
 DAILY_EXTREME_METRICS = {
     "grid_import_kwh", "grid_export_kwh", "home_consumption_kwh",
@@ -52,7 +59,7 @@ def catalog(path=CATALOG_PATH):
             }
         }, {
             "name": "current_lights",
-            "description": "Read declared current states for one or all mapped lights",
+            "description": "Read declared states and latest available Node-RED command evidence (who requested on/off, origin and delivery stage) for one or all mapped lights. This is not full on/off history or physical confirmation",
             "parameters": {"light": ["all"] + sorted(LIGHT_TOPICS)}
         }, {
             "name": "set_light_state",
@@ -231,10 +238,11 @@ def validate_climate_snapshot(snapshot):
 def validate_lights_snapshot(snapshot):
     if snapshot is None:
         return None
-    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema", "connected", "observations"}
+    if (not isinstance(snapshot, dict) or set(snapshot) not in ({"schema", "connected", "observations"},
+                {"schema", "connected", "observations", "commands"})
             or snapshot["schema"] != "house_ai.current_lights_input.v1"
             or type(snapshot["connected"]) is not bool or not isinstance(snapshot["observations"], dict)
-            or set(snapshot["observations"]) - set(LIGHT_TOPICS)):
+            or set(snapshot["observations"]) - (set(LIGHT_TOPICS) | set(LEGACY_LIGHT_TOPICS))):
         raise ValueError("Invalid current lights snapshot")
     clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
     for light, observation in snapshot["observations"].items():
@@ -246,13 +254,18 @@ def validate_lights_snapshot(snapshot):
                 or type(observation["received_at_ms"]) is not int
                 or not 0 <= observation["received_at_ms"] <= 253402214400000
                 or type(observation["retained"]) is not bool
-                or observation["source_topic"] != LIGHT_TOPICS[light]):
+                or observation["source_topic"] != {**LEGACY_LIGHT_TOPICS, **LIGHT_TOPICS}[light]):
             raise ValueError("Invalid light observation")
         if ("last_actor" in observation and (observation["last_actor"] not in ("utente", "automazione")
                 or type(observation["action_at_ms"]) is not int
                 or not 0 <= observation["action_at_ms"] <= observation["received_at_ms"])):
             raise ValueError("Invalid light actor evidence")
-        clean["observations"][light] = dict(observation)
+        if light in LEGACY_LIGHT_TOPICS:
+            continue
+        # Legacy Android actors were inferred from state changes, not Node-RED evidence.
+        clean["observations"][light] = {key: value for key, value in observation.items()
+                                        if key not in ("last_actor", "action_at_ms")}
+    clean["commands"] = validate_commands(snapshot.get("commands", {}), LIGHT_TOPICS)
     return clean
 
 
@@ -325,14 +338,18 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
             continue
         if operation["tool"] == "current_lights":
             selected = lights["observations"] if lights else {}
+            commands = lights["commands"] if lights else {}
             if operation["light"] != "all":
                 selected = ({operation["light"]: selected[operation["light"]]}
                             if operation["light"] in selected else {})
+            if operation["light"] != "all":
+                commands = {key: value for key, value in commands.items() if key == operation["light"]}
             results.append({"id": operation["id"], "light": operation["light"], "result": {
                 "schema": "house_ai.current_lights.v1",
-                "status": "available" if selected else "missing",
+                "status": "available" if selected or commands else "missing",
                 "connected": lights["connected"] if lights else False,
                 "observations": selected,
+                "commands": commands,
                 "mapped_count": len(LIGHT_TOPICS),
                 "limitations": ["Stati dichiarati dal Digital Twin; non conferma fisica.",
                     "Timestamp di ricezione Android, non istante del cambio stato.",
@@ -343,7 +360,7 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "schema": "house_ai.light_command.v1", "status": "command_ready",
                 "light": operation["light"], "state": operation["state"],
                 "limitations": ["Il backend seleziona solo ID e stato; topic e payload sono risolti dall'app.",
-                                "L'esito fisico richiede il successivo stato /stat."]}})
+                                "Il successivo /stat è uno stato dichiarato, non una conferma fisica."]}})
             continue
         source = sources[operation["metric"]]
         sign = source.get("import_sign", source.get("direction_sign"))

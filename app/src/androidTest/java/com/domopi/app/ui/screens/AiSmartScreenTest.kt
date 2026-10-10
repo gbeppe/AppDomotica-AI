@@ -90,7 +90,7 @@ class AiSmartScreenTest {
         compose.onNodeWithTag("smart-summary").assertTextContains("1 senza un dato valido", substring = true)
         screenshot("smart-light-summary.png")
         compose.onNodeWithText("Mostra provenienza e limiti").performScrollTo().performClick()
-        compose.onNodeWithTag("source-lights/hifi/power/stat").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("source-lights/service_entrance/power/stat").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Dato non ricevuto", substring = true).performScrollTo().assertIsDisplayed()
         screenshot("smart-light-provenance.png")
         compose.onNodeWithText("zara/interface/energy/puffer_acs/stat").performScrollTo().assertIsDisplayed()

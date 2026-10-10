@@ -75,3 +75,8 @@ Stato aggiornato del dominio energia, istruzioni e limiti:
 
 - [Estensione Broadlink libreria/lettura](../../backend/nodered/semantic_bridge/rm_extension/README.md):
   patch successiva alla validazione TV, installazione e rollback separati.
+
+- [Record semantici nelle risposte luci](INTEGRAZIONE_SEMANTICA_LUCI.md): consumo
+  della policy Node-RED, rimozione dell'attribuzione Android, limiti e replica.
+- [Verifica semantica luci del 22 settembre](VERIFICA_SEMANTICA_LUCI_2026-09-22.md):
+  test Android/Python, release attiva su .20, prove MQTT/TLS/Groq e collaudo app restante.

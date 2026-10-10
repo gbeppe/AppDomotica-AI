@@ -17,7 +17,7 @@ class AiSmartStateTest {
 
     @Test fun mappedSnapshotDoesNotImplyPhysicalStateOrFreshness() {
         val text = sample().summary(true)
-        assertTrue(text.contains("6 punti luce accesi, 1 spenti e 1 senza un dato valido, su 8"))
+        assertTrue(text.contains("7 punti luce accesi, 1 spenti e 1 senza un dato valido, su 9"))
         assertTrue(text.contains("24,2 gradi"))
         assertTrue(text.contains("41,1 gradi"))
         assertTrue(text.contains("non conferma l'accensione fisica"))
@@ -27,7 +27,7 @@ class AiSmartStateTest {
     @Test fun missingAndInvalidAreDistinctFromOffAndZero() {
         val initial = AiSmartState()
         assertTrue(initial.readings().all { it.quality == "missing" })
-        assertTrue(initial.lightsText().contains("0 spenti e 8 senza un dato valido"))
+        assertTrue(initial.lightsText().contains("0 spenti e 9 senza un dato valido"))
         val state = initial.observe(AiSmartState.lightTopics[0], "broken", 1, false)
             .observe(AiSmartState.lightTopics[1], "off", 2, false)
             .observe(AiSmartState.livingTopic, "0", 3, false)
@@ -57,7 +57,7 @@ class AiSmartStateTest {
         val state = sample()
         val repeated = state.observe(AiSmartState.lightTopics[0], "true", 2000, false)
         assertEquals(state.lightsText(), repeated.lightsText())
-        assertEquals(10, repeated.readings().size)
+        assertEquals(11, repeated.readings().size)
     }
 
     @Test fun compoundQuestionsReturnBothTemperaturesWithLimits() {
@@ -65,17 +65,17 @@ class AiSmartStateTest {
         assertTrue(text.contains("Temperatura living: 24,2"))
         assertTrue(text.contains("Acqua sanitaria ACS: 41,1"))
         assertTrue(text.contains(AiSmartState.freshnessText))
-        assertTrue(sample().answer("Quante luci sono accese?", true).contains("6 punti luce accesi"))
+        assertTrue(sample().answer("Quante luci sono accese?", true).contains("7 punti luce accesi"))
         val all = sample().answer("Quante luci e quali temperature in soggiorno e ACS?", false)
         assertTrue(all.contains("Connessione assente"))
-        assertTrue(all.contains("6 punti luce accesi"))
+        assertTrue(all.contains("7 punti luce accesi"))
         assertTrue(all.contains("24,2"))
         assertTrue(all.contains("41,1"))
     }
 
     @Test fun homeSummaryPartsContainOnlyActiveDevicesAndValidMeasures() {
         val state = sample()
-        assertEquals(6, state.activeDeviceLabels().size)
+        assertEquals(7, state.activeDeviceLabels().size)
         assertFalse(state.activeDevicesText().contains("spenti"))
         assertTrue(state.environmentalMeasuresText().contains("living 24,2 °C"))
         assertFalse(state.environmentalMeasuresText().contains("ACS"))
@@ -92,22 +92,18 @@ class AiSmartStateTest {
     @Test fun lightSnapshotIncludesOnlyValidStatesAndNeverCreatesCommands() {
         val state = AiSmartState()
             .observe("lights/libreria/power/stat", "ON", 1789200000000L, true)
-            .observe("lights/hifi/power/stat", "unknown", 1789200000000L, true)
+            .observe("lights/tv/power/stat", "unknown", 1789200000000L, true)
         val lights = state.validLightObservations()
         assertEquals(setOf("lights_libreria"), lights.keys)
         assertEquals("true", lights["lights_libreria"]?.payload)
         assertTrue(state.answer("Accendi la luce libreria", true).contains("sola lettura"))
     }
 
-    @Test fun lightTransitionsAttributeDashboardOrAutomationWithoutGuessingInitialState() {
-        val topic = "lights/libreria/power/stat"
-        val initial = AiSmartState().observe(topic, "OFF", 1000, true)
-        assertNull(initial.lastLightAction("lights_libreria"))
-        val user = initial.markUserLightCommand("lights_libreria", true, 2000)
-            .observe(topic, "ON", 2500, false)
-        assertEquals("utente", user.lastLightAction("lights_libreria")?.actor)
-        val automated = user.observe(topic, "OFF", 4000, false)
-        assertEquals("automazione", automated.lastLightAction("lights_libreria")?.actor)
+    @Test fun lightTransitionsNeverInventActors() {
+        val state = AiSmartState().observe("lights/libreria/power/stat", "OFF", 1000, true)
+            .observe("lights/libreria/power/stat", "ON", 2500, false)
+            .observe("lights/libreria/power/stat", "OFF", 4000, false)
+        assertTrue(state.lightCommands.isEmpty())
     }
 
     @Test fun provenanceKeepsActualPrefixRetainAndReceptionSeparateFromMeasurementAge() {

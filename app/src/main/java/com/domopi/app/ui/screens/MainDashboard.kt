@@ -598,7 +598,7 @@ fun MainDashboard(
                     }
 
                     // 1. Luci
-                    val roomLightIds = listOf("sala", "libreria", "cucina", "televisione", "tavolinolettura", "lampadahifi", "lucecamera", "prolunga")
+                    val roomLightIds = listOf("sala", "libreria", "televisione", "tavolinolettura", "lavanderia", "portico_ingresso", "ingressoservizio", "prolunga")
                     val activeLights = lightStates.filter { it.key in roomLightIds && it.value }
                     if (activeLights.isNotEmpty()) {
                         item { 
@@ -608,9 +608,9 @@ fun MainDashboard(
                                 activeLights.keys.joinToString(", ") { id ->
                                     when(id) {
                                         "sala" -> "Soggiorno"
-                                        "lampadahifi" -> "HiFi"
                                         "tavolinolettura" -> "Tavolino"
-                                        "lucecamera" -> "Camera"
+                                        "portico_ingresso" -> "Portico"
+                                        "ingressoservizio" -> "Servizio"
                                         else -> id.replaceFirstChar { it.uppercase() }
                                     }
                                 }
@@ -848,7 +848,7 @@ fun DomainCard(
                         batterySoc = energyData.batterySoc
                     )
                     1 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        val roomLightIds = listOf("sala", "libreria", "cucina", "televisione", "tavolinolettura", "lampadahifi", "lucecamera", "prolunga")
+                        val roomLightIds = listOf("sala", "libreria", "televisione", "tavolinolettura", "lavanderia", "portico_ingresso", "ingressoservizio", "prolunga")
                         val onCount = lightStates.filter { it.key in roomLightIds && it.value }.size
                         Icon(Icons.Default.Lightbulb, null, modifier = Modifier.size(64.dp), tint = if (onCount > 0) Color(0xFFFFD600) else Color.Gray)
                         Text("$onCount Luci Accese", style = MaterialTheme.typography.bodyLarge)

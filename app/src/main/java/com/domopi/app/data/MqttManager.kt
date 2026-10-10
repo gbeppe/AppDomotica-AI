@@ -233,6 +233,10 @@ class MqttManager {
     private fun subscribeToUnifiedTopics() {
         val p = digitalTwinPrefix.removeSuffix("/")
         val topics = arrayOf(
+            "$p/semantic/v1/routed_commands/+/stat",
+            "$p/semantic/v1/dispatched_commands/+/stat",
+            "$p/semantic/v1/rm_receipts/+/stat",
+            "$p/semantic/v1/publisher_inputs/+/stat",
             "$p/lights/#", "$p/pool/#", "$p/env/#",
             "$p/energy/#", "$p/heating/#", "$p/climate/#",
             "$p/ai/#", "$p/ai_climate/#", "$p/fireplace/#", "$p/ventilation/#",
@@ -703,15 +707,11 @@ class MqttManager {
             "ingressoservizio", "ingresso_servizio", "service_entrance" -> "lights" to "service_entrance"
             else -> "lights" to cleanId
         }
-        val relativeStateTopic = "$domain/$device/power/stat"
         _lightStates.update { current ->
             val newList = current.toMutableMap()
             newList[cleanId] = targetState
             newList[device] = targetState
             newList
-        }
-        AiSmartState.lightEntities.firstOrNull { it.topic == relativeStateTopic }?.let { entity ->
-            _aiSmartState.update { it.markUserLightCommand(entity.id, targetState) }
         }
         publish("zara/interface/$domain/$device/power/cmd", targetState.toString())
     }
@@ -719,7 +719,6 @@ class MqttManager {
     /** Closed command surface used by Smart: IDs come from the validated registry mapping. */
     fun setSmartLightState(lightId: String, state: Boolean): Boolean {
         val relativeStateTopic = AiSmartState.lightIdToTopic[lightId] ?: return false
-        _aiSmartState.update { it.markUserLightCommand(lightId, state) }
         publish("zara/interface/${relativeStateTopic.removeSuffix("stat")}cmd", state.toString())
         return true
     }

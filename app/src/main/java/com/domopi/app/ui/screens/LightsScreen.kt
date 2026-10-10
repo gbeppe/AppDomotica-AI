@@ -28,12 +28,9 @@ fun LightsScreen(mqttManager: MqttManager, onBack: () -> Unit) {
             LightDevice("libreria", "Libreria", "libreria"),
             LightDevice("televisione", "Televisione", "televisione"),
             LightDevice("tavolinolettura", "Tavolino Lettura", "tavolinolettura"),
-            LightDevice("lucecamera", "Luce Camera", "lucecamera"),
-            LightDevice("lampadahifi", "Lampada HiFi", "lampadahifi"),
             LightDevice("lavanderia", "Lavanderia", "lavanderia"),
-            LightDevice("portico", "Portico Ingresso", "portico"),
-            LightDevice("cucina", "Cucina Piano", "cucina"),
-            LightDevice("esterno", "Esterno", "esterno"),
+            LightDevice("portico_ingresso", "Portico Ingresso", "portico_ingresso"),
+            LightDevice("ingressoservizio", "Ingresso Servizio", "ingressoservizio"),
             LightDevice("prolunga", "Prolunga / Allarme", "prolunga")
         )
     }

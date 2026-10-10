@@ -97,3 +97,26 @@ class EnergyServerTests(unittest.TestCase):
         self.assertIn("2500,0 W", body["answer"])
         self.assertEqual(body["results"][0]["result"]["schema"],
                          "house_ai.current_energy_result.v1")
+
+    def test_full_semantic_snapshot_over_old_limit_and_oversize_rejected(self):
+        from test_light_semantics import snapshot
+        from energy_tools import LIGHT_TOPICS
+        data = snapshot()
+        template = data["commands"]["lights_tv"]
+        data["commands"] = {}
+        for light, topic in LIGHT_TOPICS.items():
+            entity = topic.removeprefix("zara/interface/").removesuffix("/stat").replace("/", ".")
+            data["commands"][light] = {**template, "entity_id": entity, "command_id": "c" * 256,
+                "attribution": "a" * 256,
+                "source_topic": f"zara/interface/semantic/v1/rm_receipts/{entity}/stat"}
+        encoded = json.dumps({"question": "Una domanda", "current_lights": data}).encode()
+        self.assertGreater(len(encoded), 8192)
+        def request(payload):
+            return Request(self.url + "/v1/assistant/query", data=payload,
+                headers={"Authorization": "Bearer " + self.token, "Content-Type": "application/json"})
+        with urlopen(request(encoded)) as response:
+            self.assertEqual(response.status, 200)
+        with self.assertRaises(HTTPError) as oversized:
+            urlopen(request(b" " * 32769))
+        self.assertEqual(oversized.exception.code, 400)
+        oversized.exception.close()
