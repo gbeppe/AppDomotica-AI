@@ -1,0 +1,494 @@
+[
+  {
+    "id": "71aeaed6.a4d5b8",
+    "type": "ui_button",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 10,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "label": "TV Mode",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "on",
+    "payloadType": "str",
+    "topic": "",
+    "x": 660,
+    "y": 840,
+    "wires": [
+      [
+        "9b0e3789a61bde80",
+        "bd6038b3.431d2"
+      ]
+    ]
+  },
+  {
+    "id": "53b3ae4.c08ccd",
+    "type": "ui_button",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 11,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "label": "Sleep Mode",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "on",
+    "payloadType": "str",
+    "topic": "",
+    "x": 670,
+    "y": 880,
+    "wires": [
+      [
+        "20fe2f37242b51f4",
+        "586bc80f.7550f"
+      ]
+    ]
+  },
+  {
+    "id": "a52920f.8a0476",
+    "type": "ui_button",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 12,
+    "width": 0,
+    "height": 0,
+    "passthru": true,
+    "label": "Tutte accese",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "on",
+    "payloadType": "str",
+    "topic": "",
+    "x": 670,
+    "y": 920,
+    "wires": [
+      [
+        "7f7ed8a95382ecd3",
+        "8cdae963.ca5c5"
+      ]
+    ]
+  },
+  {
+    "id": "e5c6a02.cf0d46",
+    "type": "ui_button",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 13,
+    "width": 0,
+    "height": 0,
+    "passthru": true,
+    "label": "Tutte spente",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "on",
+    "payloadType": "str",
+    "topic": "",
+    "x": 670,
+    "y": 960,
+    "wires": [
+      [
+        "c748956b.440de8",
+        "dcf946227865ac57"
+      ]
+    ]
+  },
+  {
+    "id": "5b048bd8.9c1794",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "modalità televisione",
+    "topic": "",
+    "x": 440,
+    "y": 1300,
+    "wires": [
+      [
+        "f28da8071ac5c224"
+      ]
+    ]
+  },
+  {
+    "id": "7b2e5e45.6a8be8",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "modalità notte",
+    "topic": "",
+    "x": 420,
+    "y": 1380,
+    "wires": [
+      [
+        "2bf06425cd84ff2d"
+      ]
+    ]
+  },
+  {
+    "id": "7afa36cd.02d79",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luci",
+    "topic": "",
+    "x": 390,
+    "y": 700,
+    "wires": [
+      [
+        "626b4e9af9f7b873"
+      ]
+    ]
+  },
+  {
+    "id": "937d52b7b946ba3b",
+    "type": "function",
+    "z": "294638a5b3d82009",
+    "name": "Scene Dispatcher",
+    "func": "const scene = String(msg.payload).trim().toLowerCase();\n\nconst outputs = [null, null, null, null];\n\nswitch (scene) {\n    case \"tv\":\n        outputs[0] = { payload: \"on\" };\n        break;\n\n    case \"sleep\":\n        outputs[1] = { payload: \"on\" };\n        break;\n\n    case \"all_on\":\n        outputs[2] = { payload: \"on\" };\n        break;\n\n    case \"all_off\":\n        outputs[3] = { payload: \"on\" };\n        break;\n\n    default:\n        node.warn(`Unknown light scene: ${scene}`);\n        return null;\n}\n\n// Preserve only explicit app scene provenance. Operational payloads unchanged.\nif (msg.retain !== true) {\n const sequence=(context.get('semantic_scene_seq')||0)+1;\n context.set('semantic_scene_seq',sequence);\n for(const out of outputs) if(out) out._semantic_scene={\n  actor:'utente',origin:'app_interface',scene,\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'interface_contract'};\n}\nreturn outputs;",
+    "outputs": 4,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 950,
+    "y": 660,
+    "wires": [
+      [
+        "0eba77909df95691"
+      ],
+      [
+        "a2738d01df161e4c"
+      ],
+      [
+        "c8a45e060fde5405"
+      ],
+      [
+        "9dc32183a454d19a"
+      ]
+    ]
+  },
+  {
+    "id": "be5662f.5dca22",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "5",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 820,
+    "y": 160,
+    "wires": [
+      [
+        "7338b389601e8de6",
+        "8f8e9837.86ceb8"
+      ]
+    ]
+  },
+  {
+    "id": "449db0e6.11864",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "shelf lamp on",
+    "links": [
+      "33db35fa.b27fda"
+    ],
+    "x": 995,
+    "y": 180,
+    "wires": [
+      [
+        "7338b389601e8de6"
+      ]
+    ]
+  },
+  {
+    "id": "2de717f2.b8e57",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "15",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "outputs": 1,
+    "x": 841,
+    "y": 700,
+    "wires": [
+      [
+        "1204cddde70cd8b3"
+      ]
+    ]
+  },
+  {
+    "id": "b2f9c1a1.fa88c",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "shelf lamp off",
+    "links": [
+      "1cb5e99c.8318e6",
+      "5bd87c6ad192e8a0"
+    ],
+    "x": 1015,
+    "y": 680,
+    "wires": [
+      [
+        "1204cddde70cd8b3"
+      ]
+    ]
+  },
+  {
+    "id": "3203c367.13e60c",
+    "type": "switch",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "property": "payload",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "off",
+        "vt": "str"
+      }
+    ],
+    "checkall": "false",
+    "repair": false,
+    "outputs": 1,
+    "x": 1050,
+    "y": 480,
+    "wires": [
+      [
+        "1204cddde70cd8b3"
+      ]
+    ]
+  },
+  {
+    "id": "f7bc8ba8.270b6",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 160,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "18386049.c296a8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 700,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "9b0e3789a61bde80",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_dashboard tv",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor:'utente',origin:'nodered_dashboard',scene:'tv',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 840,
+    "y": 910,
+    "wires": [
+      [
+        "63eaa703.fd98c"
+      ]
+    ]
+  },
+  {
+    "id": "20fe2f37242b51f4",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_dashboard sleep",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor:'utente',origin:'nodered_dashboard',scene:'sleep',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 850,
+    "y": 950,
+    "wires": [
+      [
+        "a901336b.d16cb8"
+      ]
+    ]
+  },
+  {
+    "id": "7f7ed8a95382ecd3",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_dashboard all_on",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor:'utente',origin:'nodered_dashboard',scene:'all_on',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 850,
+    "y": 990,
+    "wires": [
+      [
+        "f05d5124.911a38"
+      ]
+    ]
+  },
+  {
+    "id": "dcf946227865ac57",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_ui_or_editor all_off",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor:'utente',origin:'nodered_ui_or_editor',scene:'all_off',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 850,
+    "y": 1030,
+    "wires": [
+      [
+        "473f5068.10fbb8"
+      ]
+    ]
+  },
+  {
+    "id": "f28da8071ac5c224",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Scene provenance alexa tv",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor:'utente',origin:'alexa',scene:'tv',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 620,
+    "y": 1370,
+    "wires": [
+      [
+        "851666d5.0cc428"
+      ]
+    ]
+  },
+  {
+    "id": "2bf06425cd84ff2d",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Scene provenance alexa sleep",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor:'utente',origin:'alexa',scene:'sleep',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 1450,
+    "wires": [
+      [
+        "baf2d8b.17385a8"
+      ]
+    ]
+  },
+  {
+    "id": "626b4e9af9f7b873",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Scene provenance alexa all",
+    "func": "delete msg._semantic_scene;\nif (['on','off'].includes(msg.payload)) {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor:'utente',origin:'alexa',scene:msg.payload === 'on' ? 'all_on' : 'all_off',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 770,
+    "wires": [
+      [
+        "e761004.c0c1a8"
+      ]
+    ]
+  },
+  {
+    "id": "7338b389601e8de6",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Libreria scene ON",
+    "func": "const s=msg._semantic_scene;\nif (s && s.actor==='utente' && typeof s.command_id==='string' &&\n ['tv','sleep','all_on','all_off'].includes(s.scene)) {\n msg._semantic_command={schema:'domopi.semantic_command.v1',\n  entity_id:'lights.libreria.power',actor:s.actor,origin:s.origin,\n  attribution:s.attribution,scene:s.scene,command_id:s.command_id+':libreria:true',\n  requested_state:true,stage:'source_selected',observed_at_ms:Date.now(),\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1000,
+    "y": 400,
+    "wires": [
+      [
+        "f5f14a57.6f51a8"
+      ]
+    ]
+  },
+  {
+    "id": "1204cddde70cd8b3",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Libreria scene OFF",
+    "func": "const s=msg._semantic_scene;\nif (s && s.actor==='utente' && typeof s.command_id==='string' &&\n ['tv','sleep','all_on','all_off'].includes(s.scene)) {\n msg._semantic_command={schema:'domopi.semantic_command.v1',\n  entity_id:'lights.libreria.power',actor:s.actor,origin:s.origin,\n  attribution:s.attribution,scene:s.scene,command_id:s.command_id+':libreria:false',\n  requested_state:false,stage:'source_selected',observed_at_ms:Date.now(),\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1000,
+    "y": 800,
+    "wires": [
+      [
+        "375cd5f5.f38faa"
+      ]
+    ]
+  }
+]

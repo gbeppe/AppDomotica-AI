@@ -1,0 +1,1262 @@
+[
+  {
+    "id": "5a7c1d360710ca21",
+    "type": "function",
+    "z": "294638a5b3d82009",
+    "name": "Digital Twin Router",
+    "func": "// ============================================================================\n// DIGITAL TWIN ROUTER (Registry Unificato con Broadlink Centralizzato)\n// ============================================================================\n\nconst registry = [\n        // --- APPLIANCES / REFRIGERATOR ---\n\n        {\n            id: \"appliances.refrigerator.power\",\n            int_stat: \"zara/interface/appliances/refrigerator/power/stat\",\n            leg_stat: \"emon/tasmotaFrigorifero/power\",\n            broker: \"emon\",\n            stat_trans_func: (p) => {\n                const v = parseFloat(p);\n                return isNaN(v) ? null : v;\n            }\n        },\n        {\n            id: \"appliances.refrigerator.voltage\",\n            int_stat: \"zara/interface/appliances/refrigerator/voltage/stat\",\n            leg_stat: \"emon/tasmotaFrigorifero/tasmotaVoltage\",\n            broker: \"emon\",\n            stat_trans_func: (p) => {\n                const v = parseFloat(p);\n                return isNaN(v) ? null : v;\n            }\n        },\n        {\n            id: \"appliances.refrigerator.current\",\n            int_stat: \"zara/interface/appliances/refrigerator/current/stat\",\n            leg_stat: \"emon/tasmotaFrigorifero/tasmotaCurrent\",\n            broker: \"emon\",\n            stat_trans_func: (p) => {\n                const v = parseFloat(p);\n                return isNaN(v) ? null : v;\n            }\n        },\n\n        // --- ENVIRONMENT / ZIGBEE NORMALIZED ---\n\n        {\n            id: \"env.technical_room.temperature\",\n            int_stat: \"zara/interface/env/technical_room/temperature/stat\",\n            leg_stat: \"emon/centraleTermica/temperature\",\n            broker: \"emon\",\n            stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10\n        },\n        {\n            id: \"env.technical_room.humidity\",\n            int_stat: \"zara/interface/env/technical_room/humidity/stat\",\n            leg_stat: \"emon/centraleTermica/humidity\",\n            broker: \"emon\",\n            stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10\n        },\n\n        {\n            id: \"env.kids_room.temperature\",\n            int_stat: \"zara/interface/env/kids_room/temperature/stat\",\n            leg_stat: \"emon/cameretta/temperature\",\n            broker: \"emon\",\n            stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10\n        },\n        {\n            id: \"env.kids_room.humidity\",\n            int_stat: \"zara/interface/env/kids_room/humidity/stat\",\n            leg_stat: \"emon/cameretta/humidity\",\n            broker: \"emon\",\n            stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10\n        },\n\n        {\n            id: \"env.service_bathroom.temperature\",\n            int_stat: \"zara/interface/env/service_bathroom/temperature/stat\",\n            leg_stat: \"emon/bagnoServizio/temperature\",\n            broker: \"emon\",\n            stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10\n        },\n        {\n            id: \"env.service_bathroom.humidity\",\n            int_stat: \"zara/interface/env/service_bathroom/humidity/stat\",\n            leg_stat: \"emon/bagnoServizio/humidity\",\n            broker: \"emon\",\n            stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10\n        },\n\n        // --- SENSORS (ZigBee / IKEA Motion) ---\n        {\n            id: \"sensors.laundry.motion\",\n            int_stat: \"zara/interface/sensors/laundry/motion/stat\",\n            leg_stat: \"zigbee2mqtt/IkeaMotion_lavanderia\",\n            broker: \"home\",\n            stat_trans_func: (p) => {\n                let obj = p;\n\n                if (typeof obj === \"string\") {\n                    try {\n                        obj = JSON.parse(obj);\n                    } catch (e) {\n                        return null;\n                    }\n                }\n\n                if (\n                    obj &&\n                    typeof obj === \"object\" &&\n                    typeof obj.occupancy === \"boolean\"\n                ) {\n                    return obj.occupancy;\n                }\n\n                return null;\n            }\n        },\n\n        {\n            id: \"sensors.secondary_entrance.motion\",\n            int_stat: \"zara/interface/sensors/secondary_entrance/motion/stat\",\n            leg_stat: \"zigbee2mqtt/IkeaMotion_ingresso_secondario\",\n            broker: \"home\",\n            stat_trans_func: (p) => {\n                let obj = p;\n\n                if (typeof obj === \"string\") {\n                    try {\n                        obj = JSON.parse(obj);\n                    } catch (e) {\n                        return null;\n                    }\n                }\n\n                if (\n                    obj &&\n                    typeof obj === \"object\" &&\n                    typeof obj.occupancy === \"boolean\"\n                ) {\n                    return obj.occupancy;\n                }\n\n                return null;\n            }\n        },\n\n        // --- STATO ALLARME AI CLIMATE ---\n        { id: \"ai_climate.allarme\", \n        int_stat: \"zara/interface/ai_climate/allarme/stat\",    \n        leg_stat: \"casa/clima/system_health/stat\", \n        broker: \"home\", \n        },\n\n        // --- STATO CONDIZIONATORE ---\n        // WP-C2: stato autorevole verso zara/interface = casa/clima/stato_completo.\n        // I topic legacy casa/clima/stato_condizionatore/.../stat continuano\n        // ad essere pubblicati dai flow esistenti ma non vengono più tradotti dal Router.\n\n        {\n            id: \"stato_condizionatore.modalita_aria\",\n            int_stat: \"zara/interface/stato_condizionatore/modalita_aria/stat\"\n        },\n\n        {\n            id: \"stato_condizionatore.temperatura_impostata_c\",\n            int_stat: \"zara/interface/stato_condizionatore/temperatura_impostata_c/stat\"\n        },\n\n        {\n            id: \"stato_condizionatore.motivo_logica\",\n            int_stat: \"zara/interface/stato_condizionatore/motivo_logica/stat\"\n        },\n\n        {\n            id: \"stato_condizionatore.stato_attuale\",\n            int_stat: \"zara/interface/stato_condizionatore/stato_attuale/stat\"\n        },\n        \n        // --- LOGICA CONTROLLO AI CLIMATE ---\n        // WP-C2: stato autorevole verso zara/interface = casa/clima/stato_completo.\n        // I topic legacy casa/clima/logica_controllo/.../stat restano disponibili\n        // sul broker per eventuali consumer legacy.\n\n        {\n            id: \"logica_controllo.stagione_attuale\",\n            int_stat: \"zara/interface/logica_controllo/stagione_attuale/stat\"\n        },\n\n        {\n            id: \"logica_controllo.cuscinetto_richiesto_kwh\",\n            int_stat: \"zara/interface/logica_controllo/cuscinetto_richiesto_kwh/stat\"\n        },\n\n        {\n            id: \"logica_controllo.cuscinetto_sicurezza_kwh\",\n            int_stat: \"zara/interface/logica_controllo/cuscinetto_sicurezza_kwh/stat\"\n        },\n\n        {\n            id: \"logica_controllo.blocco_emergenza_attivo\",\n            int_stat: \"zara/interface/logica_controllo/blocco_emergenza_attivo/stat\"\n        },\n\n        {\n            id: \"logica_controllo.kwh_stimati_in_batteria\",\n            int_stat: \"zara/interface/logica_controllo/kwh_stimati_in_batteria/stat\"\n        },\n\n        {\n            id: \"logica_controllo.previsione_ricarica_batteria_percent\",\n            int_stat: \"zara/interface/logica_controllo/previsione_ricarica_batteria_percent/stat\"\n        },\n\n        {\n            id: \"logica_controllo.previsione_solare_data\",\n            int_stat: \"zara/interface/logica_controllo/previsione_solare_data/stat\"\n        },\n\n        {\n            id: \"logica_controllo.previsione_solare_domani_kwh\",\n            int_stat: \"zara/interface/logica_controllo/previsione_solare_domani_kwh/stat\"\n        },\n\n        {\n            id: \"logica_controllo.tempo_mancante_anticiclo_minuti\",\n            int_stat: \"zara/interface/logica_controllo/tempo_mancante_anticiclo_minuti/stat\"\n        },\n\n        {\n            id: \"logica_controllo.soc_minimo_applied\",\n            int_stat: \"zara/interface/logica_controllo/soc_minimo_applied/stat\"\n        },\n\n        {\n            id: \"logica_controllo.soglia_attivazione_applicata\",\n            int_stat: \"zara/interface/logica_controllo/soglia_attivazione_applicata/stat\"\n        },\n\n        {\n            id: \"logica_controllo.stanza_rilevamento_vmc\",\n            int_stat: \"zara/interface/logica_controllo/stanza_rilevamento_vmc/stat\"\n        },\n\n        {\n            id: \"logica_controllo.vmc_portata_stimata_m3h\",\n            int_stat: \"zara/interface/logica_controllo/vmc_portata_stimata_m3h/stat\"\n        },\n\n    // --- CANCELLO GARAGE ---\n    { id: \"garage.gate_1\", int_cmd: \"zara/interface/garage/gate_1/cmd\", leg_cmd: \"zara/domotics/garage/gate_1\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\" } },\n    { id: \"garage.gate_2\", int_cmd: \"zara/interface/garage/gate_2/cmd\", leg_cmd: \"zara/domotics/garage/gate_2\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\" } },\n\n    // --- SETTAGGI AUTOMATISMI ---\n    { id: \"settings.holiday_mode\", int_cmd: \"zara/interface/settings/holiday_mode/cmd\", int_stat: \"zara/interface/settings/holiday_mode/stat\", leg_cmd: \"zara/domotics/modalitavacanza\", leg_stat: \"zara/domotics/modalitavacanza\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) },\n    { id: \"settings.eco_lights\", int_cmd: \"zara/interface/settings/eco_lights/cmd\", int_stat: \"zara/interface/settings/eco_lights/stat\", leg_cmd: \"zara/domotics/luciECO\", leg_stat: \"zara/domotics/luciECO\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) },\n    { id: \"settings.pool_lights_auto\", int_cmd: \"zara/interface/settings/pool_lights_auto/cmd\", int_stat: \"zara/interface/settings/pool_lights_auto/stat\", leg_cmd: \"zara/domotics/luciPiscinaAuto\", leg_stat: \"zara/domotics/luciPiscinaAuto\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) },\n    { id: \"settings.porch_sensor\", int_cmd: \"zara/interface/settings/porch_sensor/cmd\", int_stat: \"zara/interface/settings/porch_sensor/stat\", leg_cmd: \"zara/domotics/porch_sensor\", leg_stat: \"zara/domotics/porch_sensor\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) },\n    { id: \"settings.ac_auto\", int_cmd: \"zara/interface/settings/ac_auto/cmd\", int_stat: \"zara/interface/settings/ac_auto/stat\", leg_cmd: \"zara/domotics/ACAuto\", leg_stat: \"zara/domotics/ACAuto\", broker: \"home\", stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) },\n\n    // --- AI MANAGED PARAMETERS ---\n    {\n        id: \"ai.humidex_comfort_hysteresis\",\n        int_cmd: \"zara/interface/ai/humidex_comfort_hysteresis/cmd\",\n        leg_cmd: \"casa/clima/cmnd/humidex_comfort_hysteresis\",\n        broker: \"home\"\n    },\n    {\n        id: \"ai.night_dry_humidex_margin\",\n        int_cmd: \"zara/interface/ai/night_dry_humidex_margin/cmd\",\n        leg_cmd: \"casa/clima/cmnd/night_dry_humidex_margin\",\n        broker: \"home\"\n    },\n    { id: \"ai.system_enabled\", int_cmd: \"zara/interface/ai/system_enabled/cmd\", int_stat: \"zara/interface/ai/system_enabled/stat\", leg_cmd: \"casa/clima/cmnd/AI_climate_enabling\", leg_stat: \"casa/clima/stat/AI_climate_enabling\", broker: \"home\", /*cmd_trans: { \"true\": \"1\", \"false\": \"0\" },*/ stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) },\n\n    {\n        id: \"predictive_reserve.control_enabled\",\n\n        int_cmd:\n            \"zara/interface/predictive_reserve/control_enabled/cmd\",\n\n        int_stat:\n            \"zara/interface/predictive_reserve/control_enabled/stat\",\n\n        leg_cmd:\n            \"casa/clima/cmnd/predictive_reserve_control_enabled\",\n\n        leg_stat:\n            \"casa/clima/stat/predictive_reserve_control_enabled\",\n\n        broker: \"home\",\n\n        stat_trans_func: (p) =>\n        (\n            p === \"1\" ||\n            p === \"true\" ||\n            p === \"ON\" ||\n            p === true\n        )\n    },\n\n    { id: \"ai.compressor_on_min\", int_cmd: \"zara/interface/ai/compressor_on_min/cmd\", int_stat: \"zara/interface/ai/compressor_on_min/stat\", leg_cmd: \"casa/clima/cmnd/min_run_time\", leg_stat: \"casa/clima/stat/min_run_time\", broker: \"home\", stat_trans_func: (p) => parseInt(p) },\n    { id: \"ai.compressor_off_min\", int_cmd: \"zara/interface/ai/compressor_off_min/cmd\", int_stat: \"zara/interface/ai/compressor_off_min/stat\", leg_cmd: \"casa/clima/cmnd/min_off_time\", leg_stat: \"casa/clima/stat/min_off_time\", broker: \"home\", stat_trans_func: (p) => parseInt(p) },\n    { id: \"ai.night_humidex_threshold\", int_cmd: \"zara/interface/ai/night_humidex_threshold/cmd\", int_stat: \"zara/interface/ai/night_humidex_threshold/stat\", leg_cmd: \"casa/clima/cmnd/target_humidex\", leg_stat: \"casa/clima/stat/target_humidex\", broker: \"home\", stat_trans_func: (p) => parseInt(p) },\n    { id: \"ai.night_vmc_max_speed\", int_cmd: \"zara/interface/ai/night_vmc_max_speed/cmd\", int_stat: \"zara/interface/ai/night_vmc_max_speed/stat\", leg_cmd: \"casa/clima/cmnd/vmc_max_notte\", leg_stat: \"casa/clima/stat/vmc_max_notte\", broker: \"home\", stat_trans_func: (p) => parseInt(p) },\n    { id: \"ai.deficit_tolerance_min\", int_cmd: \"zara/interface/ai/deficit_tolerance_min/cmd\", int_stat: \"zara/interface/ai/deficit_tolerance_min/stat\", leg_cmd: \"casa/clima/cmnd/deficit_tolerance_time\", leg_stat: \"casa/clima/stat/deficit_tolerance_time\", broker: \"home\", stat_trans_func: (p) => parseInt(p) },\n    { id: \"ai.morning_ac_management\", int_cmd: \"zara/interface/ai/morning_ac_management/cmd\", int_stat: \"zara/interface/ai/morning_ac_management/stat\", leg_cmd: \"casa/clima/cmnd/grace_mode_solar\", leg_stat: \"casa/clima/stat/grace_mode_solar\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) },\n    { id: \"ai.morning_humidex_emergency\", int_cmd: \"zara/interface/ai/morning_humidex_emergency/cmd\", int_stat: \"zara/interface/ai/morning_humidex_emergency/stat\", leg_cmd: \"casa/clima/cmnd/emergency_humidex_away\", leg_stat: \"casa/clima/stat/emergency_humidex_away\", broker: \"home\", stat_trans_func: (p) => parseInt(p) },\n\n    // --- LIGHTS (Topic Legacy collegati ai flussi Broadlink/Dashboard) ---\n    { id: \"lights.living.power\", int_cmd: \"zara/interface/lights/living/power/cmd\", int_stat: \"zara/interface/lights/living/power/stat\", leg_cmd: \"zara/domotics/lights/livinglamp\", leg_stat: \"zara/domotics/lights/livinglamp\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"lights.libreria.power\", int_cmd: \"zara/interface/lights/libreria/power/cmd\", int_stat: \"zara/interface/lights/libreria/power/stat\", leg_cmd: \"zara/domotics/lights/shelflamp\", leg_stat: \"zara/domotics/lights/shelflamp\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"lights.tv.power\", int_cmd: \"zara/interface/lights/tv/power/cmd\", int_stat: \"zara/interface/lights/tv/power/stat\", leg_cmd: \"zara/domotics/lights/tvlamp\", leg_stat: \"zara/domotics/lights/tvlamp\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"lights.reading.power\", int_cmd: \"zara/interface/lights/reading/power/cmd\", int_stat: \"zara/interface/lights/reading/power/stat\", leg_cmd: \"zara/domotics/lights/readinglight\", leg_stat: \"zara/domotics/lights/readinglight\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"lights.bedroom.power\", int_cmd: \"zara/interface/lights/bedroom/power/cmd\", int_stat: \"zara/interface/lights/bedroom/power/stat\", leg_cmd: \"zara/domotics/lights/bedroomlight\", leg_stat: \"zara/domotics/lights/bedroomlight\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"lights.prolunga.power\", int_cmd: \"zara/interface/lights/prolunga/power/cmd\", int_stat: \"zara/interface/lights/prolunga/power/stat\", leg_cmd: \"zara/domotics/lights/prolunga\", leg_stat: \"zara/domotics/lights/prolunga\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    // --- LIGHTS (Native MQTT / Shelly su broker .15 \"emoncms mqtt\") ---\n    {\n        id: \"lights.laundry.power\",\n        int_cmd: \"zara/interface/lights/laundry/power/cmd\",\n        int_stat: \"zara/interface/lights/laundry/power/stat\",\n        leg_cmd: \"shellies/shelly1-B8C284/relay/0/command\",\n        leg_stat: \"shellies/shelly1-B8C284/relay/0\",\n        broker: \"emon\",\n        cmd_trans: {\n            \"true\": \"on\",\n            \"false\": \"off\",\n            \"1\": \"on\",\n            \"0\": \"off\"\n        },\n        stat_trans: {\n            \"on\": true,\n            \"off\": false\n        }\n    },\n\n    {\n        id: \"lights.porch_entrance.power\",\n        int_cmd: \"zara/interface/lights/porch_entrance/power/cmd\",\n        int_stat: \"zara/interface/lights/porch_entrance/power/stat\",\n        leg_cmd: \"shellies/shelly1-771284/relay/0/command\",\n        leg_stat: \"shellies/shelly1-771284/relay/0\",\n        broker: \"emon\",\n        cmd_trans: {\n            \"true\": \"on\",\n            \"false\": \"off\",\n            \"1\": \"on\",\n            \"0\": \"off\"\n        },\n        stat_trans: {\n            \"on\": true,\n            \"off\": false\n        }\n    },\n\n    {\n        id: \"lights.service_entrance.power\",\n        int_cmd: \"zara/interface/lights/service_entrance/power/cmd\",\n        int_stat: \"zara/interface/lights/service_entrance/power/stat\",\n        leg_cmd: \"shellies/shelly1-B92AF0/relay/0/command\",\n        leg_stat: \"shellies/shelly1-B92AF0/relay/0\",\n        broker: \"emon\",\n        cmd_trans: {\n            \"true\": \"on\",\n            \"false\": \"off\",\n            \"1\": \"on\",\n            \"0\": \"off\"\n        },\n        stat_trans: {\n            \"on\": true,\n            \"off\": false\n        }\n    },\n    // --- LIGHTS (Native MQTT / Tasmota) ---\n    { id: \"lights.hifi.power\", int_cmd: \"zara/interface/lights/hifi/power/cmd\", int_stat: \"zara/interface/lights/hifi/power/stat\", leg_cmd: \"cmnd/tasmota_86AD14/POWER\", leg_stat: \"stat/tasmota_86AD14/POWER\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\", \"1\": \"1\", \"0\": \"0\" }, stat_trans: { \"1\": true, \"0\": false, \"on\": true, \"off\": false } },\n\n    // --- POOL (Topic Legacy) ---\n    { id: \"pool.pump.power\", int_cmd: \"zara/interface/pool/pump/power/cmd\", int_stat: \"zara/interface/pool/pump/power/stat\", leg_cmd: \"zara/domotics/lights/poolpump\", leg_stat: \"zara/domotics/lights/poolpump\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"pool.skimmer.power\", int_cmd: \"zara/interface/pool/skimmer/power/cmd\", int_stat: \"zara/interface/pool/skimmer/power/stat\", leg_cmd: \"zara/domotics/lights/poolskimmer\", leg_stat: \"zara/domotics/lights/poolskimmer\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"pool.water.power\", int_cmd: \"zara/interface/pool/water/power/cmd\", int_stat: \"zara/interface/pool/water/power/stat\", leg_cmd: \"zara/domotics/lights/poollight\", leg_stat: \"zara/domotics/lights/poollight\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n    { id: \"pool.deck.power\", int_cmd: \"zara/interface/pool/deck/power/cmd\", int_stat: \"zara/interface/pool/deck/power/stat\", leg_cmd: \"zara/domotics/lights/poolfloor\", leg_stat: \"zara/domotics/lights/poolfloor\", broker: \"home\", cmd_trans: { \"true\": \"on\", \"false\": \"off\", \"1\": \"on\", \"0\": \"off\" }, stat_trans: { \"on\": true, \"off\": false, \"1\": true, \"0\": false } },\n\n    // --- ENERGY (RAW SENSORS) ---\n    { id: \"energy.solar.power\", int_stat: \"zara/interface/energy/solar/power/stat\", leg_stat: \"TeslaPowerwall/solar_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } },\n    { id: \"energy.home.consumption\", int_stat: \"zara/interface/energy/home/consumption/stat\", leg_stat: \"TeslaPowerwall/load_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } },\n    { id: \"energy.battery.soc\", int_stat: \"zara/interface/energy/battery/soc/stat\", leg_stat: \"TeslaPowerwall/SOE\", stat_trans_func: (p, lastVal) => { let val = Math.round(parseFloat(p) * 10) / 10; if (lastVal !== undefined && Math.abs(val - lastVal) < 0.5) return null; return val; } },\n    { id: \"energy.grid.power_raw\", int_stat: \"zara/interface/energy/grid/power_raw/stat\", leg_stat: \"TeslaPowerwall/site_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } },\n    { id: \"energy.battery.power_raw\", int_stat: \"zara/interface/energy/battery/power_raw/stat\", leg_stat: \"TeslaPowerwall/battery_instant_power\", stat_trans_func: (p, lastVal) => { let val = parseInt(p); if (lastVal !== undefined && Math.abs(val - lastVal) < 15) return null; return val; } },\n    \n    // --- HEATING ---\n    { id: \"heating.puffer.top_temperature\",    int_stat: \"zara/interface/heating/puffer/top_temperature/stat\",    leg_stat: \"emon/resolDL2/sensor3\", broker: \"emon\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"heating.puffer.bottom_temperature\", int_stat: \"zara/interface/heating/puffer/bottom_temperature/stat\", leg_stat: \"emon/resolDL2/sensor2\", broker: \"emon\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"energy.puffer.acs\",                 int_stat: \"zara/interface/energy/puffer_acs/stat\",                 leg_stat: \"emon/shellyACS/tempACS\", broker: \"emon\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n\n    // --- SOLAR THERMAL ---\n    { id: \"heating.solar_thermal.collector_temperature\", int_stat: \"zara/interface/heating/solar_thermal/collector_temperature/stat\", leg_stat: \"emon/resolDL2/sensor1\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"heating.solar_thermal.pump_speed\", int_stat: \"zara/interface/heating/solar_thermal/pump_speed/stat\", leg_stat: \"emon/resolDL2/pump1\", stat_trans_func: (p) => { return isNaN(parseInt(p)) ? null : parseInt(p); } },\n\n    // --- GAS BOILER ---\n    { id: \"heating.gas_boiler.flame\", int_stat: \"zara/interface/heating/gas_boiler/flame/stat\", leg_stat: \"emon/OTGcaldaia/flame\", stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n    { id: \"heating.gas_boiler.modulation\", int_stat: \"zara/interface/heating/gas_boiler/modulation/stat\", leg_stat: \"emon/OTGcaldaia/modulation\", stat_trans_func: (p) => { return isNaN(parseInt(p)) ? null : parseInt(p); } },\n\n    // --- FLOOR PUMP ---\n    { id: \"heating.floor_pump.enabled\", int_cmd: \"zara/interface/heating/floor_pump/enabled/cmd\", int_stat: \"zara/interface/heating/floor_pump/enabled/stat\", leg_cmd: \"zara/domotics/pompapavimento/abilitata\", leg_stat: \"zara/domotics/pompapavimento/abilitata\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n    { id: \"heating.floor_pump.running\", int_stat: \"zara/interface/heating/floor_pump/running/stat\", leg_stat: \"zara/domotics/floorpumpstate\", stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n\n    // --- HEAT PUMP (WINTER) ---\n    { id: \"heating.heat_pump.enabled\", int_cmd: \"zara/interface/heating/heat_pump/enabled/cmd\", int_stat: \"zara/interface/heating/heat_pump/enabled/stat\", leg_cmd: \"zara/domotics/HP/abilitata\", leg_stat: \"zara/domotics/HP/abilitata\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n    { id: \"heating.heat_pump.solar_divert\", int_cmd: \"zara/interface/heating/heat_pump/solar_divert/cmd\", int_stat: \"zara/interface/heating/heat_pump/solar_divert/stat\", leg_cmd: \"zara/domotics/HP/solardivertmode\", leg_stat: \"zara/domotics/HP/solardivertmode\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n    { id: \"heating.heat_pump.target_temperature\", int_cmd: \"zara/interface/heating/heat_pump/target_temperature/cmd\", int_stat: \"zara/interface/heating/heat_pump/target_temperature/stat\", leg_cmd: \"casa/clima/cmnd/target_temp_inverno\", leg_stat: \"casa/clima/stat/target_temp_inverno\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n//    { id: \"heating.heat_pump.running\", int_stat: \"zara/interface/heating/heat_pump/running/stat\", leg_stat: \"emon/AC/HPstatus\", stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n\n    // --- FIREPLACE ---\n    { id: \"fireplace.main.power\", int_cmd: \"zara/interface/fireplace/main/power/cmd\", int_stat: \"zara/interface/fireplace/main/power/stat\", leg_cmd: \"zara/domotics/palazzetti/acceso\", leg_stat: \"zara/domotics/palazzetti/acceso\", broker: \"home\", cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n    { id: \"fireplace.main.level\", int_cmd: \"zara/interface/fireplace/main/level/cmd\", int_stat: \"zara/interface/fireplace/main/level/stat\", leg_cmd: \"alexa/caminetto\", leg_stat: \"emon/focolare/powerraw\", broker: \"emon\", stat_trans_func: (p) => { return isNaN(parseInt(p)) ? null : parseInt(p); } },\n    { id: \"fireplace.main.mode\", int_cmd: \"zara/interface/fireplace/main/mode/cmd\", int_stat: \"zara/interface/fireplace/main/mode/stat\", leg_cmd: \"zara/domotics/palazzetti/modalita\", leg_stat: \"zara/domotics/palazzetti/modalita\", broker: \"home\", stat_trans_func: (p) => { return String(p); } },\n    { id: \"fireplace.main.start_time\", int_cmd: \"zara/interface/fireplace/main/start_time/cmd\", int_stat: \"zara/interface/fireplace/main/start_time/stat\", leg_cmd: \"zara/domotics/palazzetti/oraavvio\", leg_stat: \"zara/domotics/palazzetti/oraavvio\", broker: \"emon\", stat_trans_func: (p) => { return String(p); } },\n    { id: \"fireplace.main.stop_time\", int_cmd: \"zara/interface/fireplace/main/stop_time/cmd\", int_stat: \"zara/interface/fireplace/main/stop_time/stat\", leg_cmd: \"zara/domotics/palazzetti/oraspegnimento\", leg_stat: \"zara/domotics/palazzetti/oraspegnimento\", broker: \"emon\", stat_trans_func: (p) => { return String(p); } },\n    { id: \"fireplace.main.auto_power\", int_cmd: \"zara/interface/fireplace/main/auto_power/cmd\", int_stat: \"zara/interface/fireplace/main/auto_power/stat\", leg_cmd: \"zara/domotics/controlloAutomaticoPotenzaCaminetto\", leg_stat: \"zara/domotics/controlloAutomaticoPotenzaCaminetto\", broker: \"emon\", /*cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, */ stat_trans_func: (p) => { return (p === \"1\" || p === \"true\" || p === \"ON\" || p === true); } },\n\n    // --- THERMOSTATS ---\n    { id: \"climate.thermostat_living.current_temperature\", int_stat: \"zara/interface/climate/thermostat_living/current_temperature/stat\", leg_stat: \"emon/emonth5/temperature_calibrated\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"climate.thermostat_living.target_temperature\", int_cmd: \"zara/interface/climate/thermostat_living/target_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_living/target_temperature/stat\", leg_cmd: \"cmnd/tasmota_F32F4F/TEMPTARGETSET\", leg_stat: \"cmnd/tasmota_F32F4F/TEMPTARGETSET\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"climate.thermostat_living.power\", int_stat: \"zara/interface/climate/thermostat_living/power/stat\", leg_stat: \"emon/TermostatLiving/Switch\", stat_trans: { \"100\": true, \"0\": false } },\n    { id: \"climate.thermostat_living.min_temperature\", int_cmd: \"zara/interface/climate/thermostat_living/min_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_living/min_temperature/stat\", leg_cmd: \"zara/domotics/livingThemostatMinValue\", leg_stat: \"zara/domotics/livingThemostatMinValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"climate.thermostat_living.max_temperature\", int_cmd: \"zara/interface/climate/thermostat_living/max_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_living/max_temperature/stat\", leg_cmd: \"zara/domotics/livingThemostatMaxValue\", leg_stat: \"zara/domotics/livingThemostatMaxValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    \n    { id: \"climate.thermostat_bath.current_temperature\", int_stat: \"zara/interface/climate/thermostat_bath/current_temperature/stat\", leg_stat: \"emon/bagnoServizio/temperature\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"climate.thermostat_bath.target_temperature\", int_cmd: \"zara/interface/climate/thermostat_bath/target_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_bath/target_temperature/stat\", leg_cmd: \"cmnd/SmallBathroomThermostat/TEMPTARGETSET\", leg_stat: \"cmnd/SmallBathroomThermostat/TEMPTARGETSET\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"climate.thermostat_bath.power\", int_stat: \"zara/interface/climate/thermostat_bath/power/stat\", leg_stat: \"emon/bagnoServizio/Switch\", stat_trans: { \"100\": true, \"0\": false } },\n    { id: \"climate.thermostat_bath.min_temperature\", int_cmd: \"zara/interface/climate/thermostat_bath/min_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_bath/min_temperature/stat\", leg_cmd: \"zara/domotics/SmallBathroomThermostatMinValue\", leg_stat: \"zara/domotics/SmallBathroomThermostatMinValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n    { id: \"climate.thermostat_bath.max_temperature\", int_cmd: \"zara/interface/climate/thermostat_bath/max_temperature/cmd\", int_stat: \"zara/interface/climate/thermostat_bath/max_temperature/stat\", leg_cmd: \"zara/domotics/SmallBathroomThermostatMaxValue\", leg_stat: \"zara/domotics/SmallBathroomThermostatMaxValue\", broker: \"home\", stat_trans_func: (p) => { return Math.round(parseFloat(p) * 10) / 10; } },\n\n    // --- ENVIRONMENT SENSORS (REAL) ---\n    { id: \"env.living.temperature\", int_stat: \"zara/interface/env/living/temperature/stat\", leg_stat: \"emon/emonth5/temperature_calibrated\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n    { id: \"env.living.humidity\", int_stat: \"zara/interface/env/living/humidity/stat\", leg_stat: \"emon/emonth5/humidity\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n    { id: \"env.living.humidex\", int_stat: \"zara/interface/env/living/humidex/stat\", leg_stat: \"emon/emonth5/humidex\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n\n    { id: \"env.bedroom.temperature\", int_stat: \"zara/interface/env/bedroom/temperature/stat\", leg_stat: \"emon/cameraMatrimoniale/temperature\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n    { id: \"env.bedroom.humidity\", int_stat: \"zara/interface/env/bedroom/humidity/stat\", leg_stat: \"emon/cameraMatrimoniale/humidity\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n    { id: \"env.bedroom.humidex\", int_stat: \"zara/interface/env/bedroom/humidex/stat\", leg_stat: \"emon/cameraMatrimoniale/humidex\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n\n    { id: \"env.outdoor.temperature\", int_stat: \"zara/interface/env/outdoor/temperature/stat\", leg_stat: \"emon/weather/extTemp\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n    { id: \"env.outdoor.humidity\", int_stat: \"zara/interface/env/outdoor/humidity/stat\", leg_stat: \"emon/weather/extHumidity\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n    { id: \"env.outdoor.humidex\", int_stat: \"zara/interface/env/outdoor/humidex/stat\", leg_stat: \"emon/sensore_outdoor/humidex\", stat_trans_func: (p) => Math.round(parseFloat(p) * 10) / 10 },\n\n/*     { \n    id: \"climate.ai_enabling\", \n    int_cmd: \"zara/interface/climate/ai_enabling/cmd\", \n    int_stat: \"zara/interface/climate/ai_enabling/stat\", \n    leg_cmd: \"casa/clima/cmnd/AI_climate_enabling\", \n    leg_stat: \"casa/clima/stat/AI_climate_enabling\", \n    broker: \"home\", \n    cmd_trans: { \"true\": \"1\", \"false\": \"0\" }, \n    stat_trans_func: (p) => (p === \"1\" || p === \"true\" || p === \"ON\" || p === true) \n    },\n*/\n    { \n    id: \"ventilation.vmc.speed\", \n    int_cmd: \"zara/interface/ventilation/vmc/speed/cmd\", \n    int_stat: \"zara/interface/ventilation/vmc/speed/stat\", \n    leg_cmd: \"/esp8266/brink/fanspeed\", \n    leg_stat: \"/esp8266/brink/fanspeed\", \n    broker: \"emon\", \n    stat_trans_func: (p) => isNaN(parseInt(p)) ? null : parseInt(p) \n    },\n];\n\n\n// ============================================================================\n// TOPIC COMPOSITO: clima/casa/stato_completo\n// Ogni elemento definisce il path nel JSON e il topic Digital Twin in uscita.\n// Le sorgenti legacy puntuali restano attive e continuano a funzionare.\n// ============================================================================\nconst compositeRegistry = [\n    {\n        json_path: \"logica_controllo.soglia_temperatura_avvio_cooling_c\",\n        int_stat: \"zara/interface/logica_controllo/soglia_temperatura_avvio_cooling_c/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.soglia_temperatura_off_comfort_c\",\n        int_stat: \"zara/interface/logica_controllo/soglia_temperatura_off_comfort_c/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.diagnostica_ac.timer_tipo\",\n        int_stat: \"zara/interface/logica_controllo/diagnostica_ac/timer_tipo/stat\",\n        transform_func: (p) => String(p)\n    },\n    {\n        json_path: \"logica_controllo.diagnostica_ac.timer_residuo_minuti\",\n        int_stat: \"zara/interface/logica_controllo/diagnostica_ac/timer_residuo_minuti/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    {\n        json_path: \"logica_controllo.diagnostica_ac.timer_durata_minuti\",\n        int_stat: \"zara/interface/logica_controllo/diagnostica_ac/timer_durata_minuti/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    {\n        json_path: \"logica_controllo.diagnostica_ac.deficit_tolleranza_minuti\",\n        int_stat: \"zara/interface/logica_controllo/diagnostica_ac/deficit_tolleranza_minuti/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    {\n        json_path: \"logica_controllo.diagnostica_ac.deficit_residuo_minuti\",\n        int_stat: \"zara/interface/logica_controllo/diagnostica_ac/deficit_residuo_minuti/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    {\n        json_path: \"logica_controllo.diagnostica_ac.pausa_notturna_residuo_minuti\",\n        int_stat: \"zara/interface/logica_controllo/diagnostica_ac/pausa_notturna_residuo_minuti/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    {\n        json_path: \"logica_controllo.diagnostica_ac.causa_transizione\",\n        int_stat: \"zara/interface/logica_controllo/diagnostica_ac/causa_transizione/stat\",\n        allow_null: true,\n        transform_func: (p) =>\n            p === null || p === undefined ? \"\" : String(p)\n    },\n    // =========================================================================\n    // METADATI FULL STATE\n    // =========================================================================\n    { \n        json_path: \"timestamp\",\n        int_stat: \"zara/interface/climate/full_state/timestamp/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    { \n        json_path: \"data_ora_formattata\",\n        int_stat: \"zara/interface/climate/full_state/data_ora_formattata/stat\",\n        transform_func: (p) => String(p)\n    },\n\n    // =========================================================================\n    // STAGIONE ATTIVA\n    // WP-C2: mantiene temporaneamente il doppio percorso legacy/composite.\n    // =========================================================================\n    { \n        json_path: \"stagione_attiva\",\n        int_stat: \"zara/interface/logica_controllo/stagione_attuale/stat\",\n        transform_func: (p) => String(p)\n    },\n\n    // =========================================================================\n    // METRICHE ELETTRICHE\n    //\n    // WP-C1:\n    // Rimossi dal compositeRegistry perché hanno già una sorgente puntuale\n    // autorevole:\n    //\n    // - produzione_fv_w          -> TeslaPowerwall/solar_instant_power\n    // - consumo_casa_w           -> TeslaPowerwall/load_instant_power\n    // - grid_power_w             -> TeslaPowerwall/site_instant_power\n    // - battery_power_w          -> TeslaPowerwall/battery_instant_power\n    // - powerwall_soc_percent    -> TeslaPowerwall/SOE\n    //\n    // Restano qui soltanto le metriche che non hanno un equivalente\n    // point-source nel registry.\n    // =========================================================================\n    {\n        json_path: \"metriche_elettriche.surplus_w\",\n        int_stat: \"zara/interface/energy/solar/surplus/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"metriche_elettriche.grid_import_w\",\n        int_stat: \"zara/interface/energy/grid/import/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"metriche_elettriche.grid_export_w\",\n        int_stat: \"zara/interface/energy/grid/export/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"metriche_elettriche.battery_charge_w\",\n        int_stat: \"zara/interface/energy/battery/charge/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"metriche_elettriche.battery_discharge_w\",\n        int_stat: \"zara/interface/energy/battery/discharge/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"metriche_elettriche.consumo_ac_w\",\n        int_stat: \"zara/interface/energy/ac/power/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"metriche_elettriche.consumo_medio_storico_fascia_w\",\n        int_stat: \"zara/interface/energy/home/historical_average_band/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n\n    // =========================================================================\n    // METRICHE AMBIENTALI\n    //\n    // WP-C1:\n    // Rimossi dal compositeRegistry perché hanno già una sorgente puntuale:\n    //\n    // - temp_cameraMatrimoniale -> env.bedroom.temperature\n    // - temperatura_c           -> env.living.temperature\n    // - humidex_living          -> env.living.humidex\n    // - humidex_bedroom         -> env.bedroom.humidex\n    //\n    // humidex resta intenzionalmente distinto:\n    // rappresenta il riferimento dinamico scelto dalla logica climatica.\n    // =========================================================================\n    {\n        json_path: \"metriche_ambientali.humidex\",\n        int_stat: \"zara/interface/climate/control/humidex_reference/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    },\n    {\n        json_path: \"metriche_ambientali.altitudine_sole\",\n        int_stat: \"zara/interface/env/solar_altitude/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    },\n\n    // =========================================================================\n    // LOGICA CONTROLLO\n    // WP-C2: questi mapping restano invariati per ora.\n    // =========================================================================\n    {\n        json_path: \"logica_controllo.soglia_spegnimento_comfort\",\n        int_stat: \"zara/interface/logica_controllo/soglia_spegnimento_comfort/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.ampiezza_isteresi_humidex\",\n        int_stat: \"zara/interface/logica_controllo/ampiezza_isteresi_humidex/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.night_dry_humidex_margin\",\n        int_stat: \"zara/interface/logica_controllo/night_dry_humidex_margin/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.night_dry_humidex_threshold\",\n        int_stat: \"zara/interface/logica_controllo/night_dry_humidex_threshold/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.vmc_portata_stimata_m3h\",\n        int_stat: \"zara/interface/logica_controllo/vmc_portata_stimata_m3h/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    {\n        json_path: \"logica_controllo.stanza_rilevamento_vmc\",\n        int_stat: \"zara/interface/logica_controllo/stanza_rilevamento_vmc/stat\",\n        transform_func: (p) => String(p)\n    },\n    {\n        json_path: \"logica_controllo.soglia_attivazione_applicata\",\n        int_stat: \"zara/interface/logica_controllo/soglia_attivazione_applicata/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.soc_minimo_applied\",\n        int_stat: \"zara/interface/logica_controllo/soc_minimo_applied/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.tempo_mancante_anticiclo_minuti\",\n        int_stat: \"zara/interface/logica_controllo/tempo_mancante_anticiclo_minuti/stat\",\n        transform_func: (p) => parseInt(p)\n    },\n    {\n        json_path: \"logica_controllo.previsione_solare_domani_kwh\",\n        int_stat: \"zara/interface/logica_controllo/previsione_solare_domani_kwh/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.previsione_solare_data\",\n        int_stat: \"zara/interface/logica_controllo/previsione_solare_data/stat\",\n        transform_func: (p) => String(p)\n    },\n    {\n        json_path: \"logica_controllo.previsione_ricarica_batteria_percent\",\n        int_stat: \"zara/interface/logica_controllo/previsione_ricarica_batteria_percent/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.kwh_stimati_in_batteria\",\n        int_stat: \"zara/interface/logica_controllo/kwh_stimati_in_batteria/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.blocco_emergenza_attivo\",\n        int_stat: \"zara/interface/logica_controllo/blocco_emergenza_attivo/stat\",\n        transform_func: (p) =>\n            (p === true || p === \"1\" || p === \"true\" || p === \"ON\")\n    },\n    {\n        json_path: \"logica_controllo.cuscinetto_sicurezza_kwh\",\n        int_stat: \"zara/interface/logica_controllo/cuscinetto_sicurezza_kwh/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n    {\n        json_path: \"logica_controllo.cuscinetto_richiesto_kwh\",\n        int_stat: \"zara/interface/logica_controllo/cuscinetto_richiesto_kwh/stat\",\n        transform_func: (p) => parseFloat(p)\n    },\n\n    // =========================================================================\n    // STATO CONDIZIONATORE\n    // WP-C2: questi mapping restano invariati per ora.\n    // =========================================================================\n    {\n        json_path: \"stato_condizionatore.stato_attuale\",\n        int_stat: \"zara/interface/stato_condizionatore/stato_attuale/stat\",\n        transform_func: (p) => String(p)\n    },\n    {\n        json_path: \"stato_condizionatore.motivo_logica\",\n        int_stat: \"zara/interface/stato_condizionatore/motivo_logica/stat\",\n        transform_func: (p) => String(p)\n    },\n    {\n        json_path: \"stato_condizionatore.temperatura_impostata_c\",\n        int_stat: \"zara/interface/stato_condizionatore/temperatura_impostata_c/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    },\n    {\n        json_path: \"stato_condizionatore.modalita_aria\",\n        int_stat: \"zara/interface/stato_condizionatore/modalita_aria/stat\",\n        transform_func: (p) => String(p)\n    },\n\n    // =========================================================================\n    // STATO VMC\n    //\n    // WP-C1:\n    // velocita_attuale rimossa perché la sorgente autorevole rimane:\n    // /esp8266/brink/fanspeed\n    //\n    // Gli altri tre valori esistono soltanto nel full-state.\n    // =========================================================================\n    {\n        json_path: \"stato_vmc.motivo_logica\",\n        int_stat: \"zara/interface/ventilation/vmc/reason/stat\",\n        transform_func: (p) => String(p)\n    },\n    {\n        json_path: \"stato_vmc.humidex_esterno\",\n        int_stat: \"zara/interface/ventilation/vmc/outdoor_humidex/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    },\n    {\n        json_path: \"stato_vmc.temperatura_esterna_c\",\n        int_stat: \"zara/interface/ventilation/vmc/outdoor_temperature/stat\",\n        transform_func: (p) => Math.round(parseFloat(p) * 10) / 10\n    }\n];\n\nconst COMPOSITE_TOPIC = \"casa/clima/stato_completo\";\n\n\n// INIZIALIZZAZIONE CONTESTO\n// v35: supporto al topic JSON composito clima/casa/stato_completo + humidex_reference separato.\nif (!context.get(\"router_initialized_v117\")) {\n    context.set(\"router_initialized\", false);\n    context.set(\"router_initialized_v117\", true);\n}\n\nif (!context.get(\"router_initialized\")) {\n    let mapCmdToLegacy = {};\n    let mapLegacyToStat = {};\n\n    registry.forEach(entity => {\n        if (entity.int_cmd && entity.leg_cmd) {\n            mapCmdToLegacy[entity.int_cmd] = {\n                topic: entity.leg_cmd,\n                broker: entity.broker,\n                transform: entity.cmd_trans\n            };\n        }\n\n        if (entity.int_stat && entity.leg_stat) {\n            if (!mapLegacyToStat[entity.leg_stat]) {\n                mapLegacyToStat[entity.leg_stat] = [];\n            }\n\n            // Evita solo duplicati identici leg_stat -> int_stat.\n            const duplicate = mapLegacyToStat[entity.leg_stat]\n                .some(route => route.topic === entity.int_stat);\n\n            if (!duplicate) {\n                mapLegacyToStat[entity.leg_stat].push({\n                    topic: entity.int_stat,\n                    transform: entity.stat_trans,\n                    transform_func: entity.stat_trans_func\n                });\n            }\n        }\n    });\n\n    context.set(\"mapCmdToLegacy\", mapCmdToLegacy);\n    context.set(\"mapLegacyToStat\", mapLegacyToStat);\n    context.set(\"lastSensorValues\", {});\n    context.set(\"router_initialized\", true);\n}\n\nconst mapCmdToLegacy = context.get(\"mapCmdToLegacy\") || {};\nconst mapLegacyToStat = context.get(\"mapLegacyToStat\") || {};\nlet lastSensorValues = context.get(\"lastSensorValues\") || {};\n\nlet inTopic = msg.topic || \"\";\nlet inPayload = msg.payload;\nlet outMsgLegacy = null;\nlet outMsgsApp = [];\nlet outMsgBroadlink = null;\nlet semanticEvidence = null;\n\nfunction getNestedValue(obj, path) {\n    return path.split(\".\").reduce(\n        (acc, part) => (acc !== undefined && acc !== null) ? acc[part] : undefined,\n        obj\n    );\n}\n\nfunction transformValue(config, value, lastVal) {\n    if (config.transform_func) {\n        return config.transform_func(value, lastVal);\n    }\n\n    if (config.transform && config.transform[value] !== undefined) {\n        return config.transform[value];\n    }\n\n    if (\n        typeof value !== \"boolean\" &&\n        value !== \"\" &&\n        !isNaN(parseFloat(value))\n    ) {\n        return parseFloat(value);\n    }\n\n    return value;\n}\n\nfunction emitState(config, value) {\n    const lastVal = lastSensorValues[config.topic || config.int_stat];\n    const outPayload = transformValue(config, value, lastVal);\n\n    if (outPayload === undefined || outPayload === null) {\n        return;\n    }\n\n    const topic = config.topic || config.int_stat;\n    lastSensorValues[topic] = outPayload;\n\n    outMsgsApp.push({\n        topic: topic,\n        payload: outPayload,\n        qos: 1,\n        retain: true\n    });\n}\n\nconst BROADLINK_INTERNAL_TOPICS = new Set([\n    \"zara/domotics/lights/shelflamp\",\n    \"zara/domotics/lights/livinglamp\",\n    \"zara/domotics/lights/tvlamp\",\n    \"zara/domotics/lights/readinglight\",\n    \"zara/domotics/lights/prolunga\"\n]);\n\n// -----------------------------------------------------------------------------\n// SCENE COMMAND BRIDGE\n// -----------------------------------------------------------------------------\nif (inTopic === \"zara/interface/lights/scene/cmd\") {\n    return [null, null, null, msg];\n}\n\n// 1) UI / Digital Twin command -> Legacy command\nif (inTopic.startsWith(\"zara/interface/\")) {\n    const route = mapCmdToLegacy[inTopic];\n\n    if (route) {\n        let outPayload = inPayload;\n\n        if (route.transform && route.transform[inPayload] !== undefined) {\n            outPayload = route.transform[inPayload];\n        }\n\n        // Semantic evidence only: the Router selected this route, not hardware confirmation.\n        const entity = registry.find(e => e.int_cmd === inTopic);\n        const normalized = String(inPayload).trim().toLowerCase();\n        if (entity && /^(lights\\.|pool\\.(water|deck)\\.)/.test(entity.id) &&\n            ['true','false','1','0','on','off'].includes(normalized) && msg.retain !== true) {\n            const time = Date.now();\n            const sequence = (context.get('semantic_route_sequence') || 0) + 1;\n            context.set('semantic_route_sequence', sequence);\n            const evidence = {\n                schema: 'domopi.semantic_command.v1', entity_id: entity.id,\n                command_id: node.id + ':' + time + ':' + sequence,\n                actor_policy:'dashboard_only_v2',actor: 'utente', origin: 'app_interface', attribution: 'interface_contract',\n                publisher_authenticated: false, stage: 'routed',\n                requested_state: ['true','1','on'].includes(normalized),\n                observed_at_ms: time, input_topic: inTopic,\n                routed_topic: route.topic, routed_broker: route.broker,\n                execution_confirmed: false, physical_confirmation: false\n            };\n            semanticEvidence = [\n                {topic:'zara/interface/semantic/v1/routed_commands/' + entity.id + '/stat',\n                 payload:JSON.stringify(evidence),qos:1,retain:true},\n                {topic:'zara/interface/semantic/v1/events',\n                 payload:JSON.stringify({...evidence,schema:'domopi.semantic_event.v1',\n                   event_id:evidence.command_id,kind:'user_command_routed'}),qos:1,retain:false}\n            ];\n        }\n\n        const routedMsg = {\n            topic: route.topic,\n            payload: outPayload,\n            broker: route.broker\n        };\n\n        // Le luci Broadlink verificate vengono inoltrate internamente\n        // a function 17, evitando il publish MQTT intermedio.\n        if (BROADLINK_INTERNAL_TOPICS.has(route.topic)) {\n            // Internal provenance only; function 17 strips it before operational outputs.\n            if (semanticEvidence) routedMsg._semantic_command = JSON.parse(semanticEvidence[0].payload);\n            outMsgBroadlink = routedMsg;\n        } else {\n            outMsgLegacy = routedMsg;\n        }\n    }\n}\n\n// 2) Topic JSON composito -> singoli state del Digital Twin\nelse if (inTopic === COMPOSITE_TOPIC) {\n    let compositePayload = inPayload;\n\n    // MQTT-in normalmente può essere configurato per fornire un object,\n    // ma accettiamo anche una stringa JSON per rendere il router robusto.\n    if (typeof compositePayload === \"string\") {\n        try {\n            compositePayload = JSON.parse(compositePayload);\n        } catch (err) {\n            node.warn(\"Digital Twin Router: JSON non valido su \" + COMPOSITE_TOPIC);\n            compositePayload = null;\n        }\n    }\n\n    if (\n        compositePayload &&\n        typeof compositePayload === \"object\" &&\n        !Array.isArray(compositePayload)\n    ) {\n        compositeRegistry.forEach(config => {\n            const value = getNestedValue(compositePayload, config.json_path);\n\n            if (\n                value !== undefined &&\n                (value !== null || config.allow_null === true)\n            ) {\n                emitState(config, value);\n            }\n        });\n\n        context.set(\"lastSensorValues\", lastSensorValues);\n    }\n}\n\n// 3) Topic legacy puntuale -> Digital Twin state\nelse {\n    const routes = mapLegacyToStat[inTopic];\n\n    if (routes && routes.length > 0) {\n        routes.forEach(route => emitState(route, inPayload));\n        context.set(\"lastSensorValues\", lastSensorValues);\n    }\n}\nreturn [\n    outMsgLegacy,\n    outMsgsApp.length > 0 ? outMsgsApp : null,\n    outMsgBroadlink,\n    null,\n    semanticEvidence\n];\n\n",
+    "outputs": 5,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 560,
+    "wires": [
+      [
+        "4ee8572ea78dc796"
+      ],
+      [
+        "f9d5732af8db63e0"
+      ],
+      [
+        "ea8307d48995ca93"
+      ],
+      [
+        "937d52b7b946ba3b"
+      ],
+      [
+        "7842d40acbe95392"
+      ]
+    ]
+  },
+  {
+    "id": "937d52b7b946ba3b",
+    "type": "function",
+    "z": "294638a5b3d82009",
+    "name": "Scene Dispatcher",
+    "func": "const scene = String(msg.payload).trim().toLowerCase();\n\nconst outputs = [null, null, null, null];\n\nswitch (scene) {\n    case \"tv\":\n        outputs[0] = { payload: \"on\" };\n        break;\n\n    case \"sleep\":\n        outputs[1] = { payload: \"on\" };\n        break;\n\n    case \"all_on\":\n        outputs[2] = { payload: \"on\" };\n        break;\n\n    case \"all_off\":\n        outputs[3] = { payload: \"on\" };\n        break;\n\n    default:\n        node.warn(`Unknown light scene: ${scene}`);\n        return null;\n}\n\n// Preserve only explicit app scene provenance. Operational payloads unchanged.\nif (msg.retain !== true) {\n const sequence=(context.get('semantic_scene_seq')||0)+1;\n context.set('semantic_scene_seq',sequence);\n for(const out of outputs) if(out) out._semantic_scene={\n  actor_policy:'dashboard_only_v2',actor:'utente',origin:'app_interface',scene,\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'interface_contract'};\n}\nreturn outputs;",
+    "outputs": 4,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 950,
+    "y": 660,
+    "wires": [
+      [
+        "0eba77909df95691"
+      ],
+      [
+        "a2738d01df161e4c"
+      ],
+      [
+        "c8a45e060fde5405"
+      ],
+      [
+        "9dc32183a454d19a"
+      ]
+    ]
+  },
+  {
+    "id": "bccbd37f.6e4cd8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.living.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1550,
+    "y": 60,
+    "wires": [
+      [
+        "4c3db21d.73e22c"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "6197926c.612a8c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.living.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 620,
+    "wires": [
+      [
+        "4c3db21d.73e22c"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "8f921a5e.1766f",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "/*\nmsg.payload = \"on\";\nreturn msg;\n*/\n\nconst c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.tv.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];",
+    "outputs": 2,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1570,
+    "y": 120,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "f7bc8ba8.270b6",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 160,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "18386049.c296a8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 700,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "ed8c7e3e.e2c32",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "/*\nmsg.payload = \"off\";\nreturn msg;\n*/\n\nconst c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.tv.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];",
+    "outputs": 2,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1590,
+    "y": 660,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "bfa134b2.bcd84",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.deck.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 200,
+    "wires": [
+      [
+        "f4b93906.78c038"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "6586d147.437dc",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.deck.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 740,
+    "wires": [
+      [
+        "f4b93906.78c038"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "55470375.8b265c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.water.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 240,
+    "wires": [
+      [
+        "57163eb6.11361"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "1ec04f1a.79db19",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.water.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 780,
+    "wires": [
+      [
+        "57163eb6.11361"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "a082b270d39049dc",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.reading.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1580,
+    "y": 340,
+    "wires": [
+      [
+        "2c53a89cb0d491bc",
+        "4f1a0aacf7040f60"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "1d425ade7f5a82ae",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.reading.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1580,
+    "y": 880,
+    "wires": [
+      [
+        "2c53a89cb0d491bc"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "039f407b68e135a4",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Libreria origin nodered_dashboard",
+    "func": "// Only annotate this verified source edge. Never alter its payload or routing.\nconst valid = msg.payload === 'on' || msg.payload === 'off';\ndelete msg._semantic_command;\nif (valid) {\n const time = Date.now();\n const seq = (context.get('origin_seq') || 0) + 1;\n context.set('origin_seq', seq);\n msg._semantic_command = {\n  schema:'domopi.semantic_command.v1',entity_id:'lights.libreria.power',\n  command_id:node.id+':'+time+':'+seq,actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',\n  attribution:'source_edge',stage:'source_selected',requested_state:msg.payload === 'on',\n  observed_at_ms:time,source_retained:msg.retain===true,\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false\n };\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 840,
+    "y": 810,
+    "wires": [
+      [
+        "c14c803c.86e27"
+      ]
+    ]
+  },
+  {
+    "id": "0bbbea52bfe258b0",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Libreria origin alexa",
+    "func": "// Only annotate this verified source edge. Never alter its payload or routing.\nconst valid = msg.payload === 'on' || msg.payload === 'off';\ndelete msg._semantic_command;\nif (valid) {\n const time = Date.now();\n const seq = (context.get('origin_seq') || 0) + 1;\n context.set('origin_seq', seq);\n msg._semantic_command = {\n  schema:'domopi.semantic_command.v1',entity_id:'lights.libreria.power',\n  command_id:node.id+':'+time+':'+seq,actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',\n  attribution:'source_edge',stage:'source_selected',requested_state:msg.payload === 'on',\n  observed_at_ms:time,source_retained:msg.retain===true,\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false\n };\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 1070,
+    "wires": [
+      [
+        "9d7004c9.a67e28"
+      ]
+    ]
+  },
+  {
+    "id": "63e84bba3b815b17",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Libreria origin lg_tv_rule",
+    "func": "// Only annotate this verified source edge. Never alter its payload or routing.\nconst valid = msg.payload === 'true';\ndelete msg._semantic_command;\nif (valid) {\n const time = Date.now();\n const seq = (context.get('origin_seq') || 0) + 1;\n context.set('origin_seq', seq);\n msg._semantic_command = {\n  schema:'domopi.semantic_command.v1',entity_id:'lights.libreria.power',\n  command_id:node.id+':'+time+':'+seq,actor_policy:'dashboard_only_v2',actor:'automazione',origin:'lg_tv_rule',\n  attribution:'source_edge',stage:'source_selected',requested_state:false,\n  observed_at_ms:time,source_retained:msg.retain===true,\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false\n };\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 690,
+    "y": 3790,
+    "wires": [
+      [
+        "5bd87c6ad192e8a0"
+      ]
+    ]
+  },
+  {
+    "id": "9b0e3789a61bde80",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_dashboard tv",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',scene:'tv',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 840,
+    "y": 910,
+    "wires": [
+      [
+        "63eaa703.fd98c"
+      ]
+    ]
+  },
+  {
+    "id": "20fe2f37242b51f4",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_dashboard sleep",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',scene:'sleep',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 850,
+    "y": 950,
+    "wires": [
+      [
+        "a901336b.d16cb8"
+      ]
+    ]
+  },
+  {
+    "id": "7f7ed8a95382ecd3",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_dashboard all_on",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',scene:'all_on',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 850,
+    "y": 990,
+    "wires": [
+      [
+        "f05d5124.911a38"
+      ]
+    ]
+  },
+  {
+    "id": "dcf946227865ac57",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Scene provenance nodered_ui_or_editor all_off",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor_policy:'dashboard_only_v2',actor:(typeof msg.socketid==='string' && msg.socketid.length>0)?'utente':'automazione',origin:(typeof msg.socketid==='string' && msg.socketid.length>0)?'nodered_dashboard':'editor_manual',scene:'all_off',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 850,
+    "y": 1030,
+    "wires": [
+      [
+        "473f5068.10fbb8"
+      ]
+    ]
+  },
+  {
+    "id": "f28da8071ac5c224",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Scene provenance alexa tv",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',scene:'tv',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 620,
+    "y": 1370,
+    "wires": [
+      [
+        "851666d5.0cc428"
+      ]
+    ]
+  },
+  {
+    "id": "2bf06425cd84ff2d",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Scene provenance alexa sleep",
+    "func": "delete msg._semantic_scene;\nif (msg.payload === 'on') {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',scene:'sleep',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 1450,
+    "wires": [
+      [
+        "baf2d8b.17385a8"
+      ]
+    ]
+  },
+  {
+    "id": "626b4e9af9f7b873",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Scene provenance alexa all",
+    "func": "delete msg._semantic_scene;\nif (['on','off'].includes(msg.payload)) {\n const sequence=(context.get('seq')||0)+1;context.set('seq',sequence);\n msg._semantic_scene={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',scene:msg.payload === 'on' ? 'all_on' : 'all_off',\n  command_id:node.id+':'+Date.now()+':'+sequence,attribution:'source_edge'};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 770,
+    "wires": [
+      [
+        "e761004.c0c1a8"
+      ]
+    ]
+  },
+  {
+    "id": "7338b389601e8de6",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Libreria scene ON",
+    "func": "const s=msg._semantic_scene || msg._semantic_origin;\nif (s && ['utente','automazione'].includes(s.actor) && typeof s.command_id==='string' &&\n (s.scene == null || ['tv','sleep','all_on','all_off'].includes(s.scene))) {\n msg._semantic_command={schema:'domopi.semantic_command.v1',\n  entity_id:'lights.libreria.power',actor_policy:'dashboard_only_v2',actor:s.actor,origin:s.origin,\n  attribution:s.attribution,scene:s.scene,command_id:s.command_id+':libreria:true',\n  requested_state:true,stage:'source_selected',observed_at_ms:Date.now(),\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1000,
+    "y": 400,
+    "wires": [
+      [
+        "f5f14a57.6f51a8"
+      ]
+    ]
+  },
+  {
+    "id": "1204cddde70cd8b3",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Libreria scene OFF",
+    "func": "const s=msg._semantic_scene || msg._semantic_origin;\nif (s && ['utente','automazione'].includes(s.actor) && typeof s.command_id==='string' &&\n (s.scene == null || ['tv','sleep','all_on','all_off'].includes(s.scene))) {\n msg._semantic_command={schema:'domopi.semantic_command.v1',\n  entity_id:'lights.libreria.power',actor_policy:'dashboard_only_v2',actor:s.actor,origin:s.origin,\n  attribution:s.attribution,scene:s.scene,command_id:s.command_id+':libreria:false',\n  requested_state:false,stage:'source_selected',observed_at_ms:Date.now(),\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1000,
+    "y": 800,
+    "wires": [
+      [
+        "375cd5f5.f38faa"
+      ]
+    ]
+  },
+  {
+    "id": "68a6b75602c94b70",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin da2e1f45.33e288",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 800,
+    "y": 760,
+    "wires": [
+      [
+        "887d9ca0.763ad",
+        "9c52de7b.1f7ac8"
+      ]
+    ]
+  },
+  {
+    "id": "5a2df3431344626e",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin 7a84beaa.30de78",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 840,
+    "wires": [
+      [
+        "7cb25150.0bde78",
+        "a251278a.30f7c"
+      ]
+    ]
+  },
+  {
+    "id": "0fb3ec08d42cd6c5",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin d17c748ec892c494",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 830,
+    "y": 280,
+    "wires": [
+      [
+        "dbe9efe6cb7e4b41"
+      ]
+    ]
+  },
+  {
+    "id": "65b0413fe4b0543a",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin b60e2fe7.7ab5d",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 640,
+    "wires": [
+      [
+        "46afa2e3.5946f4",
+        "8e300a92.ca8158"
+      ]
+    ]
+  },
+  {
+    "id": "191cf1882950ef95",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin cd1ccb1e.905148",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 600,
+    "wires": [
+      [
+        "5e451e.37d9f2e4",
+        "a3e508a8.9c9528"
+      ]
+    ]
+  },
+  {
+    "id": "c91ca5e5342350ed",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin a0b2b287.eaf528",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 480,
+    "wires": [
+      [
+        "cde68aa1.4a5fc"
+      ]
+    ]
+  },
+  {
+    "id": "428c3fc03c8379f5",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin c93d56eb.b0f16",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 840,
+    "y": 440,
+    "wires": [
+      [
+        "9101bd1e.39a53"
+      ]
+    ]
+  },
+  {
+    "id": "221356214910920d",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin 2f7737f3.e2ff58",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 830,
+    "y": 360,
+    "wires": [
+      [
+        "e051d71a.90b038"
+      ]
+    ]
+  },
+  {
+    "id": "1c1e77f9d00f389d",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin f2e1ae60.c1ef28",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 560,
+    "y": 1260,
+    "wires": [
+      [
+        "1062aaae.8caf0d"
+      ]
+    ]
+  },
+  {
+    "id": "d64b272b6dc566ec",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin e8580997.ad8b08",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 1160,
+    "wires": [
+      [
+        "baecbf6c.a4a0e"
+      ]
+    ]
+  },
+  {
+    "id": "a44a77c095332bcb",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin cae7c402d00b5af1",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 560,
+    "y": 1820,
+    "wires": [
+      [
+        "44dc44d6c042a89e"
+      ]
+    ]
+  },
+  {
+    "id": "24c4ac4bd3b07512",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin 34e25134.04530e",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 1520,
+    "wires": [
+      [
+        "9aa239a5.ce7ba"
+      ]
+    ]
+  },
+  {
+    "id": "41f7e9758c7100d3",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin fda64996.64402",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 580,
+    "y": 1600,
+    "wires": [
+      [
+        "6ae29f46.d2b5a8"
+      ]
+    ]
+  },
+  {
+    "id": "db9711de4db00831",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin 886af877.7a612",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 480,
+    "wires": [
+      [
+        "1b6123d556876811"
+      ]
+    ]
+  },
+  {
+    "id": "75bdee415e5f1491",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin f83d163a.c794c",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 520,
+    "wires": [
+      [
+        "803355bf7a6700dd"
+      ]
+    ]
+  },
+  {
+    "id": "12377cafa4c9ae63",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin 951aa08f.5ccf38",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 400,
+    "wires": [
+      [
+        "a9deac2e6422ccb0"
+      ]
+    ]
+  },
+  {
+    "id": "868c14c3601a3400",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 976625b3.d8ed6",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 940,
+    "y": 420,
+    "wires": [
+      [
+        "39b279ab.389a96"
+      ]
+    ]
+  },
+  {
+    "id": "3f991ed536ca0cbe",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin d9cf1037.11562",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 970,
+    "y": 540,
+    "wires": [
+      [
+        "39b279ab.389a96"
+      ]
+    ]
+  },
+  {
+    "id": "1aa077a1f958b0c0",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 562feb36.e6289c",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 720,
+    "y": 420,
+    "wires": [
+      [
+        "8dcfcfe5.990fd8"
+      ]
+    ]
+  },
+  {
+    "id": "0a1204d4747d1b1a",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 80e44a93.689f1",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 730,
+    "y": 540,
+    "wires": [
+      [
+        "8dcfcfe5.990fd8"
+      ]
+    ]
+  },
+  {
+    "id": "3e9a07782b695483",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 8fecb2d0.f05288",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1340,
+    "y": 720,
+    "wires": [
+      [
+        "5f9ae3f3.7946d4"
+      ]
+    ]
+  },
+  {
+    "id": "fe7de823521c92b2",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin aa142b2c.36921",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor_policy:'dashboard_only_v2',actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1710,
+    "y": 720,
+    "wires": [
+      [
+        "5f9ae3f3.7946d4"
+      ]
+    ]
+  },
+  {
+    "id": "86c51f2e8c14009c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.living.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.living.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.living.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "11c056bd.ce92c9"
+      ]
+    ]
+  },
+  {
+    "id": "dc08e5025ecf19dd",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.living.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.living.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.living.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "cb412a79.1d2ff"
+      ]
+    ]
+  },
+  {
+    "id": "4b4f9957ddfa73ed",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.tv.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.tv.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.tv.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "4f3d0b05.4a90dc"
+      ]
+    ]
+  },
+  {
+    "id": "b84e1314fb89a406",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.tv.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.tv.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.tv.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "7983c8a2.9ff7b8"
+      ]
+    ]
+  },
+  {
+    "id": "c0360014fe823388",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.reading.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.reading.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.reading.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "00a926dcd53cc068"
+      ]
+    ]
+  },
+  {
+    "id": "6cccab6bcad8b343",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.reading.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.reading.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.reading.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "2ef73b3e9ebd0550"
+      ]
+    ]
+  },
+  {
+    "id": "e73e747775696999",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.deck.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.deck.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.deck.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "81c3c978.57ef2"
+      ]
+    ]
+  },
+  {
+    "id": "db0f3dffcd4b6f39",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.deck.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.deck.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.deck.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "9358b53b.2ed9b8"
+      ]
+    ]
+  },
+  {
+    "id": "117278a0fe4e4c16",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.water.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.water.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.water.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "3f2b8514.11af32"
+      ]
+    ]
+  },
+  {
+    "id": "970bcfaaa45a984f",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.water.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.water.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.water.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "19fe9f8b.60f83"
+      ]
+    ]
+  },
+  {
+    "id": "1b6123d556876811",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light evidence lights.laundry.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.laundry.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.laundry.power:'+String(msg.payload === 'on'),requested_state:msg.payload === 'on',\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nconst c=msg._semantic_command;\nlet evidence=null;\nif (c && ['on','off'].includes(msg.payload)) {\n const e={...c,stage:'publisher_input',observed_at_ms:Date.now(),evidence:'before_mqtt_out',execution_confirmed:false,physical_confirmation:false};\n evidence={topic:'zara/interface/semantic/v1/publisher_inputs/'+c.entity_id+'/stat',payload:JSON.stringify(e),qos:1,retain:true};\n}\ndelete msg._semantic_command;\nreturn [msg,evidence];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "a4999728.3f7868"
+      ],
+      [
+        "aecb6db3a8e87049"
+      ]
+    ]
+  },
+  {
+    "id": "803355bf7a6700dd",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light evidence lights.service_entrance.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.service_entrance.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.service_entrance.power:'+String(msg.payload === 'on'),requested_state:msg.payload === 'on',\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nconst c=msg._semantic_command;\nlet evidence=null;\nif (c && ['on','off'].includes(msg.payload)) {\n const e={...c,stage:'publisher_input',observed_at_ms:Date.now(),evidence:'before_mqtt_out',execution_confirmed:false,physical_confirmation:false};\n evidence={topic:'zara/interface/semantic/v1/publisher_inputs/'+c.entity_id+'/stat',payload:JSON.stringify(e),qos:1,retain:true};\n}\ndelete msg._semantic_command;\nreturn [msg,evidence];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "140c8f41.289a81"
+      ],
+      [
+        "aecb6db3a8e87049"
+      ]
+    ]
+  },
+  {
+    "id": "a9deac2e6422ccb0",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light evidence lights.porch_entrance.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.porch_entrance.power',\n  actor_policy:'dashboard_only_v2',actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.porch_entrance.power:'+String(msg.payload === 'on'),requested_state:msg.payload === 'on',\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nconst c=msg._semantic_command;\nlet evidence=null;\nif (c && ['on','off'].includes(msg.payload)) {\n const e={...c,stage:'publisher_input',observed_at_ms:Date.now(),evidence:'before_mqtt_out',execution_confirmed:false,physical_confirmation:false};\n evidence={topic:'zara/interface/semantic/v1/publisher_inputs/'+c.entity_id+'/stat',payload:JSON.stringify(e),qos:1,retain:true};\n}\ndelete msg._semantic_command;\nreturn [msg,evidence];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "dd2082bb.de78e8"
+      ],
+      [
+        "aecb6db3a8e87049"
+      ]
+    ]
+  },
+  {
+    "id": "41bab9be.81c0e8",
+    "type": "schedex",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "passthroughunhandled": false,
+    "suspended": false,
+    "lat": "45.970839",
+    "lon": "12.673036",
+    "ontime": "sunset",
+    "ontopic": "auto",
+    "onpayload": "on",
+    "onoffset": 0,
+    "onrandomoffset": 0,
+    "offtime": "23:00",
+    "offtopic": "auto",
+    "offpayload": "off",
+    "offoffset": 0,
+    "offrandomoffset": 0,
+    "mon": true,
+    "tue": true,
+    "wed": true,
+    "thu": true,
+    "fri": true,
+    "sat": true,
+    "sun": true,
+    "x": 100,
+    "y": 260,
+    "wires": [
+      [
+        "71b06098d86a1252"
+      ]
+    ]
+  },
+  {
+    "id": "71b06098d86a1252",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Schedex actor policy",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'automazione',actor_policy:'dashboard_only_v2',\n  origin:'schedex',attribution:'source_edge',command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 270,
+    "y": 310,
+    "wires": [
+      [
+        "daffc993.72e418"
+      ]
+    ]
+  }
+]

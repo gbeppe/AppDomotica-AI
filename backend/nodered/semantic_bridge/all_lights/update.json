@@ -1,0 +1,2027 @@
+[
+  {
+    "id": "da2e1f45.33e288",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Sala",
+    "group": "e9c5dc64.9d6d28",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 650,
+    "y": 700,
+    "wires": [
+      [
+        "68a6b75602c94b70"
+      ]
+    ]
+  },
+  {
+    "id": "7a84beaa.30de78",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Televisione",
+    "group": "e9c5dc64.9d6d28",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 670,
+    "y": 780,
+    "wires": [
+      [
+        "5a2df3431344626e"
+      ]
+    ]
+  },
+  {
+    "id": "d17c748ec892c494",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Tavolino lettura",
+    "tooltip": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 5,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "topicType": "str",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "animate": true,
+    "className": "",
+    "x": 680,
+    "y": 220,
+    "wires": [
+      [
+        "0fb3ec08d42cd6c5"
+      ]
+    ]
+  },
+  {
+    "id": "b60e2fe7.7ab5d",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Luci Pedana",
+    "group": "2dd97f9f.5dd9e8",
+    "order": 8,
+    "width": "0",
+    "height": "0",
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 670,
+    "y": 580,
+    "wires": [
+      [
+        "65b0413fe4b0543a"
+      ]
+    ]
+  },
+  {
+    "id": "cd1ccb1e.905148",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Luci Piscina",
+    "group": "2dd97f9f.5dd9e8",
+    "order": 8,
+    "width": "0",
+    "height": "0",
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 670,
+    "y": 540,
+    "wires": [
+      [
+        "191cf1882950ef95"
+      ]
+    ]
+  },
+  {
+    "id": "a0b2b287.eaf528",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Lavanderia",
+    "tooltip": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 6,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 670,
+    "y": 420,
+    "wires": [
+      [
+        "c91ca5e5342350ed"
+      ]
+    ]
+  },
+  {
+    "id": "c93d56eb.b0f16",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Ingresso Servizio",
+    "tooltip": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 8,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 690,
+    "y": 380,
+    "wires": [
+      [
+        "428c3fc03c8379f5"
+      ]
+    ]
+  },
+  {
+    "id": "2f7737f3.e2ff58",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Portico Ingresso",
+    "tooltip": "",
+    "group": "e9c5dc64.9d6d28",
+    "order": 7,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 680,
+    "y": 300,
+    "wires": [
+      [
+        "221356214910920d"
+      ]
+    ]
+  },
+  {
+    "id": "f2e1ae60.c1ef28",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luci mensola",
+    "topic": "",
+    "x": 410,
+    "y": 1200,
+    "wires": [
+      [
+        "1c1e77f9d00f389d"
+      ]
+    ]
+  },
+  {
+    "id": "e8580997.ad8b08",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luce piantana",
+    "topic": "",
+    "x": 420,
+    "y": 1100,
+    "wires": [
+      [
+        "d64b272b6dc566ec"
+      ]
+    ]
+  },
+  {
+    "id": "cae7c402d00b5af1",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luce lettura",
+    "topic": "",
+    "x": 410,
+    "y": 1760,
+    "wires": [
+      [
+        "a44a77c095332bcb"
+      ]
+    ]
+  },
+  {
+    "id": "34e25134.04530e",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luci pedana della piscina",
+    "topic": "",
+    "x": 450,
+    "y": 1460,
+    "wires": [
+      [
+        "24c4ac4bd3b07512"
+      ]
+    ]
+  },
+  {
+    "id": "fda64996.64402",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luce acqua piscina",
+    "topic": "",
+    "x": 430,
+    "y": 1540,
+    "wires": [
+      [
+        "41f7e9758c7100d3"
+      ]
+    ]
+  },
+  {
+    "id": "886af877.7a612",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luci lavanderia",
+    "topic": "",
+    "x": 420,
+    "y": 420,
+    "wires": [
+      [
+        "db9711de4db00831"
+      ]
+    ]
+  },
+  {
+    "id": "f83d163a.c794c",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luci ingresso servizio",
+    "topic": "",
+    "x": 440,
+    "y": 460,
+    "wires": [
+      [
+        "75bdee415e5f1491"
+      ]
+    ]
+  },
+  {
+    "id": "951aa08f.5ccf38",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "portico ingresso",
+    "topic": "",
+    "x": 420,
+    "y": 340,
+    "wires": [
+      [
+        "12377cafa4c9ae63"
+      ]
+    ]
+  },
+  {
+    "id": "976625b3.d8ed6",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "on",
+    "func": "var isNight = flow.get(\"isNight\");\n\nif (isNight == \"false\") return null;\n\nmsg.payload = \"on\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 790,
+    "y": 360,
+    "wires": [
+      [
+        "868c14c3601a3400",
+        "3cc59b20.2d5a64"
+      ]
+    ]
+  },
+  {
+    "id": "d9cf1037.11562",
+    "type": "stoptimer",
+    "z": "1a0fa5bb.deee82",
+    "duration": "10",
+    "units": "Minute",
+    "payloadtype": "num",
+    "payloadval": "0",
+    "name": "",
+    "x": 820,
+    "y": 480,
+    "wires": [
+      [
+        "3f991ed536ca0cbe"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "562feb36.e6289c",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "on",
+    "func": "var isNight = flow.get(\"isNight\");\n\nif (isNight == \"false\") return null;\n\nmsg.payload = \"on\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 570,
+    "y": 360,
+    "wires": [
+      [
+        "1aa077a1f958b0c0",
+        "8c6e43f1.dc23a8"
+      ]
+    ]
+  },
+  {
+    "id": "80e44a93.689f1",
+    "type": "stoptimer",
+    "z": "1a0fa5bb.deee82",
+    "duration": "10",
+    "units": "Minute",
+    "payloadtype": "num",
+    "payloadval": "0",
+    "name": "",
+    "x": 580,
+    "y": 480,
+    "wires": [
+      [
+        "0a1204d4747d1b1a"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "8fecb2d0.f05288",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "on",
+    "func": "var isNight = flow.get(\"isNightOutdoor\");\n\nif (msg.topic == \"giardino cucina\") return null;\n\nif (isNight == \"false\") return null;\n\nmsg.payload = \"on\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1190,
+    "y": 660,
+    "wires": [
+      [
+        "3e9a07782b695483",
+        "8b3dc700.ceb808"
+      ]
+    ]
+  },
+  {
+    "id": "aa142b2c.36921",
+    "type": "stoptimer",
+    "z": "1a0fa5bb.deee82",
+    "duration": "2",
+    "units": "Minute",
+    "payloadtype": "num",
+    "payloadval": "0",
+    "name": "",
+    "x": 1560,
+    "y": 660,
+    "wires": [
+      [
+        "fe7de823521c92b2"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "ea8307d48995ca93",
+    "type": "function",
+    "z": "294638a5b3d82009",
+    "name": "function 17",
+    "func": "let topic = msg.topic;\nlet payload = String(msg.payload).toLowerCase();\nlet parts = topic.split('/');\nlet device = parts[parts.length - 1];\n\n// 1. Gestione Anti-Loop (RBE in memoria per singolo topic)\nlet lastStates = context.get(\"lastStates\") || {};\nif (lastStates[topic] === payload) {\n    return null; // Scarta il messaggio se lo stato non è cambiato, evitando loop infiniti\n}\nlastStates[topic] = payload;\ncontext.set(\"lastStates\", lastStates);\n\n// Validazione payload\nif (payload !== \"on\" && payload !== \"off\") {\n    return null;\n}\n\n// 23 output slots (0-22).\n// Output 0 is intentionally left without downstream MQTT wiring.\n// Remaining outputs route the supported lights, pool devices and gates.\nlet outputs = new Array(24).fill(null);\n\n// Slot 0: Messaggio di Eco MQTT (da collegare al nodo mqtt out per l'app/router)\noutputs[0] = {\n    topic: topic,\n    payload: payload,\n    retain: true\n};\n\n// Tabella di associazione tra dispositivo/stato e numero di uscita del nodo function\nlet routingTable = {\n    \"shelflamp\":    { on: 1,  off: 2  },\n    \"livinglamp\":   { on: 3,  off: 4  },\n    \"tvlamp\":       { on: 5,  off: 6  },\n    \"readinglight\": { on: 7,  off: 8  },\n    \"prolunga\":     { on: 9,  off: 10 },\n    \"poolpump\":     { on: 11, off: 12 },\n    \"poolskimmer\":  { on: 13, off: 14 },\n    \"poolfloor\":    { on: 15, off: 16 },\n    \"poollight\":    { on: 17, off: 18 },\n    \"gate_1\":       { on: 19, off: 20 },\n    \"gate_2\":       { on: 21, off: 22 }\n};\n\n// 3. Instradamento dinamico verso l'uscita corretta\nif (routingTable[device] && routingTable[device][payload] !== undefined) {\n    let targetIndex = routingTable[device][payload];\n    // This event attests dispatch selection after the existing RBE, not IR success.\n    const c = msg._semantic_command;\n    if (c && c.schema === 'domopi.semantic_command.v1' &&\n        c.actor === 'utente' && c.stage === 'routed' &&\n        c.routed_topic === topic && c.requested_state === (payload === 'on') &&\n        typeof c.command_id === 'string') {\n        const event = {...c, schema:'domopi.semantic_event.v1',\n            event_id:c.command_id + ':dispatch', kind:'user_command_dispatched',\n            stage:'dispatched', dispatched_at_ms:Date.now(),\n            execution_confirmed:false, physical_confirmation:false};\n        outputs[23] = [\n            {topic:'zara/interface/semantic/v1/dispatched_commands/' + c.entity_id + '/stat',\n             payload:JSON.stringify({...event,schema:'domopi.semantic_command.v1'}),qos:1,retain:true},\n            {topic:'zara/interface/semantic/v1/events',payload:JSON.stringify(event),qos:1,retain:false}\n        ];\n    }\n    outputs[targetIndex] = {\n        topic: topic,\n        payload: payload\n    };\n}\n\n// Carry provenance only along the verified TV path.\nif (['tvlamp','shelflamp','readinglight','livinglamp'].includes(device) && outputs[23]) {\n    outputs[routingTable[device][payload]]._semantic_command = JSON.parse(outputs[23][0].payload);\n}\nreturn outputs;",
+    "outputs": 24,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 930,
+    "y": 1020,
+    "wires": [
+      [],
+      [
+        "19ec2476b342256a"
+      ],
+      [
+        "d60d7cbb59f36b6b"
+      ],
+      [
+        "5ec6633c7d28e0fb"
+      ],
+      [
+        "92b240c25bb61122"
+      ],
+      [
+        "c540d6665826bbef"
+      ],
+      [
+        "262baa42a0be0f5c"
+      ],
+      [
+        "d71738bb66a3df16"
+      ],
+      [
+        "d130c9ddbbe74f0b"
+      ],
+      [
+        "7e27ad1c8eed1677"
+      ],
+      [
+        "ed732edbd05e1f0b"
+      ],
+      [
+        "2fcd9d9472d6f972"
+      ],
+      [
+        "f1e5e77402b445a2"
+      ],
+      [
+        "7b9bda3a3008397d"
+      ],
+      [
+        "37f01e8b6bf3edd8"
+      ],
+      [
+        "f6e684651f4abcbc"
+      ],
+      [
+        "71f22e6a84dd13a2"
+      ],
+      [
+        "2f62b901ec997989"
+      ],
+      [
+        "f3c68444ac6a9a3c"
+      ],
+      [
+        "3ea9b4457cb5bf47"
+      ],
+      [],
+      [
+        "caa5a3dbe4598ede"
+      ],
+      [],
+      [
+        "7842d40acbe95392"
+      ]
+    ]
+  },
+  {
+    "id": "ea85ccc3.c46418",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "1",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "outputs": 1,
+    "x": 820,
+    "y": 80,
+    "wires": [
+      [
+        "86c51f2e8c14009c",
+        "261bb1f3.8a59b6"
+      ]
+    ]
+  },
+  {
+    "id": "4460c3ad.2d47a4",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "living lamp on",
+    "links": [
+      "7d8f82b3.2396b4",
+      "5ec6633c7d28e0fb"
+    ],
+    "x": 995,
+    "y": 100,
+    "wires": [
+      [
+        "86c51f2e8c14009c"
+      ]
+    ]
+  },
+  {
+    "id": "66ba94b1.bf34fc",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "1",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "outputs": 1,
+    "x": 840,
+    "y": 620,
+    "wires": [
+      [
+        "dc08e5025ecf19dd"
+      ]
+    ]
+  },
+  {
+    "id": "4189ab8c.328374",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "living lamp off",
+    "links": [
+      "a06b3fb.f1a0c4",
+      "92b240c25bb61122"
+    ],
+    "x": 1015,
+    "y": 600,
+    "wires": [
+      [
+        "dc08e5025ecf19dd"
+      ]
+    ]
+  },
+  {
+    "id": "dc22282bb54f87cd",
+    "type": "inject",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "off",
+    "payloadType": "str",
+    "x": 310,
+    "y": 740,
+    "wires": [
+      [
+        "dc08e5025ecf19dd"
+      ]
+    ]
+  },
+  {
+    "id": "261bb1f3.8a59b6",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "10",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 820,
+    "y": 120,
+    "wires": [
+      [
+        "4b4f9957ddfa73ed",
+        "be5662f.5dca22"
+      ]
+    ]
+  },
+  {
+    "id": "11551504.b87bab",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "tv lamp on",
+    "links": [
+      "84e4a1d7.b3af6",
+      "c540d6665826bbef"
+    ],
+    "x": 995,
+    "y": 140,
+    "wires": [
+      [
+        "4b4f9957ddfa73ed"
+      ]
+    ]
+  },
+  {
+    "id": "2f066efc.e69392",
+    "type": "switch",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "property": "payload",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "on",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "off",
+        "vt": "str"
+      }
+    ],
+    "checkall": "false",
+    "repair": false,
+    "outputs": 2,
+    "x": 1050,
+    "y": 420,
+    "wires": [
+      [
+        "4b4f9957ddfa73ed"
+      ],
+      [
+        "b84e1314fb89a406"
+      ]
+    ]
+  },
+  {
+    "id": "0b12e8bedcff5734",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "5",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 820,
+    "y": 340,
+    "wires": [
+      [
+        "4b4f9957ddfa73ed"
+      ]
+    ]
+  },
+  {
+    "id": "404aa677.115dd",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "10",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "outputs": 1,
+    "x": 840,
+    "y": 660,
+    "wires": [
+      [
+        "b84e1314fb89a406"
+      ]
+    ]
+  },
+  {
+    "id": "578367ab.af9a6",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "tv lamp off",
+    "links": [
+      "16596a92.41d8f5",
+      "262baa42a0be0f5c"
+    ],
+    "x": 1015,
+    "y": 640,
+    "wires": [
+      [
+        "b84e1314fb89a406"
+      ]
+    ]
+  },
+  {
+    "id": "ab3ec5bea4e7e4f3",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "35",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 860,
+    "y": 860,
+    "wires": [
+      [
+        "b84e1314fb89a406"
+      ]
+    ]
+  },
+  {
+    "id": "870c52e3dd7d4ac2",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "5",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 820,
+    "y": 300,
+    "wires": [
+      [
+        "c0360014fe823388",
+        "0b12e8bedcff5734"
+      ]
+    ]
+  },
+  {
+    "id": "b13704ef6cef7119",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "reading lamp on",
+    "links": [
+      "9301f5f4171495ba",
+      "d71738bb66a3df16"
+    ],
+    "x": 995,
+    "y": 340,
+    "wires": [
+      [
+        "c0360014fe823388"
+      ]
+    ]
+  },
+  {
+    "id": "8e0013a5faa6e734",
+    "type": "inject",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 1240,
+    "y": 460,
+    "wires": [
+      [
+        "c0360014fe823388"
+      ]
+    ]
+  },
+  {
+    "id": "7307a3c4a3eccf9f",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "30",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 840,
+    "y": 820,
+    "wires": [
+      [
+        "6cccab6bcad8b343"
+      ]
+    ]
+  },
+  {
+    "id": "27bef428d805fa74",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "reading lamp off",
+    "links": [
+      "c3bac883150bcdc6",
+      "d130c9ddbbe74f0b"
+    ],
+    "x": 1015,
+    "y": 880,
+    "wires": [
+      [
+        "6cccab6bcad8b343"
+      ]
+    ]
+  },
+  {
+    "id": "6492e091.1cb7d",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "holiday or luciPiscinaAUTO ?",
+    "func": "var holiday         = global.get(\"holiday\", \"file\")||\"false\";\nvar luciPiscinaAUTO = global.get(\"luciPiscinaAUTO\", \"file\")||\"false\";\n\nif ((msg.topic == \"auto\" || holiday == \"false\") && luciPiscinaAUTO == \"true\")\n    return msg;\nif (msg.topic != \"auto\")\n    return msg;\n\n/*\nif (holiday == \"false\" && luciPiscinaAUTO == \"true\")\n    return msg;\nelse\n*/\nreturn null;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1180,
+    "y": 200,
+    "wires": [
+      [
+        "e73e747775696999"
+      ]
+    ]
+  },
+  {
+    "id": "370ff900.546b58",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "20",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "outputs": 1,
+    "x": 840,
+    "y": 740,
+    "wires": [
+      [
+        "db0f3dffcd4b6f39"
+      ]
+    ]
+  },
+  {
+    "id": "578e5c93.b0ee7c",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "pool floor off",
+    "links": [
+      "d5ca50f4.d25d2",
+      "71f22e6a84dd13a2"
+    ],
+    "x": 1015,
+    "y": 720,
+    "wires": [
+      [
+        "db0f3dffcd4b6f39"
+      ]
+    ]
+  },
+  {
+    "id": "8ad856af.4a0ea8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "holiday or luciPiscinaAUTO ?",
+    "func": "var holiday = global.get(\"holiday\",\"file\") || \"false\";\nvar luciPiscinaAUTO = global.get(\"luciPiscinaAUTO\", \"file\") || \"false\";\n\nif ((msg.topic == \"auto\" || holiday == \"false\") && luciPiscinaAUTO == \"true\")\n    return msg;\nif (msg.topic != \"auto\")\n    return msg;\n\n/*\nif (holiday == \"false\" && luciPiscinaAUTO == \"true\")\n    return msg;\nelse\n*/\nreturn null;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1180,
+    "y": 240,
+    "wires": [
+      [
+        "117278a0fe4e4c16"
+      ]
+    ]
+  },
+  {
+    "id": "602f5769.9cbe88",
+    "type": "delay",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "25",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "outputs": 1,
+    "x": 840,
+    "y": 780,
+    "wires": [
+      [
+        "970bcfaaa45a984f"
+      ]
+    ]
+  },
+  {
+    "id": "d3497d83.decaf",
+    "type": "link in",
+    "z": "a29bd73d.0c987",
+    "name": "pool light off",
+    "links": [
+      "142ec50d.8f5fe3",
+      "f3c68444ac6a9a3c"
+    ],
+    "x": 1015,
+    "y": 940,
+    "wires": [
+      [
+        "970bcfaaa45a984f"
+      ]
+    ]
+  },
+  {
+    "id": "9fb74d0e.eaccd8",
+    "type": "link in",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luce lavanderia",
+    "links": [
+      "cde68aa1.4a5fc",
+      "cc635596.3cd72",
+      "39b279ab.389a96"
+    ],
+    "x": 995,
+    "y": 440,
+    "wires": [
+      [
+        "1b6123d556876811"
+      ]
+    ]
+  },
+  {
+    "id": "fa6ca68b.fc2a1",
+    "type": "link in",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luce ingresso servizio",
+    "links": [
+      "8dcfcfe5.990fd8",
+      "9101bd1e.39a53",
+      "cc635596.3cd72"
+    ],
+    "x": 995,
+    "y": 480,
+    "wires": [
+      [
+        "803355bf7a6700dd"
+      ]
+    ]
+  },
+  {
+    "id": "80597807.dad32",
+    "type": "link in",
+    "z": "1f6dc345.d2b8c5",
+    "name": "portico ingresso",
+    "links": [
+      "5f9ae3f3.7946d4",
+      "cc635596.3cd72",
+      "e051d71a.90b038"
+    ],
+    "x": 995,
+    "y": 360,
+    "wires": [
+      [
+        "a9deac2e6422ccb0"
+      ]
+    ]
+  },
+  {
+    "id": "bccbd37f.6e4cd8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.living.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1550,
+    "y": 60,
+    "wires": [
+      [
+        "4c3db21d.73e22c"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "6197926c.612a8c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.living.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 620,
+    "wires": [
+      [
+        "4c3db21d.73e22c"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "bfa134b2.bcd84",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.deck.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 200,
+    "wires": [
+      [
+        "f4b93906.78c038"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "6586d147.437dc",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.deck.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 740,
+    "wires": [
+      [
+        "f4b93906.78c038"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "55470375.8b265c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.water.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 240,
+    "wires": [
+      [
+        "57163eb6.11361"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "1ec04f1a.79db19",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.water.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 780,
+    "wires": [
+      [
+        "57163eb6.11361"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "8f921a5e.1766f",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "/*\nmsg.payload = \"on\";\nreturn msg;\n*/\n\nconst c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.tv.power' && c.actor === 'utente' &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];",
+    "outputs": 2,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1570,
+    "y": 120,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "ed8c7e3e.e2c32",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "/*\nmsg.payload = \"off\";\nreturn msg;\n*/\n\nconst c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.tv.power' && c.actor === 'utente' &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];",
+    "outputs": 2,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1590,
+    "y": 660,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "a082b270d39049dc",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.reading.power' && c.actor === 'utente' &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1580,
+    "y": 340,
+    "wires": [
+      [
+        "2c53a89cb0d491bc",
+        "4f1a0aacf7040f60"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "1d425ade7f5a82ae",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.reading.power' && c.actor === 'utente' &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1580,
+    "y": 880,
+    "wires": [
+      [
+        "2c53a89cb0d491bc"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "68a6b75602c94b70",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin da2e1f45.33e288",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 800,
+    "y": 760,
+    "wires": [
+      [
+        "887d9ca0.763ad",
+        "9c52de7b.1f7ac8"
+      ]
+    ]
+  },
+  {
+    "id": "5a2df3431344626e",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin 7a84beaa.30de78",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 840,
+    "wires": [
+      [
+        "7cb25150.0bde78",
+        "a251278a.30f7c"
+      ]
+    ]
+  },
+  {
+    "id": "0fb3ec08d42cd6c5",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin d17c748ec892c494",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 830,
+    "y": 280,
+    "wires": [
+      [
+        "dbe9efe6cb7e4b41"
+      ]
+    ]
+  },
+  {
+    "id": "65b0413fe4b0543a",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin b60e2fe7.7ab5d",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 640,
+    "wires": [
+      [
+        "46afa2e3.5946f4",
+        "8e300a92.ca8158"
+      ]
+    ]
+  },
+  {
+    "id": "191cf1882950ef95",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin cd1ccb1e.905148",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 600,
+    "wires": [
+      [
+        "5e451e.37d9f2e4",
+        "a3e508a8.9c9528"
+      ]
+    ]
+  },
+  {
+    "id": "c91ca5e5342350ed",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin a0b2b287.eaf528",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 480,
+    "wires": [
+      [
+        "cde68aa1.4a5fc"
+      ]
+    ]
+  },
+  {
+    "id": "428c3fc03c8379f5",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin c93d56eb.b0f16",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 840,
+    "y": 440,
+    "wires": [
+      [
+        "9101bd1e.39a53"
+      ]
+    ]
+  },
+  {
+    "id": "221356214910920d",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Light origin 2f7737f3.e2ff58",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'nodered_dashboard',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 830,
+    "y": 360,
+    "wires": [
+      [
+        "e051d71a.90b038"
+      ]
+    ]
+  },
+  {
+    "id": "1c1e77f9d00f389d",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin f2e1ae60.c1ef28",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 560,
+    "y": 1260,
+    "wires": [
+      [
+        "1062aaae.8caf0d"
+      ]
+    ]
+  },
+  {
+    "id": "d64b272b6dc566ec",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin e8580997.ad8b08",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 1160,
+    "wires": [
+      [
+        "baecbf6c.a4a0e"
+      ]
+    ]
+  },
+  {
+    "id": "a44a77c095332bcb",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin cae7c402d00b5af1",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 560,
+    "y": 1820,
+    "wires": [
+      [
+        "44dc44d6c042a89e"
+      ]
+    ]
+  },
+  {
+    "id": "24c4ac4bd3b07512",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin 34e25134.04530e",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 1520,
+    "wires": [
+      [
+        "9aa239a5.ce7ba"
+      ]
+    ]
+  },
+  {
+    "id": "41f7e9758c7100d3",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin fda64996.64402",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 580,
+    "y": 1600,
+    "wires": [
+      [
+        "6ae29f46.d2b5a8"
+      ]
+    ]
+  },
+  {
+    "id": "db9711de4db00831",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin 886af877.7a612",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 480,
+    "wires": [
+      [
+        "1b6123d556876811"
+      ]
+    ]
+  },
+  {
+    "id": "75bdee415e5f1491",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin f83d163a.c794c",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 520,
+    "wires": [
+      [
+        "803355bf7a6700dd"
+      ]
+    ]
+  },
+  {
+    "id": "12377cafa4c9ae63",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light origin 951aa08f.5ccf38",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'utente',origin:'alexa',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 400,
+    "wires": [
+      [
+        "a9deac2e6422ccb0"
+      ]
+    ]
+  },
+  {
+    "id": "868c14c3601a3400",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 976625b3.d8ed6",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 940,
+    "y": 420,
+    "wires": [
+      [
+        "39b279ab.389a96"
+      ]
+    ]
+  },
+  {
+    "id": "3f991ed536ca0cbe",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin d9cf1037.11562",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 970,
+    "y": 540,
+    "wires": [
+      [
+        "39b279ab.389a96"
+      ]
+    ]
+  },
+  {
+    "id": "1aa077a1f958b0c0",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 562feb36.e6289c",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 720,
+    "y": 420,
+    "wires": [
+      [
+        "8dcfcfe5.990fd8"
+      ]
+    ]
+  },
+  {
+    "id": "0a1204d4747d1b1a",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 80e44a93.689f1",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 730,
+    "y": 540,
+    "wires": [
+      [
+        "8dcfcfe5.990fd8"
+      ]
+    ]
+  },
+  {
+    "id": "3e9a07782b695483",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin 8fecb2d0.f05288",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1340,
+    "y": 720,
+    "wires": [
+      [
+        "5f9ae3f3.7946d4"
+      ]
+    ]
+  },
+  {
+    "id": "fe7de823521c92b2",
+    "type": "function",
+    "z": "1a0fa5bb.deee82",
+    "name": "Light motion origin aa142b2c.36921",
+    "func": "delete msg._semantic_origin;\nif (['on','off'].includes(msg.payload)) {\n const seq=(context.get('seq')||0)+1;context.set('seq',seq);\n msg._semantic_origin={actor:'automazione',origin:'motion_rule',attribution:'source_edge',\n  command_id:node.id+':'+Date.now()+':'+seq};\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1710,
+    "y": 720,
+    "wires": [
+      [
+        "5f9ae3f3.7946d4"
+      ]
+    ]
+  },
+  {
+    "id": "86c51f2e8c14009c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.living.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.living.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.living.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "11c056bd.ce92c9"
+      ]
+    ]
+  },
+  {
+    "id": "dc08e5025ecf19dd",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.living.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.living.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.living.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "cb412a79.1d2ff"
+      ]
+    ]
+  },
+  {
+    "id": "4b4f9957ddfa73ed",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.tv.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.tv.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.tv.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "4f3d0b05.4a90dc"
+      ]
+    ]
+  },
+  {
+    "id": "b84e1314fb89a406",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.tv.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.tv.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.tv.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "7983c8a2.9ff7b8"
+      ]
+    ]
+  },
+  {
+    "id": "c0360014fe823388",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.reading.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.reading.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.reading.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "00a926dcd53cc068"
+      ]
+    ]
+  },
+  {
+    "id": "6cccab6bcad8b343",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence lights.reading.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.reading.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.reading.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "2ef73b3e9ebd0550"
+      ]
+    ]
+  },
+  {
+    "id": "e73e747775696999",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.deck.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.deck.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.deck.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "81c3c978.57ef2"
+      ]
+    ]
+  },
+  {
+    "id": "db0f3dffcd4b6f39",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.deck.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.deck.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.deck.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "9358b53b.2ed9b8"
+      ]
+    ]
+  },
+  {
+    "id": "117278a0fe4e4c16",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.water.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.water.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.water.power:'+String(true),requested_state:true,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "3f2b8514.11af32"
+      ]
+    ]
+  },
+  {
+    "id": "970bcfaaa45a984f",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Light evidence pool.water.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'pool.water.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':pool.water.power:'+String(false),requested_state:false,\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "19fe9f8b.60f83"
+      ]
+    ]
+  },
+  {
+    "id": "aecb6db3a8e87049",
+    "type": "mqtt out",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light semantic evidence",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "broker": "3ed6302a.5af928",
+    "x": 1500,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "1b6123d556876811",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light evidence lights.laundry.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.laundry.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.laundry.power:'+String(msg.payload === 'on'),requested_state:msg.payload === 'on',\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nconst c=msg._semantic_command;\nlet evidence=null;\nif (c && ['on','off'].includes(msg.payload)) {\n const e={...c,stage:'publisher_input',observed_at_ms:Date.now(),evidence:'before_mqtt_out',execution_confirmed:false,physical_confirmation:false};\n evidence={topic:'zara/interface/semantic/v1/publisher_inputs/'+c.entity_id+'/stat',payload:JSON.stringify(e),qos:1,retain:true};\n}\ndelete msg._semantic_command;\nreturn [msg,evidence];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "a4999728.3f7868"
+      ],
+      [
+        "aecb6db3a8e87049"
+      ]
+    ]
+  },
+  {
+    "id": "803355bf7a6700dd",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light evidence lights.service_entrance.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.service_entrance.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.service_entrance.power:'+String(msg.payload === 'on'),requested_state:msg.payload === 'on',\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nconst c=msg._semantic_command;\nlet evidence=null;\nif (c && ['on','off'].includes(msg.payload)) {\n const e={...c,stage:'publisher_input',observed_at_ms:Date.now(),evidence:'before_mqtt_out',execution_confirmed:false,physical_confirmation:false};\n evidence={topic:'zara/interface/semantic/v1/publisher_inputs/'+c.entity_id+'/stat',payload:JSON.stringify(e),qos:1,retain:true};\n}\ndelete msg._semantic_command;\nreturn [msg,evidence];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "140c8f41.289a81"
+      ],
+      [
+        "aecb6db3a8e87049"
+      ]
+    ]
+  },
+  {
+    "id": "a9deac2e6422ccb0",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Light evidence lights.porch_entrance.power",
+    "func": "const o=msg._semantic_scene || msg._semantic_origin;\nif (o && ['utente','automazione'].includes(o.actor) && typeof o.command_id==='string') {\n msg._semantic_command={schema:'domopi.semantic_command.v1',entity_id:'lights.porch_entrance.power',\n  actor:o.actor,origin:o.origin,scene:o.scene||null,attribution:o.attribution,\n  command_id:o.command_id+':lights.porch_entrance.power:'+String(msg.payload === 'on'),requested_state:msg.payload === 'on',\n  stage:'source_selected',observed_at_ms:Date.now(),execution_confirmed:false,\n  physical_confirmation:false,publisher_authenticated:false};\n}\ndelete msg._semantic_scene;\ndelete msg._semantic_origin;\n\nconst c=msg._semantic_command;\nlet evidence=null;\nif (c && ['on','off'].includes(msg.payload)) {\n const e={...c,stage:'publisher_input',observed_at_ms:Date.now(),evidence:'before_mqtt_out',execution_confirmed:false,physical_confirmation:false};\n evidence={topic:'zara/interface/semantic/v1/publisher_inputs/'+c.entity_id+'/stat',payload:JSON.stringify(e),qos:1,retain:true};\n}\ndelete msg._semantic_command;\nreturn [msg,evidence];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1100,
+    "y": 200,
+    "wires": [
+      [
+        "dd2082bb.de78e8"
+      ],
+      [
+        "aecb6db3a8e87049"
+      ]
+    ]
+  },
+  {
+    "id": "9b33d00568c535e2",
+    "type": "mqtt out",
+    "z": "a29bd73d.0c987",
+    "name": "Light semantic evidence",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "broker": "3ed6302a.5af928",
+    "x": 1500,
+    "y": 200,
+    "wires": []
+  }
+]

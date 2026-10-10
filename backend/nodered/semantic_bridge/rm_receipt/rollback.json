@@ -1,0 +1,117 @@
+[
+  {
+    "id": "ea8307d48995ca93",
+    "type": "function",
+    "z": "294638a5b3d82009",
+    "name": "function 17",
+    "func": "let topic = msg.topic;\nlet payload = String(msg.payload).toLowerCase();\nlet parts = topic.split('/');\nlet device = parts[parts.length - 1];\n\n// 1. Gestione Anti-Loop (RBE in memoria per singolo topic)\nlet lastStates = context.get(\"lastStates\") || {};\nif (lastStates[topic] === payload) {\n    return null; // Scarta il messaggio se lo stato non è cambiato, evitando loop infiniti\n}\nlastStates[topic] = payload;\ncontext.set(\"lastStates\", lastStates);\n\n// Validazione payload\nif (payload !== \"on\" && payload !== \"off\") {\n    return null;\n}\n\n// 23 output slots (0-22).\n// Output 0 is intentionally left without downstream MQTT wiring.\n// Remaining outputs route the supported lights, pool devices and gates.\nlet outputs = new Array(24).fill(null);\n\n// Slot 0: Messaggio di Eco MQTT (da collegare al nodo mqtt out per l'app/router)\noutputs[0] = {\n    topic: topic,\n    payload: payload,\n    retain: true\n};\n\n// Tabella di associazione tra dispositivo/stato e numero di uscita del nodo function\nlet routingTable = {\n    \"shelflamp\":    { on: 1,  off: 2  },\n    \"livinglamp\":   { on: 3,  off: 4  },\n    \"tvlamp\":       { on: 5,  off: 6  },\n    \"readinglight\": { on: 7,  off: 8  },\n    \"prolunga\":     { on: 9,  off: 10 },\n    \"poolpump\":     { on: 11, off: 12 },\n    \"poolskimmer\":  { on: 13, off: 14 },\n    \"poolfloor\":    { on: 15, off: 16 },\n    \"poollight\":    { on: 17, off: 18 },\n    \"gate_1\":       { on: 19, off: 20 },\n    \"gate_2\":       { on: 21, off: 22 }\n};\n\n// 3. Instradamento dinamico verso l'uscita corretta\nif (routingTable[device] && routingTable[device][payload] !== undefined) {\n    let targetIndex = routingTable[device][payload];\n    // This event attests dispatch selection after the existing RBE, not IR success.\n    const c = msg._semantic_command;\n    if (c && c.schema === 'domopi.semantic_command.v1' &&\n        c.actor === 'utente' && c.stage === 'routed' &&\n        c.routed_topic === topic && c.requested_state === (payload === 'on') &&\n        typeof c.command_id === 'string') {\n        const event = {...c, schema:'domopi.semantic_event.v1',\n            event_id:c.command_id + ':dispatch', kind:'user_command_dispatched',\n            stage:'dispatched', dispatched_at_ms:Date.now(),\n            execution_confirmed:false, physical_confirmation:false};\n        outputs[23] = [\n            {topic:'zara/interface/semantic/v1/dispatched_commands/' + c.entity_id + '/stat',\n             payload:JSON.stringify({...event,schema:'domopi.semantic_command.v1'}),qos:1,retain:true},\n            {topic:'zara/interface/semantic/v1/events',payload:JSON.stringify(event),qos:1,retain:false}\n        ];\n    }\n    outputs[targetIndex] = {\n        topic: topic,\n        payload: payload\n    };\n}\n\nreturn outputs;",
+    "outputs": 24,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 930,
+    "y": 1020,
+    "wires": [
+      [],
+      [
+        "19ec2476b342256a"
+      ],
+      [
+        "d60d7cbb59f36b6b"
+      ],
+      [
+        "5ec6633c7d28e0fb"
+      ],
+      [
+        "92b240c25bb61122"
+      ],
+      [
+        "c540d6665826bbef"
+      ],
+      [
+        "262baa42a0be0f5c"
+      ],
+      [
+        "d71738bb66a3df16"
+      ],
+      [
+        "d130c9ddbbe74f0b"
+      ],
+      [
+        "7e27ad1c8eed1677"
+      ],
+      [
+        "ed732edbd05e1f0b"
+      ],
+      [
+        "2fcd9d9472d6f972"
+      ],
+      [
+        "f1e5e77402b445a2"
+      ],
+      [
+        "7b9bda3a3008397d"
+      ],
+      [
+        "37f01e8b6bf3edd8"
+      ],
+      [
+        "f6e684651f4abcbc"
+      ],
+      [
+        "71f22e6a84dd13a2"
+      ],
+      [
+        "2f62b901ec997989"
+      ],
+      [
+        "f3c68444ac6a9a3c"
+      ],
+      [
+        "3ea9b4457cb5bf47"
+      ],
+      [],
+      [
+        "caa5a3dbe4598ede"
+      ],
+      [],
+      [
+        "7842d40acbe95392"
+      ]
+    ]
+  },
+  {
+    "id": "8f921a5e.1766f",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"on\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 1570,
+    "y": 120,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ]
+    ]
+  },
+  {
+    "id": "ed8c7e3e.e2c32",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"off\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 1590,
+    "y": 660,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ]
+    ]
+  }
+]

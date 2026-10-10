@@ -1,0 +1,173 @@
+[
+  {
+    "id": "ad32e56b.84cfe",
+    "type": "ui_switch",
+    "z": "ab4429e1.433be8",
+    "name": "",
+    "label": "Libreria",
+    "group": "e9c5dc64.9d6d28",
+    "order": 3,
+    "width": 0,
+    "height": 0,
+    "passthru": false,
+    "decouple": "true",
+    "topic": "",
+    "style": "",
+    "onvalue": "on",
+    "onvalueType": "str",
+    "onicon": "fa-lightbulb-o fa-2x",
+    "oncolor": "#00FE19",
+    "offvalue": "off",
+    "offvalueType": "str",
+    "officon": "fa-power-off fa-2x",
+    "offcolor": "red",
+    "x": 660,
+    "y": 740,
+    "wires": [
+      [
+        "039f407b68e135a4",
+        "2f519325.fa6bbc"
+      ]
+    ]
+  },
+  {
+    "id": "039f407b68e135a4",
+    "type": "function",
+    "z": "ab4429e1.433be8",
+    "name": "Libreria origin nodered_dashboard",
+    "func": "// Only annotate this verified source edge. Never alter its payload or routing.\nconst valid = msg.payload === 'on' || msg.payload === 'off';\ndelete msg._semantic_command;\nif (valid) {\n const time = Date.now();\n const seq = (context.get('origin_seq') || 0) + 1;\n context.set('origin_seq', seq);\n msg._semantic_command = {\n  schema:'domopi.semantic_command.v1',entity_id:'lights.libreria.power',\n  command_id:node.id+':'+time+':'+seq,actor:'utente',origin:'nodered_dashboard',\n  attribution:'source_edge',stage:'source_selected',requested_state:msg.payload === 'on',\n  observed_at_ms:time,source_retained:msg.retain===true,\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false\n };\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 840,
+    "y": 810,
+    "wires": [
+      [
+        "c14c803c.86e27"
+      ]
+    ]
+  },
+  {
+    "id": "2e66d0dd.ac93d",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "luci libreria",
+    "topic": "",
+    "x": 410,
+    "y": 1000,
+    "wires": [
+      [
+        "0bbbea52bfe258b0"
+      ]
+    ]
+  },
+  {
+    "id": "0bbbea52bfe258b0",
+    "type": "function",
+    "z": "1f6dc345.d2b8c5",
+    "name": "Libreria origin alexa",
+    "func": "// Only annotate this verified source edge. Never alter its payload or routing.\nconst valid = msg.payload === 'on' || msg.payload === 'off';\ndelete msg._semantic_command;\nif (valid) {\n const time = Date.now();\n const seq = (context.get('origin_seq') || 0) + 1;\n context.set('origin_seq', seq);\n msg._semantic_command = {\n  schema:'domopi.semantic_command.v1',entity_id:'lights.libreria.power',\n  command_id:node.id+':'+time+':'+seq,actor:'utente',origin:'alexa',\n  attribution:'source_edge',stage:'source_selected',requested_state:msg.payload === 'on',\n  observed_at_ms:time,source_retained:msg.retain===true,\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false\n };\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 1070,
+    "wires": [
+      [
+        "9d7004c9.a67e28"
+      ]
+    ]
+  },
+  {
+    "id": "47b4e6deb69b994a",
+    "type": "switch",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "property": "payload",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "true",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "false",
+        "vt": "str"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 2,
+    "x": 510,
+    "y": 3720,
+    "wires": [
+      [
+        "63e84bba3b815b17"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "63e84bba3b815b17",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "Libreria origin lg_tv_rule",
+    "func": "// Only annotate this verified source edge. Never alter its payload or routing.\nconst valid = msg.payload === 'true';\ndelete msg._semantic_command;\nif (valid) {\n const time = Date.now();\n const seq = (context.get('origin_seq') || 0) + 1;\n context.set('origin_seq', seq);\n msg._semantic_command = {\n  schema:'domopi.semantic_command.v1',entity_id:'lights.libreria.power',\n  command_id:node.id+':'+time+':'+seq,actor:'automazione',origin:'lg_tv_rule',\n  attribution:'source_edge',stage:'source_selected',requested_state:false,\n  observed_at_ms:time,source_retained:msg.retain===true,\n  execution_confirmed:false,physical_confirmation:false,publisher_authenticated:false\n };\n}\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 690,
+    "y": 3790,
+    "wires": [
+      [
+        "5bd87c6ad192e8a0"
+      ]
+    ]
+  },
+  {
+    "id": "f7bc8ba8.270b6",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 160,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "18386049.c296a8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor:c.actor,origin:c.origin,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 700,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  }
+]

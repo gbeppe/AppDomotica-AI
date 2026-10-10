@@ -1,0 +1,15 @@
+[
+  {
+    "id": "aa764cb4ce617210",
+    "type": "mqtt out",
+    "z": "a29bd73d.0c987",
+    "name": "TV semantic receipt only",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "broker": "3ed6302a.5af928",
+    "x": 1100,
+    "y": 1700,
+    "wires": []
+  }
+]

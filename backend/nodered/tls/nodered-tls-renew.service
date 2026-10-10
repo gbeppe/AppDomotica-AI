@@ -1,0 +1,7 @@
+[Unit]
+Description=Renew Node-RED Tailscale TLS certificate
+After=tailscaled.service network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/nodered-tls-renew
+UMask=0027
