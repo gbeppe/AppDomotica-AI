@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Box
 import com.domopi.app.data.AppAlignmentStatus
 import com.domopi.app.data.BuildAlignment
 import com.domopi.app.data.IndicatorTone
+import com.domopi.app.data.PrSeverity
 import com.domopi.app.network.AccessPathState
 import com.domopi.app.network.AccessPathStatus
 import com.domopi.app.ui.theme.SolarGreen
@@ -55,6 +56,13 @@ fun accessPathColor(status: AccessPathStatus): Color = when (status) {
     AccessPathStatus.LOCALE, AccessPathStatus.REMOTO_CONNECTED -> SolarGreen
     AccessPathStatus.REMOTO_DISCONNECTED, AccessPathStatus.NON_IN_RETE, AccessPathStatus.UNKNOWN -> IndicatorRed
     AccessPathStatus.PENDING -> Color.Gray
+}
+
+fun prSeverityColor(severity: PrSeverity): Color = when (severity) {
+    PrSeverity.OK -> SolarGreen
+    PrSeverity.WARNING -> IndicatorRed
+    PrSeverity.UNKNOWN -> Color(0xFFFFB300)
+    PrSeverity.NEUTRAL -> Color.Gray
 }
 
 fun indicatorToneColor(tone: IndicatorTone): Color = when (tone) {

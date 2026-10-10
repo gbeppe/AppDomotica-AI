@@ -43,6 +43,9 @@ import com.domopi.app.data.LogicaControllo
 import com.domopi.app.data.MetricheAmbientali
 import com.domopi.app.data.MetricheElettriche
 import com.domopi.app.data.MqttManager
+import com.domopi.app.data.PredictiveReserveStatus
+import com.domopi.app.data.PrSeverity
+import com.domopi.app.ui.components.prSeverityColor
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.EnergyFlowComponent
@@ -267,7 +270,8 @@ fun MainDashboard(
 
     if (showPrStatePopup) {
         val isPrEnabled = aiSettings.predictiveReserveEnabled
-        val prColor = if (isPrEnabled) SolarGreen else Color.Gray
+        val prEffect = PredictiveReserveStatus.effect(isPrEnabled, aiSettings.predictiveReserveMode, aiSettings.predictiveReserveReady)
+        val prColor = prSeverityColor(prEffect.severity)
         AlertDialog(
             onDismissRequest = { showPrStatePopup = false },
             icon = { Icon(Icons.Default.NightsStay, null, tint = prColor) },
@@ -284,7 +288,7 @@ fun MainDashboard(
                         border = BorderStroke(1.dp, prColor.copy(alpha = 0.5f))
                     ) {
                         Text(
-                            text = if (isPrEnabled) "PR ON" else "PR OFF",
+                            text = prEffect.badge,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             color = prColor,
                             style = MaterialTheme.typography.labelLarge,
@@ -314,10 +318,8 @@ fun MainDashboard(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = if (isPrEnabled)
-                                    "Consente al PR di influenzare AI Climate durante le ore notturne."
-                                else
-                                    "Vieta al PR di influenzare AI Climate durante le ore notturne.",
+                                text = prEffect.explanation + "\n\n" +
+                                    PredictiveReserveStatus.details(aiSettings.predictiveReserveMode, aiSettings.predictiveReserveReady),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -469,7 +471,9 @@ fun MainDashboard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Badge PR (Prima del circoletto dello stato condizionatore) -> Apre Popup Dettaglio PR
-                        val prColor = if (aiSettings.predictiveReserveEnabled) SolarGreen else Color.Gray
+                        val prEffect = PredictiveReserveStatus.effect(
+                            aiSettings.predictiveReserveEnabled, aiSettings.predictiveReserveMode, aiSettings.predictiveReserveReady)
+                        val prColor = prSeverityColor(prEffect.severity)
                         Surface(
                             modifier = Modifier.clickable { showPrStatePopup = true },
                             color = prColor.copy(alpha = 0.12f),
@@ -488,7 +492,7 @@ fun MainDashboard(
                                 )
                                 Spacer(Modifier.width(4.dp))
                                 Text(
-                                    text = if (aiSettings.predictiveReserveEnabled) "PR ON" else "PR OFF",
+                                    text = if (prEffect.severity == PrSeverity.WARNING) "PR ON ⚠" else if (aiSettings.predictiveReserveEnabled) "PR ON" else "PR OFF",
                                     style = MaterialTheme.typography.labelLarge,
                                     color = prColor,
                                     fontWeight = FontWeight.Bold,

@@ -27,6 +27,9 @@ import com.domopi.app.data.HvacState
 import com.domopi.app.data.LogicaControllo
 import com.domopi.app.data.MetricheElettriche
 import com.domopi.app.data.MqttManager
+import com.domopi.app.data.PredictiveReserveStatus
+import com.domopi.app.data.PrSeverity
+import com.domopi.app.ui.components.prSeverityColor
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.StatoCondizionatore
 import com.domopi.app.ui.components.NumericStepper
@@ -59,10 +62,12 @@ fun AiManagedScreen(
             title = { Text("Conferma Modifica PR") },
             text = {
                 Text(
-                    if (willEnable)
-                        "Sei sicuro di voler abilitare il controllo Predictive Reserve notturno?\n\nConsente al PR di influenzare AI Climate."
+                    (if (willEnable)
+                        "Sei sicuro di voler abilitare il controllo Predictive Reserve notturno?\n\n"
                     else
-                        "Sei sicuro di voler disabilitare il controllo Predictive Reserve notturno?\n\nVieta al PR di influenzare AI Climate."
+                        "Sei sicuro di voler disabilitare il controllo Predictive Reserve notturno?\n\n") +
+                        PredictiveReserveStatus.toggleExplanation(willEnable, aiSettings.predictiveReserveMode, aiSettings.predictiveReserveReady) +
+                        "\n\n" + PredictiveReserveStatus.details(aiSettings.predictiveReserveMode, aiSettings.predictiveReserveReady)
                 )
             },
             confirmButton = {
@@ -203,12 +208,20 @@ fun AiManagedScreen(
 
                             Spacer(Modifier.width(12.dp))
 
-                            Text(
-                                "Predictive Reserve",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.weight(1f)
-                            )
+                            val prEffect = PredictiveReserveStatus.effect(
+                                aiSettings.predictiveReserveEnabled, aiSettings.predictiveReserveMode, aiSettings.predictiveReserveReady)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Predictive Reserve",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    prEffect.badge,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = prSeverityColor(prEffect.severity)
+                                )
+                            }
 
                             Switch(
                                 checked = aiSettings.predictiveReserveEnabled,

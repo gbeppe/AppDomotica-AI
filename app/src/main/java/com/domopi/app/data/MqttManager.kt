@@ -42,6 +42,9 @@ data class EnvironmentState(
 data class AiSettings(
     val systemEnabled: Boolean = true,
     val predictiveReserveEnabled: Boolean = false,
+    // PR-MODE.1, read-only: null until Node-RED publishes them.
+    val predictiveReserveMode: String? = null,
+    val predictiveReserveReady: Boolean? = null,
     val compressorOnMin: Int = 15,
     val compressorOffMin: Int = 15,
     val nightHumidexThreshold: Int = 30,
@@ -313,16 +316,25 @@ class MqttManager {
             "climate" -> handleClimateDomain(device, property, rounded, isOn, payload)
             "ai" -> handleAiDomain(device, isOn, payload)
             "ai_climate" -> handleAiClimateDomain(property, payload)
-            "predictive_reserve" -> handlePredictiveReserveDomain(property, isOn)
+            "predictive_reserve" -> handlePredictiveReserveDomain(property, isOn, payload)
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
             "ventilation" -> handleVentilationDomain(device, property, payload)
             "settings" -> handleSettingsDomain(device, isOn)
         }
     }
 
-    private fun handlePredictiveReserveDomain(prop: String, isOn: Boolean) {
-        if (prop == "control_enabled") {
-            _aiSettings.update { it.copy(predictiveReserveEnabled = isOn) }
+    private fun handlePredictiveReserveDomain(prop: String, isOn: Boolean, payload: String) {
+        when (prop) {
+            "control_enabled" -> _aiSettings.update { it.copy(predictiveReserveEnabled = isOn) }
+            "operating_mode" -> {
+                val mode = payload.trim().uppercase().takeIf { it == "SHADOW" || it == "ACTIVE" }
+                _aiSettings.update { it.copy(predictiveReserveMode = mode) }
+            }
+            "ready" -> {
+                val clean = payload.trim().lowercase()
+                val ready = when (clean) { "true", "1" -> true; "false", "0" -> false; else -> null }
+                _aiSettings.update { it.copy(predictiveReserveReady = ready) }
+            }
         }
     }
 
