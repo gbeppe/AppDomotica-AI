@@ -25,6 +25,12 @@ data class EnergyData(
     val solarPumpSpeed: Int = 0,
     val gridImportKwhOggi: Float = 0f,
     val gridImportKwhIeri: Float = 0f,
+    // Android receive time (ms) of the flow values; 0 = never received (energy flow freshness).
+    val solarAtMs: Long = 0L,
+    val homeAtMs: Long = 0L,
+    val gridAtMs: Long = 0L,
+    val batteryAtMs: Long = 0L,
+    val socAtMs: Long = 0L,
 )
 
 data class SensorData(
@@ -365,25 +371,26 @@ class MqttManager {
     }
 
     private fun handleEnergyDomain(device: String, prop: String, value: Float) {
+        val now = System.currentTimeMillis()
         _energyData.update { current ->
             when (device) {
                 "solar" -> when (prop) {
-                    "power" -> current.copy(solarPower = value)
+                    "power" -> current.copy(solarPower = value, solarAtMs = now)
                     else -> current
                 }
                 "home" -> when (prop) {
-                    "consumption" -> current.copy(homeConsumption = value)
+                    "consumption" -> current.copy(homeConsumption = value, homeAtMs = now)
                     else -> current
                 }
                 "grid" -> when (prop) {
-                    "power_raw" -> current.copy(gridPower = value)
+                    "power_raw" -> current.copy(gridPower = value, gridAtMs = now)
                     "import_kwh_oggi", "import_today" -> current.copy(gridImportKwhOggi = value)
                     "import_kwh_ieri", "import_yesterday" -> current.copy(gridImportKwhIeri = value)
                     else -> current
                 }
                 "battery" -> when (prop) {
-                    "power_raw" -> current.copy(batteryPower = value)
-                    "soc" -> current.copy(batterySoc = value)
+                    "power_raw" -> current.copy(batteryPower = value, batteryAtMs = now)
+                    "soc" -> current.copy(batterySoc = value, socAtMs = now)
                     else -> current
                 }
                 "puffer_acs" -> current.copy(pufferAcs = value)

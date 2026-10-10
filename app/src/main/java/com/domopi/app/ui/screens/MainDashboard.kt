@@ -831,11 +831,8 @@ fun DomainCard(
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 when(page) {
                     0 -> EnergyFlowComponent(
-                        solarPower = energyData.solarPower,
-                        homeConsumption = energyData.homeConsumption,
-                        gridPower = energyData.gridPower,
-                        batteryPower = energyData.batteryPower,
-                        batterySoc = energyData.batterySoc,
+                        energyData = energyData,
+                        connected = mqttManager.isConnected.collectAsState().value,
                         gridImportKwhOggi = if (aiData.metricheElettriche.gridImportKwhOggi > 0) aiData.metricheElettriche.gridImportKwhOggi else energyData.gridImportKwhOggi,
                         gridImportKwhIeri = if (aiData.metricheElettriche.gridImportKwhIeri > 0) aiData.metricheElettriche.gridImportKwhIeri else energyData.gridImportKwhIeri
                     )
