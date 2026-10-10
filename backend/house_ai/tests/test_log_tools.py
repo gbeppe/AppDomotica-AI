@@ -42,3 +42,79 @@ class LogTests(unittest.TestCase):
         plan['operations'][0]['path'] = '/etc/passwd'
         with self.assertRaises(ValueError):
             validate_plan(plan)
+
+
+class FreshnessTests(unittest.TestCase):
+    """2026-10-10: predictive_reserve_shadow.log is no longer written by Node-RED."""
+
+    def _files(self, folder, ages_s, now):
+        import os
+        for source, (filename, key, _) in SOURCES.items():
+            if source in ages_s:
+                path = Path(folder, filename)
+                path.write_text(json.dumps({key: 1}) + '\n')
+                os.utime(path, (now - ages_s[source], now - ages_s[source]))
+
+    def test_source_status_by_cadence(self):
+        from log_tools import source_status
+        import time
+        now = time.time()
+        with tempfile.TemporaryDirectory() as folder:
+            self._files(folder, {'learning': 4 * 3600, 'climate': 9 * 86400,
+                                 'reserve_shadow': 34 * 86400, 'solar_forecast': 3600}, now)
+            status = {s: source_status(folder, s, int(now * 1000))['status'] for s in SOURCES}
+            self.assertEqual(status, {'learning': 'stale', 'climate': 'online',
+                                      'reserve_shadow': 'archive', 'solar_forecast': 'online'})
+            Path(folder, 'clima_controllo.log').unlink()
+            self.assertEqual(source_status(folder, 'climate')['status'], 'missing')
+        self.assertEqual(source_status(None, 'learning')['status'], 'missing')
+
+    def test_day_after_last_write_is_not_updated_not_no_events(self):
+        import os
+        from energy_presenter import log_text
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder, 'predictive_reserve_shadow.log')
+            path.write_text(json.dumps({'timestamp_ms': day_bounds('2026-09-06')[0] + 1000}) + '\n')
+            frozen = day_bounds('2026-09-06')[0] / 1000 + 4800
+            os.utime(path, (frozen, frozen))
+            archived = read_day(folder, 'reserve_shadow', '2026-09-06')
+            self.assertEqual(archived['status'], 'partial')
+            later = read_day(folder, 'reserve_shadow', '2026-10-09')
+            self.assertEqual(later['status'], 'source_not_updated')
+            text = log_text(later)
+            self.assertIn('non è più aggiornato dal 06/09/2026', text)
+            self.assertIn('archivio storico', text)
+            self.assertNotIn('non prova assenza di eventi', text)
+
+    def test_assistant_treats_not_updated_as_insufficient(self):
+        import os
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder, 'predictive_reserve_shadow.log')
+            path.write_text('')
+            stamp = day_bounds('2026-09-06')[0] / 1000
+            os.utime(path, (stamp, stamp))
+            plan = {'operations': [{'id': 'a', 'tool': 'backend_log_day', 'source': 'reserve_shadow', 'day': '2026-10-09'}]}
+            class Planner:
+                def plan(self, *args):
+                    return plan
+            result = ask(None, Planner(), 'Cosa dice il PR ieri?', log_root=folder)
+            self.assertEqual(result['status'], 'insufficient_data')
+            self.assertIn('non è più aggiornato', result['answer'])
+
+    def test_health_reports_stale_logs_as_degraded_and_archive_date(self):
+        import os, time
+        from server import detailed_health
+        class Client:
+            def catalog(self): return []
+        now = time.time()
+        with tempfile.TemporaryDirectory() as folder:
+            self._files(folder, {'learning': 60, 'climate': 9 * 86400,
+                                 'reserve_shadow': 34 * 86400, 'solar_forecast': 3600}, now)
+            logs = [c for c in detailed_health(Client(), None, folder)['components'] if c['id'] == 'logs'][0]
+            self.assertEqual(logs['status'], 'online')
+            self.assertIn('archivio fermo al', logs['detail'])
+            self.assertEqual(len(logs['files']), 4)
+            os.utime(Path(folder, 'apprendimento_storico.log'), (now - 5 * 3600, now - 5 * 3600))
+            logs = [c for c in detailed_health(Client(), None, folder)['components'] if c['id'] == 'logs'][0]
+            self.assertEqual(logs['status'], 'degraded')
+            self.assertIn('in ritardo: apprendimento_storico.log', logs['detail'])

@@ -36,6 +36,12 @@ def numeric(record, *path):
 def log_text(result):
     prefix = f"Log {result['file']} del {result['day']}"
     if not result['records']:
+        if result['status'] == 'source_not_updated':
+            since = datetime.fromtimestamp(result['last_modified_ms'] / 1000, ZoneInfo('Europe/Rome')).strftime('%d/%m/%Y')
+            text = f"{prefix}: il log non è più aggiornato dal {since}; non contiene dati per questo giorno."
+            if result.get('cadence') == 'archive':
+                text += " È un archivio storico della simulazione SHADOW, non lo stato attuale del Predictive Reserve."
+            return text
         return prefix + ": " + ("sorgente non disponibile." if result['status'] in ('unavailable', 'source_rejected')
                                  else "nessun record utilizzabile; non prova assenza di eventi.")
     # Latest by evidence timestamp, not file order; forecast has only target date.

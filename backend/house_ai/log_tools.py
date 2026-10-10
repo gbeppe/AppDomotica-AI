@@ -3,6 +3,7 @@ import json
 import math
 import os
 import stat
+import time
 from datetime import date
 from pathlib import Path
 
@@ -13,6 +14,15 @@ SOURCES = {
     "climate": ("clima_controllo.log", "timestamp", "recorded_control_event"),
     "reserve_shadow": ("predictive_reserve_shadow.log", "timestamp_ms", "shadow_simulation"),
     "solar_forecast": ("zara_previsione_kwh_openmeteo.log", "data_previsione", "forecast"),
+}
+# Expected update rhythm per source: max age in seconds, None when event-driven,
+# "archive" for evidence no longer written by Node-RED (verified 2026-10-10:
+# no flow node writes predictive_reserve_shadow.log after 2026-09-06).
+CADENCE = {
+    "learning": ("hourly", 3 * 3600),
+    "climate": ("event_driven", None),
+    "reserve_shadow": ("archive", None),
+    "solar_forecast": ("daily", 36 * 3600),
 }
 MAX_BYTES = 32 * 1024 * 1024
 MAX_LINE = 128 * 1024
@@ -25,6 +35,31 @@ def tool_catalog():
             "parameters": {"source": list(SOURCES), "day": "YYYY-MM-DD Europe/Rome; forecast uses target date"}}
 
 
+def source_status(root, source, now_ms=None):
+    """File-level freshness: online, stale, archive or missing; never reads content."""
+    filename = SOURCES[source][0]
+    cadence, max_age = CADENCE[source]
+    entry = {"source": source, "file": filename, "cadence": cadence,
+             "last_modified_ms": None, "status": "missing"}
+    if root is None:
+        return entry
+    try:
+        metadata = (Path(root) / filename).lstat()
+    except OSError:
+        return entry
+    if not stat.S_ISREG(metadata.st_mode):
+        return entry
+    now_ms = int(time.time() * 1000) if now_ms is None else now_ms
+    entry["last_modified_ms"] = int(metadata.st_mtime * 1000)
+    if cadence == "archive":
+        entry["status"] = "archive"
+    elif max_age is not None and now_ms - entry["last_modified_ms"] > max_age * 1000:
+        entry["status"] = "stale"
+    else:
+        entry["status"] = "online"
+    return entry
+
+
 def read_day(root, source, day):
     if not isinstance(source, str) or source not in SOURCES:
         raise ValueError("Unknown log source")
@@ -34,6 +69,7 @@ def read_day(root, source, day):
               "file": filename, "day": day, "timezone": "Europe/Rome",
               "evidence_type": kind, "status": "unavailable", "records": [],
               "matched_records": 0, "invalid_lines": 0, "truncated": False,
+              "cadence": CADENCE[source][0], "last_modified_ms": None,
               "limitations": ["I log non garantiscono copertura continua né conferma fisica dei comandi.",
                               "SHADOW è simulazione; le previsioni non sono produzione misurata.",
                               "La data della previsione è il giorno previsto, non l'ora di elaborazione."]}
@@ -47,6 +83,7 @@ def read_day(root, source, day):
             if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_BYTES:
                 result["status"] = "source_rejected"
                 return result
+            result["last_modified_ms"] = int(metadata.st_mtime * 1000)
             consumed = 0
             retained_bytes = []
             for number, raw in enumerate(iter(lambda: stream.readline(MAX_LINE + 1), b""), 1):
@@ -77,7 +114,13 @@ def read_day(root, source, day):
                             result["truncated"] = True
                 except (ValueError, TypeError, UnicodeDecodeError, RecursionError, OverflowError):
                     result["invalid_lines"] += 1
-        result["status"] = "partial" if result["records"] else "insufficient_data"
+        if result["records"]:
+            result["status"] = "partial"
+        elif result["last_modified_ms"] is not None and result["last_modified_ms"] < start:
+            # The file was last written before the requested day: no data, not "no events".
+            result["status"] = "source_not_updated"
+        else:
+            result["status"] = "insufficient_data"
     except OSError:
         pass
     return result

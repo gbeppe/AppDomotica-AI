@@ -2,7 +2,6 @@
 import hmac
 import json
 import os
-import stat
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -13,7 +12,7 @@ from energy_query import answer as energy_answer
 from service import report
 from assistant import ask as assistant_ask
 from planner import HttpJsonPlanner
-from log_tools import SOURCES
+from log_tools import SOURCES, source_status
 
 
 def detailed_health(client, planner, log_root):
@@ -49,16 +48,21 @@ def detailed_health(client, planner, log_root):
         components.append({'id': 'emoncms', 'label': 'Storico EmonCMS (.15)',
                            'status': 'offline', 'latency_ms': int((time.monotonic() - started) * 1000),
                            'detail': 'Sorgente non raggiungibile'})
-    missing = []
-    for filename, _key, _kind in SOURCES.values():
-        try:
-            if not stat.S_ISREG((Path(log_root) / filename).lstat().st_mode):
-                missing.append(filename)
-        except (OSError, TypeError):
-            missing.append(filename)
+    files = [source_status(log_root, source) for source in SOURCES]
+    missing = [f['file'] for f in files if f['status'] == 'missing']
+    stale = [f['file'] for f in files if f['status'] == 'stale']
+    archives = [f for f in files if f['status'] == 'archive']
+    detail = '{} file attivi aggiornati'.format(len(files) - len(missing) - len(stale) - len(archives))
+    if stale:
+        detail += '; in ritardo: ' + ', '.join(stale)
+    if missing:
+        detail += '; non disponibili: ' + ', '.join(missing)
+    for item in archives:
+        frozen = time.strftime('%d/%m/%Y', time.localtime(item['last_modified_ms'] / 1000))
+        detail += '; archivio fermo al {}: {}'.format(frozen, item['file'])
     components.append({'id': 'logs', 'label': 'Log Node-RED (.20)',
-                       'status': 'online' if not missing else 'offline',
-                       'detail': '4 file leggibili' if not missing else '{} file non disponibili'.format(len(missing))})
+                       'status': 'offline' if missing else 'degraded' if stale else 'online',
+                       'detail': detail, 'files': files})
     return {'schema': 'house_ai.stack_health.v1', 'mode': 'read_only',
             'checked_at_ms': int(time.time() * 1000), 'components': components}
 
