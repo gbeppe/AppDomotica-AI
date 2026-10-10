@@ -82,7 +82,7 @@ class FreshnessTests(unittest.TestCase):
             later = read_day(folder, 'reserve_shadow', '2026-10-09')
             self.assertEqual(later['status'], 'source_not_updated')
             text = log_text(later)
-            self.assertIn('non è più aggiornato dal 06/09/2026', text)
+            self.assertIn('non è più aggiornato dal 06/09', text)
             self.assertIn('archivio storico', text)
             self.assertNotIn('non prova assenza di eventi', text)
 

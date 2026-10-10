@@ -1,5 +1,5 @@
 """Deterministic Italian presentation of energy evidence; no generated numbers."""
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 import math
 
@@ -20,6 +20,27 @@ LIGHT_LABELS = {
 }
 
 THERMOSTAT_LABELS = {"thermostat_living": "Termostato soggiorno", "thermostat_bath": "Termostato bagno"}
+
+ROME = ZoneInfo('Europe/Rome')
+
+
+def day_text(day):
+    """gg/mm for the current year, gg/mm/aaaa otherwise: easy to read and to speak."""
+    value = date.fromisoformat(day) if isinstance(day, str) else day
+    return value.strftime('%d/%m' if value.year == datetime.now(ROME).year else '%d/%m/%Y')
+
+
+def moment_text(ms):
+    instant = datetime.fromtimestamp(ms / 1000, ROME)
+    return f"{day_text(instant.date())} alle {instant.strftime('%H:%M')}"
+
+
+def period_text(start, end_exclusive):
+    """Periods are end-exclusive internally; spoken as inclusive calendar days."""
+    last = date.fromisoformat(end_exclusive) - timedelta(days=1)
+    if last == date.fromisoformat(start):
+        return f"il {day_text(start)}"
+    return f"dal {day_text(start)} al {day_text(last)}"
 
 
 def number(value, digits=2):
@@ -68,7 +89,7 @@ def predictive_reserve_text(r):
     details = 'Modalità: {} · Modello: {}.'.format(
         mode or 'non ricevuta', {'true': 'pronto', 'false': 'non pronto'}.get(ready, 'stato non ricevuto'))
     received = max(observation['received_at_ms'] for observation in observations.values())
-    received_text = datetime.fromtimestamp(received / 1000, ZoneInfo('Europe/Rome')).isoformat()
+    received_text = moment_text(received)
     parts = [f'Predictive Reserve: {effect}', details, f'Ultimo dato ricevuto il {received_text}.']
     if not r['connected']:
         parts.append('Digital Twin disconnesso.')
@@ -99,8 +120,7 @@ def thermostats_text(item):
         parts.append(f'{THERMOSTAT_LABELS[thermostat]}: ' + ', '.join(facts) + '.')
     if observations:
         received = max(observation['received_at_ms'] for observation in observations.values())
-        parts.append('Ultimo dato ricevuto il {}.'.format(
-            datetime.fromtimestamp(received / 1000, ZoneInfo('Europe/Rome')).isoformat()))
+        parts.append(f'Ultimo dato ricevuto il {moment_text(received)}.')
         parts.append("Il setpoint è l'ultimo valore comandato, non una lettura del termostato.")
     if not r['connected']:
         parts.append('Digital Twin disconnesso.')
@@ -108,10 +128,10 @@ def thermostats_text(item):
 
 
 def log_text(result):
-    prefix = f"Log {result['file']} del {result['day']}"
+    prefix = f"Log {result['file']} del {day_text(result['day'])}"
     if not result['records']:
         if result['status'] == 'source_not_updated':
-            since = datetime.fromtimestamp(result['last_modified_ms'] / 1000, ZoneInfo('Europe/Rome')).strftime('%d/%m/%Y')
+            since = day_text(datetime.fromtimestamp(result['last_modified_ms'] / 1000, ROME).date())
             text = f"{prefix}: il log non è più aggiornato dal {since}; non contiene dati per questo giorno."
             if result.get('cadence') == 'archive':
                 text += " È un archivio storico della simulazione SHADOW, non lo stato attuale del Predictive Reserve."
@@ -168,9 +188,10 @@ def describe(item):
     if schema == 'house_ai.energy_comparison.v1':
         if r['value'] is None:
             return 'Confronto non calcolabile: servono dati completi e comparabili.'
-        text = (f"{LABELS[r['metric']]}: differenza del periodo {r['left_period']['start']} → "
-                f"{r['left_period']['end_exclusive']} rispetto a {r['right_period']['start']} → "
-                f"{r['right_period']['end_exclusive']} (fini escluse): {number(r['value'])} {r['unit']}.")
+        text = (f"{LABELS[r['metric']]}: differenza fra il periodo "
+                f"{period_text(r['left_period']['start'], r['left_period']['end_exclusive'])} e il periodo "
+                f"{period_text(r['right_period']['start'], r['right_period']['end_exclusive'])}: "
+                f"{number(r['value'])} {r['unit']}.")
         if r['change_percent'] is not None:
             text += f" Variazione rispetto al secondo periodo: {number(r['change_percent'])}%."
         else:
@@ -179,18 +200,18 @@ def describe(item):
     if schema == 'house_ai.energy_daily_extreme.v1':
         label = LABELS.get(r['metric'], item.get('id', 'Dato'))
         if r['winner'] is None:
-            text = (f"{label}: nessun giorno con copertura completa dal {r['period']['start']} "
-                    f"al {r['period']['end_exclusive']} escluso.")
+            text = (f"{label}: nessun giorno con copertura completa "
+                    f"{period_text(r['period']['start'], r['period']['end_exclusive'])}.")
         else:
             kind = 'maggiore' if r['extremum'] == 'maximum' else 'minore'
             text = (f"Tra i giorni con copertura completa, il {label.lower()} {kind} è stato il "
-                    f"{r['winner']['day']}: {number(r['winner']['value'])} {r['unit']}, "
+                    f"{day_text(r['winner']['day'])}: {number(r['winner']['value'])} {r['unit']}, "
                     f"copertura dati 100%. Giorni completi confrontati: {r['eligible_days']}.")
         observed = r['observed_winner']
         if observed is not None:
             text += (f" Considerando tutti i dati EmonCMS disponibili, il {label.lower()} "
                      f"osservato {('maggiore' if r['extremum'] == 'maximum' else 'minore')} "
-                     f"è stato il {observed['day']}: "
+                     f"è stato il {day_text(observed['day'])}: "
                      f"{'almeno ' if observed['status'] != 'complete' else ''}"
                      f"{number(observed['value'])} {r['unit']}, copertura dati "
                      f"{number(observed['coverage_ratio'] * 100, 1)}%.")
@@ -198,7 +219,7 @@ def describe(item):
             text += (' Il massimo assoluto non è determinabile: nei periodi mancanti '
                      'potrebbe esserci ulteriore energia non registrata.')
         elif r['absolute_winner'] is not None:
-            text += f" Il giorno del valore assoluto è determinato: {r['absolute_winner']['day']}."
+            text += f" Il giorno del valore assoluto è determinato: {day_text(r['absolute_winner']['day'])}."
         if r['excluded_days']:
             text += f" Giorni con copertura incompleta: {len(r['excluded_days'])}."
         return text + ' Stima da campioni EmonCMS, non misura fiscale.'
@@ -218,7 +239,7 @@ def describe(item):
             label = 'Scarica della batteria' if value > 0 else 'Carica della batteria' if value < 0 else 'Scambio netto della batteria'
             value = abs(value)
         unit = '%' if metric == 'battery_soc_percent' else 'W'
-        received = datetime.fromtimestamp(obs['received_at_ms']/1000, ZoneInfo('Europe/Rome')).isoformat()
+        received = moment_text(obs['received_at_ms'])
         qualifier = ' Digital Twin disconnesso.' if not r['connected'] else ''
         return (f"{label}: {number(value, 1)} {unit}, ultimo dato ricevuto il {received}." + qualifier +
                 (' Messaggio retained.' if obs['retained'] else '') +
@@ -256,7 +277,7 @@ def describe(item):
                     value = 'non disponibile'
             parts.append(f"{labels[metric]}: {value}.")
         received = max(observation['received_at_ms'] for observation in observations.values())
-        received_text = datetime.fromtimestamp(received / 1000, ZoneInfo('Europe/Rome')).isoformat()
+        received_text = moment_text(received)
         qualifiers = [f"Ultimo dato ricevuto il {received_text}."]
         if not r['connected']:
             qualifiers.append('Digital Twin disconnesso al momento della richiesta.')
@@ -280,7 +301,7 @@ def describe(item):
             text = (f"{LIGHT_LABELS[item['light']]}: {'accesa' if observation['value'] else 'spenta'} dichiarata."
                     if observation else f"{LIGHT_LABELS[item['light']]}: stato dichiarato non disponibile.")
         for light, command in commands.items():
-            occurred = datetime.fromtimestamp(command['observed_at_ms']/1000, ZoneInfo('Europe/Rome')).isoformat()
+            occurred = moment_text(command['observed_at_ms'])
             stage = {
                 'routed': 'instradato dal router',
                 'dispatched': 'inoltrato al ramo di invio',
@@ -311,8 +332,8 @@ def describe(item):
                 f"di {LIGHT_LABELS[r['light']]}. L'app lo invia sul topic validato del registry; "
                 "il successivo messaggio /stat riporta uno stato dichiarato, non una conferma fisica.")
     if r['value'] is None:
-        return f"{label}: dati insufficienti dal {r['period']['start']} al {r['period']['end_exclusive']} escluso."
-    return (f"{label}: {number(r['value'])} {r['unit']} dal {r['period']['start']} "
-            f"al {r['period']['end_exclusive']} escluso; copertura {number(r['coverage_ratio']*100, 1)}%. " +
+        return f"{label}: dati insufficienti {period_text(r['period']['start'], r['period']['end_exclusive'])}."
+    return (f"{label}: {number(r['value'])} {r['unit']} "
+            f"{period_text(r['period']['start'], r['period']['end_exclusive'])}; copertura {number(r['coverage_ratio']*100, 1)}%. " +
             ('Stima limitata agli intervalli coperti, non totale del periodo.' if r['status'] != 'complete'
              else 'Stima da campioni EmonCMS, non misura fiscale.'))
