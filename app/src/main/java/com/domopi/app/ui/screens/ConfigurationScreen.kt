@@ -13,8 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.domopi.app.data.GithubStatus
-import com.domopi.app.data.GithubVersionChecker
+import com.domopi.app.data.AppAlignmentStatus
+import com.domopi.app.data.BuildAlignment
+import com.domopi.app.network.HomeNetworkSettings
+import com.domopi.app.ui.components.indicatorToneColor
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.theme.SolarGreen
 import com.domopi.app.BuildConfig
@@ -25,15 +27,26 @@ import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
+fun ConfigurationScreen(
+    settingsManager: SettingsManager,
+    onBack: () -> Unit,
+    buildAlignment: AppAlignmentStatus = AppAlignmentStatus.CHECKING,
+    onOpenBuildAlignment: () -> Unit = {},
+) {
     val scope = rememberCoroutineScope()
     var showDiscardDialog by remember { mutableStateOf(false) }
-    val githubStatus by GithubVersionChecker.status.collectAsState()
-    val currentGithubIconStyle by settingsManager.githubIconStyle.collectAsState(initial = "code")
 
+    // Rete di casa: salvata a parte, solo se dominio e subnet sono entrambi validi.
+    var homeDomain by remember { mutableStateOf(HomeNetworkSettings.DEFAULT_DOMAIN) }
+    var homeSubnet by remember { mutableStateOf(HomeNetworkSettings.DEFAULT_SUBNET) }
+    var homeNetworkMessage by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(Unit) {
-        GithubVersionChecker.checkVersion()
+        val home = settingsManager.homeNetwork.first()
+        homeDomain = home.domain
+        homeSubnet = home.subnet
     }
+    val homeDomainError = if (HomeNetworkSettings.isValidDomain(homeDomain)) null else "Dominio non valido"
+    val homeSubnetError = if (HomeNetworkSettings.isValidSubnet(homeSubnet)) null else "Subnet CIDR non valida (es. 192.168.1.0/24)"
     
     var domopiIp by remember { mutableStateOf("") }
     var domopiRemoteIp by remember { mutableStateOf("") }
@@ -178,37 +191,28 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            "Informazioni Build",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        TextButton(
-                            onClick = { scope.launch { GithubVersionChecker.checkVersion() } },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("Verifica Ora", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
+                    Text(
+                        "Informazioni Build",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                     Spacer(Modifier.height(8.dp))
-                    BuildInfoRow("Versione", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-                    BuildInfoRow("Git Hash", BuildConfig.GIT_HASH)
-                    BuildInfoRow("Git Branch", BuildConfig.GIT_BRANCH)
-                    BuildInfoRow("Data Build", BuildConfig.BUILD_TIME)
-                    
-                    val (githubText, githubColor) = when (val s = githubStatus) {
-                        is GithubStatus.UpToDate -> "🟢 Allineato a GitHub (${s.latestHash})" to SolarGreen
-                        is GithubStatus.Behind -> "🔴 Indietro di ${s.behindBy} commit da GitHub" to Color.Red
-                        is GithubStatus.LocalDev -> "🟡 Build locale / dev (+)" to Color(0xFFFF9800)
-                        is GithubStatus.Checking -> "⏳ Verifica in corso..." to Color.Gray
-                        is GithubStatus.Error -> "⚠️ ${s.message}" to Color.Gray
+                    BuildIdentityRows(
+                        version = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                        gitSha = BuildConfig.GIT_SHA,
+                        branch = BuildConfig.GIT_BRANCH,
+                        dirty = BuildConfig.BUILD_DIRTY,
+                        buildId = BuildConfig.BUILD_ID,
+                        buildTimestamp = BuildConfig.BUILD_TIMESTAMP,
+                    )
+                    BuildInfoRow(
+                        "Allineamento",
+                        BuildAlignment.describe(buildAlignment),
+                        indicatorToneColor(BuildAlignment.toneOf(buildAlignment))
+                    )
+                    TextButton(onClick = onOpenBuildAlignment) {
+                        Text("Dettaglio build", style = MaterialTheme.typography.labelSmall)
                     }
-                    BuildInfoRow("Stato GitHub", githubText, githubColor)
                 }
                 HorizontalDivider(modifier = Modifier.padding(top = 16.dp))
             }
@@ -260,6 +264,51 @@ fun ConfigurationScreen(settingsManager: SettingsManager, onBack: () -> Unit) {
                 )
             }
             
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Text("Rete di casa", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "LOCALE: Wi-Fi senza VPN con questo dominio esatto. REMOTO: VPN con una route esatta verso questa subnet.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = homeDomain,
+                    onValueChange = { homeDomain = it; homeNetworkMessage = null },
+                    label = { Text("Dominio Wi-Fi di casa") },
+                    isError = homeDomainError != null,
+                    supportingText = homeDomainError?.let { { Text(it) } },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = homeSubnet,
+                    onValueChange = { homeSubnet = it; homeNetworkMessage = null },
+                    label = { Text("Subnet di casa (CIDR)") },
+                    isError = homeSubnetError != null,
+                    supportingText = homeSubnetError?.let { { Text(it) } },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = {
+                        scope.launch {
+                            homeNetworkMessage = if (settingsManager.saveHomeNetwork(homeDomain, homeSubnet))
+                                "Rete di casa salvata" else "Valori non validi: non salvati"
+                        }
+                    }) { Text("Salva rete di casa") }
+                    TextButton(onClick = {
+                        homeDomain = HomeNetworkSettings.DEFAULT_DOMAIN
+                        homeSubnet = HomeNetworkSettings.DEFAULT_SUBNET
+                        scope.launch {
+                            settingsManager.saveHomeNetwork(homeDomain, homeSubnet)
+                            homeNetworkMessage = "Predefiniti ripristinati"
+                        }
+                    }) { Text("Ripristina predefiniti") }
+                }
+                homeNetworkMessage?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
+            }
+
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text("EmonCMS", style = MaterialTheme.typography.titleMedium)

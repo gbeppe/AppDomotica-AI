@@ -100,6 +100,21 @@ class MqttManager {
     private val _isConnected = MutableStateFlow(value = false)
     val isConnected: StateFlow<Boolean> = _isConnected
 
+    // Release identity published by tools/release_android.py (outside the Digital Twin namespace).
+    private val _publishedBuild = MutableStateFlow<PublishedBuild>(PublishedBuild.Waiting)
+    val publishedBuild: StateFlow<PublishedBuild> = _publishedBuild
+
+    private val _startupGraceOver = MutableStateFlow(false)
+    val startupGraceOver: StateFlow<Boolean> = _startupGraceOver
+    private var retainedWaitJob: Job? = null
+
+    init {
+        scope.launch {
+            delay(BuildAlignment.STARTUP_GRACE_MS)
+            _startupGraceOver.value = true
+        }
+    }
+
     private val _trafficLog = MutableStateFlow<List<String>>(emptyList())
     val trafficLog: StateFlow<List<String>> = _trafficLog
 
@@ -178,6 +193,7 @@ class MqttManager {
                     _climateSmartState.value = ClimateSmartState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
+                    subscribeToBuildIdentity()
                     processMessageQueue()
                 }
                 override fun connectionLost(cause: Throwable?) { 
@@ -250,7 +266,23 @@ class MqttManager {
         mqttClient?.subscribe(topics, IntArray(topics.size) { 1 })
     }
 
+    private fun subscribeToBuildIdentity() {
+        if (_publishedBuild.value !is PublishedBuild.Received) _publishedBuild.value = PublishedBuild.Waiting
+        try {
+            mqttClient?.subscribe(BuildAlignment.TOPIC, 1)
+        } catch (_: Exception) {}
+        retainedWaitJob?.cancel()
+        retainedWaitJob = scope.launch {
+            delay(BuildAlignment.RETAINED_WAIT_MS)
+            if (_publishedBuild.value == PublishedBuild.Waiting) _publishedBuild.value = PublishedBuild.Absent
+        }
+    }
+
     private fun handleIncomingMessage(topic: String, payload: String) {
+        if (topic == BuildAlignment.TOPIC) {
+            _publishedBuild.value = BuildAlignment.parse(payload)
+            return
+        }
         val p = digitalTwinPrefix.removeSuffix("/")
         if (!topic.startsWith(p)) return
         updateRateCounter()

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import com.domopi.app.network.HomeNetworkSettings
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
@@ -22,7 +23,8 @@ class SettingsManager(private val context: Context) {
         val DARK_MODE = booleanPreferencesKey("dark_mode")
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
-        val GITHUB_ICON_STYLE = stringPreferencesKey("github_icon_style")
+        val HOME_NETWORK_DOMAIN = stringPreferencesKey("home_network_domain")
+        val HOME_NETWORK_SUBNET = stringPreferencesKey("home_network_subnet")
         val DIGITAL_TWIN_PREFIX = stringPreferencesKey("digital_twin_prefix")
 
         val DOMOPI_BROKER_IP = stringPreferencesKey("domopi_broker_ip")
@@ -61,7 +63,12 @@ class SettingsManager(private val context: Context) {
     val darkMode: Flow<Boolean?> = context.dataStore.data.map { it[DARK_MODE] }.distinctUntilChanged()
     val isAdminMode: Flow<Boolean> = context.dataStore.data.map { it[IS_ADMIN_MODE] ?: false }.distinctUntilChanged()
     val adminPin: Flow<String> = context.dataStore.data.map { it[ADMIN_PIN] ?: "1234" }.distinctUntilChanged()
-    val githubIconStyle: Flow<String> = context.dataStore.data.map { it[GITHUB_ICON_STYLE] ?: "branch" }.distinctUntilChanged()
+    val homeNetwork: Flow<HomeNetworkSettings> = context.dataStore.data.map {
+        HomeNetworkSettings(
+            domain = it[HOME_NETWORK_DOMAIN] ?: HomeNetworkSettings.DEFAULT_DOMAIN,
+            subnet = it[HOME_NETWORK_SUBNET] ?: HomeNetworkSettings.DEFAULT_SUBNET,
+        )
+    }.distinctUntilChanged()
     val digitalTwinPrefix: Flow<String> = context.dataStore.data.map { it[DIGITAL_TWIN_PREFIX] ?: "zara/interface" }.distinctUntilChanged()
 
     val domopiIp: Flow<String> = context.dataStore.data.map { it[DOMOPI_BROKER_IP] ?: "192.168.1.20" }.distinctUntilChanged()
@@ -101,10 +108,14 @@ class SettingsManager(private val context: Context) {
         }
     }
 
-    suspend fun saveGithubIconStyle(style: String) {
+    /** Saves only a fully valid pair; returns false and keeps the previous values otherwise. */
+    suspend fun saveHomeNetwork(domain: String, subnet: String): Boolean {
+        if (!HomeNetworkSettings.isValidDomain(domain) || !HomeNetworkSettings.isValidSubnet(subnet)) return false
         context.dataStore.edit {
-            it[GITHUB_ICON_STYLE] = style
+            it[HOME_NETWORK_DOMAIN] = domain
+            it[HOME_NETWORK_SUBNET] = subnet
         }
+        return true
     }
 
     suspend fun saveDigitalTwinPrefix(prefix: String) {

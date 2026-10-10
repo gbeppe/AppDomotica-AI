@@ -1,6 +1,3 @@
-import java.util.Date
-import java.text.SimpleDateFormat
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,33 +5,34 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-val gitHash: String by lazy {
-    try {
-        val hash = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
-            .start().inputStream.bufferedReader().readText().trim()
-        
-        // Verifica se ci sono modifiche non committate (dirty state)
-        val isDirty = ProcessBuilder("git", "status", "--porcelain")
-            .start().inputStream.bufferedReader().readText().isNotEmpty()
-            
-        if (isDirty) "$hash+" else hash
-    } catch (_: Exception) {
-        "unknown"
-    }
+// Build identity (same scheme as WallBox REL-APP.1): only tools/release_android.py passes
+// a release identity, which it then publishes itself. Every other build (assembleDebug,
+// Android Studio Run, tests) gets a local development identity and never publishes.
+val releaseGitSha = providers.gradleProperty("domopi.release.gitSha").orNull
+val releaseBuildId = providers.gradleProperty("domopi.release.buildId").orNull
+val releaseBuildTimestamp = providers.gradleProperty("domopi.release.buildTimestamp").orNull
+val releaseIdentity = listOf(releaseGitSha, releaseBuildId, releaseBuildTimestamp)
+if (releaseIdentity.any { it != null } && releaseIdentity.any { it == null }) {
+    throw GradleException("Incomplete DomoPi release identity")
 }
 
-val gitBranch: String by lazy {
-    try {
-        ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-            .start().inputStream.bufferedReader().readText().trim()
-    } catch (_: Exception) {
-        "unknown"
-    }
-}
+val buildInstant = System.currentTimeMillis()
+val buildTimestamp = releaseBuildTimestamp ?: buildInstant.toString()
+val buildId = releaseBuildId ?: "dev_$buildInstant"
 
-val buildTime: String by lazy {
-    SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
-}
+val gitShaVal = releaseGitSha ?: providers.exec {
+    commandLine("git", "rev-parse", "HEAD")
+}.standardOutput.asText.map { it.trim() }.getOrElse("unknown")
+
+val gitBranchVal = providers.exec {
+    commandLine("git", "rev-parse", "--abbrev-ref", "HEAD")
+}.standardOutput.asText.map { it.trim() }.getOrElse("unknown")
+
+val gitDirtyVal = providers.exec {
+    commandLine("git", "status", "--porcelain")
+}.standardOutput.asText.map { out ->
+    if (out.trim().isEmpty()) "clean" else "dirty"
+}.getOrElse("unknown")
 
 android {
     namespace = "com.domopi.app"
@@ -44,17 +42,19 @@ android {
         applicationId = "com.domopi.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 36
-        versionName = "9.8"
+        versionCode = 37
+        versionName = "9.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
-        buildConfigField("String", "GIT_BRANCH", "\"$gitBranch\"")
-        buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
+        buildConfigField("String", "GIT_SHA", "\"$gitShaVal\"")
+        buildConfigField("String", "GIT_BRANCH", "\"$gitBranchVal\"")
+        buildConfigField("String", "BUILD_DIRTY", "\"$gitDirtyVal\"")
+        buildConfigField("String", "BUILD_TIMESTAMP", "\"$buildTimestamp\"")
+        buildConfigField("String", "BUILD_ID", "\"$buildId\"")
     }
 
     buildTypes {
@@ -105,6 +105,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

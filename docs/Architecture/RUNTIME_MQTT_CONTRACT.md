@@ -129,3 +129,22 @@ Android scene baseline commit:
 `5013ff6 fix(android): preserve semantic light scene commands`
 
 The corresponding Node-RED D2 baseline was committed after the final full-flow export and E2E validation.
+
+## 9. Exception: release identity topic (UI-TOPBAR.D1)
+
+Decided on 2026-10-10. One topic outside `zara/interface/...` is consumed by Android:
+
+| Topic | Broker | Direction | Retained | Publisher |
+|---|---|---|---|---|
+| `domopi/build/android` | `.20` | Android subscribes (read-only) | yes, QoS 2 | `tools/release_android.py` on `.40` only |
+
+Payload schema `domopi.build_identity.v1` (same shape as WallBox `wallbox.build_identity.v1`):
+
+```json
+{"schema":"domopi.build_identity.v1","component":"android","git_sha":"<40 hex>",
+ "dirty":"clean","build_id":"bld_<uuid>","build_timestamp":"<ISO-8601 UTC>"}
+```
+
+It is delivery metadata, not home-automation state: it does not pass through the
+Digital Twin Router, Node-RED does not consume it, and Android never publishes on
+it. Gradle builds (Android Studio, `assembleDebug`, tests) never publish.

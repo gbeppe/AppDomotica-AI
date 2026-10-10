@@ -11,8 +11,19 @@ import com.domopi.app.ui.screens.*
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.data.MqttManager
+import com.domopi.app.data.BuildAlignment
+import com.domopi.app.data.BuildIdentity
+import com.domopi.app.network.AccessPathClassifier
+import com.domopi.app.network.AccessPathState
+import com.domopi.app.network.AndroidNetworkObserver
+import com.domopi.app.network.HomeNetworkSettings
+import com.domopi.app.network.NetworkEvidence
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.delay
@@ -66,7 +77,34 @@ class MainActivity : ComponentActivity() {
                 }
         }
 
+        // Topbar: percorso di accesso (solo indicatore, gli endpoint restano LAN canonici)
+        val accessPathState = combine(
+            AndroidNetworkObserver(this).observe()
+                .map<NetworkEvidence, NetworkEvidence?> { it }
+                .onStart { emit(null) },
+            settingsManager.homeNetwork,
+        ) { evidence, home ->
+            evidence?.let { AccessPathClassifier.classify(it, home) } ?: AccessPathState.Pending
+        }.stateIn(lifecycleScope, SharingStarted.WhileSubscribed(5000), AccessPathState.Pending)
+
+        // Topbar: allineamento con l'ultima release pubblicata su domopi/build/android
+        val localBuild = BuildIdentity(
+            gitSha = BuildConfig.GIT_SHA,
+            dirty = BuildConfig.BUILD_DIRTY,
+            buildId = BuildConfig.BUILD_ID,
+            buildTimestamp = BuildConfig.BUILD_TIMESTAMP,
+        )
+        val buildAlignment = combine(
+            mqttManager.isConnected,
+            mqttManager.startupGraceOver,
+            mqttManager.publishedBuild,
+        ) { connected, graceOver, published ->
+            BuildAlignment.evaluate(connected, graceOver, published, localBuild)
+        }.stateIn(lifecycleScope, SharingStarted.Eagerly, BuildAlignment.evaluate(false, false, mqttManager.publishedBuild.value, localBuild))
+
         setContent {
+            val accessPath by accessPathState.collectAsState()
+            val alignment by buildAlignment.collectAsState()
             val isDarkModeSetting by settingsManager.darkMode.collectAsState(initial = null)
             val isDarkMode = isDarkModeSetting ?: true // Default a Dark Mode se non impostato
             
@@ -84,8 +122,28 @@ class MainActivity : ComponentActivity() {
                             settingsManager = settingsManager,
                             initialPage = lastDashboardPage,
                             onPageChanged = { lastDashboardPage = it },
-                            onNavigate = { currentScreen = it }
+                            onNavigate = { currentScreen = it },
+                            accessPathState = accessPath,
+                            buildAlignment = alignment,
                         )
+                        "access_path" -> {
+                            val home by settingsManager.homeNetwork.collectAsState(initial = HomeNetworkSettings())
+                            AccessPathDetailScreen(
+                                state = accessPath,
+                                homeNetwork = home,
+                                onEditHomeNetwork = { currentScreen = "configuration" },
+                                onBack = { currentScreen = "home" }
+                            )
+                        }
+                        "build_alignment" -> {
+                            val published by mqttManager.publishedBuild.collectAsState()
+                            BuildAlignmentScreen(
+                                status = alignment,
+                                published = published,
+                                onOpenDiagnostics = { currentScreen = "diagnosis" },
+                                onBack = { currentScreen = "home" }
+                            )
+                        }
                         "ai_smart" -> {
                             val state by mqttManager.aiSmartState.collectAsState()
                             val energyState by mqttManager.energySmartState.collectAsState()
@@ -122,7 +180,9 @@ class MainActivity : ComponentActivity() {
                         )
                         "configuration" -> ConfigurationScreen(
                             settingsManager = settingsManager,
-                            onBack = { currentScreen = "home" }
+                            onBack = { currentScreen = "home" },
+                            buildAlignment = alignment,
+                            onOpenBuildAlignment = { currentScreen = "build_alignment" }
                         )
                         "pool" -> PoolScreen(
                             mqttManager = mqttManager,
