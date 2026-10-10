@@ -63,17 +63,18 @@ fun DiagnosisScreen(
                     ) {
                         Text("Connettività", style = MaterialTheme.typography.titleMedium)
                         
-                        // Badge Frequenza Messaggi
+                        // Badge Frequenza Messaggi: media sugli ultimi 10 s (traffico live), picco al secondo
+                        val rateColor = if (messageRate.averagePerSecond > 50) Color.Red else Color.Green
                         Surface(
-                            color = if (messageRate > 50) Color.Red.copy(alpha = 0.1f) else Color.Green.copy(alpha = 0.1f),
+                            color = rateColor.copy(alpha = 0.1f),
                             shape = androidx.compose.foundation.shape.CircleShape,
-                            border = BorderStroke(1.dp, if (messageRate > 50) Color.Red else Color.Green)
+                            border = BorderStroke(1.dp, rateColor)
                         ) {
                             Text(
-                                text = "$messageRate msg/s",
+                                text = "${messageRate.averagePerSecond} msg/s (picco ${messageRate.peakPerSecond})",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (messageRate > 50) Color.Red else Color.Green
+                                color = rateColor
                             )
                         }
                     }

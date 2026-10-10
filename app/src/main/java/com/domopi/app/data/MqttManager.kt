@@ -10,7 +10,6 @@ import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToInt
 
 data class EnergyData(
@@ -60,6 +59,9 @@ data class DomoticaSettings(
     val porchSensor: Boolean = false,
     val acAuto: Boolean = false
 )
+
+private const val RATE_WINDOW_SECONDS = 10
+private const val TRAFFIC_LOG_SIZE = 50
 
 class MqttManager {
     private val _aiSmartState = MutableStateFlow(AiSmartState())
@@ -118,33 +120,24 @@ class MqttManager {
     private val _trafficLog = MutableStateFlow<List<String>>(emptyList())
     val trafficLog: StateFlow<List<String>> = _trafficLog
 
-    private val _messageRate = MutableStateFlow(0)
-    val messageRate: StateFlow<Int> = _messageRate
+    // Live Digital Twin traffic only: retained replays after (re)subscription are not counted.
+    private val rateMeter = MessageRateMeter(RATE_WINDOW_SECONDS)
+    private val _messageRate = MutableStateFlow(MessageRate())
+    val messageRate: StateFlow<MessageRate> = _messageRate
 
-    private val messageCounter = AtomicInteger(0)
-    private var lastRateCalculationTime = System.currentTimeMillis()
-    private var lastLogUpdateTime = 0L
-
-    private fun updateRateCounter() {
-        val now = System.currentTimeMillis()
-        messageCounter.incrementAndGet()
-        if ((now - lastRateCalculationTime) >= 1000) {
-            _messageRate.value = messageCounter.getAndSet(0)
-            lastRateCalculationTime = now
+    init {
+        scope.launch {
+            while (isActive) {
+                delay(1_000)
+                _messageRate.value = rateMeter.snapshot(System.currentTimeMillis())
+            }
         }
     }
 
     private fun addTrafficLog(message: String) {
-        val now = System.currentTimeMillis()
-        if (now - lastLogUpdateTime < 1000) return 
-        lastLogUpdateTime = now
-
         val timestamp = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))
         _trafficLog.update { current ->
-            val newList = current.toMutableList()
-            newList.add(0, "[$timestamp] $message")
-            if (newList.size > 20) newList.removeAt(newList.size - 1)
-            newList
+            (listOf("[$timestamp] $message") + current).take(TRAFFIC_LOG_SIZE)
         }
     }
 
@@ -205,6 +198,9 @@ class MqttManager {
                 override fun messageArrived(topic: String?, message: MqttMessage?) {
                     val receivedAt = System.currentTimeMillis()
                     val receivedPrefix = digitalTwinPrefix.removeSuffix("/") + "/"
+                    if (topic != null && message != null && topic.startsWith(receivedPrefix) && !message.isRetained) {
+                        rateMeter.record(receivedAt)
+                    }
                     scope.launch {
                         if (topic != null && message != null && topic.startsWith(receivedPrefix) &&
                             receivedPrefix == digitalTwinPrefix.removeSuffix("/") + "/") {
@@ -285,7 +281,6 @@ class MqttManager {
         }
         val p = digitalTwinPrefix.removeSuffix("/")
         if (!topic.startsWith(p)) return
-        updateRateCounter()
         
         val relativeTopic = topic.removePrefix(p).removePrefix("/")
         val parts = relativeTopic.split("/")
