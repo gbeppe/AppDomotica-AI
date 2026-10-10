@@ -833,8 +833,8 @@ fun DomainCard(
                     0 -> EnergyFlowComponent(
                         energyData = energyData,
                         connected = mqttManager.isConnected.collectAsState().value,
-                        gridImportKwhOggi = if (aiData.metricheElettriche.gridImportKwhOggi > 0) aiData.metricheElettriche.gridImportKwhOggi else energyData.gridImportKwhOggi,
-                        gridImportKwhIeri = if (aiData.metricheElettriche.gridImportKwhIeri > 0) aiData.metricheElettriche.gridImportKwhIeri else energyData.gridImportKwhIeri
+                        gridImportKwhOggi = if (energyData.gridImportAtMs == 0L) null else if (aiData.metricheElettriche.gridImportKwhOggi > 0) aiData.metricheElettriche.gridImportKwhOggi else energyData.gridImportKwhOggi,
+                        gridImportKwhIeri = if (energyData.gridImportAtMs == 0L) null else if (aiData.metricheElettriche.gridImportKwhIeri > 0) aiData.metricheElettriche.gridImportKwhIeri else energyData.gridImportKwhIeri
                     )
                     1 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         val roomLightIds = listOf("sala", "libreria", "televisione", "tavolinolettura", "lavanderia", "portico_ingresso", "ingressoservizio", "prolunga")

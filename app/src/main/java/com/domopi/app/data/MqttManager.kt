@@ -31,6 +31,8 @@ data class EnergyData(
     val gridAtMs: Long = 0L,
     val batteryAtMs: Long = 0L,
     val socAtMs: Long = 0L,
+    // When the daily grid-import summary was last obtained (MQTT or EmonCMS); 0 = unknown, shown as "—".
+    val gridImportAtMs: Long = 0L,
 )
 
 data class SensorData(
@@ -390,8 +392,8 @@ class MqttManager {
                 }
                 "grid" -> when (prop) {
                     "power_raw" -> current.copy(gridPower = value, gridAtMs = now)
-                    "import_kwh_oggi", "import_today" -> current.copy(gridImportKwhOggi = value)
-                    "import_kwh_ieri", "import_yesterday" -> current.copy(gridImportKwhIeri = value)
+                    "import_kwh_oggi", "import_today" -> current.copy(gridImportKwhOggi = value, gridImportAtMs = now)
+                    "import_kwh_ieri", "import_yesterday" -> current.copy(gridImportKwhIeri = value, gridImportAtMs = now)
                     else -> current
                 }
                 "battery" -> when (prop) {
@@ -789,7 +791,8 @@ class MqttManager {
         _energyData.update { current ->
             current.copy(
                 gridImportKwhOggi = kwhOggi,
-                gridImportKwhIeri = kwhIeri
+                gridImportKwhIeri = kwhIeri,
+                gridImportAtMs = System.currentTimeMillis()
             )
         }
         _aiManagedData.update { current ->

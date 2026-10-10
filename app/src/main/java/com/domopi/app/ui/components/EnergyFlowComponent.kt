@@ -76,8 +76,9 @@ fun EnergyFlowComponent(
     energyData: EnergyData,
     connected: Boolean,
     modifier: Modifier = Modifier,
-    gridImportKwhOggi: Float = 0f,
-    gridImportKwhIeri: Float = 0f,
+    /** null = not yet obtained (EmonCMS unreachable, no MQTT summary): shown as "—", never as 0. */
+    gridImportKwhOggi: Float? = null,
+    gridImportKwhIeri: Float? = null,
 ) {
     // Freshness is re-evaluated every 5 s even when no message arrives.
     var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -207,17 +208,23 @@ private fun QualityText(text: String, color: Color) {
     Text(text, color = color, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 2.dp))
 }
 
-/** Unchanged behaviour: green at 0 kWh, flashing red when energy was imported. */
+/** Green at 0 kWh, flashing red when energy was imported, grey "—" when unknown. */
 @Composable
-private fun GridImportSummary(ieri: Float, oggi: Float) {
+private fun GridImportSummary(ieri: Float?, oggi: Float?) {
     val locale = LocalConfiguration.current.locales[0]
     val blinkAlpha by rememberInfiniteTransition(label = "import").animateFloat(
         initialValue = 0.7f, targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(600, easing = LinearEasing), RepeatMode.Reverse),
         label = "blink_red"
     )
-    val ieriColor = if (ieri >= 0.05f) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
-    val oggiColor = if (oggi >= 0.05f) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
+    fun color(kwh: Float?) = when {
+        kwh == null -> Color.Gray
+        kwh >= 0.05f -> Color.Red.copy(alpha = blinkAlpha)
+        else -> SolarGreen
+    }
+    fun text(kwh: Float?) = kwh?.let { "%.1f kWh".format(locale, it) } ?: "— kWh"
+    val ieriColor = color(ieri)
+    val oggiColor = color(oggi)
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -225,13 +232,13 @@ private fun GridImportSummary(ieri: Float, oggi: Float) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Importato ieri : ", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            Text("%.1f kWh".format(locale, ieri), style = MaterialTheme.typography.bodyMedium,
+            Text(text(ieri), style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold, color = ieriColor)
         }
         Text("•", color = Color.Gray.copy(alpha = 0.5f), style = MaterialTheme.typography.bodySmall)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("oggi : ", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            Text("%.1f kWh".format(locale, oggi), style = MaterialTheme.typography.bodyMedium,
+            Text(text(oggi), style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold, color = oggiColor)
         }
     }
