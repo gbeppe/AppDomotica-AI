@@ -100,6 +100,23 @@ data class EnergyAssistantAnswer(
                         }
                         detail += "Righe invalide: ${result.getInt("invalid_lines")} · troncamento: ${result.getBoolean("truncated")}"
                     }
+                    "house_ai.energy_daily_extreme.v1" -> {
+                        val period = result.getJSONObject("period")
+                        val source = result.getJSONObject("source")
+                        detail += "EmonCMS · feed ${source.getInt("feed_id")} · campionamento ${source.getInt("interval_seconds")} s"
+                        detail += "Periodo: ${period.getString("start")} → ${period.getString("end_exclusive")} escluso · Europe/Rome"
+                        detail += "Giorni completi confrontati: ${result.getInt("eligible_days")} · " +
+                            "esclusi: ${result.getJSONArray("excluded_days").length()}"
+                    }
+                    "house_ai.current_predictive_reserve.v1" -> {
+                        detail += "Digital Twin · stato Predictive Reserve (PR-MODE.1) · " +
+                            if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
+                        val observations = result.getJSONObject("observations")
+                        detail += observations.keys().asSequence().sorted().map {
+                            val observation = observations.getJSONObject(it)
+                            "${observation.getString("source_topic")} = ${observation.getString("value")}"
+                        }.toList()
+                    }
                     "house_ai.energy_comparison.v1" -> detail += "Confronto: ${result.getString("left_id")} meno ${result.getString("right_id")}"
                     "house_ai.source_error.v1" -> detail += "Sorgente non disponibile"
                     else -> error("Schema evidenza non riconosciuto")
