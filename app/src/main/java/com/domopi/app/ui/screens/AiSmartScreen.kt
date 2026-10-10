@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -122,13 +124,81 @@ fun AiSmartScreen(
         }
     }
 
+    var askedQuestion by rememberSaveable { mutableStateOf<String?>(null) }
+    fun speak(text: String) {
+        val limit = TextToSpeech.getMaxSpeechInputLength()
+        val chunks = speechChunks(text, limit)
+        for ((index, chunk) in chunks.withIndex()) {
+            val id = "energy-$index" + if (index == chunks.lastIndex) "-last" else ""
+            if (speech?.speak(chunk, if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id) == TextToSpeech.ERROR) {
+                speech?.stop()
+                voiceNotice = "Lettura vocale non riuscita. La risposta resta disponibile a schermo."
+                break
+            }
+        }
+    }
+    // A spoken question is sent at once and its answer (or error) is read aloud; typed ones are not.
+    fun ask(text: String, spoken: Boolean) {
+        askedQuestion = text
+        scope.launch {
+            loading = true
+            dynamicError = null
+            response = null
+            try {
+                val started = System.currentTimeMillis()
+                val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
+                    climateState, state, assistantContext, reserve = reserveState,
+                    thermostats = thermostatState)
+                result.lightCommands.forEach { command ->
+                    check(connected && onLightCommand(command.lightId, command.state)) {
+                        "Comando luce non inviato: connessione o target non valido."
+                    }
+                }
+                result.thermostatCommands.forEach { command ->
+                    check(connected && onThermostatCommand(command.thermostat, command.targetC)) {
+                        "Comando termostato non inviato: connessione o valore non valido."
+                    }
+                }
+                result.sceneCommands.forEach { scene ->
+                    check(connected && onSceneCommand(scene)) {
+                        "Scena luci non inviata: connessione o scena non valida."
+                    }
+                }
+                response = result
+                assistantContext = result.context ?: assistantContext
+                stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
+                    statusCode = 200, latencyMs = System.currentTimeMillis() - started,
+                    details = "Richiesta completata"))
+                healthRefresh++
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IllegalStateException) {
+                dynamicError = e.message ?: "Risposta del backend non valida."
+                stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
+                    details = "Risposta backend non valida", isError = true))
+                healthRefresh++
+            } catch (_: Exception) {
+                dynamicError = "Assistente non raggiungibile o risposta non valida. Verifica la connessione, anche Tailscale, poi riprova."
+                stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
+                    details = "Richiesta non riuscita", isError = true))
+                healthRefresh++
+            } finally {
+                loading = false
+                if (spoken && speechReady) (response?.text ?: dynamicError)?.let(::speak)
+            }
+        }
+    }
     val recognizer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim()
         if (result.resultCode == Activity.RESULT_OK && !text.isNullOrBlank()) {
             question = text
-            voiceNotice = "Trascrizione pronta: controlla la domanda e premi Chiedi."
+            when {
+                text.length > 1000 -> voiceNotice = "Domanda troppo lunga: al massimo 1000 caratteri."
+                serviceUrl.isBlank() || serviceToken.isBlank() -> voiceNotice = "Configura indirizzo e token dell'assistente."
+                else -> { voiceNotice = null; ask(text, spoken = true) }
+            }
         } else {
-            voiceNotice = "Nessuna trascrizione ricevuta. Puoi scrivere la domanda."
+            voiceNotice = "Nessuna domanda riconosciuta. Riprova o scrivi la domanda."
         }
     }
     DisposableEffect(context, lifecycleOwner) {
@@ -185,6 +255,7 @@ fun AiSmartScreen(
         onServiceUrlChange = { serviceUrl = it; dynamicError = null; response = null },
         onServiceTokenChange = { serviceToken = it; dynamicError = null; response = null },
         dynamicAnswer = response?.text,
+        askedQuestion = askedQuestion,
         dynamicResponse = response,
         dynamicError = dynamicError,
         loading = loading,
@@ -196,78 +267,20 @@ fun AiSmartScreen(
         onClearTrafficLogs = {
             stackHealthManager.clearLogs()
         },
-        onAskDynamic = { text ->
-            scope.launch {
-                    loading = true
-                    dynamicError = null
-                    response = null
-                    try {
-                        val started = System.currentTimeMillis()
-                        val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
-                            climateState, state, assistantContext, reserve = reserveState,
-                            thermostats = thermostatState)
-                        result.lightCommands.forEach { command ->
-                            check(connected && onLightCommand(command.lightId, command.state)) {
-                                "Comando luce non inviato: connessione o target non valido."
-                            }
-                        }
-                        result.thermostatCommands.forEach { command ->
-                            check(connected && onThermostatCommand(command.thermostat, command.targetC)) {
-                                "Comando termostato non inviato: connessione o valore non valido."
-                            }
-                        }
-                        result.sceneCommands.forEach { scene ->
-                            check(connected && onSceneCommand(scene)) {
-                                "Scena luci non inviata: connessione o scena non valida."
-                            }
-                        }
-                        response = result
-                        assistantContext = result.context ?: assistantContext
-                        stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
-                            statusCode = 200, latencyMs = System.currentTimeMillis() - started,
-                            details = "Richiesta completata"))
-                        healthRefresh++
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: IllegalStateException) {
-                        dynamicError = e.message ?: "Risposta del backend non valida."
-                        stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
-                            details = "Risposta backend non valida", isError = true))
-                        healthRefresh++
-                    } catch (_: Exception) {
-                        dynamicError = "Assistente energia non raggiungibile o risposta non valida. Verifica indirizzo e connessione, poi riprova."
-                        stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
-                            details = "Richiesta non riuscita", isError = true))
-                        healthRefresh++
-                    } finally {
-                        loading = false
-                    }
-            }
-        },
+        onAskDynamic = { ask(it, spoken = false) },
         onDictate = {
             speech?.stop()
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, "it-IT")
                 putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "Chiedi dello stato o dell’energia della casa")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Chiedi o comanda la casa")
             }
             try { recognizer.launch(intent) }
             catch (_: ActivityNotFoundException) { voiceNotice = "Riconoscimento vocale non disponibile. Puoi scrivere la domanda." }
             catch (_: SecurityException) { voiceNotice = "Accesso al riconoscimento vocale negato. Puoi scrivere la domanda." }
         },
-        onSpeak = { text ->
-            val limit = TextToSpeech.getMaxSpeechInputLength()
-            val chunks = speechChunks(text, limit)
-            for ((index, chunk) in chunks.withIndex()) {
-                val id = "energy-$index" + if (index == chunks.lastIndex) "-last" else ""
-                if (speech?.speak(chunk, if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id) == TextToSpeech.ERROR) {
-                    speech?.stop()
-                    voiceNotice = "Lettura vocale non riuscita. La risposta resta disponibile a schermo."
-                    break
-                }
-            }
-        },
+        onSpeak = { speak(it) },
         onStopSpeaking = { speech?.stop(); voiceNotice = "Lettura interrotta." }
     )
 }
@@ -303,6 +316,7 @@ internal fun AiSmartContent(
     onRefreshStackHealth: () -> Unit = {},
     onClearTrafficLogs: () -> Unit = {},
     onAskDynamic: (String) -> Unit = {},
+    askedQuestion: String? = null,
 ) {
     BackHandler(onBack = onClassic)
     var submittedQuestion by rememberSaveable { mutableStateOf<String?>(null) }
@@ -429,34 +443,42 @@ internal fun AiSmartContent(
             Card(Modifier.fillMaxWidth().testTag("smart-query-card")) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Chiedi alla casa", style = MaterialTheme.typography.titleMedium)
-                    Text(if (dynamicMode) "Scrivi o detta una query. Puoi anche comandare luci, scene luci e termostati."
+                    Text(if (dynamicMode) "Tocca Parla e fai la tua domanda: parte da sola e la risposta viene letta. " +
+                        "Puoi comandare luci, scene luci e termostati."
                         else "Puoi chiedere luci e temperature disponibili.", style = MaterialTheme.typography.bodySmall)
-                    OutlinedTextField(question, onQuestionChange, label = { Text("La tua query") },
-                        modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 5, enabled = !loading)
-                    if (question.length > 1000) Text("La query può contenere al massimo 1000 caratteri.", color = MaterialTheme.colorScheme.error)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(enabled = question.isNotBlank() && question.length <= 1000 && !loading &&
-                            (!dynamicMode || serviceUrl.isNotBlank() && serviceToken.isNotBlank()), onClick = {
-                            onStopSpeaking()
-                            submittedQuestion = question.trim()
-                            if (dynamicMode) onAskDynamic(question.trim())
-                        }) { Text("Chiedi") }
-                        OutlinedButton(enabled = !loading, onClick = onDictate) { Text("Detta") }
+                    // Voice is the primary input: the recognized question is sent without a second tap.
+                    Button(enabled = !loading, onClick = onDictate,
+                        modifier = Modifier.fillMaxWidth().height(64.dp).testTag("smart-speak")) {
+                        Icon(Icons.Default.Mic, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Parla", style = MaterialTheme.typography.titleMedium)
                     }
                     if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
-                    Text("Controlla la trascrizione prima di inviarla.", style = MaterialTheme.typography.bodySmall)
                     voiceNotice?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                    OutlinedTextField(question, onQuestionChange, label = { Text("Oppure scrivi la domanda") },
+                        modifier = Modifier.fillMaxWidth(), minLines = 1, maxLines = 5, enabled = !loading)
+                    if (question.length > 1000) Text("La query può contenere al massimo 1000 caratteri.", color = MaterialTheme.colorScheme.error)
+                    OutlinedButton(enabled = question.isNotBlank() && question.length <= 1000 && !loading &&
+                        (!dynamicMode || serviceUrl.isNotBlank() && serviceToken.isNotBlank()), onClick = {
+                        onStopSpeaking()
+                        submittedQuestion = question.trim()
+                        if (dynamicMode) onAskDynamic(question.trim())
+                    }) { Text("Invia") }
                 }
             }
             Card(Modifier.fillMaxWidth().testTag("smart-response-card")) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Risposta", style = MaterialTheme.typography.titleMedium)
+                    val asked = askedQuestion ?: submittedQuestion
+                    if (asked != null && (answer != null || dynamicError != null || loading)) {
+                        Text("Hai chiesto: $asked", Modifier.testTag("smart-asked"), style = MaterialTheme.typography.bodyMedium,
+                            fontStyle = FontStyle.Italic)
+                    }
                     dynamicError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     if (answer == null && dynamicError == null && !loading) {
                         Text("La risposta apparirà qui.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     answer?.let { text ->
-                        Text("Domanda: ${dynamicResponse?.question?.takeIf { it.isNotBlank() } ?: submittedQuestion.orEmpty()}", style = MaterialTheme.typography.bodySmall)
                         dynamicResponse?.let { result ->
                             Text(result.statusLabel, style = MaterialTheme.typography.labelLarge)
                             if (result.generatedAt.isNotBlank()) Text("Risposta del ${SpokenTime.moment(result.generatedAt)}", style = MaterialTheme.typography.bodySmall)

@@ -63,11 +63,11 @@ class AiSmartScreenTest {
                     speechReady = true, onSpeak = { spoken = it })
             }
         }
-        compose.onNodeWithText("Chiedi").assertIsNotEnabled()
-        compose.onNodeWithText("La tua query").performScrollTo()
+        compose.onNodeWithText("Invia").assertIsNotEnabled()
+        compose.onNodeWithText("Oppure scrivi la domanda").performScrollTo()
             .performTextInput("Quante luci sono accese e quali sono le temperature living e ACS?")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
-        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithText("Invia").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo()
             .assertTextContains("6 punti luce accesi", substring = true)
             .assertTextContains("24,2 gradi", substring = true)
@@ -108,7 +108,7 @@ class AiSmartScreenTest {
             }
         }
         compose.onNodeWithText("Leggi riepilogo").assertIsNotEnabled()
-        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithText("Invia").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo()
             .assertTextContains("Temperatura living: dato non disponibile", substring = true)
             .assertTextContains("Acqua sanitaria ACS: dato non disponibile", substring = true)
@@ -120,7 +120,7 @@ class AiSmartScreenTest {
         screenshot("smart-dark-missing.png")
     }
 
-    @Test fun dictationCanBeCorrectedBeforeAskingAndReadingCanBeStopped() {
+    @Test fun typedQuestionStillWorksAndReadingCanBeStopped() {
         var stopped = false
         compose.setContent {
             var question by remember { mutableStateOf("") }
@@ -129,11 +129,11 @@ class AiSmartScreenTest {
                     onDictate = { question = "Temperatura camera" }, onStopSpeaking = { stopped = true })
             }
         }
-        compose.onNodeWithText("Detta").performScrollTo().performClick()
+        compose.onNodeWithText("Parla").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").assertDoesNotExist()
-        compose.onNodeWithText("La tua query").performScrollTo().performTextReplacement("Temperatura living e ACS")
+        compose.onNodeWithText("Oppure scrivi la domanda").performScrollTo().performTextReplacement("Temperatura living e ACS")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
-        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithText("Invia").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo().assertTextContains("41,1 gradi", substring = true)
         compose.onNodeWithText("Ferma lettura").performScrollTo().performClick()
         compose.runOnIdle { assertTrue(stopped) }
@@ -156,14 +156,14 @@ class AiSmartScreenTest {
                     })
             }
         }
-        compose.onNodeWithText("Chiedi").assertIsNotEnabled()
+        compose.onNodeWithText("Invia").assertIsNotEnabled()
         compose.onNodeWithContentDescription("Menu configurazione e diagnostica").performClick()
         compose.onNodeWithText("Configurazione assistente").performClick()
         compose.onNodeWithText("Indirizzo backend AI").performTextInput("http://10.0.2.2:8765")
         compose.onNodeWithText("Token backend").performTextInput("token-di-test-abbastanza-lungo")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.onNodeWithText("Chiudi").performClick()
-        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithText("Invia").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo()
             .assertTextContains("12,50 kWh", substring = true)
         compose.runOnIdle { assertEquals("Quanta energia ho prodotto oggi?", asked) }
@@ -214,15 +214,15 @@ class AiSmartScreenTest {
                     })
             }
         }
-        compose.onNodeWithText("Detta").performScrollTo().performClick()
+        compose.onNodeWithText("Parla").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("", asked) }
         compose.onNodeWithTag("smart-answer").assertDoesNotExist()
-        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithText("Invia").performScrollTo().performClick()
         compose.onNodeWithTag("smart-answer").performScrollTo().assertTextContains("Intendi il livello medio", substring = true)
         screenshot("energy-dark-clarification.png")
-        compose.onNodeWithText("La tua query").performScrollTo().performTextReplacement("SOC medio dal 1 al 7 settembre inclusi")
+        compose.onNodeWithText("Oppure scrivi la domanda").performScrollTo().performTextReplacement("SOC medio dal 1 al 7 settembre inclusi")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
-        compose.onNodeWithText("Chiedi").performScrollTo().performClick()
+        compose.onNodeWithText("Invia").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("SOC medio dal 1 al 7 settembre inclusi", asked) }
     }
 
