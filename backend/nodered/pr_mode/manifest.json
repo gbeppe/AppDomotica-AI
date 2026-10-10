@@ -1,0 +1,17 @@
+{
+  "patch": "PR-MODE.1",
+  "modified_ids": [
+    "5a7c1d360710ca21",
+    "c67ee62775ea71f8"
+  ],
+  "added_ids": [],
+  "bootstrap_inject_id": "8a5df72f1a69144b",
+  "func_sha256_before": {
+    "5a7c1d360710ca21": "c7e4677dd29e895c7c20eeb0ab363a253b54d1c0dc486813adf76ca2159edfe2",
+    "c67ee62775ea71f8": "1119fd4aa3a732faddd81a50967548d5162f043bc9af41c18016ccc12a868acb"
+  },
+  "func_sha256_after": {
+    "5a7c1d360710ca21": "7cecbf1a857e7794601c1f0f89d5d3dfc6d42420cd581416787452ceb84a60ed",
+    "c67ee62775ea71f8": "79a226deca51d8357a3c4eed6a5672b40c08b444a81182a8b55eed4ae8618f39"
+  }
+}

@@ -148,3 +148,16 @@ Payload schema `domopi.build_identity.v1` (same shape as WallBox `wallbox.build_
 It is delivery metadata, not home-automation state: it does not pass through the
 Digital Twin Router, Node-RED does not consume it, and Android never publishes on
 it. Gradle builds (Android Studio, `assembleDebug`, tests) never publish.
+
+## 10. Predictive Reserve read-only state (PR-MODE.1)
+
+Added on 2026-10-10 (patch `backend/nodered/pr_mode/`). State only, no `/cmd`:
+
+| Public topic | Legacy source | Payload |
+|---|---|---|
+| `zara/interface/predictive_reserve/operating_mode/stat` | `casa/clima/stat/predictive_reserve_operating_mode` | `SHADOW` / `ACTIVE` |
+| `zara/interface/predictive_reserve/ready/stat` | `casa/clima/stat/predictive_reserve_ready` | `true` / `false` |
+
+Both are published retained by `PR Control State Adapter` from the state already
+computed by `PR Operational State`. Android only explains their effect; the operating
+mode remains settable only from the Node-RED editor.
