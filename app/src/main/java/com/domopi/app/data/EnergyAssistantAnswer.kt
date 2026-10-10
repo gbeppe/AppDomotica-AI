@@ -52,7 +52,7 @@ data class EnergyAssistantAnswer(
                         if (observation == null) detail += "Dato non disponibile"
                         else {
                             detail += observation.getString("source_topic")
-                            detail += "Ricezione: ${java.time.Instant.ofEpochMilli(observation.getLong("received_at_ms"))}"
+                            detail += "Ricezione: ${SpokenTime.moment(observation.getLong("received_at_ms"))}"
                             detail += "Retained: ${if (observation.getBoolean("retained")) "sì" else "no"}"
                         }
                     }
@@ -80,8 +80,8 @@ data class EnergyAssistantAnswer(
                             detail += "Comando: ${command.getString("command_id")}"
                             detail += "Policy: ${command.getString("actor_policy")} · origine: ${command.getString("origin")}"
                             detail += command.getString("source_topic")
-                            detail += "Evento: ${java.time.Instant.ofEpochMilli(command.getLong("observed_at_ms"))}"
-                            detail += "Ricezione Android: ${java.time.Instant.ofEpochMilli(command.getLong("received_at_ms"))}"
+                            detail += "Evento: ${SpokenTime.moment(command.getLong("observed_at_ms"))}"
+                            detail += "Ricezione Android: ${SpokenTime.moment(command.getLong("received_at_ms"))}"
                             detail += "Retained: ${command.getBoolean("retained")} · nessuna conferma fisica"
                         }
                     }

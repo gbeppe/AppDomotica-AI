@@ -2,9 +2,6 @@ package com.domopi.app.data
 
 import java.text.Normalizer
 import java.util.Locale
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 data class SmartObservation(
     val payload: String, val receivedAtMs: Long, val retained: Boolean,
@@ -21,9 +18,7 @@ data class SmartReading(
 ) {
     fun provenance(): String {
         val received = observation ?: return "Nessun messaggio ricevuto. Età della misura ignota."
-        val time = Instant.ofEpochMilli(received.receivedAtMs).atZone(ZoneId.of("Europe/Rome"))
-            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss", Locale.ITALIAN))
-        return "Ricevuto il $time (Europe/Rome). " +
+        return "Ricevuto il ${SpokenTime.moment(received.receivedAtMs)}. " +
             (if (received.retained) "Messaggio conservato dal broker (retained). " else "Messaggio non retained. ") +
             "Età della misura ignota."
     }

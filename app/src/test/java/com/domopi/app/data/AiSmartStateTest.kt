@@ -111,7 +111,7 @@ class AiSmartStateTest {
             "custom/house/env/living/temperature/stat")
         val reading = state.readings().first { it.entity.topic == AiSmartState.livingTopic }
         assertEquals("custom/house/env/living/temperature/stat", reading.observation!!.sourceTopic)
-        assertTrue(reading.provenance().contains("01/01/1970 01:00:00"))
+        assertTrue(reading.provenance().contains("01/01/1970 alle 01:00"))
         assertTrue(reading.provenance().contains("Messaggio conservato dal broker"))
         assertTrue(reading.provenance().contains("Età della misura ignota"))
         assertTrue(sample().readings().last().provenance().contains("Messaggio non retained"))

@@ -39,7 +39,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.Instant
 
 /** Uses the existing state observer. This screen has no command or MQTT client capability. */
 @Composable
@@ -454,7 +453,7 @@ internal fun AiSmartContent(
                         Text("Domanda: ${dynamicResponse?.question?.takeIf { it.isNotBlank() } ?: submittedQuestion.orEmpty()}", style = MaterialTheme.typography.bodySmall)
                         dynamicResponse?.let { result ->
                             Text(result.statusLabel, style = MaterialTheme.typography.labelLarge)
-                            if (result.generatedAt.isNotBlank()) Text("Risposta del ${result.generatedAt}", style = MaterialTheme.typography.bodySmall)
+                            if (result.generatedAt.isNotBlank()) Text("Risposta del ${SpokenTime.moment(result.generatedAt)}", style = MaterialTheme.typography.bodySmall)
                         }
                         if (dynamicMode) Text("Risposta riferita alla richiesta, non aggiornata automaticamente.", style = MaterialTheme.typography.bodySmall)
                         Text(text, Modifier.testTag("smart-answer"))
@@ -478,7 +477,7 @@ internal fun AiSmartContent(
                                     Text(observation?.sourceTopic ?: "Topic atteso: $topic", style = MaterialTheme.typography.bodySmall)
                                     Text(
                                         if (observation == null) "Nessun messaggio ricevuto. Età della misura ignota."
-                                        else "Ricezione: ${Instant.ofEpochMilli(observation.receivedAtMs)} · retained: ${observation.retained}. Età della misura ignota.",
+                                        else "Ricezione: ${SpokenTime.moment(observation.receivedAtMs)} · retained: ${observation.retained}. Età della misura ignota.",
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 }
