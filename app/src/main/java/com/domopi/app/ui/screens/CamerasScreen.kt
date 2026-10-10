@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.domopi.app.data.ConnectionMode
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.SettingsManager
 import com.domopi.app.ui.components.CameraStreamComponent
@@ -22,15 +21,12 @@ fun CamerasScreen(
     connectivityManager: ZaiConnectivityManager,
     onBack: () -> Unit,
 ) {
-    val connectionMode by connectivityManager.connectionMode.collectAsState()
     
-    val tcLocalIp by settingsManager.tinycamLocalIp.collectAsState("")
-    val tcRemoteIp by settingsManager.tinycamRemoteIp.collectAsState("")
+    val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
     val tcUser by settingsManager.tinycamUser.collectAsState("guest")
     val tcPass by settingsManager.tinycamPass.collectAsState("password")
 
-    val tcIp = if (connectionMode == ConnectionMode.LOCAL) tcLocalIp else tcRemoteIp
     val baseUrl = "http://$tcIp:$tcPort/axis-cgi/mjpg/video.cgi"
 
     // Stato per la telecamera selezionata (0 = Ingresso, 1 = Soggiorno)
