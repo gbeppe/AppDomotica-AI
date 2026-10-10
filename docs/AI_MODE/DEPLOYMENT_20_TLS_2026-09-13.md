@@ -77,6 +77,18 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 10 ottobre 2026 — stato del Predictive Reserve (fase 3.1)
+
+Release attiva: `/opt/domopi-house-ai/releases/20261010-predictive-reserve`, commit
+`18cbd1c`; `PREVIOUS_RELEASE` = `20261010-log-freshness`. 89 test superati su
+`.20` (Python 3.9.2, utente `house-ai`), controllo AST, symlink atomico, servizi
+`active`. Nuovo tool chiuso `current_predictive_reserve` sullo snapshot
+`current_predictive_reserve` inviato dall'app (topic PR-MODE.1, valori in
+allowlist). Domanda reale «Il PR è attivo? In che modalità è?»: piano
+`current_predictive_reserve`, risposta «controllo disattivato … Modalità: ACTIVE ·
+Modello: pronto». Il backend va rilasciato prima dell'app: le versioni precedenti
+rifiutano il campo `current_predictive_reserve` (HTTP 400).
+
 Dal 10/10/2026 l'app salva il token cifrato (Android Keystore): va inserito una
 sola volta, copiandolo privatamente da `/home/pi/.config/house-ai/android.token`.
 
