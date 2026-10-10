@@ -17,6 +17,17 @@ LIGHT_LABELS = {
     "lights_laundry": "Lavanderia", "lights_porch_entrance": "Portico ingresso",
     "lights_service_entrance": "Ingresso servizio",
     "pool_water": "Luci piscina", "pool_deck": "Luci pedana piscina",
+    "lights_prolunga": "Prolunga",
+}
+# What the Node-RED scene flows do (live flows .20, 2026-10-11).
+SCENE_TEXTS = {
+    "tv": "Scena TV: accendo lampada TV e soggiorno, spengo libreria e lampadario TV.",
+    "sleep": "Scena notte: tra 2 minuti si spengono tutte le luci, una alla volta in circa 35 secondi.",
+    "all_on": ("Accensione di tutte le luci: soggiorno, TV, libreria, pedana e luci piscina e lettura, "
+               "una alla volta in circa 30 secondi. Con le luci ECO attive si accendono solo lettura e TV; "
+               "in modalità vacanza la scena non ha effetto."),
+    "all_off": ("Spegnimento di tutte le luci: interne, esterne e piscina, una alla volta in circa "
+                "35 secondi."),
 }
 
 THERMOSTAT_LABELS = {"thermostat_living": "Termostato soggiorno", "thermostat_bath": "Termostato bagno"}
@@ -292,7 +303,7 @@ def describe(item):
             on = [LIGHT_LABELS[key] for key, obs in observations.items() if obs['value']]
             off = sum(not obs['value'] for obs in observations.values())
             missing = r['mapped_count'] - len(observations)
-            text = (f"Tra gli {r['mapped_count']} punti luce mappati, risultano accesi {len(on)}, "
+            text = (f"Tra i {r['mapped_count']} punti luce mappati, risultano accesi {len(on)}, "
                     f"spenti {off} e senza dato valido {missing}.")
             if on:
                 text += ' Accesi dichiarati: ' + ', '.join(on) + '.'
@@ -327,6 +338,9 @@ def describe(item):
             text += ' Uno o più messaggi sono retained.'
         return text + (' Il timestamp dello stato indica la ricezione Android; '
                        'non prova freschezza, durata o stato fisico.')
+    if schema == 'house_ai.light_scene_command.v1':
+        return (SCENE_TEXTS[r['scene']] + " L'app invia la scena a Node-RED; i successivi /stat sono "
+                "stati dichiarati, non conferme fisiche.")
     if schema == 'house_ai.light_command.v1':
         return (f"Comando pronto: {'accensione' if r['state'] == 'on' else 'spegnimento'} "
                 f"di {LIGHT_LABELS[r['light']]}. L'app lo invia sul topic validato del registry; "

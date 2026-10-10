@@ -28,6 +28,13 @@
     {"id":"thermostat_set_bath_half","question":"Metti il bagno a diciannove e mezzo","operations":[{"tool":"set_thermostat_target","thermostat":"thermostat_bath","target_c":"19.5"}]},
     {"id":"thermostat_out_of_range","question":"Porta il soggiorno a 25 gradi","clarification":true},
     {"id":"thermostat_no_room","question":"Alza un po' il riscaldamento","clarification":true},
-    {"id":"ac_command_refused","question":"Accendi il condizionatore","clarification":true}
+    {"id":"ac_command_refused","question":"Accendi il condizionatore","clarification":true},
+    {"id":"scene_tv","question":"Attiva la modalità TV","operations":[{"tool":"set_light_scene","scene":"tv"}]},
+    {"id":"scene_sleep","question":"Buonanotte, modalità notte","operations":[{"tool":"set_light_scene","scene":"sleep"}]},
+    {"id":"scene_all_off","question":"Spegni tutte le luci","operations":[{"tool":"set_light_scene","scene":"all_off"}]},
+    {"id":"scene_all_on","question":"Accendi tutte le luci","operations":[{"tool":"set_light_scene","scene":"all_on"}]},
+    {"id":"prolunga_off","question":"Spegni la prolunga","operations":[{"tool":"set_light_state","light":"lights_prolunga","state":"off"}]},
+    {"id":"prolunga_state","question":"La prolunga è accesa?","operations":[{"tool":"current_lights","light":"lights_prolunga"}]},
+    {"id":"light_unmapped","question":"Accendi le luci della cucina","clarification":true}
   ]
 }

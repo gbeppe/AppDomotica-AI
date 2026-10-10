@@ -5,7 +5,7 @@ from current_state import CurrentState
 class CurrentStateTest(unittest.TestCase):
     def test_empty_state_is_unknown_not_off(self):
         state = CurrentState().snapshot()
-        self.assertEqual(state['lights']['unknown'], 9)
+        self.assertEqual(state['lights']['unknown'], 10)
         self.assertEqual(state['lights']['reported_off'], 0)
         self.assertTrue(all(e['value'] is None for e in state['entities']))
 
@@ -25,7 +25,7 @@ class CurrentStateTest(unittest.TestCase):
         state.ingest(topic, 'true', 1)
         state.ingest(topic, 'unavailable', 3)
         self.assertFalse(state.ingest(topic, 'true', 2))
-        self.assertEqual(state.snapshot()['lights']['unknown'], 9)
+        self.assertEqual(state.snapshot()['lights']['unknown'], 10)
 
     def test_temperature_zero_valid_and_retained_does_not_prove_freshness(self):
         state = CurrentState()

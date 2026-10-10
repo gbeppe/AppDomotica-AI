@@ -75,8 +75,8 @@ La presenza di un comando non costituisce autorizzazione a eseguirlo con la voce
 2. `heating.heat_pump.*`: quattro voci ancora nel registry, dispositivo rimosso
    secondo `RUNTIME_MQTT_CONTRACT.md`. Non promuovere l'esistenza della rotta a
    prova dell'esistenza dell'impianto.
-3. `lights.prolunga.power`: comando/stato presenti, ruolo fisico ancora da
-   chiarire. Dominio lights non basta a decidere che sia una lampada.
+3. `lights.prolunga.power`: presa radio Broadlink usata come «luce allarme» e
+   «luci natale» (chiarito l'11/10/2026); nel catalogo Smart come «Prolunga».
 4. `env.living.temperature` e `climate.thermostat_living.current_temperature`
    condividono `emon/emonth5/temperature_calibrated`: due viste della stessa
    misura, non due sensori da contare.

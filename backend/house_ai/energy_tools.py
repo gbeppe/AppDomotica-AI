@@ -54,7 +54,11 @@ LIGHT_TOPICS = {
     "lights_service_entrance": "zara/interface/lights/service_entrance/power/stat",
     "pool_water": "zara/interface/pool/water/power/stat",
     "pool_deck": "zara/interface/pool/deck/power/stat",
+    # Broadlink RF socket (Node-RED "luce allarme"/"luci natale"); fase 3.3.
+    "lights_prolunga": "zara/interface/lights/prolunga/power/stat",
 }
+# Node-RED "Scene Dispatcher" accepts exactly these payloads on zara/interface/lights/scene/cmd.
+LIGHT_SCENES = ("tv", "sleep", "all_on", "all_off")
 # Retired state keys accepted only for old-client transport compatibility, never tool targets.
 LEGACY_LIGHT_TOPICS = {
     "lights_bedroom": "zara/interface/lights/bedroom/power/stat",
@@ -86,6 +90,10 @@ def catalog(path=CATALOG_PATH):
             "name": "set_light_state",
             "description": "Request ON or OFF for one mapped light",
             "parameters": {"light": sorted(LIGHT_TOPICS), "state": ["on", "off"]}
+        }, {
+            "name": "set_light_scene",
+            "description": "Run one Node-RED light scene: tv (TV lamp and living on, bookshelf and TV chandelier off), sleep (all lights off after 2 minutes), all_on (main indoor and pool lights on; nothing in holiday mode, fewer with ECO lights), all_off (all indoor, outdoor and pool lights off)",
+            "parameters": {"scene": list(LIGHT_SCENES)}
         }, {
             "name": "current_thermostats",
             "description": "Read room temperature, heating setpoint, heating on/off and the time-slot timer setpoints (max inside the slot, min outside) for the living-room or bathroom thermostat",
@@ -159,7 +167,8 @@ def validate_plan(plan, sources=None):
                     if tool == "energy_daily_extreme" else {"id", "tool"}
                     if tool in ("current_air_conditioner", "current_predictive_reserve") else {"id", "tool", "light"}
                     if tool == "current_lights" else {"id", "tool", "light", "state"}
-                    if tool == "set_light_state" else {"id", "tool", "thermostat"}
+                    if tool == "set_light_state" else {"id", "tool", "scene"}
+                    if tool == "set_light_scene" else {"id", "tool", "thermostat"}
                     if tool == "current_thermostats" else {"id", "tool", "thermostat", "target_c"}
                     if tool == "set_thermostat_target" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
@@ -181,6 +190,8 @@ def validate_plan(plan, sources=None):
         if tool == "set_light_state" and (operation["light"] not in LIGHT_TOPICS
                                            or operation["state"] not in ("on", "off")):
             raise ValueError("Unknown light command")
+        if tool == "set_light_scene" and operation["scene"] not in LIGHT_SCENES:
+            raise ValueError("Unknown light scene")
         if tool == "current_thermostats" and operation["thermostat"] not in ("all", *THERMOSTATS):
             raise ValueError("Unknown thermostat")
         if tool == "set_thermostat_target" and (operation["thermostat"] not in THERMOSTATS
@@ -426,6 +437,13 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "limitations": ["Stato dichiarato dal Digital Twin; la modalità si cambia solo dall'editor Node-RED.",
                     "Lo stato attuale non spiega decisioni di notti passate: il PR non registra le sue decisioni.",
                     "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
+            continue
+        if operation["tool"] == "set_light_scene":
+            results.append({"id": operation["id"], "result": {
+                "schema": "house_ai.light_scene_command.v1", "status": "command_ready",
+                "scene": operation["scene"],
+                "limitations": ["Il backend seleziona solo il nome della scena; topic e payload sono risolti dall'app.",
+                                "Node-RED esegue la scena in sequenza; gli stati /stat successivi sono dichiarati, non conferme fisiche."]}})
             continue
         if operation["tool"] == "current_thermostats":
             selected = THERMOSTATS if operation["thermostat"] == "all" else (operation["thermostat"],)

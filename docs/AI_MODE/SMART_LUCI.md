@@ -97,3 +97,30 @@ richiesta «Chi ha acceso la luce libreria?» con evidenza di fixture ha scelto
 validazione e presentazione; non certificano ancora pubblicazione dall'app né
 commutazione fisica. La release precedente per rollback è
 `/opt/domopi-house-ai/releases/20260913-climate-reason`.
+
+## Fase 3.3 — scene luci e Prolunga (ottobre 2026)
+
+**Scene.** Nuovo tool chiuso `set_light_scene(scene)` con i soli quattro valori
+accettati dallo «Scene Dispatcher» di Node-RED. Il backend restituisce
+`house_ai.light_scene_command.v1` senza topic; l'app ricontrolla il nome e
+pubblica su `zara/interface/lights/scene/cmd` (`MqttManager.setSmartLightScene`).
+Esecuzione immediata (decisione utente). Effetti reali dai flussi live `.20`
+(11/10/2026), riportati nella risposta:
+
+| Scena | Effetto | Durata |
+|---|---|---|
+| `tv` | accende lampada TV e soggiorno, spegne libreria e lampadario TV | secondi |
+| `sleep` | dopo 2 minuti esegue `all_off` | ~2 min 35 s |
+| `all_on` | nulla in modalità vacanza; con ECO luci solo lettura e TV; altrimenti soggiorno, TV, libreria, pedana e luci piscina, lettura | ~30 s |
+| `all_off` | soggiorno, TV, libreria, pedana e luci piscina, lettura, portico, lavanderia, lampadario TV, ingresso servizio | ~35 s |
+
+Il Dispatcher registra già la provenienza (`scene`, `utente`, `app_interface`),
+quindi le domande «chi ha spento…» possono citare la scena.
+
+**Prolunga.** È una presa radio Broadlink che Node-RED usa come «luce allarme»
+(simulazione presenza in vacanza, timer `zaradomo`) e «luci natale». Entra nel
+catalogo Smart come `lights_prolunga` (`lights/prolunga/power/stat`): stato,
+accendi/spegni e conteggio nel riepilogo, che prima la ignorava.
+
+Nessuna modifica a Node-RED. Rollback: release backend precedente e APK
+precedente.

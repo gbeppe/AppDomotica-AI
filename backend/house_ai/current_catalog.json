@@ -75,6 +75,14 @@
       "physical_confirmation": "not_verified"
     },
     {
+      "id": "light.prolunga",
+      "label": "Prolunga",
+      "kind": "light",
+      "topic": "zara/interface/lights/prolunga/power/stat",
+      "android_id": "prolunga",
+      "physical_confirmation": "not_verified"
+    },
+    {
       "id": "temperature.living",
       "label": "Temperatura living",
       "kind": "temperature",
