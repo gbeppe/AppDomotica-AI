@@ -77,6 +77,17 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — scene luci e Prolunga (fase 3.3)
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-light-scenes`, commit
+`41670a3`; `PREVIOUS_RELEASE` = `20261011-spoken-dates`. 103 test superati su
+`.20`, servizi `active`, catalogo con `set_light_scene` e `lights_prolunga`.
+Prova reale con Groq: 7 domande su 7 con piano atteso (scene tv, sleep, all_off,
+all_on; spegnimento e stato della Prolunga con stato letto dal broker;
+chiarimento per una luce non mappata). Nessun comando inviato dal backend. App
+`bld_811b0571` (`8d0265f`) installata. Prima il backend: le release precedenti
+rifiutano `lights_prolunga` nello snapshot luci (HTTP 400).
+
 ## Release dell'11 ottobre 2026 — date leggibili nelle risposte
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-spoken-dates`, commit
