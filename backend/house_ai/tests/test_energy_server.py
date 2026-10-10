@@ -17,6 +17,8 @@ class EnergyServerTests(unittest.TestCase):
         self.token = "t" * 24
         class Planner:
             def plan(self, question, tools, today):
+                if "riserva" in question:
+                    return {"operations": [{"id": "pr", "tool": "current_predictive_reserve"}]}
                 if "corrente" in question:
                     return {"operations": [{"id": "now", "tool": "current_energy_metric",
                         "metric": "solar_power_w"}]}
@@ -97,6 +99,17 @@ class EnergyServerTests(unittest.TestCase):
         self.assertIn("2500,0 W", body["answer"])
         self.assertEqual(body["results"][0]["result"]["schema"],
                          "house_ai.current_energy_result.v1")
+
+    def test_predictive_reserve_snapshot_is_accepted(self):
+        from test_predictive_reserve import snapshot
+        data = json.dumps({"question": "Stato della riserva predittiva?",
+                           "current_predictive_reserve": snapshot(control="true", mode="SHADOW")}).encode()
+        request = Request(self.url + "/v1/assistant/query", data=data,
+            headers={"Authorization": "Bearer " + self.token, "Content-Type": "application/json"})
+        with urlopen(request) as response:
+            body = json.load(response)
+        self.assertEqual(body["results"][0]["result"]["schema"], "house_ai.current_predictive_reserve.v1")
+        self.assertIn("SHADOW", body["answer"])
 
     def test_full_semantic_snapshot_over_old_limit_and_oversize_rejected(self):
         from test_light_semantics import snapshot

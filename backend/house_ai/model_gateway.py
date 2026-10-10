@@ -38,6 +38,9 @@ energy_daily_extreme; non creare una energy_metric separata per ogni giorno.
 Per stato attuale, modalità, temperatura impostata o motivo per cui il condizionatore
 risulta acceso o spento usa current_air_conditioner. Il motivo è quello registrato dal
 controller: non aggiungere cause o deduzioni.
+Per stato, modalità (SHADOW/ACTIVE), prontezza o effetto attuale del Predictive Reserve
+(riserva predittiva, PR) usa current_predictive_reserve. Non può spiegare decisioni di
+notti passate: per quelle aggiungi backend_log_day con source climate del giorno indicato.
 Per stato, conteggio o domande 'chi ha acceso/spento' le luci usa current_lights.
 Restituisce l'ultimo comando documentato disponibile: non uno storico completo né
 la causa fisica del cambio stato. Non usare set_light_state per domande su chi ha agito.

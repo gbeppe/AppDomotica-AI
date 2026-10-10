@@ -23,6 +23,17 @@ CLIMATE_TOPICS = {
     "temperature_set_c": "zara/interface/stato_condizionatore/temperatura_impostata_c/stat",
     "recorded_reason": "zara/interface/stato_condizionatore/motivo_logica/stat",
 }
+# Predictive Reserve read-only state published by Node-RED PR-MODE.1 (fase 3.1).
+PR_TOPICS = {
+    "control_enabled": "zara/interface/predictive_reserve/control_enabled/stat",
+    "operating_mode": "zara/interface/predictive_reserve/operating_mode/stat",
+    "ready": "zara/interface/predictive_reserve/ready/stat",
+}
+PR_VALUES = {
+    "control_enabled": {"true", "false"},
+    "operating_mode": {"SHADOW", "ACTIVE"},
+    "ready": {"true", "false"},
+}
 LIGHT_TOPICS = {
     "lights_living": "zara/interface/lights/living/power/stat",
     "lights_libreria": "zara/interface/lights/libreria/power/stat",
@@ -70,6 +81,10 @@ def catalog(path=CATALOG_PATH):
             "description": "Read current declared air-conditioner state, mode, setpoint and recorded controller reason",
             "parameters": {}
         }, {
+            "name": "current_predictive_reserve",
+            "description": "Read whether the Predictive Reserve control is enabled, its operating mode (SHADOW or ACTIVE), model readiness and what that means now for new night dehumidification starts",
+            "parameters": {}
+        }, {
             "name": "current_energy_metric",
             "description": "Read one current Digital Twin energy metric",
             "parameters": {"metric": sorted(CURRENT_METRICS)}
@@ -95,6 +110,7 @@ def catalog(path=CATALOG_PATH):
             "SOC is battery level, not energy charged. Ask which meaning is intended for ambiguous percentages.",
             "Today and the current month/week may be incomplete. End date is exclusive.",
             "Use backend_log_day for forecasts, recorded reasons, learning or SHADOW evidence. Never infer actions from SHADOW.",
+            "Use current_predictive_reserve for the current Predictive Reserve state; it cannot explain past nights.",
             "No control, cost, tariffs, unsupported metrics or causal speculation; clarify unsupported requests."
         ]
     }
@@ -122,7 +138,7 @@ def validate_plan(plan, sources=None):
         expected = ({"id", "tool", "metric", "start", "end"}
                     if tool == "energy_metric" else {"id", "tool", "metric", "start", "end", "extremum"}
                     if tool == "energy_daily_extreme" else {"id", "tool"}
-                    if tool == "current_air_conditioner" else {"id", "tool", "light"}
+                    if tool in ("current_air_conditioner", "current_predictive_reserve") else {"id", "tool", "light"}
                     if tool == "current_lights" else {"id", "tool", "light", "state"}
                     if tool == "set_light_state" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
@@ -269,13 +285,36 @@ def validate_lights_snapshot(snapshot):
     return clean
 
 
+def validate_predictive_reserve_snapshot(snapshot):
+    if snapshot is None:
+        return None
+    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema", "connected", "observations"}
+            or snapshot["schema"] != "house_ai.current_predictive_reserve_input.v1"
+            or type(snapshot["connected"]) is not bool or not isinstance(snapshot["observations"], dict)
+            or set(snapshot["observations"]) - set(PR_TOPICS)):
+        raise ValueError("Invalid current predictive reserve snapshot")
+    clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
+    for metric, observation in snapshot["observations"].items():
+        if (not isinstance(observation, dict)
+                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or observation["value"] not in PR_VALUES[metric]
+                or type(observation["received_at_ms"]) is not int
+                or not 0 <= observation["received_at_ms"] <= 253402214400000
+                or type(observation["retained"]) is not bool
+                or observation["source_topic"] != PR_TOPICS[metric]):
+            raise ValueError("Invalid predictive reserve observation")
+        clean["observations"][metric] = dict(observation)
+    return clean
+
+
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
-            lights_snapshot=None, log_root=None):
+            lights_snapshot=None, log_root=None, pr_snapshot=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     current = validate_current_snapshot(current_snapshot)
     climate = validate_climate_snapshot(climate_snapshot)
     lights = validate_lights_snapshot(lights_snapshot)
+    reserve = validate_predictive_reserve_snapshot(pr_snapshot)
     if checked["clarification"]:
         return checked
     results = []
@@ -324,6 +363,17 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                                 "observation": observation,
                                 "limitations": ["Timestamp di ricezione Android; età della misura sorgente ignota.",
                                                 "Retained non costituisce conferma fisica o di freschezza."]}})
+            continue
+        if operation["tool"] == "current_predictive_reserve":
+            observations = reserve["observations"] if reserve else {}
+            results.append({"id": operation["id"], "result": {
+                "schema": "house_ai.current_predictive_reserve.v1",
+                "status": "available" if observations else "missing",
+                "connected": reserve["connected"] if reserve else False,
+                "observations": observations,
+                "limitations": ["Stato dichiarato dal Digital Twin; la modalità si cambia solo dall'editor Node-RED.",
+                    "Lo stato attuale non spiega decisioni di notti passate: il PR non registra le sue decisioni.",
+                    "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
             continue
         if operation["tool"] == "current_air_conditioner":
             observations = climate["observations"] if climate else {}

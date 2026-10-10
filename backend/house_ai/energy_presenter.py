@@ -33,6 +33,47 @@ def numeric(record, *path):
         return None
 
 
+# Predictive Reserve reasons the climate controller can record (Node-RED snapshot 2026-10-10).
+PR_REASONS = {
+    'PR_PRESTART_PENDING': "l'avvio notturno in deumidificazione era in attesa dell'autorizzazione del Predictive Reserve",
+    'BLOCCO_PR_GATE_INVALID': "avvio notturno bloccato: stato del Predictive Reserve non determinabile",
+    'BLOCCO_PR_REQUEST_INVALID': "avvio notturno bloccato: richiesta al Predictive Reserve non correlabile",
+}
+
+
+def predictive_reserve_text(r):
+    observations = r['observations']
+    if not observations:
+        return 'Predictive Reserve: stato non disponibile nel Digital Twin al momento della richiesta.'
+    value = lambda metric: observations[metric]['value'] if metric in observations else None
+    control, mode, ready = value('control_enabled'), value('operating_mode'), value('ready')
+    if control == 'false':
+        effect = ("Il controllo del Predictive Reserve è disattivato: l'avvio notturno in deumidificazione "
+                  "segue la logica AI Climate normale.")
+    elif control is None:
+        effect = 'Non risulta se il controllo del Predictive Reserve sia attivo.'
+    elif mode == 'SHADOW':
+        effect = ('Il controllo è attivo in modalità SHADOW: il PR simula soltanto e nega ogni nuovo avvio '
+                  'notturno in deumidificazione.')
+    elif mode == 'ACTIVE' and ready == 'false':
+        effect = ('Il controllo è attivo in modalità ACTIVE ma il modello non è pronto: ogni nuovo avvio '
+                  'notturno in deumidificazione viene negato.')
+    elif mode == 'ACTIVE' and ready == 'true':
+        effect = ("Il controllo è attivo in modalità ACTIVE con modello pronto: il PR autorizza l'avvio notturno "
+                  "solo con il regime qualificato eco26dry, decisione recente e bilancio energetico favorevole.")
+    else:
+        effect = "Il controllo è attivo ma modalità o prontezza non sono disponibili: l'effetto non è determinabile."
+    details = 'Modalità: {} · Modello: {}.'.format(
+        mode or 'non ricevuta', {'true': 'pronto', 'false': 'non pronto'}.get(ready, 'stato non ricevuto'))
+    received = max(observation['received_at_ms'] for observation in observations.values())
+    received_text = datetime.fromtimestamp(received / 1000, ZoneInfo('Europe/Rome')).isoformat()
+    parts = [f'Predictive Reserve: {effect}', details, f'Ultimo dato ricevuto il {received_text}.']
+    if not r['connected']:
+        parts.append('Digital Twin disconnesso.')
+    parts.append('Lo stato attuale non spiega le decisioni di notti passate: il PR non le registra.')
+    return ' '.join(parts)
+
+
 def log_text(result):
     prefix = f"Log {result['file']} del {result['day']}"
     if not result['records']:
@@ -75,6 +116,8 @@ def log_text(result):
         reason = logic.get('motivo_ac') if isinstance(logic, dict) else None
         if isinstance(reason, str):
             parts.append(f"Motivo AC registrato: {reason[:180]}.")
+            if reason.strip() in PR_REASONS:
+                parts.append(f"Significato: {PR_REASONS[reason.strip()]}.")
         parts.append("È un evento registrato, non una conferma fisica né una spiegazione causale aggiuntiva.")
     if result['truncated']:
         parts.append("Risultati limitati: il dettaglio non comprende tutti i record.")
@@ -147,6 +190,8 @@ def describe(item):
         return (f"{label}: {number(value, 1)} {unit}, ultimo dato ricevuto il {received}." + qualifier +
                 (' Messaggio retained.' if obs['retained'] else '') +
                 ' Età della misura sorgente ignota; non è una conferma fisica in tempo reale.')
+    if schema == 'house_ai.current_predictive_reserve.v1':
+        return predictive_reserve_text(r)
     if schema == 'house_ai.current_air_conditioner.v1':
         observations = r['observations']
         if not observations:
