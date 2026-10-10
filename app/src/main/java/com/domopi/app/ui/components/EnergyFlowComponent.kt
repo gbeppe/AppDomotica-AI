@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,12 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import kotlin.math.abs
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.R
+import com.domopi.app.ui.theme.SolarGreen
 
 @Composable
 fun EnergyFlowComponent(
@@ -28,6 +31,8 @@ fun EnergyFlowComponent(
     gridPower: Float, 
     batteryPower: Float = 0f, 
     batterySoc: Float = 0f,
+    gridImportKwhOggi: Float = 0f,
+    gridImportKwhIeri: Float = 0f,
 ) {
     val hasData = (solarPower != 0f) || (homeConsumption != 0f) || (gridPower != 0f) || (batteryPower != 0f)
 
@@ -124,14 +129,77 @@ fun EnergyFlowComponent(
         // 4. Battery (Bottom Center - Aligned and Minimal)
         BatteryNodeMinimal(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = hubY + 25.dp),
+            batteryPower = batteryPower,
             soc = batterySoc
         )
+
+        // 5. Grid Import Summary Row (Importato ieri : X kWh • oggi : Y kWh)
+        val locale = LocalConfiguration.current.locales[0]
+        val blinkAlpha by infiniteTransition.animateFloat(
+            initialValue = 0.7f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(600, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "blink_red"
+        )
+
+        val isIeriImported = gridImportKwhIeri >= 0.05f
+        val isOggiImported = gridImportKwhOggi >= 0.05f
+
+        val ieriColor = if (isIeriImported) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
+        val oggiColor = if (isOggiImported) Color.Red.copy(alpha = blinkAlpha) else SolarGreen
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Importato ieri : ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "%.1f kWh".format(locale, gridImportKwhIeri),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = ieriColor
+                )
+            }
+
+            Text(
+                text = "•",
+                color = Color.Gray.copy(alpha = 0.5f),
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "oggi : ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "%.1f kWh".format(locale, gridImportKwhOggi),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = oggiColor
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun BatteryNodeMinimal(
     modifier: Modifier = Modifier,
+    batteryPower: Float = 0f,
     soc: Float
 ) {
     val batteryHeight = 96.dp
@@ -141,7 +209,7 @@ fun BatteryNodeMinimal(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.TopCenter
     ) {
-        // 1. Battery Image centered EXACLY at size.width / 2
+        // 1. Battery Image centered EXACTLY at size.width / 2
         Image(
             painter = painterResource(id = R.drawable.tesla_powerwall),
             contentDescription = null,
@@ -175,13 +243,23 @@ fun BatteryNodeMinimal(
             
             Spacer(Modifier.width(6.dp))
             
-            Text(
-                text = "${soc.toInt()}%", 
-                color = Color.White, 
-                fontSize = 11.sp, 
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
+            Column(
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Text(
+                    text = "${"%.1f".format(abs(batteryPower) / 1000f)} kW",
+                    color = if (abs(batteryPower) > 15) Color(0xFF00FF00) else Color.Gray,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "${soc.toInt()}%", 
+                    color = Color.White, 
+                    fontSize = 11.sp, 
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

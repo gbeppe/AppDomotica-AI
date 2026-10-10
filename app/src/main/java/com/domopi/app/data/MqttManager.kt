@@ -24,6 +24,8 @@ data class EnergyData(
     val pufferBasso: Float = 0f,
     val solarCollectorTemp: Float = 0f,
     val solarPumpSpeed: Int = 0,
+    val gridImportKwhOggi: Float = 0f,
+    val gridImportKwhIeri: Float = 0f,
 )
 
 data class SensorData(
@@ -336,6 +338,8 @@ class MqttManager {
                 }
                 "grid" -> when (prop) {
                     "power_raw" -> current.copy(gridPower = value)
+                    "import_kwh_oggi", "import_today" -> current.copy(gridImportKwhOggi = value)
+                    "import_kwh_ieri", "import_yesterday" -> current.copy(gridImportKwhIeri = value)
                     else -> current
                 }
                 "battery" -> when (prop) {
@@ -371,6 +375,8 @@ class MqttManager {
                     "power_raw" -> elec.copy(gridPowerW = value)
                     "import" -> elec.copy(gridImportW = value)
                     "export" -> elec.copy(gridExportW = value)
+                    "import_kwh_oggi", "import_today" -> elec.copy(gridImportKwhOggi = value)
+                    "import_kwh_ieri", "import_yesterday" -> elec.copy(gridImportKwhIeri = value)
                     else -> elec
                 }
                 "battery" -> when (prop) {
@@ -725,6 +731,24 @@ class MqttManager {
 
     fun sendLightScene(scene: String) {
         publish("zara/interface/lights/scene/cmd", scene)
+    }
+
+    fun updateGridImportKwhSummary(kwhOggi: Float, kwhIeri: Float) {
+        _energyData.update { current ->
+            current.copy(
+                gridImportKwhOggi = kwhOggi,
+                gridImportKwhIeri = kwhIeri
+            )
+        }
+        _aiManagedData.update { current ->
+            val elec = current.metricheElettriche
+            current.copy(
+                metricheElettriche = elec.copy(
+                    gridImportKwhOggi = kwhOggi,
+                    gridImportKwhIeri = kwhIeri
+                )
+            )
+        }
     }
 
     fun publish(topic: String, payload: String, retained: Boolean = false) {

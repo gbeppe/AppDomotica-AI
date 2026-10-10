@@ -9,6 +9,8 @@ import kotlinx.serialization.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.util.Log
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 data class HistoryPoint(val timestamp: Long, val value: Float)
 
@@ -58,6 +60,49 @@ class EnergyRepository(private val emoncmsIp: String) {
         } catch (e: Exception) {
             Log.e("EnergyRepo", "Error fetching history", e)
             EnergyHistory()
+        }
+    }
+
+    suspend fun fetchGridImportSummary(): Pair<Float, Float> = withContext(Dispatchers.IO) {
+        try {
+            val nowZone = ZonedDateTime.now(ZoneId.systemDefault())
+            val todayStartSec = nowZone.toLocalDate().atStartOfDay(nowZone.zone).toEpochSecond()
+            val yesterdayStartSec = nowZone.toLocalDate().minusDays(1).atStartOfDay(nowZone.zone).toEpochSecond()
+            val endSec = nowZone.toEpochSecond()
+            val interval = 300 // 5-minute sampling interval
+
+            val gridPoints = fetchFeedData(305, yesterdayStartSec, endSec, interval)
+            if (gridPoints.size < 2) return@withContext Pair(0f, 0f)
+            
+            var kwhIeri = 0f
+            var kwhOggi = 0f
+
+            for (i in 0 until gridPoints.size - 1) {
+                val pt = gridPoints[i]
+                val nextPt = gridPoints[i + 1]
+
+                // Normalizziamo i timestamp in secondi (EmonCMS data.json restituisce ms 13 cifre)
+                val ptSec = if (pt.timestamp > 2000000000L) pt.timestamp / 1000 else pt.timestamp
+                val nextPtSec = if (nextPt.timestamp > 2000000000L) nextPt.timestamp / 1000 else nextPt.timestamp
+
+                val pWatts = pt.value.coerceAtLeast(0f)
+                val dtSeconds = (nextPtSec - ptSec).coerceAtLeast(0L)
+
+                if (pWatts > 0f && dtSeconds > 0) {
+                    val kwh = (pWatts * dtSeconds) / (3600f * 1000f)
+                    if (ptSec < todayStartSec) {
+                        kwhIeri += kwh
+                    } else {
+                        kwhOggi += kwh
+                    }
+                }
+            }
+
+            Log.d("EnergyRepo", "Grid import summary (00:00 window): Ieri = $kwhIeri kWh, Oggi = $kwhOggi kWh")
+            Pair(kwhIeri, kwhOggi)
+        } catch (e: Exception) {
+            Log.e("EnergyRepo", "Error calculating grid import summary", e)
+            Pair(0f, 0f)
         }
     }
 

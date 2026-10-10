@@ -50,6 +50,10 @@ data class MetricheElettriche(
     val consumoAcW: Float = 0f,
     @SerialName("consumo_medio_storico_fascia_w")
     val consumoMedioStoricoFasciaW: Float = 0f,
+    @SerialName("grid_import_kwh_oggi")
+    val gridImportKwhOggi: Float = 0f,
+    @SerialName("grid_import_kwh_ieri")
+    val gridImportKwhIeri: Float = 0f,
 )
 
 @Serializable
