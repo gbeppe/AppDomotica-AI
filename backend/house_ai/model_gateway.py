@@ -6,9 +6,11 @@ import stat
 import time
 from datetime import date, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.error import HTTPError
 from urllib.request import Request, build_opener
 
 from emoncms import NoRedirect
+from planner import RateLimited, retry_seconds
 from energy_tools import catalog, validate_plan
 from energy_history import relative_period
 
@@ -148,6 +150,13 @@ class GroqPlanner:
             self.last_provider_status = 'online'
             self.last_provider_check_ms = int(time.time() * 1000)
             return result
+        except HTTPError as error:
+            self.last_provider_status = 'offline'
+            self.last_provider_check_ms = int(time.time() * 1000)
+            with error:
+                if error.code == 429:
+                    raise RateLimited(retry_seconds(error.headers.get('Retry-After'))) from None
+            raise RuntimeError('Model unavailable or invalid plan') from None
         except Exception:
             self.last_provider_status = 'offline'
             self.last_provider_check_ms = int(time.time() * 1000)
@@ -209,6 +218,8 @@ def gateway_handler(provider, token):
                 return
             try:
                 self.send_json(200, provider.plan(body))
+            except RateLimited as limited:
+                self.send_json(429, {'error': 'rate_limited', 'retry_after_s': limited.retry_after_s})
             except RuntimeError:
                 self.send_json(502, {'error': 'Model unavailable or invalid plan'})
     return Handler

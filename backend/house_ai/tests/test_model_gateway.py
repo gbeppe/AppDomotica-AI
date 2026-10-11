@@ -11,7 +11,7 @@ from urllib.request import Request, urlopen
 
 from energy_tools import catalog
 from model_gateway import GroqPlanner, gateway_handler, checked_request, plan_schema, MAX_RESPONSE, configured_api_key
-from planner import HttpJsonPlanner
+from planner import HttpJsonPlanner, RateLimited
 from server import handler
 
 
@@ -107,10 +107,57 @@ class GatewayTests(unittest.TestCase):
 
     def test_provider_errors_are_sanitized_without_retry(self):
         with patch('model_gateway.build_opener') as opener:
-            opener.return_value.open.side_effect = HTTPError('https://provider', 429, 'secret body', {}, None)
+            opener.return_value.open.side_effect = HTTPError('https://provider', 500, 'secret body', {}, None)
             with self.assertRaisesRegex(RuntimeError, '^Model unavailable or invalid plan$'):
                 GroqPlanner('secret').plan(envelope())
             self.assertEqual(opener.return_value.open.call_count, 1)
+
+    def test_provider_rate_limit_keeps_bounded_wait_without_retry(self):
+        for header, expected in [({'Retry-After': '12'}, 12), ({'Retry-After': '0.2'}, 1),
+                                 ({'Retry-After': '900'}, 60), ({}, 30), ({'Retry-After': 'soon'}, 30)]:
+            with self.subTest(header=header), patch('model_gateway.build_opener') as opener:
+                opener.return_value.open.side_effect = HTTPError('https://provider', 429, 'secret body',
+                                                                 header, None)
+                with self.assertRaisesRegex(RateLimited, '^Planner rate limited$') as raised:
+                    GroqPlanner('secret').plan(envelope())
+                self.assertEqual(raised.exception.retry_after_s, expected)
+                self.assertEqual(opener.return_value.open.call_count, 1)
+
+    def backend_error(self, provider_effect, client=None):
+        """Runs gateway + backend over HTTP and returns (status, body, Retry-After) of the backend."""
+        from unittest.mock import Mock
+        with patch('model_gateway.build_opener') as opener:
+            if isinstance(provider_effect, Exception):
+                opener.return_value.open.side_effect = provider_effect
+            else:
+                opener.return_value.open.return_value = io.BytesIO(provider_effect)
+            with serving(gateway_handler(GroqPlanner('secret'), 'gateway-secret')) as gateway:
+                planner = HttpJsonPlanner(gateway + '/v1/plan', 'gateway-secret')
+                with serving(handler(client or Mock(), 'backend-secret', None, planner)) as backend:
+                    request = Request(backend + '/v1/assistant/query',
+                                      data=json.dumps({'question': 'Quanto ho prelevato ieri?'}).encode(),
+                                      headers={'Authorization': 'Bearer backend-secret'})
+                    with self.assertRaises(HTTPError) as result:
+                        urlopen(request)
+                    with result.exception as error:
+                        return error.code, json.loads(error.read()), error.headers.get('Retry-After')
+
+    def test_rate_limit_reaches_the_app_as_429_with_wait(self):
+        limited = HTTPError('https://provider', 429, 'secret body', {'Retry-After': '12'}, None)
+        self.assertEqual(self.backend_error(limited),
+                         (429, {'error': 'rate_limited', 'retry_after_s': 12}, '12'))
+
+    def test_provider_down_and_source_down_are_distinguished(self):
+        down = HTTPError('https://provider', 503, 'secret body', {}, None)
+        self.assertEqual(self.backend_error(down)[:2], (502, {'error': 'planner_unavailable'}))
+
+        # Per-tool source failures become 'unavailable' results inside a 200 answer; an
+        # unexpected I/O failure outside the tools is reported as a source problem.
+        plan = {'clarification': None, 'operations': [{'id': 'past', 'tool': 'energy_metric',
+                'metric': 'grid_import_kwh', 'start': '2026-09-06', 'end': '2026-09-07'}]}
+        with patch('assistant.execute', side_effect=OSError('EmonCMS unreachable')):
+            self.assertEqual(self.backend_error(completion(plan))[:2],
+                             (502, {'error': 'source_unavailable'}))
 
     def test_request_catalog_and_dates_are_owned_by_gateway(self):
         for change in [{'today': '2026-99-12'}, {'tool_catalog': {}}, {'question': ''},
@@ -160,7 +207,9 @@ class GatewayTests(unittest.TestCase):
                     with self.assertRaises(HTTPError) as result:
                         urlopen(request)
                     self.assertEqual(result.exception.code, 502)
-                    self.assertNotIn('secret', result.exception.read().decode())
+                    body = result.exception.read().decode()
+                    self.assertNotIn('secret', body)
+                    self.assertEqual(json.loads(body), {'error': 'planner_unavailable'})
                     result.exception.close()
         client.history.assert_not_called()
 

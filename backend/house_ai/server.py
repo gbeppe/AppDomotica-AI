@@ -11,7 +11,7 @@ from emoncms import Emoncms
 from energy_query import answer as energy_answer
 from service import report
 from assistant import ask as assistant_ask
-from planner import HttpJsonPlanner
+from planner import HttpJsonPlanner, PlannerUnavailable, RateLimited
 from log_tools import SOURCES, source_status
 
 
@@ -76,9 +76,11 @@ def handler(client, token, log_path, planner=None, log_root=None):
         def log_message(self, *_args):
             pass  # Do not persist household queries or credentials.
 
-        def send_json(self, status, value):
+        def send_json(self, status, value, headers=()):
             body = json.dumps(value, ensure_ascii=False, allow_nan=False).encode()
             self.send_response(status)
+            for name, header_value in headers:
+                self.send_header(name, header_value)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(body)))
@@ -146,8 +148,13 @@ def handler(client, token, log_path, planner=None, log_root=None):
                                                   log_root=log_root))
             except (ValueError, json.JSONDecodeError):
                 self.send_json(400, {"error": "Invalid request"})
+            except RateLimited as limited:
+                self.send_json(429, {"error": "rate_limited", "retry_after_s": limited.retry_after_s},
+                               headers=[("Retry-After", str(limited.retry_after_s))])
+            except PlannerUnavailable:
+                self.send_json(502, {"error": "planner_unavailable"})
             except (OSError, RuntimeError):
-                self.send_json(502, {"error": "Planner or source unavailable"})
+                self.send_json(502, {"error": "source_unavailable"})
     return Handler
 
 

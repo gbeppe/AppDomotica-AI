@@ -5,6 +5,7 @@ from energy_tools import (catalog, execute, validate_climate_snapshot, validate_
                           validate_lights_snapshot, validate_predictive_reserve_snapshot,
                           validate_thermostats_snapshot, validate_environment_snapshot)
 from energy_presenter import compose, notes
+from planner import PlannerUnavailable
 
 
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
@@ -34,8 +35,10 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
             if conversation_context == {"domain": "climate", "focus": "air_conditioner"}:
                 planned_question = "Perché il condizionatore è nello stato attuale?"
         proposed = planner.plan(planned_question, catalog(), current)
+    except PlannerUnavailable:
+        raise  # keeps RateLimited and its wait time
     except (ValueError, RuntimeError):
-        raise RuntimeError('Planner unavailable or invalid response') from None
+        raise PlannerUnavailable('Planner unavailable or invalid response') from None
     try:
         execution = execute(client, proposed, current_snapshot=current_snapshot,
                             climate_snapshot=climate_snapshot, lights_snapshot=lights_snapshot,
@@ -43,7 +46,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
                             thermostats_snapshot=thermostats_snapshot,
                             environment_snapshot=environment_snapshot)
     except (ValueError, TypeError, OverflowError):
-        raise RuntimeError('Planner returned an invalid plan') from None
+        raise PlannerUnavailable('Planner returned an invalid plan') from None
     if execution['clarification']:
         return {**base, 'status': 'clarification_required', 'answer': execution['clarification']}
     # Spoken answers stay short; technical caveats travel with each result for the diagnostics view.

@@ -111,3 +111,22 @@ valori numerici; umidità 0–100). Stanze: `living`, `bedroom` (camera da letto
 setpoint e riscaldamento del termostato collegato (living, bagno servizio); l'elenco
 «temperature in casa» comprende anche esterno e locale tecnico (scelta utente).
 Prima il backend: le release precedenti rifiutano il campo `current_environment`.
+
+## Messaggi d'errore (11/10/2026)
+
+Il backend distingue le cause e l'app (`HouseAiErrors.kt`) le traduce in frasi brevi,
+lette anche ad alta voce:
+
+| Causa | Risposta HTTP del backend | Messaggio |
+|---|---|---|
+| quota Groq esaurita (gratuito ~2 domande/min) | 429 `rate_limited`, `retry_after_s` 1–60 (da `Retry-After` di Groq, altrimenti 30) | "Troppe domande ravvicinate: riprova tra N secondi." |
+| Groq o gateway non disponibili, piano non valido | 502 `planner_unavailable` | "Il servizio di intelligenza artificiale non risponde. Riprova tra poco." |
+| errore di I/O delle sorgenti fuori dai tool | 502 `source_unavailable` | "I dati di casa non sono raggiungibili in questo momento." |
+| backend fermo dietro `house-ai-lan` | 502 `Backend unavailable` | "Il backend di casa non risponde." |
+| nome non risolto (fuori casa senza Tailscale) | — | "Assistente non trovato: fuori casa attiva Tailscale." |
+| connessione rifiutata o scaduta | — | "Il server di casa non risponde." |
+| errore TLS | — | "Connessione sicura non verificata." |
+
+Gli errori di una singola sorgente dentro un tool (per esempio EmonCMS per uno storico)
+restano risultati `unavailable` dentro una risposta 200. Nessuna ripetizione automatica
+verso Groq. Un backend precedente produce i messaggi generici di prima.

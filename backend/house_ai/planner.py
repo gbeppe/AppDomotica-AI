@@ -1,9 +1,35 @@
 """Provider-neutral JSON planner adapter for natural-language tool selection."""
 import json
+from urllib.error import HTTPError
 from urllib.parse import urlsplit
 from urllib.request import Request, build_opener
 
 from emoncms import NoRedirect
+
+DEFAULT_RETRY_S = 30
+MAX_RETRY_S = 60
+
+
+class PlannerUnavailable(RuntimeError):
+    """The model or its gateway failed, or returned an unusable plan."""
+
+
+class RateLimited(PlannerUnavailable):
+    """The provider quota is exhausted for now (Groq free tier: ~2 questions per minute)."""
+    def __init__(self, retry_after_s=DEFAULT_RETRY_S):
+        super().__init__("Planner rate limited")
+        self.retry_after_s = retry_after_s
+
+
+def retry_seconds(value):
+    """Bounded wait from a Retry-After header or JSON value; default when missing or odd."""
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        return DEFAULT_RETRY_S
+    if seconds != seconds:  # NaN
+        return DEFAULT_RETRY_S
+    return int(min(max(seconds, 1), MAX_RETRY_S) + 0.999)
 
 
 class HttpJsonPlanner:
@@ -46,10 +72,19 @@ class HttpJsonPlanner:
             if not isinstance(plan, dict):
                 raise ValueError("Planner response has no plan")
             return plan
+        except HTTPError as error:
+            with error:
+                if error.code == 429:
+                    try:
+                        retry = json.loads(error.read(4096)).get("retry_after_s")
+                    except (ValueError, AttributeError, OSError):
+                        retry = None
+                    raise RateLimited(retry_seconds(retry)) from None
+            raise PlannerUnavailable("Planner unavailable") from None
         except ValueError:
             raise
         except Exception:
-            raise RuntimeError("Planner unavailable") from None
+            raise PlannerUnavailable("Planner unavailable") from None
 
     def health(self):
         request = Request(self.url.rsplit('/', 1)[0] + '/health', headers={
