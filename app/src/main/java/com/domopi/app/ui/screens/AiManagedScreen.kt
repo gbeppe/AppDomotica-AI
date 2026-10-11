@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.domopi.app.data.ControlInputs
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -287,10 +288,19 @@ fun AiManagedScreen(
                         )
                         
                         Column {
-                            Text("Velocità Max VMC Notte: ${aiSettings.nightVmcMaxSpeed}", style = MaterialTheme.typography.bodySmall)
+                            // Dragging moves only the local value; one command on release, if it changed.
+                            var pendingVmc by remember { mutableStateOf<Float?>(null) }
+                            LaunchedEffect(aiSettings.nightVmcMaxSpeed) { pendingVmc = null }
+                            val shownVmc = pendingVmc?.let { ControlInputs.step(it, 1..4) } ?: aiSettings.nightVmcMaxSpeed
+                            Text("Velocità Max VMC Notte: $shownVmc", style = MaterialTheme.typography.bodySmall)
                             Slider(
-                                value = aiSettings.nightVmcMaxSpeed.toFloat(),
-                                onValueChange = { mqttManager.publish("zara/interface/ai/night_vmc_max_speed/cmd", it.toInt().toString()) },
+                                value = pendingVmc ?: aiSettings.nightVmcMaxSpeed.toFloat(),
+                                onValueChange = { pendingVmc = it },
+                                onValueChangeFinished = {
+                                    val speed = pendingVmc?.let { ControlInputs.step(it, 1..4) }
+                                    if (speed == null || speed == aiSettings.nightVmcMaxSpeed) pendingVmc = null
+                                    else mqttManager.publish("zara/interface/ai/night_vmc_max_speed/cmd", speed.toString())
+                                },
                                 valueRange = 1f..4f,
                                 steps = 2
                             )

@@ -27,6 +27,12 @@ import com.domopi.app.data.ThermostatStatus
 import com.domopi.app.ui.components.PufferTankComponent
 import com.domopi.app.ui.theme.SolarGreen
 import java.util.Locale
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import com.domopi.app.data.ControlInputs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -548,24 +554,13 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
 
             Spacer(Modifier.height(16.dp))
 
-            // Orari Avvio/Spegnimento
+            // Orari Avvio/Spegnimento: typing edits a local draft; a complete HH:MM is sent
+            // once, on keyboard Done or when the field loses focus, and only if it changed.
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = state.startTime,
-                    onValueChange = { mqttManager.publish("zara/interface/fireplace/main/start_time/cmd", it) },
-                    label = { Text("Avvio") },
-                    modifier = Modifier.weight(1f),
-                    leadingIcon = { Icon(Icons.Default.PlayArrow, null, tint = Color.Green) },
-                    shape = RoundedCornerShape(12.dp)
-                )
-                OutlinedTextField(
-                    value = state.stopTime,
-                    onValueChange = { mqttManager.publish("zara/interface/fireplace/main/stop_time/cmd", it) },
-                    label = { Text("Fine") },
-                    modifier = Modifier.weight(1f),
-                    leadingIcon = { Icon(Icons.Default.Stop, null, tint = Color.Red) },
-                    shape = RoundedCornerShape(12.dp)
-                )
+                FireplaceTimeField("Avvio", state.startTime, Icons.Default.PlayArrow, Color.Green,
+                    Modifier.weight(1f)) { mqttManager.publish("zara/interface/fireplace/main/start_time/cmd", it) }
+                FireplaceTimeField("Fine", state.stopTime, Icons.Default.Stop, Color.Red,
+                    Modifier.weight(1f)) { mqttManager.publish("zara/interface/fireplace/main/stop_time/cmd", it) }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -577,10 +572,19 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
                 color = MaterialTheme.colorScheme.primary
             )
             
+            // Dragging moves only the local value; one command on release, if the level changed.
+            var pendingLevel by remember { mutableStateOf<Float?>(null) }
+            LaunchedEffect(state.level) { pendingLevel = null }
+            val shownLevel = pendingLevel?.let { ControlInputs.step(it, 1..6) } ?: state.level
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Slider(
-                    value = state.level.toFloat(),
-                    onValueChange = { mqttManager.publish("zara/interface/fireplace/main/level/cmd", it.toInt().toString()) },
+                    value = pendingLevel ?: state.level.toFloat(),
+                    onValueChange = { pendingLevel = it },
+                    onValueChangeFinished = {
+                        val level = pendingLevel?.let { ControlInputs.step(it, 1..6) }
+                        if (level == null || level == state.level) pendingLevel = null
+                        else mqttManager.publish("zara/interface/fireplace/main/level/cmd", level.toString())
+                    },
                     valueRange = 1f..6f,
                     steps = 4,
                     modifier = Modifier.weight(1f),
@@ -590,7 +594,7 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
                     )
                 )
                 Text(
-                    text = state.level.toString(),
+                    text = shownLevel.toString(),
                     modifier = Modifier.padding(start = 16.dp),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
@@ -627,4 +631,37 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
             }
         }
     }
+}
+
+@Composable
+private fun FireplaceTimeField(
+    label: String,
+    current: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color,
+    modifier: Modifier,
+    onCommit: (String) -> Unit
+) {
+    var draft by remember(current) { mutableStateOf(current) }
+    var focused by remember { mutableStateOf(false) }
+    val valid = ControlInputs.time(draft)
+    fun commit() {
+        if (valid != null && valid != current) onCommit(valid)
+    }
+    OutlinedTextField(
+        value = draft,
+        onValueChange = { draft = it.take(5) },
+        label = { Text(label) },
+        modifier = modifier.onFocusChanged {
+            if (focused && !it.isFocused) commit()
+            focused = it.isFocused
+        },
+        isError = draft != current && valid == null,
+        supportingText = if (draft != current && valid == null) {{ Text("HH:MM") }} else null,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { commit() }),
+        leadingIcon = { Icon(icon, null, tint = tint) },
+        shape = RoundedCornerShape(12.dp)
+    )
 }
