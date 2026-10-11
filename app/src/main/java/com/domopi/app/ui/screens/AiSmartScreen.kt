@@ -58,6 +58,7 @@ fun AiSmartScreen(
     thermostatState: ThermostatSmartState = ThermostatSmartState(),
     onThermostatCommand: (String, String) -> Boolean = { _, _ -> false },
     onSceneCommand: (String) -> Boolean = { false },
+    environmentState: EnvironmentSmartState = EnvironmentSmartState(),
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -148,7 +149,7 @@ fun AiSmartScreen(
                 val started = System.currentTimeMillis()
                 val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
                     climateState, state, assistantContext, reserve = reserveState,
-                    thermostats = thermostatState)
+                    thermostats = thermostatState, environment = environmentState)
                 result.lightCommands.forEach { command ->
                     check(connected && onLightCommand(command.lightId, command.state)) {
                         "Comando luce non inviato: connessione o target non valido."

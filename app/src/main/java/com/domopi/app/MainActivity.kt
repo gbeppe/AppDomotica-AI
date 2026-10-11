@@ -152,6 +152,7 @@ class MainActivity : ComponentActivity() {
                             val climateState by mqttManager.climateSmartState.collectAsState()
                             val reserveState by mqttManager.predictiveReserveSmartState.collectAsState()
                             val thermostatState by mqttManager.thermostatSmartState.collectAsState()
+                            val environmentState by mqttManager.environmentSmartState.collectAsState()
                             val connected by mqttManager.isConnected.collectAsState()
                             AiSmartScreen(state, energyState, climateState, connected,
                                 reserveState = reserveState,
@@ -162,7 +163,8 @@ class MainActivity : ComponentActivity() {
                                 credentialStore = credentialStore,
                                 thermostatState = thermostatState,
                                 onThermostatCommand = mqttManager::setSmartThermostatTarget,
-                                onSceneCommand = mqttManager::setSmartLightScene)
+                                onSceneCommand = mqttManager::setSmartLightScene,
+                                environmentState = environmentState)
                         }
                         "house_ai" -> HouseAiScreen(onBack = { currentScreen = "ai_smart" })
                         "lights" -> LightsScreen(

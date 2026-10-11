@@ -100,6 +100,17 @@ data class EnergyAssistantAnswer(
                         sceneCommands += scene
                         detail += "Comando scena luci validato · $scene"
                     }
+                    "house_ai.current_environment.v1" -> {
+                        detail += "Digital Twin · sensori ambiente · " +
+                            if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
+                        listOf("observations", "thermostat").forEach { group ->
+                            val observations = result.optJSONObject(group) ?: return@forEach
+                            detail += observations.keys().asSequence().sorted().map {
+                                val observation = observations.getJSONObject(it)
+                                "${observation.getString("source_topic")} = ${observation.get("value")}"
+                            }.toList()
+                        }
+                    }
                     "house_ai.current_thermostats.v1" -> {
                         detail += "Digital Twin · termostati riscaldamento · " +
                             if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"

@@ -87,3 +87,27 @@ All'ingresso il riepilogo è espanso. L'intera intestazione e l'icona a freccia
 lo richiudono; quando è minimizzato resta una barra compatta che può essere
 toccata per riaprirlo. Lo stato usa `rememberSaveable`, quindi sopravvive alle
 ricomposizioni e lascia spazio verticale ai riquadri query e risposta.
+
+## Risposte brevi e sensori ambiente (ottobre 2026)
+
+Le risposte sono pensate per l'ascolto: frasi brevi, unità pronunciabili
+(«gradi», «per cento», «watt/kilowatt», «kilowattora»), nessun avvertimento tecnico
+nel testo letto. Le avvertenze (stato dichiarato, retained, ora di ricezione, autore e
+stadio del comando, copertura, dettagli delle scene, timer dei termostati) sono
+aggiunte da `energy_presenter.notes()` ai `limitations` di ciascun risultato e l'app le
+mostra in «Mostra provenienza e limiti».
+
+Comandi: un'unica frase «Ok, …» anche per richieste composte, senza affermare
+l'esecuzione fisica («Ok, accendo la lampada TV e imposto il termostato del bagno a
+20 gradi.»). Letture: «La prolunga è accesa.», «Accese: … Spente: …», «Il condizionatore
+è spento. Motivo: logica invernale attiva.», «Il fotovoltaico produce 3,5 kilowatt.».
+
+Nuovo tool `current_environment(room, metric)` sullo snapshot
+`house_ai.current_environment_input.v1` (topic `zara/interface/env/{stanza}/{metrica}/stat`,
+valori numerici; umidità 0–100). Stanze: `living`, `bedroom` (camera da letto),
+`kids_room` (cameretta), `service_bathroom` (bagno servizio), `technical_room`
+(locale tecnico), `outdoor` (esterno); metriche `temperature`, `humidity`, `humidex`
+(humidex pubblicato solo per living e camera). La panoramica di una stanza aggiunge
+setpoint e riscaldamento del termostato collegato (living, bagno servizio); l'elenco
+«temperature in casa» comprende anche esterno e locale tecnico (scelta utente).
+Prima il backend: le release precedenti rifiutano il campo `current_environment`.
