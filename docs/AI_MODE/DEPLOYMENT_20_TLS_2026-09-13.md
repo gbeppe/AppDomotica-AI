@@ -77,6 +77,22 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — AI Smart in casa senza Tailscale
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-lan-tls`, commit
+`818bd07`; `PREVIOUS_RELEASE` = `20261011-short-answers`. 118 test superati su
+`.20` (compresi i test TLS di `lan_tls.py` su Python 3.9.2), servizi `active`.
+Installati `house-ai-lan.service` (HTTPS solo su `192.168.1.20:443`, client solo
+`192.168.1.0/24`) e `house-ai-lan-cert.timer` (copia settimanale del certificato
+Tailscale in `/etc/house-ai/tls/`, scadenza attuale 12/12/2026). Pi-hole: record
+locale `192.168.1.20 domopi.tailf30ba8.ts.net` aggiunto dall'utente, backup in
+`/etc/pihole/pihole.toml.bak-20261011-house-ai-lan`. Verifiche dal PC: certificato
+valido, 401 senza token, 404 fuori API, HTTP in chiaro chiuso; domanda reale via
+LAN `complete`. App `bld_0adde659` (`fb01303`) installata; prova dell'utente in
+casa con Tailscale spento riuscita. Tailscale Serve, Apache, Node-RED e Pi-hole
+invariati. Dettagli e ripristino completo in
+[`ACCESSO_LAN_SENZA_TAILSCALE.md`](ACCESSO_LAN_SENZA_TAILSCALE.md).
+
 ## Release dell'11 ottobre 2026 — risposte brevi e sensori ambiente
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-short-answers`, commit
