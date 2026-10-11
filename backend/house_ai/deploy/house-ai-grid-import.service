@@ -1,0 +1,24 @@
+[Unit]
+Description=DomoPi House AI daily grid import publisher (app "Importato ieri / oggi")
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=house-ai
+Group=house-ai
+WorkingDirectory=/opt/domopi-house-ai/current
+EnvironmentFile=/etc/house-ai/backend.env
+ExecStart=/usr/bin/python3 -B grid_import_publisher.py
+TimeoutStartSec=120
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+UMask=0077
