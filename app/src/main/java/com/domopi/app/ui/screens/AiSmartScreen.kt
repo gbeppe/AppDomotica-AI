@@ -250,6 +250,7 @@ fun AiSmartScreen(
         speechReady = speechReady,
         dynamicMode = true,
         energyState = energyState,
+        environmentState = environmentState,
         climateState = climateState,
         serviceUrl = serviceUrl,
         serviceToken = serviceToken,
@@ -303,6 +304,7 @@ internal fun AiSmartContent(
     onStopSpeaking: () -> Unit = {},
     dynamicMode: Boolean = false,
     energyState: EnergySmartState = EnergySmartState(),
+    environmentState: EnvironmentSmartState = EnvironmentSmartState(),
     climateState: ClimateSmartState = ClimateSmartState(),
     dynamicResponse: EnergyAssistantAnswer? = null,
     serviceUrl: String = "",
@@ -327,14 +329,9 @@ internal fun AiSmartContent(
     var showConfiguration by rememberSaveable { mutableStateOf(false) }
     var summaryExpanded by rememberSaveable { mutableStateOf(true) }
 
-    val active = state.activeDeviceLabels() + listOfNotNull(climateState.declaredActiveLabel())
-    val summary = if (dynamicMode) listOf(
-        if (connected) "Collegamento attivo." else "Collegamento assente: mostro gli ultimi dati ricevuti.",
-        if (active.isEmpty()) "Nessun dispositivo attivo rilevato tra quelli mappati."
-        else "Dispositivi attivi dichiarati: ${active.joinToString(", ")}.",
-        state.environmentalMeasuresText(),
-        AiSmartState.freshnessText,
-    ).joinToString(" ") else state.summary(connected)
+    // Fase 3.5 A: temperatures and energy only, written (read aloud only on "Leggi riepilogo").
+    val summary = if (dynamicMode) HouseSummary.text(energyState, environmentState, connected)
+    else state.summary(connected)
     // Re-evaluate against the latest observations so a cached answer cannot hide a disconnection.
     val answer = if (dynamicMode) dynamicAnswer else submittedQuestion?.let { state.answer(it, connected) }
     Scaffold(

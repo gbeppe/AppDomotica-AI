@@ -186,7 +186,7 @@ class AiSmartScreenTest {
                     dynamicAnswer = response.text, speechReady = true, onSpeak = { spoken = it })
             }
         }
-        compose.onNodeWithTag("smart-summary").assertTextContains("Dispositivi attivi dichiarati", substring = true)
+        compose.onNodeWithTag("smart-summary").assertTextContains("Immissione in rete: 450 watt.", substring = true)
         screenshot("energy-light-summary.png")
         compose.onNodeWithTag("smart-answer").performScrollTo().assertTextEquals(response.text)
         compose.onNodeWithText("Leggi risposta").performScrollTo().performClick()
