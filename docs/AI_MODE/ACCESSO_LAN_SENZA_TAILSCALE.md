@@ -47,19 +47,10 @@ curl -sS --resolve domopi.tailf30ba8.ts.net:443:192.168.1.20 \
 
 Solo dopo: record su Pi-hole (con backup di `pihole.toml`).
 
-## Ripristino completo
+## Certificato e ripristino
 
-```sh
-sudo systemctl disable --now house-ai-lan.service house-ai-lan-cert.timer
-sudo rm -f /etc/systemd/system/house-ai-lan.service /etc/systemd/system/house-ai-lan-cert.service \
-           /etc/systemd/system/house-ai-lan-cert.timer /etc/house-ai/lan.env
-sudo rm -rf /etc/house-ai/tls
-sudo systemctl daemon-reload
-sudo pihole-FTL --config dns.hosts '["192.168.1.4 registry.wallbox.lan"]'
-```
-
-Dopo questi comandi `.20` è come prima; il codice `lan_tls.py` resta nella release ma
-non viene eseguito.
+Controlli, rinnovo manuale del certificato e comandi per annullare tutto (anche in
+parte) sono in [`RUNBOOK_ACCESSO_LAN.md`](RUNBOOK_ACCESSO_LAN.md).
 
 ## Sicurezza
 
