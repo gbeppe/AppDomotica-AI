@@ -1,0 +1,51 @@
+[
+  {
+    "id": "6916979d5a52f89e",
+    "type": "inject",
+    "z": "2cc001ef3d59afd2",
+    "name": "alle 23:00 e ogni 30 min fino alle 05:30",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "*/30 23,0-5 * * *",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 260,
+    "y": 380,
+    "wires": [
+      [
+        "6ba4fd927988c70b"
+      ]
+    ]
+  },
+  {
+    "id": "e987e367138f30ef",
+    "type": "function",
+    "z": "2cc001ef3d59afd2",
+    "name": "function 22",
+    "func": "// SOLAR-FORECAST.1 (2026-10-11): Open-Meteo forecast for the PV controller.\n// Target day in Europe/Rome: before noon the current day (night retries), from noon\n// the next day. The inject fires at 23:00 and every 30 min until 05:00; once the\n// target day has a fresh forecast (computed in the last 7 h) further runs do nothing.\n// Every failure is logged with node.warn; the forecast log only receives real forecasts.\nconst SUPERFICIE_MQ = 34;\nconst EFFICIENZA = (0.20 - 0.08);\nconst LOSS_FACTOR = 0.85;\nconst FRESH_MS = 7 * 3600 * 1000;\n\nconst now = new Date();\nconst oggi = now.toLocaleDateString(\"sv-SE\", { timeZone: \"Europe/Rome\" });\nconst ora = Number(now.toLocaleString(\"en-GB\", { timeZone: \"Europe/Rome\", hour: \"2-digit\", hour12: false }));\nconst domani = new Date(Date.parse(oggi + \"T12:00:00Z\") + 24 * 3600 * 1000).toISOString().slice(0, 10);\nconst target = ora < 12 ? oggi : domani;\n\nif (flow.get(\"previsione_data_domani\") === target &&\n    now.getTime() - (flow.get(\"previsione_elaborata_ms\") || 0) < FRESH_MS) {\n    return null;  // already fresh for this target: nothing to do\n}\n\nlet data;\n\n// 1. GESTIONE SICURA DEGLI ERRORI API\ntry {\n    data = typeof msg.payload === \"string\" ? JSON.parse(msg.payload) : msg.payload;\n} catch (e) {\n    node.error(\"Open-Meteo API Error: Formato risposta non valido (HTTP \" + msg.statusCode +\n        \"). Applico fallback di sicurezza.\", msg);\n    flow.set(\"previsione_kwh_domani\", 12); // Valore di sicurezza medio (comportamento invariato)\n    return null;\n}\n\n// 2. ELABORAZIONE DATI METEO\nif (!data || !data.hourly) {\n    node.warn(\"Open-Meteo: risposta senza dati orari (HTTP \" + msg.statusCode + \", motivo: \" +\n        String((data && data.reason) || \"non indicato\").slice(0, 200) + \"). Previsione per \" + target +\n        \" non aggiornata; nuovo tentativo al prossimo giro.\");\n    return null;\n}\n\nlet ore = data.hourly.time;\nlet radiazione = data.hourly.shortwave_radiation || data.hourly.direct_radiation || data.hourly.direct_radiation_instant;\n\nif (!radiazione || !Array.isArray(ore)) {\n    node.error(\"Open-Meteo non ha restituito dati di radiazione validi.\");\n    return null;\n}\n\nlet sommaWh_per_mq = 0;\nlet oreTrovate = 0;\n\nfor (let i = 0; i < ore.length; i++) {\n    if (ore[i] && ore[i].startsWith(target)) {\n        sommaWh_per_mq += radiazione[i] || 0;\n        oreTrovate++;\n    }\n}\n\nlet kwh_per_mq = sommaWh_per_mq / 1000;\nlet kwhStimatiDomani = Math.round(SUPERFICIE_MQ * EFFICIENZA * kwh_per_mq * LOSS_FACTOR);\n\n// Giornata incompleta o anomala: nessuna previsione inventata, si ritenta.\nif (oreTrovate < 24 || isNaN(kwhStimatiDomani) || kwhStimatiDomani < 0) {\n    node.warn(\"Open-Meteo: dati incompleti per \" + target + \" (\" + oreTrovate +\n        \" ore). Previsione non aggiornata; nuovo tentativo al prossimo giro.\");\n    return null;\n}\n\nflow.set(\"previsione_kwh_domani\", kwhStimatiDomani);\nflow.set(\"previsione_data_domani\", target);\nflow.set(\"previsione_elaborata_ms\", now.getTime());\n\nmsg.payload = {\n    messaggio: \"Previsione elaborata\",\n    data_previsione: target,\n    ore_elaborate: oreTrovate,\n    radiazione_totale_kwh_mq: parseFloat(kwh_per_mq.toFixed(2)),\n    kwh_stimati_impianto_reali: kwhStimatiDomani,\n    elaborata_alle: now.toISOString()\n};\n\nmsg.topic = \"casa/clima/previsione_meteo\";\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 830,
+    "y": 380,
+    "wires": [
+      [
+        "63143d1907ca3d72"
+      ]
+    ]
+  }
+]

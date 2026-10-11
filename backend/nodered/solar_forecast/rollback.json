@@ -1,0 +1,51 @@
+[
+  {
+    "id": "6916979d5a52f89e",
+    "type": "inject",
+    "z": "2cc001ef3d59afd2",
+    "name": "alle 23:00 ogni giono",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 23 * * *",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 260,
+    "y": 380,
+    "wires": [
+      [
+        "6ba4fd927988c70b"
+      ]
+    ]
+  },
+  {
+    "id": "e987e367138f30ef",
+    "type": "function",
+    "z": "2cc001ef3d59afd2",
+    "name": "function 22",
+    "func": "const SUPERFICIE_MQ = 34; \nconst EFFICIENZA = (0.20 - 0.08); \nconst LOSS_FACTOR = 0.85; \n\nlet data;\n\n// 1. GESTIONE SICURA DEGLI ERRORI API\ntry {\n    data = typeof msg.payload === \"string\" ? JSON.parse(msg.payload) : msg.payload;\n} catch (e) {\n    node.error(\"Open-Meteo API Error: Formato risposta non valido. Applico fallback di sicurezza.\", msg);\n    flow.set(\"previsione_kwh_domani\", 12); // Valore di sicurezza medio\n    return null; // Interrompe l'elaborazione dolcemente\n}\n\n// 2. ELABORAZIONE DATI METEO\nif (data && data.hourly) { \n    let ore = data.hourly.time; \n    let radiazione = data.hourly.shortwave_radiation || data.hourly.direct_radiation || data.hourly.direct_radiation_instant; \n    \n    if (!radiazione) { \n        node.error(\"Open-Meteo non ha restituito dati di radiazione validi.\"); \n        return null; \n    } \n    \n    let domani = new Date(); \n    domani.setDate(domani.getDate() + 1); \n    let stringaDomani = domani.toISOString().split('T')[0]; \n    \n    let sommaWh_per_mq = 0; \n    let oreTrovate = 0; \n    \n    for (let i = 0; i < ore.length; i++) { \n        if (ore[i] && ore[i].startsWith(stringaDomani)) { \n            sommaWh_per_mq += radiazione[i] || 0; \n            oreTrovate++; \n        } \n    } \n    \n    let kwh_per_mq = sommaWh_per_mq / 1000; \n    let kwhStimatiDomani = Math.round(SUPERFICIE_MQ * EFFICIENZA * kwh_per_mq * LOSS_FACTOR); \n    \n    // Fallback in caso di giornata anomala\n    if (oreTrovate === 0 || isNaN(kwhStimatiDomani) || kwhStimatiDomani < 0) { \n        kwhStimatiDomani = 12; \n    } \n    \n    flow.set(\"previsione_kwh_domani\", kwhStimatiDomani); \n    flow.set(\"previsione_data_domani\", stringaDomani); \n    \n    msg.payload = { \n        messaggio: \"Previsione elaborata\", \n        data_previsione: stringaDomani, \n        ore_elaborate: oreTrovate, \n        radiazione_totale_kwh_mq: parseFloat(kwh_per_mq.toFixed(2)), \n        kwh_stimati_impianto_reali: kwhStimatiDomani \n    }; \n    \n    msg.topic = \"casa/clima/previsione_meteo\"; \n    return msg; \n} \n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 830,
+    "y": 380,
+    "wires": [
+      [
+        "63143d1907ca3d72"
+      ]
+    ]
+  }
+]

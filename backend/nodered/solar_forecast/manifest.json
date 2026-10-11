@@ -1,0 +1,16 @@
+{
+  "patch": "SOLAR-FORECAST.1",
+  "modified_ids": [
+    "6916979d5a52f89e",
+    "e987e367138f30ef"
+  ],
+  "added_ids": [],
+  "node_sha256_before": {
+    "6916979d5a52f89e": "343ec5defb3c63f5f1af1d903c42c9e2f95be1a564d1fe7ff77d5468af2b189c",
+    "e987e367138f30ef": "0d07e7a424e9f407ee6bda4034ac85e86f990d662fb448eb754efb782953badd"
+  },
+  "node_sha256_after": {
+    "6916979d5a52f89e": "5c22cd364d0c1c1cc1eedeb8cbf27551234fbf38af5bac930372916e0910c8b9",
+    "e987e367138f30ef": "a755fb0b0fb410a57726d7b75273f558c6686148bb0bb3389fc16f9252f5fee6"
+  }
+}
