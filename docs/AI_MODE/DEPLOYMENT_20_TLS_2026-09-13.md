@@ -77,6 +77,18 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — riepilogo del giorno (fase 3.5 C)
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-day-summary`, commit
+`5140a4b`; `PREVIOUS_RELEASE` = `20261011-error-messages`. 127 test superati su `.20`;
+riavviati gateway, backend e `house-ai-lan`, tutti `active`. `GET /v1/summary/day`
+(strumenti fissi, senza Groq) provato in locale e via LAN: `complete`, «Oggi fino alle
+15:14: prodotti 14,7 kilowattora, consumati 6,4, prelevati 0,1, immessi 3,1. Previsione
+per domani: 10 kilowattora.», copertura del tempo trascorso 99,9%. Prima, alle 14:15,
+applicata in Node-RED SOLAR-FORECAST.1 (`backend/nodered/solar_forecast/`). App
+`bld_b9fc8589` (`67663f3`) installata. Fase 3.5 A (riepilogo all'apertura, solo app)
+installata in precedenza con `bld_d5cc0cd7` (`0f3d3f7`).
+
 ## Release dell'11 ottobre 2026 — messaggi d'errore distinti
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-error-messages`, commit
