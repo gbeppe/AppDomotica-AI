@@ -10,7 +10,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, build_opener
 
 from emoncms import NoRedirect
-from planner import RateLimited, retry_seconds
+from planner import RateLimited, close_quietly, retry_seconds
 from energy_tools import catalog, validate_plan
 from energy_history import relative_period
 
@@ -153,9 +153,9 @@ class GroqPlanner:
         except HTTPError as error:
             self.last_provider_status = 'offline'
             self.last_provider_check_ms = int(time.time() * 1000)
-            with error:
-                if error.code == 429:
-                    raise RateLimited(retry_seconds(error.headers.get('Retry-After'))) from None
+            close_quietly(error)
+            if error.code == 429:
+                raise RateLimited(retry_seconds(error.headers.get('Retry-After'))) from None
             raise RuntimeError('Model unavailable or invalid plan') from None
         except Exception:
             self.last_provider_status = 'offline'

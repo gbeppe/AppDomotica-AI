@@ -21,6 +21,12 @@ class RateLimited(PlannerUnavailable):
         self.retry_after_s = retry_after_s
 
 
+def close_quietly(error):
+    """HTTPError.close() fails on Python 3.9 when the error has no body."""
+    if getattr(error, "fp", None) is not None:
+        error.close()
+
+
 def retry_seconds(value):
     """Bounded wait from a Retry-After header or JSON value; default when missing or odd."""
     try:
@@ -73,13 +79,15 @@ class HttpJsonPlanner:
                 raise ValueError("Planner response has no plan")
             return plan
         except HTTPError as error:
-            with error:
+            try:
                 if error.code == 429:
                     try:
                         retry = json.loads(error.read(4096)).get("retry_after_s")
                     except (ValueError, AttributeError, OSError):
                         retry = None
                     raise RateLimited(retry_seconds(retry)) from None
+            finally:
+                close_quietly(error)
             raise PlannerUnavailable("Planner unavailable") from None
         except ValueError:
             raise
