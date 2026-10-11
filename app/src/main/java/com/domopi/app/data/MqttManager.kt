@@ -194,8 +194,12 @@ class MqttManager {
                 isCleanSession = false // Mantieni sessione per evitare riconnessioni costose
                 connectionTimeout = 15
                 keepAliveInterval = 60
-                if (!user.isNullOrEmpty()) userName = user
-                if (!pass.isNullOrEmpty()) password = pass.toCharArray()
+                // A username without password is rejected by Mosquitto's password file:
+                // send credentials only as a pair, otherwise connect anonymously.
+                if (!user.isNullOrEmpty() && !pass.isNullOrEmpty()) {
+                    userName = user
+                    password = pass.toCharArray()
+                }
             }
             mqttClient?.setCallback(
                 object : MqttCallbackExtended {

@@ -18,6 +18,10 @@ import kotlinx.coroutines.withContext
 /** Secrets kept encrypted on the phone (ported from WallBox KeystoreCredentialStore). */
 enum class Credential(val prefKey: String) {
     HOUSE_AI_TOKEN("house_ai_token"),
+    MQTT_PASSWORD("mqtt_password"),
+    TINYCAM_PASSWORD("tinycam_password"),
+    ADMIN_PIN("admin_pin"),
+    EMONCMS_API_KEY("emoncms_api_key"),
 }
 
 sealed interface CredentialResult {

@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.AppAlignmentStatus
@@ -57,6 +58,7 @@ fun ConfigurationScreen(
     
     var emoncmsIp by remember { mutableStateOf("") }
     var emoncmsRemoteIp by remember { mutableStateOf("") }
+    var emoncmsApiKey by remember { mutableStateOf("") }
     
     var tinycamIp by remember { mutableStateOf("") }
     var tinycamRemoteIp by remember { mutableStateOf("") }
@@ -76,6 +78,7 @@ fun ConfigurationScreen(
         domopiPass != initialValues!!["dpPass"] ||
         emoncmsIp != initialValues!!["ecIp"] ||
         emoncmsRemoteIp != initialValues!!["ecRemoteIp"] ||
+        emoncmsApiKey != initialValues!!["ecKey"] ||
         tinycamIp != initialValues!!["tcIp"] ||
         tinycamRemoteIp != initialValues!!["tcRemoteIp"] ||
         tinycamPort != initialValues!!["tcPort"] ||
@@ -94,6 +97,7 @@ fun ConfigurationScreen(
         
         val ecIp = settingsManager.emoncmsIp.first()
         val ecRemoteIp = settingsManager.emoncmsRemoteIp.first()
+        val ecKey = settingsManager.emoncmsApiKey.first()
         
         val tcIp = settingsManager.tinycamLocalIp.first()
         val tcRemoteIp = settingsManager.tinycamRemoteIp.first()
@@ -111,6 +115,7 @@ fun ConfigurationScreen(
         
         emoncmsIp = ecIp
         emoncmsRemoteIp = ecRemoteIp
+        emoncmsApiKey = ecKey
         
         tinycamIp = tcIp
         tinycamRemoteIp = tcRemoteIp
@@ -122,7 +127,7 @@ fun ConfigurationScreen(
         
         initialValues = mapOf(
             "dpIp" to dpIp, "dpRemoteIp" to dpRemoteIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
-            "ecIp" to ecIp, "ecRemoteIp" to ecRemoteIp,
+            "ecIp" to ecIp, "ecRemoteIp" to ecRemoteIp, "ecKey" to ecKey,
             "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass,
             "darkMode" to dm, "adminPin" to pin
         )
@@ -131,13 +136,13 @@ fun ConfigurationScreen(
     fun saveAll() {
         scope.launch {
             settingsManager.saveDomoPiBroker(domopiIp, domopiRemoteIp, domopiPort, domopiUser, domopiPass)
-            settingsManager.saveEmonCms(emoncmsIp, emoncmsRemoteIp)
+            settingsManager.saveEmonCms(emoncmsIp, emoncmsRemoteIp, emoncmsApiKey)
             settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
             settingsManager.saveDarkMode(darkMode)
             settingsManager.saveAdminPin(adminPin)
             initialValues = mapOf(
                 "dpIp" to domopiIp, "dpRemoteIp" to domopiRemoteIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
-                "ecIp" to emoncmsIp, "ecRemoteIp" to emoncmsRemoteIp,
+                "ecIp" to emoncmsIp, "ecRemoteIp" to emoncmsRemoteIp, "ecKey" to emoncmsApiKey,
                 "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass,
                 "darkMode" to darkMode, "adminPin" to adminPin
             )
@@ -314,6 +319,9 @@ fun ConfigurationScreen(
                 Text("EmonCMS", style = MaterialTheme.typography.titleMedium)
                 OutlinedTextField(value = emoncmsIp, onValueChange = { emoncmsIp = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = emoncmsRemoteIp, onValueChange = { emoncmsRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = emoncmsApiKey, onValueChange = { emoncmsApiKey = it.trim() },
+                    label = { Text("Chiave API di lettura (salvata cifrata)") }, singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
             }
 
             item {

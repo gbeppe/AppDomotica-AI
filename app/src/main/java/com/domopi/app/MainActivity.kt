@@ -43,10 +43,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        settingsManager = SettingsManager(this)
+        val credentialStore = CredentialStore(this)
+        settingsManager = SettingsManager(this, credentialStore)
         val connectivityManager = ZaiConnectivityManager(this)
         mqttManager = MqttManager()
-        val credentialStore = CredentialStore(this)
+        // Secrets live only in the encrypted store; old plain values are migrated here once.
+        lifecycleScope.launch { settingsManager.loadSecrets() }
 
         // Sync prefisso Digital Twin
         lifecycleScope.launch {
@@ -188,7 +190,8 @@ class MainActivity : ComponentActivity() {
                         )
                         "energy_detail" -> {
                             val epIp by settingsManager.emoncmsIp.collectAsState(initial = "")
-                            EnergyDetailScreen(emoncmsIp = epIp, onBack = { currentScreen = "home" })
+                            val epKey by settingsManager.emoncmsApiKey.collectAsState(initial = "")
+                            EnergyDetailScreen(emoncmsIp = epIp, apiKey = epKey, onBack = { currentScreen = "home" })
                         }
                         "diagnosis" -> DiagnosisScreen(
                             mqttManager = mqttManager,

@@ -40,7 +40,7 @@ sealed interface EnergyResult<out T> {
 data class FeedSample(val timestamp: Long, val value: Float?)
 
 fun describeEnergyError(error: EnergyFetchError): String = when (error) {
-    EnergyFetchError.NotConfigured -> "EmonCMS non configurato: imposta l'indirizzo in Configurazione."
+    EnergyFetchError.NotConfigured -> "EmonCMS non configurato: imposta indirizzo e chiave API di lettura in Configurazione."
     EnergyFetchError.Unreachable -> "EmonCMS non raggiungibile: verifica Wi-Fi o VPN."
     is EnergyFetchError.Http -> "EmonCMS ha risposto con errore HTTP ${error.status}."
     is EnergyFetchError.Rejected -> "EmonCMS ha rifiutato la richiesta: ${error.message}"
@@ -94,10 +94,9 @@ object EmonCmsParser {
     }
 }
 
-class EnergyRepository(private val emoncmsIp: String) {
+/** [apiKey]: EmonCMS read-only key from the encrypted settings, never from the code. */
+class EnergyRepository(private val emoncmsIp: String, private val apiKey: String) {
     private val client = HttpClient()
-
-    private val apiKey = "e04a090163e34e823f1ae560859b1c47"
 
     suspend fun fetchHistory(hours: Int): EnergyResult<EnergyHistory> = withContext(Dispatchers.IO) {
         val end = System.currentTimeMillis() / 1000
@@ -135,7 +134,7 @@ class EnergyRepository(private val emoncmsIp: String) {
     }
 
     private suspend fun fetchFeedData(feedId: Int, start: Long, end: Long, interval: Int): EnergyResult<List<FeedSample>> {
-        if (emoncmsIp.isEmpty()) return EnergyResult.Failure(EnergyFetchError.NotConfigured)
+        if (emoncmsIp.isEmpty() || apiKey.isBlank()) return EnergyResult.Failure(EnergyFetchError.NotConfigured)
         val query = "feed/data.json?id=$feedId&start=$start&end=$end&interval=$interval&apikey=$apiKey"
         val primary = request("http://$emoncmsIp/emoncms/$query")
         if (primary is EnergyResult.Success || primary.isFinal()) return primary

@@ -69,13 +69,14 @@ fun MainDashboard(
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()
     val isAdminMode by settingsManager.isAdminMode.collectAsState(initial = false)
-    val adminPin by settingsManager.adminPin.collectAsState(initial = "1234")
+    val adminPin by settingsManager.adminPin.collectAsState(initial = "")
     val epIp by settingsManager.emoncmsIp.collectAsState("")
+    val epKey by settingsManager.emoncmsApiKey.collectAsState("")
 
-    LaunchedEffect(epIp) {
-        if (epIp.isNotEmpty()) {
+    LaunchedEffect(epIp, epKey) {
+        if (epIp.isNotEmpty() && epKey.isNotBlank()) {
             try {
-                val repo = EnergyRepository(epIp)
+                val repo = EnergyRepository(epIp, epKey)
                 // On failure keep the values already shown instead of overwriting them with zeros.
                 val summary = repo.fetchGridImportSummary()
                 if (summary is EnergyResult.Success) {
@@ -102,6 +103,7 @@ fun MainDashboard(
     if (showPinDialog) {
         AdminPinDialog(
             correctPin = adminPin,
+            onSetPin = { scope.launch { settingsManager.saveAdminPin(it) } },
             onConfirm = {
                 scope.launch { settingsManager.saveAdminMode(true) }
                 showPinDialog = false
@@ -368,8 +370,9 @@ fun MainDashboard(
                                 .pointerInput(Unit) {
                                     detectTapGestures(
                                         onLongPress = {
+                                            // Recovery: forget the PIN; the next unlock asks to choose a new one.
                                             scope.launch {
-                                                settingsManager.saveAdminPin("1234")
+                                                settingsManager.saveAdminPin("")
                                                 settingsManager.saveAdminMode(false)
                                             }
                                         }
@@ -773,7 +776,7 @@ fun DomainCard(
     val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
     val tcUser by settingsManager.tinycamUser.collectAsState("admin")
-    val tcPass by settingsManager.tinycamPass.collectAsState("password")
+    val tcPass by settingsManager.tinycamPass.collectAsState("")
     
     
     val title = when(page) {
@@ -1003,8 +1006,11 @@ fun DomainCard(
 fun AdminPinDialog(
     correctPin: String,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSetPin: (String) -> Unit = {},
 ) {
+    // No PIN yet (new install, or after the long-press reset): the first 4 digits become the PIN.
+    val choosing = correctPin.isEmpty()
     var enteredPin by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
 
@@ -1013,7 +1019,8 @@ fun AdminPinDialog(
         title = { Text("Modalità Esperto", fontWeight = FontWeight.Bold) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Inserisci il PIN per abilitare le modifiche", style = MaterialTheme.typography.bodyMedium)
+                Text(if (choosing) "Nessun PIN impostato: scegli un PIN di 4 cifre" else "Inserisci il PIN per abilitare le modifiche",
+                    style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(16.dp))
                 OutlinedTextField(
                     value = enteredPin,
@@ -1028,7 +1035,7 @@ fun AdminPinDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     isError = isError,
-                    supportingText = { if (isError) Text("PIN Errato", color = MaterialTheme.colorScheme.error) },
+                    supportingText = { if (isError) Text(if (choosing) "Servono 4 cifre" else "PIN Errato", color = MaterialTheme.colorScheme.error) },
                     singleLine = true
                 )
             }
@@ -1036,7 +1043,10 @@ fun AdminPinDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (enteredPin == correctPin) {
+                    if (choosing && enteredPin.length == 4 && enteredPin.all(Char::isDigit)) {
+                        onSetPin(enteredPin)
+                        onConfirm()
+                    } else if (!choosing && enteredPin == correctPin) {
                         onConfirm()
                     } else {
                         isError = true

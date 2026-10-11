@@ -25,7 +25,7 @@ fun CamerasScreen(
     val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
     val tcUser by settingsManager.tinycamUser.collectAsState("guest")
-    val tcPass by settingsManager.tinycamPass.collectAsState("password")
+    val tcPass by settingsManager.tinycamPass.collectAsState("")
 
     val baseUrl = "http://$tcIp:$tcPort/axis-cgi/mjpg/video.cgi"
 
