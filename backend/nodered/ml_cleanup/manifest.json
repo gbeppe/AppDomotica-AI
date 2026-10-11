@@ -1,0 +1,29 @@
+{
+  "patch": "AI-CLIMATE-CLEANUP.1",
+  "modified_ids": [],
+  "added_ids": [],
+  "removed_ids": [
+    "112b83a5b0996529",
+    "234c14caa02c7881",
+    "34d195884b61e3d7",
+    "655f20f9bfc74f4f",
+    "d5d60e578d517b21",
+    "aef522b9530d2781"
+  ],
+  "removed_reasons": {
+    "112b83a5b0996529": "unwired copy of Machine Learning domotico",
+    "234c14caa02c7881": "unwired copy of Machine Learning domotico",
+    "34d195884b61e3d7": "unwired copy of Machine Learning domotico",
+    "655f20f9bfc74f4f": "unwired copy of Machine Learning domotico",
+    "d5d60e578d517b21": "unwired copy of Machine Learning domotico",
+    "aef522b9530d2781": "unwired copy of Machine Learning domotico"
+  },
+  "node_sha256_before": {
+    "112b83a5b0996529": "699341e4d91d656e46a3e6330b0ad6cfba6aefba850132bb6944c20c7c53c735",
+    "234c14caa02c7881": "e35a9cb8a271d6297ad71dc93fb6342167c2e6002b6a0a7a7b6a450f10addbe6",
+    "34d195884b61e3d7": "6e31976eaa43691523077c202c35b90f6c287888d09a9a1f6bceafcb068d2683",
+    "655f20f9bfc74f4f": "69fd37500a617fd56418b2a3bdbddd9eeb5aaf96ff6b5a5d0b688b358e3b589c",
+    "d5d60e578d517b21": "2a878dc78fa63fb08dad0f66ccb3e1440b4f73269739e83c095ea2fb4acde43d",
+    "aef522b9530d2781": "ccbbb7fe1f6d4304a1a312ac22eaa5ea324cd2c5b098f4187d80cd06ee81cf6b"
+  }
+}
