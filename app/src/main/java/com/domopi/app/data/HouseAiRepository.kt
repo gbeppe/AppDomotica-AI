@@ -101,6 +101,23 @@ class HouseAiRepository {
             } finally { connection.disconnect() }
         }
 
+    /** Fase 3.5 C: today's totals and tomorrow's forecast; fixed backend tools, no model call. */
+    suspend fun daySummary(baseUrl: String, token: String): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
+        val base = validatedBase(baseUrl)
+        require(token.isNotBlank())
+        val connection = URL("${base.toExternalForm()}/v1/summary/day").openConnection() as HttpURLConnection
+        try {
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 10000
+            connection.readTimeout = 60000
+            connection.setRequestProperty("Authorization", "Bearer $token")
+            checkStatus(connection)
+            EnergyAssistantAnswer.fromJson(JSONObject(readBounded(connection)))
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     suspend fun report(baseUrl: String, token: String, day: String): JSONObject = withContext(Dispatchers.IO) {
         java.time.LocalDate.parse(day)
         val base = validatedBase(baseUrl)

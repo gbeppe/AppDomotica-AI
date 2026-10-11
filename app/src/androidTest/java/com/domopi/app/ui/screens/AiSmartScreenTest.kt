@@ -250,6 +250,19 @@ class AiSmartScreenTest {
         screenshot("smart-stack-status.png")
     }
 
+    @Test fun daySummaryButtonCallsBackend() {
+        var asked = 0
+        compose.setContent {
+            DomoPiTheme(darkTheme = false) {
+                AiSmartContent(state(), true, "", {}, {}, {}, dynamicMode = true,
+                    serviceUrl = "https://domopi.example", serviceToken = "token",
+                    onDaySummary = { asked++ })
+            }
+        }
+        compose.onNodeWithTag("smart-day-summary").performClick()
+        compose.runOnIdle { assertEquals(1, asked) }
+    }
+
     @Test fun summaryCardCanBeCollapsedAndReExpanded() {
         compose.setContent {
             DomoPiTheme(darkTheme = true) {

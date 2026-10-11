@@ -138,6 +138,35 @@ fun AiSmartScreen(
             }
         }
     }
+    // "Com'è andata oggi": shown like an answer, read aloud only on "Leggi risposta".
+    fun daySummary() {
+        askedQuestion = "Com'è andata oggi?"
+        scope.launch {
+            loading = true
+            dynamicError = null
+            response = null
+            val started = System.currentTimeMillis()
+            try {
+                response = repository.daySummary(serviceUrl, serviceToken)
+                stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/summary/day",
+                    statusCode = 200, latencyMs = System.currentTimeMillis() - started,
+                    details = "Riepilogo del giorno completato"))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IllegalStateException) {
+                dynamicError = e.message ?: "Risposta del backend non valida."
+                stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/summary/day",
+                    details = "Riepilogo del giorno non riuscito", isError = true))
+            } catch (e: Exception) {
+                dynamicError = HouseAiErrors.network(e)
+                stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/summary/day",
+                    details = "Riepilogo del giorno non riuscito", isError = true))
+            } finally {
+                loading = false
+                healthRefresh++
+            }
+        }
+    }
     // A spoken question is sent at once and its answer (or error) is read aloud; typed ones are not.
     fun ask(text: String, spoken: Boolean) {
         askedQuestion = text
@@ -270,6 +299,7 @@ fun AiSmartScreen(
             stackHealthManager.clearLogs()
         },
         onAskDynamic = { ask(it, spoken = false) },
+        onDaySummary = { daySummary() },
         onDictate = {
             speech?.stop()
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -319,6 +349,7 @@ internal fun AiSmartContent(
     onRefreshStackHealth: () -> Unit = {},
     onClearTrafficLogs: () -> Unit = {},
     onAskDynamic: (String) -> Unit = {},
+    onDaySummary: () -> Unit = {},
     askedQuestion: String? = null,
 ) {
     BackHandler(onBack = onClassic)
@@ -434,7 +465,15 @@ internal fun AiSmartContent(
                     }
                     if (summaryExpanded) {
                         Text(summary, Modifier.testTag("smart-summary"))
-                        TextButton(enabled = speechReady, onClick = { onSpeak(summary) }) { Text("Leggi riepilogo") }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(enabled = speechReady, onClick = { onSpeak(summary) }) { Text("Leggi riepilogo") }
+                            if (dynamicMode) {
+                                TextButton(enabled = !loading && serviceUrl.isNotBlank() && serviceToken.isNotBlank(),
+                                    onClick = onDaySummary, modifier = Modifier.testTag("smart-day-summary")) {
+                                    Text("Com'è andata oggi")
+                                }
+                            }
+                        }
                     }
                 }
             }
