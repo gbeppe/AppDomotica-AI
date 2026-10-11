@@ -1,0 +1,14 @@
+{
+  "patch": "ROUTER-CLEANUP.2",
+  "modified_ids": [
+    "5a7c1d360710ca21"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "5a7c1d360710ca21": "7ff249c5a2d038928c4b4d540e10b839f322a01716f2f061a2a42bb1feab3be3"
+  },
+  "node_sha256_after": {
+    "5a7c1d360710ca21": "cef40c8fcf91ef87263cc3495248743e402d09d03f57daa5742f2540ee1cd0b6"
+  }
+}
