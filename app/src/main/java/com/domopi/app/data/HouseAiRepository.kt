@@ -34,15 +34,18 @@ class HouseAiRepository {
             result.toString()
         }
 
-    private fun checkStatus(code: Int) {
-        check(code == 200) {
-            when (code) {
-                401 -> "Token backend non valido."
-                400 -> "Domanda o dati inviati non validi."
-                502 -> "Pianificatore o sorgente non disponibili. Riprova più tardi."
-                else -> "Servizio non disponibile (HTTP $code)."
+    private fun checkStatus(connection: HttpURLConnection) {
+        val code = connection.responseCode
+        if (code == 200) return
+        // Small error bodies only: they carry the backend error code and the retry wait.
+        val body = runCatching {
+            connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { reader ->
+                val chunk = CharArray(4096)
+                val count = reader.read(chunk)
+                if (count > 0) String(chunk, 0, count) else null
             }
-        }
+        }.getOrNull()
+        throw IllegalStateException(HouseAiErrors.http(code, body))
     }
 
     suspend fun stackHealth(baseUrl: String, token: String, digitalTwinConnected: Boolean): StackHealthState =
@@ -57,7 +60,7 @@ class HouseAiRepository {
                 connection.connectTimeout = 10000
                 connection.readTimeout = 30000
                 connection.setRequestProperty("Authorization", "Bearer $token")
-                checkStatus(connection.responseCode)
+                checkStatus(connection)
                 val body = JSONObject(readBounded(connection))
                 check(body.optString("schema") == "house_ai.stack_health.v1")
                 val checkedAt = body.getLong("checked_at_ms")
@@ -108,7 +111,7 @@ class HouseAiRepository {
             connection.connectTimeout = 10000
             connection.readTimeout = 120000
             connection.setRequestProperty("Authorization", "Bearer $token")
-            checkStatus(connection.responseCode)
+            checkStatus(connection)
             val text = readBounded(connection)
             JSONObject(text).also { check(it.optString("schema") == "house_ai.daily_report.v1") }
         } finally {
@@ -210,7 +213,7 @@ class HouseAiRepository {
             connection.setRequestProperty("Authorization", "Bearer $token")
             connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
             connection.outputStream.use { it.write(requestBody.toByteArray(Charsets.UTF_8)) }
-            checkStatus(connection.responseCode)
+            checkStatus(connection)
             EnergyAssistantAnswer.fromJson(JSONObject(readBounded(connection)))
         } finally {
             connection.disconnect()

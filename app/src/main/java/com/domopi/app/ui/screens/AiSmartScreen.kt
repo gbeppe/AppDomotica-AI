@@ -178,8 +178,8 @@ fun AiSmartScreen(
                 stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
                     details = "Risposta backend non valida", isError = true))
                 healthRefresh++
-            } catch (_: Exception) {
-                dynamicError = "Assistente non raggiungibile o risposta non valida. In casa basta il Wi-Fi; fuori casa serve Tailscale attivo. Poi riprova."
+            } catch (e: Exception) {
+                dynamicError = HouseAiErrors.network(e)
                 stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
                     details = "Richiesta non riuscita", isError = true))
                 healthRefresh++
