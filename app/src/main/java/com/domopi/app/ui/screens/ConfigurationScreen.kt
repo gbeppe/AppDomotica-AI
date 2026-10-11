@@ -65,6 +65,7 @@ fun ConfigurationScreen(
     var tinycamPort by remember { mutableStateOf("") }
     var tinycamUser by remember { mutableStateOf("") }
     var tinycamPass by remember { mutableStateOf("") }
+    var tinycamCameras by remember { mutableStateOf("") }
     var darkMode by remember { mutableStateOf(true) }
     var adminPin by remember { mutableStateOf("") }
 
@@ -84,6 +85,7 @@ fun ConfigurationScreen(
         tinycamPort != initialValues!!["tcPort"] ||
         tinycamUser != initialValues!!["tcUser"] ||
         tinycamPass != initialValues!!["tcPass"] ||
+        tinycamCameras != initialValues!!["tcCams"] ||
         darkMode != initialValues!!["darkMode"] ||
         adminPin != initialValues!!["adminPin"]
     )
@@ -104,6 +106,7 @@ fun ConfigurationScreen(
         val tcPort = settingsManager.tinycamPort.first()
         val tcUser = settingsManager.tinycamUser.first()
         val tcPass = settingsManager.tinycamPass.first()
+        val tcCams = settingsManager.tinycamCameras.first()
         val dm = settingsManager.darkMode.first() ?: true
         val pin = settingsManager.adminPin.first()
         
@@ -122,13 +125,14 @@ fun ConfigurationScreen(
         tinycamPort = tcPort
         tinycamUser = tcUser
         tinycamPass = tcPass
+        tinycamCameras = tcCams
         darkMode = dm
         adminPin = pin
         
         initialValues = mapOf(
             "dpIp" to dpIp, "dpRemoteIp" to dpRemoteIp, "dpPort" to dpPort, "dpUser" to dpUser, "dpPass" to dpPass,
             "ecIp" to ecIp, "ecRemoteIp" to ecRemoteIp, "ecKey" to ecKey,
-            "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass,
+            "tcIp" to tcIp, "tcRemoteIp" to tcRemoteIp, "tcPort" to tcPort, "tcUser" to tcUser, "tcPass" to tcPass, "tcCams" to tcCams,
             "darkMode" to dm, "adminPin" to pin
         )
     }
@@ -137,13 +141,13 @@ fun ConfigurationScreen(
         scope.launch {
             settingsManager.saveDomoPiBroker(domopiIp, domopiRemoteIp, domopiPort, domopiUser, domopiPass)
             settingsManager.saveEmonCms(emoncmsIp, emoncmsRemoteIp, emoncmsApiKey)
-            settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass)
+            settingsManager.saveTinycam(tinycamIp, tinycamRemoteIp, tinycamPort, tinycamUser, tinycamPass, tinycamCameras)
             settingsManager.saveDarkMode(darkMode)
             settingsManager.saveAdminPin(adminPin)
             initialValues = mapOf(
                 "dpIp" to domopiIp, "dpRemoteIp" to domopiRemoteIp, "dpPort" to domopiPort, "dpUser" to domopiUser, "dpPass" to domopiPass,
                 "ecIp" to emoncmsIp, "ecRemoteIp" to emoncmsRemoteIp, "ecKey" to emoncmsApiKey,
-                "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass,
+                "tcIp" to tinycamIp, "tcRemoteIp" to tinycamRemoteIp, "tcPort" to tinycamPort, "tcUser" to tinycamUser, "tcPass" to tinycamPass, "tcCams" to tinycamCameras,
                 "darkMode" to darkMode, "adminPin" to adminPin
             )
         }
@@ -259,7 +263,8 @@ fun ConfigurationScreen(
                 OutlinedTextField(value = domopiRemoteIp, onValueChange = { domopiRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiPort, onValueChange = { domopiPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiUser, onValueChange = { domopiUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = domopiPass, onValueChange = { domopiPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = domopiPass, onValueChange = { domopiPass = it }, label = { Text("Password (salvata cifrata)") },
+                    visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = digitalTwinPrefix, onValueChange = { digitalTwinPrefix = it }, label = { Text("Prefisso Topic Digital Twin") }, modifier = Modifier.fillMaxWidth())
                 Text(
                     text = "⚠️ Modificare questo prefisso richiede il riavvio dell'applicazione per ri-sottoscrivere i topic con la nuova alberatura.",
@@ -331,7 +336,10 @@ fun ConfigurationScreen(
                 OutlinedTextField(value = tinycamRemoteIp, onValueChange = { tinycamRemoteIp = it }, label = { Text("IP Remoto / Cloud") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = tinycamPort, onValueChange = { tinycamPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = tinycamUser, onValueChange = { tinycamUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = tinycamPass, onValueChange = { tinycamPass = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = tinycamPass, onValueChange = { tinycamPass = it }, label = { Text("Password (salvata cifrata)") },
+                    visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = tinycamCameras, onValueChange = { tinycamCameras = it },
+                    label = { Text("Telecamere (Nome=ID, separate da virgola; la prima va nella Home)") }, modifier = Modifier.fillMaxWidth())
             }
         }
     }

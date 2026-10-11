@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.AcReasonCategory
+import com.domopi.app.data.TinyCamCameras
+import com.domopi.app.data.TinyCamClient
 import com.domopi.app.data.AcReasonMapper
 import com.domopi.app.data.AcReasonMetric
 import com.domopi.app.data.AiManagedData
@@ -775,8 +777,9 @@ fun DomainCard(
     
     val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
-    val tcUser by settingsManager.tinycamUser.collectAsState("admin")
+    val tcUser by settingsManager.tinycamUser.collectAsState("")
     val tcPass by settingsManager.tinycamPass.collectAsState("")
+    val tcCameras by settingsManager.tinycamCameras.collectAsState(TinyCamCameras.DEFAULT)
     
     
     val title = when(page) {
@@ -928,10 +931,11 @@ fun DomainCard(
                         }
                     }
                     6 -> if (isVisible) {
+                        // Snapshot every 1.5 s of the first configured camera, only while this card is visible.
+                        val firstCamera = TinyCamCameras.parse(tcCameras).firstOrNull() ?: TinyCamCameras.parse(TinyCamCameras.DEFAULT).first()
+                        val camClient = remember(tcIp, tcPort, tcUser, tcPass) { TinyCamClient(tcIp, tcPort, tcUser, tcPass) }
                         com.domopi.app.ui.components.CameraStreamComponent(
-                            url = "http://${tcIp}:${tcPort}/axis-cgi/mjpg/video.cgi?cameraId=936942165",
-                            user = tcUser,
-                            pass = tcPass,
+                            client = camClient, cameraId = firstCamera.id, live = false,
                             modifier = Modifier.clip(MaterialTheme.shapes.medium)
                         )
                     } else {

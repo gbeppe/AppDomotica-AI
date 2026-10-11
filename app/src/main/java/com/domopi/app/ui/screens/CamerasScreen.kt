@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.ZaiConnectivityManager
 import com.domopi.app.data.SettingsManager
+import com.domopi.app.data.TinyCamCameras
+import com.domopi.app.data.TinyCamClient
 import com.domopi.app.ui.components.CameraStreamComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,19 +26,16 @@ fun CamerasScreen(
     
     val tcIp by settingsManager.tinycamLocalIp.collectAsState("")
     val tcPort by settingsManager.tinycamPort.collectAsState("8083")
-    val tcUser by settingsManager.tinycamUser.collectAsState("guest")
+    val tcUser by settingsManager.tinycamUser.collectAsState("")
     val tcPass by settingsManager.tinycamPass.collectAsState("")
+    val tcCameras by settingsManager.tinycamCameras.collectAsState(TinyCamCameras.DEFAULT)
+    val client = remember(tcIp, tcPort, tcUser, tcPass) { TinyCamClient(tcIp, tcPort, tcUser, tcPass) }
 
-    val baseUrl = "http://$tcIp:$tcPort/axis-cgi/mjpg/video.cgi"
-
-    // Stato per la telecamera selezionata (0 = Ingresso, 1 = Soggiorno)
     var selectedCamIndex by remember { mutableIntStateOf(0) }
-    
-    val cams = listOf(
-        "Ingresso" to "936942165",
-        "Soggiorno" to "1708386743"
-    )
-    
+    val cams = TinyCamCameras.parse(tcCameras).ifEmpty { TinyCamCameras.parse(TinyCamCameras.DEFAULT) }
+        .map { it.name to it.id }
+    if (selectedCamIndex >= cams.size) selectedCamIndex = 0
+
     val currentCamName = cams[selectedCamIndex].first
     val currentCamId = cams[selectedCamIndex].second
 
@@ -92,12 +91,8 @@ fun CamerasScreen(
                 // Passiamo l'URL specifico della camera selezionata.
                 // Compose ricaricherà il componente solo per questa camera.
                 key(currentCamId) {
-                    CameraStreamComponent(
-                        url = "$baseUrl?cameraId=$currentCamId",
-                        user = tcUser,
-                        pass = tcPass,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    CameraStreamComponent(client = client, cameraId = currentCamId, live = true,
+                        modifier = Modifier.fillMaxWidth())
                 }
             }
             

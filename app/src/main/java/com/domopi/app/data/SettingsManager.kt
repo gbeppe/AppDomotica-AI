@@ -62,6 +62,7 @@ class SettingsManager(private val context: Context, private val credentials: Cre
         val TINYCAM_PORT = stringPreferencesKey("tinycam_port")
         val TINYCAM_USER = stringPreferencesKey("tinycam_user")
         val TINYCAM_PASS = stringPreferencesKey("tinycam_pass")
+        val TINYCAM_CAMERAS = stringPreferencesKey("tinycam_cameras")
         val DARK_MODE = booleanPreferencesKey("dark_mode")
         val IS_ADMIN_MODE = booleanPreferencesKey("is_admin_mode")
         val ADMIN_PIN = stringPreferencesKey("admin_pin")
@@ -104,6 +105,8 @@ class SettingsManager(private val context: Context, private val credentials: Cre
     val tinycamPort: Flow<String> = context.dataStore.data.map { it[TINYCAM_PORT] ?: "8083" }.distinctUntilChanged()
     val tinycamUser: Flow<String> = context.dataStore.data.map { it[TINYCAM_USER] ?: "admin" }.distinctUntilChanged()
     val tinycamPass: Flow<String> = secret(Credential.TINYCAM_PASSWORD)
+    /** "Nome=ID, Nome=ID"; the first camera is shown on the dashboard card. */
+    val tinycamCameras: Flow<String> = context.dataStore.data.map { it[TINYCAM_CAMERAS] ?: TinyCamCameras.DEFAULT }.distinctUntilChanged()
 
     val darkMode: Flow<Boolean?> = context.dataStore.data.map { it[DARK_MODE] }.distinctUntilChanged()
     val isAdminMode: Flow<Boolean> = context.dataStore.data.map { it[IS_ADMIN_MODE] ?: false }.distinctUntilChanged()
@@ -131,8 +134,9 @@ class SettingsManager(private val context: Context, private val credentials: Cre
     /** EmonCMS read-only API key (My Account → Read API Key). */
     val emoncmsApiKey: Flow<String> = secret(Credential.EMONCMS_API_KEY)
 
-    suspend fun saveTinycam(localIp: String, remoteIp: String, port: String, user: String, pass: String) {
+    suspend fun saveTinycam(localIp: String, remoteIp: String, port: String, user: String, pass: String, cameras: String) {
         context.dataStore.edit {
+            it[TINYCAM_CAMERAS] = cameras.trim()
             it[TINYCAM_LOCAL_IP] = localIp
             it[TINYCAM_REMOTE_IP] = remoteIp
             it[TINYCAM_PORT] = port
