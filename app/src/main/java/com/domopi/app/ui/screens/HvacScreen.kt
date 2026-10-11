@@ -657,7 +657,7 @@ private fun FireplaceTimeField(
             focused = it.isFocused
         },
         isError = draft != current && valid == null,
-        supportingText = if (draft != current && valid == null) {{ Text("HH:MM") }} else null,
+        supportingText = if (draft != current && valid == null) {{ Text("HH:MM o HHMM") }} else null,
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { commit() }),

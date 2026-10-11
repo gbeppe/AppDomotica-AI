@@ -16,10 +16,12 @@ class ControlInputsTest {
         assertEquals("07:05", ControlInputs.time("7:05"))
         assertEquals("21:30", ControlInputs.time(" 21:30 "))
         assertEquals("00:00", ControlInputs.time("00:00"))
+        assertEquals("21:30", ControlInputs.time("2130"))  // numeric keyboards without ":"
+        assertEquals("07:30", ControlInputs.time("730"))
     }
 
     @Test fun partialOrInvalidTimesAreNeverSent() {
-        listOf("2", "21", "21:", "21:3", "24:00", "21:60", "--:--", "", "2130", "21.30").forEach {
+        listOf("2", "21", "21:", "21:3", "24:00", "2400", "21:60", "2160", "--:--", "", "21.30", "21300").forEach {
             assertNull(it, ControlInputs.time(it))
         }
     }

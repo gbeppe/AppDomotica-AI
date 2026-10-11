@@ -4,9 +4,10 @@ import kotlin.math.roundToInt
 
 /** Pure helpers for manual controls that publish real MQTT commands. */
 object ControlInputs {
-    private val TIME = Regex("^([01]?\\d|2[0-3]):([0-5]\\d)$")
+    // The colon is optional: numeric keyboards often have no ":" ("2130", "730").
+    private val TIME = Regex("^([01]?\\d|2[0-3]):?([0-5]\\d)$")
 
-    /** "7:05" or "07:05" -> "07:05"; anything incomplete or out of range -> null (never sent). */
+    /** "7:05", "07:05", "705" or "0705" -> "07:05"; incomplete or out of range -> null (never sent). */
     fun time(text: String): String? = TIME.matchEntire(text.trim())?.let { match ->
         "%02d:%s".format(match.groupValues[1].toInt(), match.groupValues[2])
     }
