@@ -77,6 +77,16 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — messaggi d'errore distinti
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-error-messages`, commit
+`a684b8c`; `PREVIOUS_RELEASE` = `20261011-lan-tls`. Un primo staging da `fd8321c` è
+fallito su `.20` (chiusura di `HTTPError` senza corpo su Python 3.9) e non è mai stato
+attivato; corretto in `a684b8c`, 121 test superati su `.20`. Riavviati gateway,
+backend e `house-ai-lan`, tutti `active`. Prova reale con 4 domande ravvicinate:
+1ª e 4ª `complete`, 2ª e 3ª HTTP 429 `rate_limited` con `retry_after_s` 1 e
+`Retry-After: 1`. App `bld_0b8cc93d` (`528c557`) installata.
+
 ## Release dell'11 ottobre 2026 — AI Smart in casa senza Tailscale
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-lan-tls`, commit
