@@ -1,0 +1,248 @@
+[
+  {
+    "id": "65f956719bdbf4f8",
+    "type": "tab",
+    "label": "Irrigazione OpenSprinkler (DomoPi)",
+    "disabled": false,
+    "info": "IRRIGATION.1 (2026-10-11): comandi app -> API OpenSprinkler 192.168.1.3:9003, stato ogni 10 s su zara/interface/irrigation/state/stat, registrazione EmonCMS emon/irrigazione/zona_N. Password: /home/pi/.config/domopi/opensprinkler.md5. Repository: backend/nodered/irrigation/."
+  },
+  {
+    "id": "417d243d3ffa3436",
+    "type": "comment",
+    "z": "65f956719bdbf4f8",
+    "name": "IRRIGATION.1 — vedi backend/nodered/irrigation/README.md",
+    "info": "",
+    "x": 250,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "34b23791167d26da",
+    "type": "inject",
+    "z": "65f956719bdbf4f8",
+    "name": "carica password (avvio, ogni ora)",
+    "props": [],
+    "repeat": "3600",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "2",
+    "topic": "",
+    "x": 190,
+    "y": 100,
+    "wires": [
+      [
+        "db5061aabcb4df37"
+      ]
+    ]
+  },
+  {
+    "id": "db5061aabcb4df37",
+    "type": "file in",
+    "z": "65f956719bdbf4f8",
+    "name": "opensprinkler.md5",
+    "filename": "/home/pi/.config/domopi/opensprinkler.md5",
+    "filenameType": "str",
+    "format": "utf8",
+    "chunk": false,
+    "sendError": false,
+    "encoding": "none",
+    "allProps": false,
+    "x": 430,
+    "y": 100,
+    "wires": [
+      [
+        "0649ac2163302eae"
+      ]
+    ]
+  },
+  {
+    "id": "0649ac2163302eae",
+    "type": "function",
+    "z": "65f956719bdbf4f8",
+    "name": "memorizza password",
+    "func": "// IRRIGATION.1: OpenSprinkler password hash (MD5, 32 hex) read from\n// /home/pi/.config/domopi/opensprinkler.md5; kept only in flow context, never logged.\nconst value = String(msg.payload || \"\").trim().toLowerCase();\nif (/^[0-9a-f]{32}$/.test(value)) {\n    flow.set(\"os_pw\", value);\n    node.status({fill: \"green\", shape: \"dot\", text: \"password caricata\"});\n} else {\n    node.status({fill: \"red\", shape: \"ring\", text: \"password mancante o non valida\"});\n    node.warn(\"Irrigazione: file della password OpenSprinkler mancante o non valido\");\n}\nreturn null;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 650,
+    "y": 100,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f021f48463c89a75",
+    "type": "inject",
+    "z": "65f956719bdbf4f8",
+    "name": "ogni 10 s",
+    "props": [],
+    "repeat": "10",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "5",
+    "topic": "",
+    "x": 160,
+    "y": 180,
+    "wires": [
+      [
+        "a9796414ba95cc5e"
+      ]
+    ]
+  },
+  {
+    "id": "a9796414ba95cc5e",
+    "type": "function",
+    "z": "65f956719bdbf4f8",
+    "name": "lettura stato",
+    "func": "// IRRIGATION.1: every 10 s (and right after a command) read the whole OpenSprinkler state.\nconst pw = flow.get(\"os_pw\");\nif (!pw) return null;\nreturn {url: \"http://192.168.1.3:9003/ja?pw=\" + pw, kind: \"poll\"};\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 180,
+    "wires": [
+      [
+        "b437751086894d75"
+      ]
+    ]
+  },
+  {
+    "id": "b437751086894d75",
+    "type": "http request",
+    "z": "65f956719bdbf4f8",
+    "name": "OpenSprinkler API",
+    "method": "GET",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "x": 580,
+    "y": 220,
+    "wires": [
+      [
+        "eb0ff999b188ee5f"
+      ]
+    ]
+  },
+  {
+    "id": "eb0ff999b188ee5f",
+    "type": "function",
+    "z": "65f956719bdbf4f8",
+    "name": "stato, esito, EmonCMS",
+    "func": "// IRRIGATION.1: OpenSprinkler HTTP response.\n// Outputs: 1 = app state (retained JSON), 2 = command result for the app, 3 = poll now,\n//          4 = EmonCMS (emon/irrigazione/zona_N every poll, zona_N_durata_s at the end of a run).\nconst now = Date.now();\nif (msg.kind === \"command\") {\n    const result = msg.payload && typeof msg.payload === \"object\" ? msg.payload.result : null;\n    const ok = msg.statusCode === 200 && result === 1;\n    if (!ok) node.warn(\"Irrigazione: OpenSprinkler ha rifiutato \" + msg.command + \" (HTTP \" + msg.statusCode + \", result \" + result + \")\");\n    return [null, {topic: \"zara/interface/irrigation/last_command/stat\", retain: false,\n                   payload: {ok: ok, command: msg.command, result: result, at_ms: now}},\n            {kind: \"poll-now\"}, null];\n}\n\nconst d = msg.payload;\nif (msg.statusCode !== 200 || !d || typeof d !== \"object\" || !d.settings || !d.status || !d.stations || !d.programs) {\n    node.warn(\"Irrigazione: lettura stato OpenSprinkler non riuscita (HTTP \" + msg.statusCode + \")\");\n    return null;\n}\nconst names = d.stations.snames || [];\nconst disabled = d.stations.stn_dis || [];\nconst sn = d.status.sn || [];\nconst ps = d.settings.ps || [];\nconst zones = [];\nnames.forEach((name, i) => {\n    if ((disabled[i >> 3] >> (i & 7)) & 1) return;   // station disabled in OpenSprinkler\n    zones.push({id: i + 1, name: String(name), running: sn[i] === 1,\n                remaining_s: Array.isArray(ps[i]) ? Number(ps[i][1]) || 0 : 0});\n});\nconst programs = (d.programs.pd || []).map((p, i) => ({id: i + 1, name: String(p[5]), enabled: (p[0] & 1) === 1}));\nconst state = {schema: \"domopi.irrigation.v1\", controller_enabled: d.settings.en === 1,\n               rain_delay: d.settings.rd === 1, rain_delay_until_s: Number(d.settings.rdst) || 0,\n               zones: zones, programs: programs};\nflow.set(\"irrigation_state\", state);\n\n// EmonCMS: running state every poll, measured duration when a zone stops.\nconst starts = flow.get(\"irrigation_starts\") || {};\nconst emon = [];\nfor (const z of zones) {\n    emon.push({topic: \"emon/irrigazione/zona_\" + z.id, payload: z.running ? 1 : 0});\n    if (z.running && !starts[z.id]) starts[z.id] = now;\n    if (!z.running && starts[z.id]) {\n        emon.push({topic: \"emon/irrigazione/zona_\" + z.id + \"_durata_s\", payload: Math.round((now - starts[z.id]) / 1000)});\n        delete starts[z.id];\n    }\n}\nflow.set(\"irrigation_starts\", starts);\n\n// App: publish on change, or every 60 s as heartbeat.\nconst key = JSON.stringify(state);\nconst last = flow.get(\"irrigation_last\") || {};\nlet app = null;\nif (key !== last.key || now - (last.at || 0) >= 60000) {\n    flow.set(\"irrigation_last\", {key: key, at: now});\n    app = {topic: \"zara/interface/irrigation/state/stat\", retain: true, qos: 1,\n           payload: Object.assign({}, state, {updated_at_ms: now})};\n}\nreturn [app, null, null, emon];\n",
+    "outputs": 4,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 810,
+    "y": 220,
+    "wires": [
+      [
+        "f0692d78079a2e94"
+      ],
+      [
+        "f0692d78079a2e94"
+      ],
+      [
+        "a9796414ba95cc5e"
+      ],
+      [
+        "bb25983c8b4254e7"
+      ]
+    ]
+  },
+  {
+    "id": "ff56700733ae359a",
+    "type": "mqtt in",
+    "z": "65f956719bdbf4f8",
+    "name": "comandi app",
+    "topic": "zara/interface/irrigation/#",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 160,
+    "y": 280,
+    "wires": [
+      [
+        "bd3356e3e6378d64"
+      ]
+    ]
+  },
+  {
+    "id": "bd3356e3e6378d64",
+    "type": "function",
+    "z": "65f956719bdbf4f8",
+    "name": "valida comando",
+    "func": "// IRRIGATION.1: app command -> OpenSprinkler HTTP API. Only known zones/programs, 1-60 min.\n// Outputs: 1 = HTTP request, 2 = result for the app (zara/interface/irrigation/last_command/stat).\nconst BASE = \"http://192.168.1.3:9003\";\nconst MAX_MINUTES = 60;\nconst match = /^zara\\/interface\\/irrigation\\/(.+)\\/cmd$/.exec(msg.topic || \"\");\nif (!match) return null;\nconst command = match[1];\nconst path = command.split(\"/\");\nconst value = String(msg.payload).trim().toLowerCase();\nconst state = flow.get(\"irrigation_state\");\n\nfunction reject(reason) {\n    node.warn(\"Irrigazione: comando \" + command + \" scartato (\" + reason + \")\");\n    return [null, {topic: \"zara/interface/irrigation/last_command/stat\", retain: false,\n                   payload: {ok: false, command: command, reason: reason, at_ms: Date.now()}}];\n}\n\nconst pw = flow.get(\"os_pw\");\nif (!pw) return reject(\"password OpenSprinkler non caricata\");\nif (!state) return reject(\"stato OpenSprinkler non ancora letto\");\n\nlet query;\nif (path[0] === \"zone\" && path.length === 3) {\n    const id = Number(path[1]);\n    if (!state.zones.some(z => z.id === id)) return reject(\"zona sconosciuta\");\n    if (path[2] === \"start\") {\n        const minutes = Number(value);\n        if (!Number.isInteger(minutes) || minutes < 1 || minutes > MAX_MINUTES) return reject(\"minuti non validi\");\n        query = \"cm?sid=\" + (id - 1) + \"&en=1&t=\" + minutes * 60;\n    } else if (path[2] === \"stop\") {\n        query = \"cm?sid=\" + (id - 1) + \"&en=0\";\n    } else return reject(\"azione sconosciuta\");\n} else if (path[0] === \"program\" && path.length === 3 && path[2] === \"start\") {\n    const id = Number(path[1]);\n    if (!state.programs.some(p => p.id === id)) return reject(\"programma sconosciuto\");\n    if (value !== \"true\") return reject(\"valore non valido\");\n    query = \"mp?pid=\" + (id - 1) + \"&uwt=0\";\n} else if (command === \"all/stop\") {\n    if (value !== \"true\") return reject(\"valore non valido\");\n    query = \"cv?rsn=1\";\n} else if (command === \"controller/enabled\") {\n    if (value !== \"true\" && value !== \"false\") return reject(\"valore non valido\");\n    query = \"cv?en=\" + (value === \"true\" ? 1 : 0);\n} else return reject(\"comando sconosciuto\");\n\nreturn [{url: BASE + \"/\" + query + \"&pw=\" + pw, kind: \"command\", command: command}, null];\n",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 280,
+    "wires": [
+      [
+        "b437751086894d75"
+      ],
+      [
+        "f0692d78079a2e94"
+      ]
+    ]
+  },
+  {
+    "id": "f0692d78079a2e94",
+    "type": "mqtt out",
+    "z": "65f956719bdbf4f8",
+    "name": "stato app (Home)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "3ed6302a.5af928",
+    "x": 1060,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "bb25983c8b4254e7",
+    "type": "mqtt out",
+    "z": "65f956719bdbf4f8",
+    "name": "EmonCMS (Emon)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "cfd9898e.1367b8",
+    "x": 1060,
+    "y": 260,
+    "wires": []
+  }
+]
