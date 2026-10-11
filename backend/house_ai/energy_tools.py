@@ -44,6 +44,13 @@ THERMOSTAT_TOPICS = {f"{t}.{m}": f"zara/interface/climate/{t}/{m}/stat"
                      for t in THERMOSTATS for m in THERMOSTAT_METRICS}
 # Same bounds and 0.5 °C step as the app slider; strings so the planner schema is a closed enum.
 THERMOSTAT_TARGETS = [f"{x / 2:.1f}" for x in range(32, 45)]
+# Room sensors published by the Digital Twin Router (live broker 2026-10-11); a missing
+# metric (e.g. outdoor humidex) simply stays missing.
+ENV_ROOMS = ("living", "bedroom", "kids_room", "service_bathroom", "technical_room", "outdoor")
+ENV_METRICS = ("temperature", "humidity", "humidex")
+ENV_TOPICS = {f"{room}.{metric}": f"zara/interface/env/{room}/{metric}/stat"
+              for room in ENV_ROOMS for metric in ENV_METRICS}
+ROOM_THERMOSTAT = {"living": "thermostat_living", "service_bathroom": "thermostat_bath"}
 LIGHT_TOPICS = {
     "lights_living": "zara/interface/lights/living/power/stat",
     "lights_libreria": "zara/interface/lights/libreria/power/stat",
@@ -94,6 +101,10 @@ def catalog(path=CATALOG_PATH):
             "name": "set_light_scene",
             "description": "Run one Node-RED light scene: tv (TV lamp and living on, bookshelf and TV chandelier off), sleep (all lights off after 2 minutes), all_on (main indoor and pool lights on; nothing in holiday mode, fewer with ECO lights), all_off (all indoor, outdoor and pool lights off)",
             "parameters": {"scene": list(LIGHT_SCENES)}
+        }, {
+            "name": "current_environment",
+            "description": "Read room temperature, humidity and humidex for one room or the whole house (all includes outdoor and technical room); living and service_bathroom also report thermostat setpoint and heating on/off",
+            "parameters": {"room": ["all", *ENV_ROOMS], "metric": ["all", *ENV_METRICS]}
         }, {
             "name": "current_thermostats",
             "description": "Read room temperature, heating setpoint, heating on/off and the time-slot timer setpoints (max inside the slot, min outside) for the living-room or bathroom thermostat",
@@ -168,7 +179,8 @@ def validate_plan(plan, sources=None):
                     if tool in ("current_air_conditioner", "current_predictive_reserve") else {"id", "tool", "light"}
                     if tool == "current_lights" else {"id", "tool", "light", "state"}
                     if tool == "set_light_state" else {"id", "tool", "scene"}
-                    if tool == "set_light_scene" else {"id", "tool", "thermostat"}
+                    if tool == "set_light_scene" else {"id", "tool", "room", "metric"}
+                    if tool == "current_environment" else {"id", "tool", "thermostat"}
                     if tool == "current_thermostats" else {"id", "tool", "thermostat", "target_c"}
                     if tool == "set_thermostat_target" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
@@ -190,6 +202,9 @@ def validate_plan(plan, sources=None):
         if tool == "set_light_state" and (operation["light"] not in LIGHT_TOPICS
                                            or operation["state"] not in ("on", "off")):
             raise ValueError("Unknown light command")
+        if tool == "current_environment" and (operation["room"] not in ("all", *ENV_ROOMS)
+                                              or operation["metric"] not in ("all", *ENV_METRICS)):
+            raise ValueError("Unknown room or environment metric")
         if tool == "set_light_scene" and operation["scene"] not in LIGHT_SCENES:
             raise ValueError("Unknown light scene")
         if tool == "current_thermostats" and operation["thermostat"] not in ("all", *THERMOSTATS):
@@ -369,8 +384,33 @@ def validate_thermostats_snapshot(snapshot):
     return clean
 
 
+def validate_environment_snapshot(snapshot):
+    if snapshot is None:
+        return None
+    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema", "connected", "observations"}
+            or snapshot["schema"] != "house_ai.current_environment_input.v1"
+            or type(snapshot["connected"]) is not bool or not isinstance(snapshot["observations"], dict)
+            or set(snapshot["observations"]) - set(ENV_TOPICS)):
+        raise ValueError("Invalid current environment snapshot")
+    clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
+    for key, observation in snapshot["observations"].items():
+        metric = key.split(".", 1)[1]
+        low, high = (0, 100) if metric == "humidity" else (-40, 70)
+        if (not isinstance(observation, dict)
+                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or not finite_number(observation["value"]) or not low <= observation["value"] <= high
+                or type(observation["received_at_ms"]) is not int
+                or not 0 <= observation["received_at_ms"] <= 253402214400000
+                or type(observation["retained"]) is not bool
+                or observation["source_topic"] != ENV_TOPICS[key]):
+            raise ValueError("Invalid environment observation")
+        clean["observations"][key] = dict(observation)
+    return clean
+
+
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
-            lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None):
+            lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
+            environment_snapshot=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     current = validate_current_snapshot(current_snapshot)
@@ -378,6 +418,7 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
     lights = validate_lights_snapshot(lights_snapshot)
     reserve = validate_predictive_reserve_snapshot(pr_snapshot)
     thermostats = validate_thermostats_snapshot(thermostats_snapshot)
+    environment = validate_environment_snapshot(environment_snapshot)
     if checked["clarification"]:
         return checked
     results = []
@@ -437,6 +478,24 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "limitations": ["Stato dichiarato dal Digital Twin; la modalità si cambia solo dall'editor Node-RED.",
                     "Lo stato attuale non spiega decisioni di notti passate: il PR non registra le sue decisioni.",
                     "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
+            continue
+        if operation["tool"] == "current_environment":
+            rooms = ENV_ROOMS if operation["room"] == "all" else (operation["room"],)
+            metrics = ENV_METRICS if operation["metric"] == "all" else (operation["metric"],)
+            wanted_keys = {f"{r}.{m}" for r in rooms for m in metrics}
+            observations = {key: value for key, value in (environment["observations"] if environment else {}).items()
+                            if key in wanted_keys}
+            # Thermostat state only for a single-room overview, where it belongs to the answer.
+            wanted = ROOM_THERMOSTAT.get(operation["room"]) if operation["metric"] == "all" else None
+            room_thermostat = {key: value for key, value in (thermostats["observations"] if thermostats else {}).items()
+                               if wanted and key.split(".", 1)[0] == wanted}
+            results.append({"id": operation["id"], "room": operation["room"], "metric": operation["metric"], "result": {
+                "schema": "house_ai.current_environment.v1",
+                "status": "available" if observations or room_thermostat else "missing",
+                "connected": environment["connected"] if environment else False,
+                "observations": observations, "thermostat": room_thermostat,
+                "limitations": ["Valori dichiarati dal Digital Twin; timestamp di ricezione Android, età della misura ignota.",
+                                "Il setpoint del termostato è l'ultimo valore comandato, non una lettura del termostato."]}})
             continue
         if operation["tool"] == "set_light_scene":
             results.append({"id": operation["id"], "result": {

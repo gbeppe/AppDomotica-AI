@@ -30,6 +30,12 @@ class Planner:
 PR_PLAN = {'operations': [{'id': 'pr', 'tool': 'current_predictive_reserve'}]}
 
 
+def diagnostics(result):
+    """Spoken answer plus the technical notes shown under provenance and limits."""
+    return result['answer'] + '\n' + '\n'.join(
+        note for item in result.get('results', []) for note in item['result'].get('limitations', []))
+
+
 class PredictiveReserveToolTests(unittest.TestCase):
     def test_tool_is_in_catalog_plan_schema_and_validation(self):
         self.assertIn('current_predictive_reserve', [t['name'] for t in catalog()['tools']])
@@ -54,21 +60,23 @@ class PredictiveReserveToolTests(unittest.TestCase):
     def test_effect_table(self):
         self.assertIn('disattivato', self.answer(control='false')['answer'])
         shadow = self.answer(control='true', mode='SHADOW')['answer']
-        self.assertIn('SHADOW', shadow); self.assertIn('nega ogni nuovo avvio', shadow)
+        self.assertIn('SHADOW', shadow); self.assertIn('blocca gli avvii notturni', shadow)
         self.assertIn('modello non è pronto', self.answer(control='true', ready='false')['answer'])
-        active = self.answer(control='true')['answer']
-        self.assertIn('eco26dry', active); self.assertIn('Modalità: ACTIVE · Modello: pronto.', active)
-        self.assertIn('non spiega le decisioni di notti passate', active)
+        active = self.answer(control='true')
+        self.assertIn('eco26dry', active['answer'])
+        self.assertIn('Modalità: ACTIVE · Modello: pronto.', diagnostics(active))
+        self.assertIn('non spiega decisioni di notti passate', diagnostics(active))
+        self.assertNotIn('notti passate', active['answer'])
         unknown = self.answer(control='true', drop=('operating_mode',))['answer']
-        self.assertIn('non è determinabile', unknown)
+        self.assertIn('non sono disponibili', unknown)
 
     def test_missing_snapshot_is_insufficient(self):
         result = ask(None, Planner(PR_PLAN), 'Il PR è attivo?')
         self.assertEqual(result['status'], 'insufficient_data')
-        self.assertIn('non disponibile', result['answer'])
+        self.assertIn('non è disponibile', result['answer'])
 
     def test_disconnected_is_declared(self):
-        self.assertIn('Digital Twin disconnesso', self.answer(connected=False)['answer'])
+        self.assertIn('La casa non è collegata', self.answer(connected=False)['answer'])
 
     def test_pr_reason_in_climate_log_is_explained(self):
         with tempfile.TemporaryDirectory() as folder:

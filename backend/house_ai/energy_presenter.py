@@ -1,4 +1,9 @@
-"""Deterministic Italian presentation of energy evidence; no generated numbers."""
+"""Deterministic Italian presentation of tool results; no generated numbers.
+
+Answers are read aloud, so the text is short and spoken-friendly (gradi, per cento,
+kilowatt). Technical caveats go to each result's limitations via notes(), which the
+app shows under "Mostra provenienza e limiti".
+"""
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 import math
@@ -11,26 +16,47 @@ LABELS = {
     "home_consumption_w": "Consumo della casa", "grid_power_w": "Scambio con la rete",
     "battery_power_w": "Potenza della batteria", "battery_soc_percent": "Carica della batteria Tesla",
 }
-LIGHT_LABELS = {
-    "lights_living": "Soggiorno", "lights_libreria": "Libreria",
-    "lights_tv": "Lampada TV", "lights_reading": "Tavolino lettura",
-    "lights_laundry": "Lavanderia", "lights_porch_entrance": "Portico ingresso",
-    "lights_service_entrance": "Ingresso servizio",
-    "pool_water": "Luci piscina", "pool_deck": "Luci pedana piscina",
-    "lights_prolunga": "Prolunga",
+# Short names for lists ("Accese: lampada TV, prolunga").
+LIGHT_NAMES = {
+    "lights_living": "soggiorno", "lights_libreria": "libreria", "lights_tv": "lampada TV",
+    "lights_reading": "tavolino lettura", "lights_laundry": "lavanderia",
+    "lights_porch_entrance": "portico ingresso", "lights_service_entrance": "ingresso servizio",
+    "pool_water": "luci piscina", "pool_deck": "luci pedana piscina", "lights_prolunga": "prolunga",
 }
-# What the Node-RED scene flows do (live flows .20, 2026-10-11).
-SCENE_TEXTS = {
-    "tv": "Scena TV: accendo lampada TV e soggiorno, spengo libreria e lampadario TV.",
-    "sleep": "Scena notte: tra 2 minuti si spengono tutte le luci, una alla volta in circa 35 secondi.",
-    "all_on": ("Accensione di tutte le luci: soggiorno, TV, libreria, pedana e luci piscina e lettura, "
-               "una alla volta in circa 30 secondi. Con le luci ECO attive si accendono solo lettura e TV; "
-               "in modalità vacanza la scena non ha effetto."),
-    "all_off": ("Spegnimento di tutte le luci: interne, esterne e piscina, una alla volta in circa "
-                "35 secondi."),
+# Phrases with article for sentences; True = plural.
+LIGHT_SPOKEN = {
+    "lights_living": ("la luce del soggiorno", False), "lights_libreria": ("la luce della libreria", False),
+    "lights_tv": ("la lampada TV", False), "lights_reading": ("la lampada del tavolino lettura", False),
+    "lights_laundry": ("la luce della lavanderia", False),
+    "lights_porch_entrance": ("la luce del portico ingresso", False),
+    "lights_service_entrance": ("la luce dell'ingresso servizio", False),
+    "pool_water": ("le luci della piscina", True), "pool_deck": ("le luci della pedana piscina", True),
+    "lights_prolunga": ("la prolunga", False),
 }
-
-THERMOSTAT_LABELS = {"thermostat_living": "Termostato soggiorno", "thermostat_bath": "Termostato bagno"}
+SCENE_ACTIONS = {
+    "tv": "attivo la modalità TV", "sleep": "tra 2 minuti spengo tutte le luci",
+    "all_on": "accendo tutte le luci", "all_off": "spengo tutte le luci",
+}
+# What the Node-RED scene flows do (live flows .20, 2026-10-11): diagnostics only.
+SCENE_DETAILS = {
+    "tv": "Scena TV: accende lampada TV e soggiorno, spegne libreria e lampadario TV.",
+    "sleep": "Scena notte: dopo 2 minuti esegue lo spegnimento di tutte le luci, una alla volta in circa 35 secondi.",
+    "all_on": ("Accende soggiorno, TV, libreria, pedana e luci piscina e lettura in circa 30 secondi; con le luci "
+               "ECO attive solo lettura e TV; in modalità vacanza non ha effetto."),
+    "all_off": "Spegne luci interne, esterne e piscina, una alla volta in circa 35 secondi.",
+}
+THERMOSTAT_SPOKEN = {"thermostat_living": "il termostato del living", "thermostat_bath": "il termostato del bagno"}
+THERMOSTAT_TITLES = {"thermostat_living": "Termostato del living", "thermostat_bath": "Termostato del bagno"}
+ROOM_LABELS = {
+    "living": "Living", "bedroom": "Camera da letto", "kids_room": "Cameretta",
+    "service_bathroom": "Bagno servizio", "technical_room": "Locale tecnico", "outdoor": "Esterno",
+}
+ROOM_IN = {
+    "living": "Nel living", "bedroom": "Nella camera da letto", "kids_room": "Nella cameretta",
+    "service_bathroom": "Nel bagno servizio", "technical_room": "Nel locale tecnico", "outdoor": "All'esterno",
+}
+ROOM_THERMOSTAT = {"living": "thermostat_living", "service_bathroom": "thermostat_bath"}
+UNITS = {"kWh": "kilowattora", "%": "per cento", "punti percentuali": "punti percentuali"}
 
 ROME = ZoneInfo('Europe/Rome')
 
@@ -58,6 +84,30 @@ def number(value, digits=2):
     return f"{value:.{digits}f}".replace('.', ',')
 
 
+def spoken(value, digits=1):
+    """Like number() but without a trailing ",0": 18 gradi, 22,4 gradi."""
+    rounded = round(value, digits)
+    return str(int(rounded)) if rounded == int(rounded) else number(rounded, digits)
+
+
+def power(watts):
+    watts = abs(watts)
+    return f"{spoken(watts, 0)} watt" if watts < 1000 else f"{spoken(watts / 1000)} kilowatt"
+
+
+def join_it(parts):
+    parts = [p for p in parts if p]
+    return parts[0] if len(parts) == 1 else ', '.join(parts[:-1]) + ' e ' + parts[-1]
+
+
+def capitalize(text):
+    return text[:1].upper() + text[1:]
+
+
+def humanize(code):
+    return str(code).strip().replace('_', ' ').lower()
+
+
 def numeric(record, *path):
     for key in path:
         record = record.get(key) if isinstance(record, dict) else None
@@ -67,6 +117,16 @@ def numeric(record, *path):
         return None
 
 
+def received_note(observations):
+    if not observations:
+        return []
+    received = max(observation['received_at_ms'] for observation in observations)
+    notes = [f"Ultimo dato ricevuto il {moment_text(received)}."]
+    if any(observation['retained'] for observation in observations):
+        notes.append("Uno o più messaggi sono retained: valore conservato dal broker, non necessariamente recente.")
+    return notes
+
+
 # Predictive Reserve reasons the climate controller can record (Node-RED snapshot 2026-10-10).
 PR_REASONS = {
     'PR_PRESTART_PENDING': "l'avvio notturno in deumidificazione era in attesa dell'autorizzazione del Predictive Reserve",
@@ -74,68 +134,39 @@ PR_REASONS = {
     'BLOCCO_PR_REQUEST_INVALID': "avvio notturno bloccato: richiesta al Predictive Reserve non correlabile",
 }
 
+DISCONNECTED = " La casa non è collegata: sono gli ultimi dati ricevuti."
+
 
 def predictive_reserve_text(r):
     observations = r['observations']
     if not observations:
-        return 'Predictive Reserve: stato non disponibile nel Digital Twin al momento della richiesta.'
+        return "Lo stato del Predictive Reserve non è disponibile."
     value = lambda metric: observations[metric]['value'] if metric in observations else None
     control, mode, ready = value('control_enabled'), value('operating_mode'), value('ready')
     if control == 'false':
-        effect = ("Il controllo del Predictive Reserve è disattivato: l'avvio notturno in deumidificazione "
-                  "segue la logica AI Climate normale.")
+        text = "Il Predictive Reserve è disattivato."
     elif control is None:
-        effect = 'Non risulta se il controllo del Predictive Reserve sia attivo.'
+        text = "Non risulta se il Predictive Reserve sia attivo."
     elif mode == 'SHADOW':
-        effect = ('Il controllo è attivo in modalità SHADOW: il PR simula soltanto e nega ogni nuovo avvio '
-                  'notturno in deumidificazione.')
+        text = "Il Predictive Reserve è attivo in modalità SHADOW: blocca gli avvii notturni in deumidificazione."
     elif mode == 'ACTIVE' and ready == 'false':
-        effect = ('Il controllo è attivo in modalità ACTIVE ma il modello non è pronto: ogni nuovo avvio '
-                  'notturno in deumidificazione viene negato.')
+        text = ("Il Predictive Reserve è attivo in modalità ACTIVE ma il modello non è pronto: "
+                "blocca gli avvii notturni in deumidificazione.")
     elif mode == 'ACTIVE' and ready == 'true':
-        effect = ("Il controllo è attivo in modalità ACTIVE con modello pronto: il PR autorizza l'avvio notturno "
-                  "solo con il regime qualificato eco26dry, decisione recente e bilancio energetico favorevole.")
+        text = ("Il Predictive Reserve è attivo in modalità ACTIVE con modello pronto: autorizza l'avvio "
+                "notturno solo in eco26dry e quando il bilancio energetico è favorevole.")
     else:
-        effect = "Il controllo è attivo ma modalità o prontezza non sono disponibili: l'effetto non è determinabile."
-    details = 'Modalità: {} · Modello: {}.'.format(
-        mode or 'non ricevuta', {'true': 'pronto', 'false': 'non pronto'}.get(ready, 'stato non ricevuto'))
-    received = max(observation['received_at_ms'] for observation in observations.values())
-    received_text = moment_text(received)
-    parts = [f'Predictive Reserve: {effect}', details, f'Ultimo dato ricevuto il {received_text}.']
-    if not r['connected']:
-        parts.append('Digital Twin disconnesso.')
-    parts.append('Lo stato attuale non spiega le decisioni di notti passate: il PR non le registra.')
-    return ' '.join(parts)
+        text = "Il Predictive Reserve è attivo, ma modalità o prontezza non sono disponibili."
+    return text + ('' if r['connected'] else DISCONNECTED)
 
 
-def thermostats_text(item):
-    r = item['result']
+def predictive_reserve_notes(r):
     observations = r['observations']
-    selected = list(THERMOSTAT_LABELS) if item['thermostat'] == 'all' else [item['thermostat']]
-    parts = []
-    for thermostat in selected:
-        value = lambda metric: observations.get(f'{thermostat}.{metric}', {}).get('value')
-        if not any(key.startswith(thermostat + '.') for key in observations):
-            parts.append(f'{THERMOSTAT_LABELS[thermostat]}: dati non disponibili nel Digital Twin.')
-            continue
-        facts = []
-        if value('current_temperature') is not None:
-            facts.append(f"temperatura ambiente {number(value('current_temperature'), 1)} °C")
-        if value('target_temperature') is not None:
-            facts.append(f"setpoint {number(value('target_temperature'), 1)} °C")
-        if value('power') is not None:
-            facts.append('riscaldamento ' + ('acceso' if value('power') else 'spento'))
-        if value('min_temperature') is not None and value('max_temperature') is not None:
-            facts.append(f"timer delle fasce orarie {number(value('max_temperature'), 1)} °C in fascia e "
-                         f"{number(value('min_temperature'), 1)} °C fuori fascia")
-        parts.append(f'{THERMOSTAT_LABELS[thermostat]}: ' + ', '.join(facts) + '.')
-    if observations:
-        received = max(observation['received_at_ms'] for observation in observations.values())
-        parts.append(f'Ultimo dato ricevuto il {moment_text(received)}.')
-        parts.append("Il setpoint è l'ultimo valore comandato, non una lettura del termostato.")
-    if not r['connected']:
-        parts.append('Digital Twin disconnesso.')
-    return ' '.join(parts)
+    value = lambda metric: observations[metric]['value'] if metric in observations else None
+    mode, ready = value('operating_mode'), value('ready')
+    return ['Modalità: {} · Modello: {}.'.format(
+        mode or 'non ricevuta', {'true': 'pronto', 'false': 'non pronto'}.get(ready, 'stato non ricevuto'))
+    ] + received_note(observations.values())
 
 
 def log_text(result):
@@ -154,18 +185,17 @@ def log_text(result):
     last = (result['records'][-1] if result['source'] == 'solar_forecast' else
             max(result['records'], key=lambda r: numeric(r['record'], key) or 0))
     record = last['record']
-    parts = [f"{prefix}: {result['matched_records']} record trovati. Ultimo record restituito, riga {last['source']['line']}."]
+    parts = [f"{prefix}: {result['matched_records']} record trovati."]
     if result['source'] == 'solar_forecast':
         value = numeric(record, 'kwh_stimati_impianto_reali')
-        parts.append(f"Produzione prevista: {number(value)} kWh." if value is not None else "Produzione prevista non disponibile.")
+        parts.append(f"Produzione prevista: {number(value, 1)} kilowattora." if value is not None else "Produzione prevista non disponibile.")
         if result["matched_records"] > 1:
             parts.append("Sono presenti più record per questo giorno; riporto l’ultimo restituito in ordine di file.")
-        parts.append("È una previsione per il giorno indicato, non produzione misurata; ora di elaborazione non presente.")
     elif result['source'] == 'learning':
         for key, label in [('consumo_medio_w', 'Consumo medio orario registrato'), ('produzione_media_w', 'Produzione media oraria registrata'), ('carica_media_batteria_w', 'Carica media oraria registrata')]:
             value = numeric(record, 'metriche_medie_ora', key)
             if value is not None:
-                parts.append(f"{label}: {number(value)} W.")
+                parts.append(f"{label}: {spoken(value, 0)} watt.")
         value = numeric(record, 'calcolo_efficienza', 'nuova_efficienza_storica_ema')
         if value is not None:
             parts.append(f"Efficienza storica EMA registrata: {number(value, 3)}; non è una misura istantanea.")
@@ -173,7 +203,7 @@ def log_text(result):
         for key, label in [('reserve_kwh', 'Riserva simulata'), ('climate_budget_kwh', 'Budget climatico simulato'), ('support_pred_kwh', 'Supporto previsto')]:
             value = numeric(record, 'energy', key)
             if value is not None:
-                parts.append(f"{label}: {number(value)} kWh.")
+                parts.append(f"{label}: {number(value, 1)} kilowattora.")
         parts.append("Questo log è telemetria SHADOW: non dimostra attivazioni o autorizzazioni ai dispositivi.")
     else:
         logic = record.get('logica_controllo', {})
@@ -182,172 +212,316 @@ def log_text(result):
             parts.append(f"Motivo AC registrato: {reason[:180]}.")
             if reason.strip() in PR_REASONS:
                 parts.append(f"Significato: {PR_REASONS[reason.strip()]}.")
-        parts.append("È un evento registrato, non una conferma fisica né una spiegazione causale aggiuntiva.")
     if result['truncated']:
         parts.append("Risultati limitati: il dettaglio non comprende tutti i record.")
     if result['invalid_lines']:
         parts.append(f"Righe non utilizzabili: {result['invalid_lines']}.")
-    parts.append("I log non garantiscono copertura continua e non sostituiscono lo stato corrente.")
     return ' '.join(parts)
+
+
+def thermostat_facts(observations, thermostat, with_temperature=True):
+    value = lambda metric: observations.get(f'{thermostat}.{metric}', {}).get('value')
+    facts = []
+    if with_temperature and value('current_temperature') is not None:
+        facts.append(f"{spoken(value('current_temperature'))} gradi")
+    if value('target_temperature') is not None:
+        facts.append(f"setpoint {spoken(value('target_temperature'))} gradi")
+    if value('power') is not None:
+        facts.append('riscaldamento ' + ('acceso' if value('power') else 'spento'))
+    return facts
+
+
+def thermostats_text(item):
+    r = item['result']
+    selected = list(THERMOSTAT_SPOKEN) if item['thermostat'] == 'all' else [item['thermostat']]
+    parts = []
+    for thermostat in selected:
+        facts = thermostat_facts(r['observations'], thermostat)
+        name = THERMOSTAT_TITLES[thermostat]
+        parts.append(f"{name}: " + ', '.join(facts) + '.' if facts else f"{name}: dati non disponibili.")
+    return ' '.join(parts) + ('' if r['connected'] else DISCONNECTED)
+
+
+def thermostats_notes(item):
+    r = item['result']
+    notes = []
+    for thermostat in THERMOSTAT_SPOKEN:
+        low = r['observations'].get(f'{thermostat}.min_temperature', {}).get('value')
+        high = r['observations'].get(f'{thermostat}.max_temperature', {}).get('value')
+        if low is not None and high is not None:
+            notes.append(f"{THERMOSTAT_TITLES[thermostat]}: timer delle fasce orarie "
+                         f"{spoken(high)} gradi in fascia e {spoken(low)} gradi fuori fascia.")
+    return notes + received_note(r['observations'].values())
+
+
+def environment_text(item):
+    r = item['result']
+    observations, room, metric = r['observations'], item['room'], item['metric']
+    value = lambda rm, m: observations.get(f'{rm}.{m}', {}).get('value')
+    rooms = list(ROOM_LABELS) if room == 'all' else [room]
+    if room != 'all' and metric != 'all':
+        v = value(room, metric)
+        if v is None:
+            name = {'temperature': 'la temperatura', 'humidity': "l'umidità", 'humidex': "l'humidex"}[metric]
+            text = f"{ROOM_IN[room]} {name} non è disponibile."
+        else:
+            text = {'temperature': f"{ROOM_IN[room]} ci sono {spoken(v)} gradi.",
+                    'humidity': f"{ROOM_IN[room]} l'umidità è al {spoken(v)} per cento.",
+                    'humidex': f"{ROOM_IN[room]} l'humidex è {spoken(v)}."}[metric]
+    elif room != 'all':
+        facts = []
+        if value(room, 'temperature') is not None:
+            facts.append(f"{spoken(value(room, 'temperature'))} gradi")
+        if value(room, 'humidity') is not None:
+            facts.append(f"umidità {spoken(value(room, 'humidity'))} per cento")
+        if value(room, 'humidex') is not None:
+            facts.append(f"humidex {spoken(value(room, 'humidex'))}")
+        text = f"{ROOM_LABELS[room]}: " + (', '.join(facts) + '.' if facts else 'dati non disponibili.')
+        thermostat = ROOM_THERMOSTAT.get(room)
+        heating = thermostat_facts(r.get('thermostat', {}), thermostat, with_temperature=False) if thermostat else []
+        if heating:
+            text += ' Termostato: ' + ', '.join(heating) + '.'
+    elif metric != 'all':
+        listed = [f"{ROOM_LABELS[rm].lower()} {spoken(value(rm, metric))}" for rm in rooms if value(rm, metric) is not None]
+        title = {'temperature': 'Temperature', 'humidity': 'Umidità', 'humidex': 'Humidex'}[metric]
+        unit = {'temperature': ' gradi', 'humidity': ' per cento', 'humidex': ''}[metric]
+        text = f"{title}: {', '.join(listed)}{unit}." if listed else f"{title}: dati non disponibili."
+    else:
+        parts = []
+        for rm in rooms:
+            facts = []
+            if value(rm, 'temperature') is not None:
+                facts.append(f"{spoken(value(rm, 'temperature'))} gradi")
+            if value(rm, 'humidity') is not None:
+                facts.append(f"{spoken(value(rm, 'humidity'))} per cento")
+            parts.append(f"{ROOM_LABELS[rm]} " + ', '.join(facts) + '.' if facts else f"{ROOM_LABELS[rm]}: dati non disponibili.")
+        text = ' '.join(parts)
+    return text + ('' if r['connected'] else DISCONNECTED)
+
+
+def light_state_sentence(light, value):
+    phrase, plural = LIGHT_SPOKEN[light]
+    state = ('accese' if value else 'spente') if plural else ('accesa' if value else 'spenta')
+    return f"{capitalize(phrase)} {'sono' if plural else 'è'} {state}."
+
+
+def lights_text(item):
+    r = item['result']
+    observations, commands = r['observations'], r.get('commands', {})
+    if item['light'] == 'all':
+        on = [LIGHT_NAMES[k] for k in LIGHT_NAMES if k in observations and observations[k]['value']]
+        off = [LIGHT_NAMES[k] for k in LIGHT_NAMES if k in observations and not observations[k]['value']]
+        missing = [LIGHT_NAMES[k] for k in LIGHT_NAMES if k not in observations]
+        if not observations:
+            text = "Lo stato delle luci non è disponibile."
+        elif not on:
+            text = "Tutte le luci risultano spente."
+        else:
+            text = f"Accese: {', '.join(on)}." + (f" Spente: {', '.join(off)}." if off else '')
+        if missing and observations:
+            text += f" Senza dato: {', '.join(missing)}."
+    else:
+        light = item['light']
+        observation = observations.get(light)
+        text = (light_state_sentence(light, observation['value']) if observation
+                else f"{capitalize(LIGHT_SPOKEN[light][0])}: stato non disponibile.")
+        command = commands.get(light)
+        if command:
+            who = "dell'utente" if command['actor'] == 'utente' else "di un'automazione"
+            what = 'accensione' if command['requested_state'] else 'spegnimento'
+            text += f" Ultimo comando registrato: {what} {who}, {moment_text(command['observed_at_ms'])}."
+    return text + ('' if r['connected'] else DISCONNECTED)
+
+
+def lights_notes(item):
+    r = item['result']
+    notes = []
+    stage = {'routed': 'instradato dal router', 'dispatched': 'inoltrato al ramo di invio',
+             'send_invoked': 'invocata la funzione di invio Broadlink (sendData)',
+             'publisher_input': 'arrivato all’ingresso del publisher MQTT'}
+    for light, command in r.get('commands', {}).items():
+        notes.append(f"{capitalize(LIGHT_NAMES[light])}, ultimo comando documentato: "
+                     f"{'accensione' if command['requested_state'] else 'spegnimento'}, autore {command['actor']}, "
+                     f"origine {command['origin']}, {moment_text(command['observed_at_ms'])}: {stage[command['stage']]}.")
+    if r.get('commands'):
+        notes.append("L’autore riguarda il comando documentato, non la causa provata dello stato attuale; "
+                     "non è uno storico completo né una conferma di esecuzione fisica.")
+        if any(command['retained'] for command in r['commands'].values()):
+            notes.append("Record di comando retained: evidenza conservata, non un nuovo evento.")
+    elif item['light'] != 'all':
+        notes.append("Autore non disponibile: nessun record Node-RED valido con la catalogazione corrente.")
+    return notes + received_note(r['observations'].values())
+
+
+def air_conditioner_text(r):
+    observations = r['observations']
+    if not observations:
+        return "Lo stato del condizionatore non è disponibile."
+    value = lambda metric: observations[metric]['value'] if metric in observations else None
+    state, mode, setpoint, reason = (value('current_state'), value('air_mode'),
+                                     value('temperature_set_c'), value('recorded_reason'))
+    if state is None:
+        text = "Lo stato del condizionatore non è disponibile."
+    elif state.strip().upper() == 'OFF':
+        text = "Il condizionatore è spento."
+    else:
+        details = [] if humanize(state) in ('acceso', 'on') else [humanize(state)]
+        if mode and mode.strip().upper() != 'OFF':
+            details.append(f"modalità {humanize(mode)}")
+        try:
+            degrees = float(str(setpoint).replace(',', '.'))
+            if degrees > 0:
+                details.append(f"{spoken(degrees)} gradi")
+        except ValueError:
+            pass
+        text = f"Il condizionatore è acceso: {', '.join(details)}." if details else "Il condizionatore è acceso."
+    if reason:
+        text += f" Motivo: {humanize(reason)}."
+    return text + ('' if r['connected'] else DISCONNECTED)
+
+
+def current_energy_text(item):
+    r = item['result']
+    obs = r['observation']
+    label = LABELS.get(item['metric'], 'Dato')
+    if obs is None:
+        return f"{label}: dato non disponibile."
+    value, metric = obs['value'], item['metric']
+    if metric == 'solar_power_w':
+        text = f"Il fotovoltaico produce {power(value)}."
+    elif metric == 'home_consumption_w':
+        text = f"La casa consuma {power(value)}."
+    elif metric == 'grid_power_w':
+        text = (f"Stai prelevando {power(value)} dalla rete." if value > 0 else
+                f"Stai immettendo {power(value)} in rete." if value < 0 else "Nessuno scambio con la rete.")
+    elif metric == 'battery_power_w':
+        text = (f"La batteria si sta scaricando a {power(value)}." if value > 0 else
+                f"La batteria si sta caricando a {power(value)}." if value < 0 else "La batteria è ferma.")
+    else:
+        text = f"La batteria è al {spoken(value, 0)} per cento."
+    return text + ('' if r['connected'] else DISCONNECTED)
+
+
+def energy_value(value, unit):
+    return f"{number(value, 1)} {UNITS.get(unit, unit)}"
 
 
 def describe(item):
     r = item['result']
     schema = r['schema']
+    if schema in COMMAND_SCHEMAS:
+        return capitalize(command_action(r)) + '.'
     if schema == 'house_ai.backend_log_evidence.v1':
         return log_text(r)
     if schema == 'house_ai.energy_comparison.v1':
         if r['value'] is None:
-            return 'Confronto non calcolabile: servono dati completi e comparabili.'
-        text = (f"{LABELS[r['metric']]}: differenza fra il periodo "
-                f"{period_text(r['left_period']['start'], r['left_period']['end_exclusive'])} e il periodo "
-                f"{period_text(r['right_period']['start'], r['right_period']['end_exclusive'])}: "
-                f"{number(r['value'])} {r['unit']}.")
+            return 'Confronto non calcolabile: servono dati completi per entrambi i periodi.'
+        left = period_text(r['left_period']['start'], r['left_period']['end_exclusive'])
+        right = period_text(r['right_period']['start'], r['right_period']['end_exclusive'])
+        trend = 'in più' if r['value'] > 0 else 'in meno' if r['value'] < 0 else 'di differenza'
+        text = (f"{LABELS[r['metric']]} {left}: {energy_value(abs(r['value']), r['unit'])} {trend} "
+                f"rispetto al periodo {right}")
         if r['change_percent'] is not None:
-            text += f" Variazione rispetto al secondo periodo: {number(r['change_percent'])}%."
-        else:
-            text += ' Variazione percentuale non definita: base zero.'
-        return text + ' I periodi non sono normalizzati per durata.'
+            text += f", {'+' if r['change_percent'] > 0 else ''}{number(r['change_percent'], 1)} per cento"
+        return text + '.'
     if schema == 'house_ai.energy_daily_extreme.v1':
         label = LABELS.get(r['metric'], item.get('id', 'Dato'))
+        period = period_text(r['period']['start'], r['period']['end_exclusive'])
         if r['winner'] is None:
-            text = (f"{label}: nessun giorno con copertura completa "
-                    f"{period_text(r['period']['start'], r['period']['end_exclusive'])}.")
-        else:
-            kind = 'maggiore' if r['extremum'] == 'maximum' else 'minore'
-            text = (f"Tra i giorni con copertura completa, il {label.lower()} {kind} è stato il "
-                    f"{day_text(r['winner']['day'])}: {number(r['winner']['value'])} {r['unit']}, "
-                    f"copertura dati 100%. Giorni completi confrontati: {r['eligible_days']}.")
-        observed = r['observed_winner']
-        if observed is not None:
-            text += (f" Considerando tutti i dati EmonCMS disponibili, il {label.lower()} "
-                     f"osservato {('maggiore' if r['extremum'] == 'maximum' else 'minore')} "
-                     f"è stato il {day_text(observed['day'])}: "
-                     f"{'almeno ' if observed['status'] != 'complete' else ''}"
-                     f"{number(observed['value'])} {r['unit']}, copertura dati "
-                     f"{number(observed['coverage_ratio'] * 100, 1)}%.")
+            return f"{label}: nessun giorno con dati completi {period}."
+        kind = 'maggiore' if r['extremum'] == 'maximum' else 'minore'
+        text = (f"Il giorno con {label.lower()} {kind} {period} è stato il {day_text(r['winner']['day'])}: "
+                f"{energy_value(r['winner']['value'], r['unit'])}.")
         if r['absolute_winner'] is None and r['excluded_days']:
-            text += (' Il massimo assoluto non è determinabile: nei periodi mancanti '
-                     'potrebbe esserci ulteriore energia non registrata.')
-        elif r['absolute_winner'] is not None:
-            text += f" Il giorno del valore assoluto è determinato: {day_text(r['absolute_winner']['day'])}."
-        if r['excluded_days']:
-            text += f" Giorni con copertura incompleta: {len(r['excluded_days'])}."
-        return text + ' Stima da campioni EmonCMS, non misura fiscale.'
-    label = LABELS.get(item.get('metric'), item.get('id', 'Dato'))
+            text += " Alcuni giorni hanno dati incompleti: il risultato riguarda solo i giorni completi."
+        return text
     if schema == 'house_ai.source_error.v1':
-        return f"{label}: sorgente non disponibile; riprova più tardi."
+        return f"{LABELS.get(item.get('metric'), item.get('id', 'Dato'))}: sorgente non disponibile, riprova più tardi."
     if schema == 'house_ai.current_energy_result.v1':
-        obs = r['observation']
-        if obs is None:
-            return f"{label}: dato non disponibile."
-        value = obs['value']
-        metric = item['metric']
-        if metric == 'grid_power_w':
-            label = 'Prelievo dalla rete' if value > 0 else 'Immissione in rete' if value < 0 else 'Scambio netto con la rete'
-            value = abs(value)
-        if metric == 'battery_power_w':
-            label = 'Scarica della batteria' if value > 0 else 'Carica della batteria' if value < 0 else 'Scambio netto della batteria'
-            value = abs(value)
-        unit = '%' if metric == 'battery_soc_percent' else 'W'
-        received = moment_text(obs['received_at_ms'])
-        qualifier = ' Digital Twin disconnesso.' if not r['connected'] else ''
-        return (f"{label}: {number(value, 1)} {unit}, ultimo dato ricevuto il {received}." + qualifier +
-                (' Messaggio retained.' if obs['retained'] else '') +
-                ' Età della misura sorgente ignota; non è una conferma fisica in tempo reale.')
+        return current_energy_text(item)
     if schema == 'house_ai.current_predictive_reserve.v1':
         return predictive_reserve_text(r)
     if schema == 'house_ai.current_thermostats.v1':
         return thermostats_text(item)
-    if schema == 'house_ai.thermostat_command.v1':
-        return (f"Comando pronto: setpoint di {THERMOSTAT_LABELS[r['thermostat']].lower()} a "
-                f"{number(float(r['target_c']), 1)} °C. Resta valido fino al prossimo intervento del timer delle "
-                "fasce orarie (cambio fascia, modifica dei valori in/fuori fascia o ripristino ogni 8 ore) "
-                "o della modalità vacanza; il successivo /stat è l'eco del comando, non una conferma del termostato.")
+    if schema == 'house_ai.current_environment.v1':
+        return environment_text(item)
     if schema == 'house_ai.current_air_conditioner.v1':
-        observations = r['observations']
-        if not observations:
-            return ('Condizionatore: stato e motivo non disponibili nel Digital Twin al momento '
-                    'della richiesta.')
-        labels = {
-            'current_state': 'Stato dichiarato',
-            'air_mode': 'Modalità aria',
-            'temperature_set_c': 'Temperatura impostata',
-            'recorded_reason': 'Motivo registrato dal controller',
-        }
-        parts = []
-        for metric in ('current_state', 'air_mode', 'temperature_set_c', 'recorded_reason'):
-            observation = observations.get(metric)
-            if observation is None:
-                continue
-            value = observation['value']
-            if metric == 'temperature_set_c':
-                try:
-                    value = number(float(value.replace(',', '.')), 1) + ' °C'
-                except (ValueError, AttributeError):
-                    value = 'non disponibile'
-            parts.append(f"{labels[metric]}: {value}.")
-        received = max(observation['received_at_ms'] for observation in observations.values())
-        received_text = moment_text(received)
-        qualifiers = [f"Ultimo dato ricevuto il {received_text}."]
-        if not r['connected']:
-            qualifiers.append('Digital Twin disconnesso al momento della richiesta.')
-        if any(observation['retained'] for observation in observations.values()):
-            qualifiers.append('Uno o più messaggi sono retained.')
-        qualifiers.append('Il motivo è il testo pubblicato da Node-RED, non una deduzione né una conferma fisica; età delle misure sorgente ignota.')
-        return ' '.join(parts + qualifiers)
+        return air_conditioner_text(r)
     if schema == 'house_ai.current_lights.v1':
-        observations = r['observations']
-        commands = r.get('commands', {})
-        if item['light'] == 'all':
-            on = [LIGHT_LABELS[key] for key, obs in observations.items() if obs['value']]
-            off = sum(not obs['value'] for obs in observations.values())
-            missing = r['mapped_count'] - len(observations)
-            text = (f"Tra i {r['mapped_count']} punti luce mappati, risultano accesi {len(on)}, "
-                    f"spenti {off} e senza dato valido {missing}.")
-            if on:
-                text += ' Accesi dichiarati: ' + ', '.join(on) + '.'
-        else:
-            observation = observations.get(item['light'])
-            text = (f"{LIGHT_LABELS[item['light']]}: {'accesa' if observation['value'] else 'spenta'} dichiarata."
-                    if observation else f"{LIGHT_LABELS[item['light']]}: stato dichiarato non disponibile.")
-        for light, command in commands.items():
-            occurred = moment_text(command['observed_at_ms'])
-            stage = {
-                'routed': 'instradato dal router',
-                'dispatched': 'inoltrato al ramo di invio',
-                'send_invoked': 'invocata la funzione di invio Broadlink (sendData)',
-                'publisher_input': 'arrivato all’ingresso del publisher MQTT',
-            }[command['stage']]
-            text += (f" {LIGHT_LABELS[light]}, ultimo comando documentato disponibile: "
-                     f"{'accensione' if command['requested_state'] else 'spegnimento'}, "
-                     f"autore {command['actor']}, origine {command['origin']}. "
-                     f"Riscontro Node-RED del {occurred}: {stage}.")
-        if not commands:
-            text += " Autore non disponibile: nessun record Node-RED valido con la catalogazione corrente."
-        else:
-            text += (" L’autore riguarda il comando documentato, non la causa provata dello stato attuale. "
-                     "Questi record non sono uno storico completo delle accensioni e degli spegnimenti; "
-                     "un comando dell’altro tipo non identifica l’autore dell’azione richiesta. "
-                     "Nessuna conferma di esecuzione fisica o identità autenticata del mittente.")
-            if any(command['retained'] for command in commands.values()):
-                text += ' Record di comando retained: evidenza conservata, non un nuovo evento.'
-        if not r['connected']:
-            text += ' Digital Twin disconnesso al momento della richiesta.'
-        if any(obs['retained'] for obs in observations.values()):
-            text += ' Uno o più messaggi sono retained.'
-        return text + (' Il timestamp dello stato indica la ricezione Android; '
-                       'non prova freschezza, durata o stato fisico.')
-    if schema == 'house_ai.light_scene_command.v1':
-        return (SCENE_TEXTS[r['scene']] + " L'app invia la scena a Node-RED; i successivi /stat sono "
-                "stati dichiarati, non conferme fisiche.")
-    if schema == 'house_ai.light_command.v1':
-        return (f"Comando pronto: {'accensione' if r['state'] == 'on' else 'spegnimento'} "
-                f"di {LIGHT_LABELS[r['light']]}. L'app lo invia sul topic validato del registry; "
-                "il successivo messaggio /stat riporta uno stato dichiarato, non una conferma fisica.")
+        return lights_text(item)
+    label = LABELS.get(item.get('metric'), item.get('id', 'Dato'))
+    period = period_text(r['period']['start'], r['period']['end_exclusive'])
     if r['value'] is None:
-        return f"{label}: dati insufficienti {period_text(r['period']['start'], r['period']['end_exclusive'])}."
-    return (f"{label}: {number(r['value'])} {r['unit']} "
-            f"{period_text(r['period']['start'], r['period']['end_exclusive'])}; copertura {number(r['coverage_ratio']*100, 1)}%. " +
-            ('Stima limitata agli intervalli coperti, non totale del periodo.' if r['status'] != 'complete'
-             else 'Stima da campioni EmonCMS, non misura fiscale.'))
+        return f"{label}: dati insufficienti {period}."
+    text = f"{label} {period}: {energy_value(r['value'], r['unit'])}."
+    if r['status'] != 'complete':
+        text += f" Dati parziali: copertura {number(r['coverage_ratio'] * 100, 1)} per cento."
+    return text
+
+
+COMMAND_SCHEMAS = ('house_ai.light_command.v1', 'house_ai.light_scene_command.v1', 'house_ai.thermostat_command.v1')
+
+
+def command_action(r):
+    if r['schema'] == 'house_ai.light_command.v1':
+        return f"{'accendo' if r['state'] == 'on' else 'spengo'} {LIGHT_SPOKEN[r['light']][0]}"
+    if r['schema'] == 'house_ai.light_scene_command.v1':
+        return SCENE_ACTIONS[r['scene']]
+    return f"imposto {THERMOSTAT_SPOKEN[r['thermostat']]} a {spoken(float(r['target_c']))} gradi"
+
+
+def notes(item):
+    """Technical details moved out of the spoken answer, for the diagnostics view."""
+    r = item['result']
+    schema = r['schema']
+    if schema == 'house_ai.light_scene_command.v1':
+        return [SCENE_DETAILS[r['scene']]]
+    if schema == 'house_ai.thermostat_command.v1':
+        return ["Il setpoint resta valido fino al prossimo intervento del timer delle fasce orarie (cambio fascia, "
+                "modifica dei valori in/fuori fascia o ripristino ogni 8 ore) o della modalità vacanza."]
+    if schema == 'house_ai.current_lights.v1':
+        return lights_notes(item)
+    if schema == 'house_ai.current_thermostats.v1':
+        return thermostats_notes(item)
+    if schema == 'house_ai.current_environment.v1':
+        return received_note(list(r['observations'].values()) + list(r.get('thermostat', {}).values()))
+    if schema == 'house_ai.current_air_conditioner.v1':
+        return received_note(r['observations'].values())
+    if schema == 'house_ai.current_predictive_reserve.v1':
+        return predictive_reserve_notes(r)
+    if schema == 'house_ai.current_energy_result.v1':
+        return received_note([r['observation']] if r['observation'] else [])
+    if schema == 'house_ai.backend_log_evidence.v1':
+        extra = []
+        if r['records']:
+            key = 'timestamp_ms' if r['source'] == 'reserve_shadow' else 'timestamp'
+            last = (r['records'][-1] if r['source'] == 'solar_forecast' else
+                    max(r['records'], key=lambda rec: numeric(rec['record'], key) or 0))
+            extra.append(f"Ultimo record restituito: riga {last['source']['line']}.")
+        if r['source'] == 'solar_forecast':
+            extra.append("È una previsione per il giorno indicato, non produzione misurata; ora di elaborazione non presente.")
+        if r['source'] == 'climate':
+            extra.append("È un evento registrato, non una conferma fisica né una spiegazione causale aggiuntiva.")
+        return extra + ["I log non garantiscono copertura continua e non sostituiscono lo stato corrente."]
+    if schema == 'house_ai.energy_comparison.v1':
+        return ["I periodi non sono normalizzati per durata."]
+    if schema == 'house_ai.energy_daily_extreme.v1':
+        extra = [f"Giorni completi confrontati: {r['eligible_days']}; con copertura incompleta: {len(r['excluded_days'])}."]
+        observed = r['observed_winner']
+        if observed is not None:
+            extra.append(f"Su tutti i dati disponibili il giorno osservato è il {day_text(observed['day'])}: "
+                         f"{'almeno ' if observed['status'] != 'complete' else ''}{energy_value(observed['value'], r['unit'])}, "
+                         f"copertura {number(observed['coverage_ratio'] * 100, 1)} per cento.")
+        return extra + ["Stima da campioni EmonCMS, non misura fiscale."]
+    if schema == 'house_ai.energy_history.v1':
+        return [f"Copertura {number(r['coverage_ratio'] * 100, 1)} per cento.", "Stima da campioni EmonCMS, non misura fiscale."]
+    return []
+
+
+def compose(results):
+    """One answer: all commands in a single "Ok, …" sentence, then each reading."""
+    actions = [command_action(item['result']) for item in results if item['result']['schema'] in COMMAND_SCHEMAS]
+    texts = [describe(item) for item in results if item['result']['schema'] not in COMMAND_SCHEMAS]
+    if actions:
+        texts.insert(0, f"Ok, {join_it(actions)}.")
+    return '\n\n'.join(texts)

@@ -21,13 +21,21 @@ def snapshot(stage="send_invoked"):
                 "physical_confirmation": False, "execution_confirmed": False, "publisher_authenticated": False}}}
 
 
+def diagnostics(result):
+    """Spoken answer plus the technical notes shown under provenance and limits."""
+    return result['answer'] + '\n' + '\n'.join(
+        note for item in result.get('results', []) for note in item['result'].get('limitations', []))
+
+
 class LightSemanticTests(unittest.TestCase):
     def test_command_without_state_can_answer_without_physical_claim(self):
         result = ask(None, Planner(), "Chi ha acceso la lampada TV?", date(2026, 9, 22), lights_snapshot=snapshot())
-        answer = result["answer"]
-        for part in ("stato dichiarato non disponibile", "autore utente", "origine app_interface", "sendData",
-                     "non la causa provata", "Nessuna conferma", "retained"):
-            self.assertIn(part, answer)
+        self.assertIn("La lampada TV: stato non disponibile. Ultimo comando registrato: accensione dell'utente",
+                      result["answer"])
+        for part in ("autore utente", "origine app_interface", "sendData",
+                     "non la causa provata", "conferma di esecuzione fisica", "retained"):
+            self.assertIn(part, diagnostics(result))
+            self.assertNotIn(part, result["answer"])
         self.assertEqual(result["results"][0]["result"]["status"], "available")
 
     def test_every_stage_has_distinct_wording_and_state_remains_independent(self):
@@ -37,10 +45,10 @@ class LightSemanticTests(unittest.TestCase):
             data = snapshot(stage)
             data["observations"]["lights_tv"] = {"value": False, "received_at_ms": 1790076640000,
                 "retained": False, "source_topic": LIGHT_TOPICS["lights_tv"]}
-            answer = ask(None, Planner(), "Chi ha acceso la TV?", date(2026, 9, 22), lights_snapshot=data)["answer"]
-            self.assertIn("spenta dichiarata", answer)
-            self.assertIn("accensione, autore utente", answer)
-            self.assertIn(word, answer)
+            result = ask(None, Planner(), "Chi ha acceso la TV?", date(2026, 9, 22), lights_snapshot=data)
+            self.assertIn("La lampada TV è spenta.", result["answer"])
+            self.assertIn("accensione, autore utente", diagnostics(result))
+            self.assertIn(word, diagnostics(result))
 
     def test_legacy_android_actor_is_discarded(self):
         data = snapshot()
@@ -49,9 +57,10 @@ class LightSemanticTests(unittest.TestCase):
             "source_topic": LIGHT_TOPICS["lights_tv"], "last_actor": "automazione", "action_at_ms": 1000}
         clean = validate_lights_snapshot(data)
         self.assertNotIn("last_actor", clean["observations"]["lights_tv"])
-        answer = ask(None, Planner(), "Chi ha acceso la TV?", date(2026, 9, 22), lights_snapshot=data)["answer"]
-        self.assertIn("Autore non disponibile", answer)
-        self.assertNotIn("autore automazione", answer)
+        result = ask(None, Planner(), "Chi ha acceso la TV?", date(2026, 9, 22), lights_snapshot=data)
+        self.assertIn("Autore non disponibile", diagnostics(result))
+        self.assertNotIn("autore automazione", diagnostics(result))
+        self.assertNotIn("automazione", result["answer"])
 
     def test_bad_provenance_and_claims_are_rejected(self):
         for key, value in (("actor_policy", "old"), ("entity_id", "lights.libreria.power"),

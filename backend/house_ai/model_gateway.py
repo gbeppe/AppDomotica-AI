@@ -39,6 +39,14 @@ energy_daily_extreme; non creare una energy_metric separata per ogni giorno.
 Per stato attuale, modalità, temperatura impostata o motivo per cui il condizionatore
 risulta acceso o spento usa current_air_conditioner. Il motivo è quello registrato dal
 controller: non aggiungere cause o deduzioni.
+Per temperatura, umidità o humidex delle stanze usa current_environment. Stanze: living
+(anche "soggiorno", "sala"), bedroom ("camera", "camera da letto"), kids_room ("cameretta"),
+service_bathroom ("bagno", "bagno servizio"), technical_room ("locale tecnico"), outdoor
+("esterno", "fuori"). "Temperature in casa" o "come sono le temperature" = room all,
+metric temperature se chiede solo temperature, altrimenti all. Una domanda col solo nome
+di una stanza (es. "living?") o "com'è il living" = quella stanza con metric all.
+"Qual è la temperatura del living" = room living, metric temperature.
+Per "come sono le luci" o "quali luci sono accese" usa current_lights con light all.
 I termostati soggiorno e bagno comandano il riscaldamento: per temperatura ambiente,
 setpoint, riscaldamento acceso/spento o valori del timer delle fasce usa current_thermostats;
 per impostare la temperatura usa set_thermostat_target con un valore del catalogo

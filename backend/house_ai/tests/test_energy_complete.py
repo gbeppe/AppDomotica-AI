@@ -16,6 +16,12 @@ class Client:
         return [[t*1000, 1000] for t in range(start, end+1, interval)]
 
 
+def diagnostics(result):
+    """Spoken answer plus the technical notes shown under provenance and limits."""
+    return result['answer'] + '\n' + '\n'.join(
+        note for item in result.get('results', []) for note in item['result'].get('limitations', []))
+
+
 class EnergyCompleteTests(unittest.TestCase):
     def test_oversized_numeric_values_are_invalid_not_server_errors(self):
         from energy_tools import validate_current_snapshot
@@ -73,9 +79,9 @@ class EnergyCompleteTests(unittest.TestCase):
             key: dict(value=-500, received_at_ms=1789200000000, retained=True, source_topic='zara/interface/energy/test/stat')
             for key in ('grid_power_w','battery_power_w')})
         result = ask(None, Planner(), 'Flussi?', current_snapshot=snapshot)
-        self.assertIn('Immissione in rete: 500,0 W', result['answer'])
-        self.assertIn('Carica della batteria: 500,0 W', result['answer'])
-        self.assertIn('Età della misura sorgente ignota', result['answer'])
+        self.assertIn('Stai immettendo 500 watt in rete.', result['answer'])
+        self.assertIn('La batteria si sta caricando a 500 watt.', result['answer'])
+        self.assertIn('età della misura sorgente ignota', diagnostics(result))
         self.assertEqual(result['status'], 'partial')
 
     def test_log_forecast_is_not_a_measurement_and_zero_preserved(self):
@@ -85,8 +91,8 @@ class EnergyCompleteTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             Path(root, 'zara_previsione_kwh_openmeteo.log').write_text(json.dumps({'data_previsione':'2026-09-12', 'kwh_stimati_impianto_reali':0}))
             result = ask(None, Planner(), 'Previsione?', log_root=root)
-            self.assertIn('0,00 kWh', result['answer'])
-            self.assertIn('non produzione misurata', result['answer'])
+            self.assertIn('Produzione prevista: 0,0 kilowattora.', result['answer'])
+            self.assertIn('non produzione misurata', diagnostics(result))
             self.assertEqual(result['results'][0]['result']['records'][0]['source']['line'], 1)
 
     def test_log_nonfinite_nested_value_is_excluded(self):

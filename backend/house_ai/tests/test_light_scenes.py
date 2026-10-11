@@ -36,13 +36,16 @@ class LightSceneTests(unittest.TestCase):
                                            'topic': 'zara/interface/lights/scene/cmd'}]})
 
     def test_answers_explain_real_effect_without_topics(self):
-        expected = {'tv': 'spengo libreria e lampadario TV', 'sleep': 'tra 2 minuti',
-                    'all_on': 'modalità vacanza la scena non ha effetto', 'all_off': 'interne, esterne e piscina'}
-        for name, text in expected.items():
+        spoken = {'tv': 'Ok, attivo la modalità TV.', 'sleep': 'Ok, tra 2 minuti spengo tutte le luci.',
+                  'all_on': 'Ok, accendo tutte le luci.', 'all_off': 'Ok, spengo tutte le luci.'}
+        details = {'tv': 'spegne libreria e lampadario TV', 'sleep': 'dopo 2 minuti',
+                   'all_on': 'in modalità vacanza non ha effetto', 'all_off': 'interne, esterne e piscina'}
+        for name, text in spoken.items():
             result = ask(None, Planner(scene(name)), 'scena')
             self.assertEqual(result['status'], 'complete')
             self.assertEqual(result['results'][0]['result']['schema'], 'house_ai.light_scene_command.v1')
-            self.assertIn(text, result['answer'])
+            self.assertEqual(text, result['answer'])
+            self.assertIn(details[name], ' '.join(result['results'][0]['result']['limitations']))
             self.assertNotIn('zara/', json.dumps(result))
 
 
@@ -51,7 +54,7 @@ class ProlungaTests(unittest.TestCase):
         self.assertEqual(LIGHT_TOPICS['lights_prolunga'], 'zara/interface/lights/prolunga/power/stat')
         plan = {'operations': [{'id': 'p', 'tool': 'set_light_state', 'light': 'lights_prolunga', 'state': 'off'}]}
         result = ask(None, Planner(plan), 'Spegni la prolunga')
-        self.assertIn('spegnimento di Prolunga', result['answer'])
+        self.assertEqual('Ok, spengo la prolunga.', result['answer'])
 
     def test_prolunga_counts_in_summary(self):
         snapshot = {'schema': 'house_ai.current_lights_input.v1', 'connected': True, 'observations': {
@@ -59,8 +62,8 @@ class ProlungaTests(unittest.TestCase):
                                 'source_topic': LIGHT_TOPICS['lights_prolunga']}}}
         plan = {'operations': [{'id': 'l', 'tool': 'current_lights', 'light': 'all'}]}
         answer = ask(None, Planner(plan), 'Cosa è acceso?', lights_snapshot=snapshot)['answer']
-        self.assertIn('Tra i 10 punti luce mappati, risultano accesi 1', answer)
-        self.assertIn('Accesi dichiarati: Prolunga.', answer)
+        self.assertTrue(answer.startswith('Accese: prolunga.'))
+        self.assertIn('Senza dato: soggiorno', answer)
 
 
 if __name__ == '__main__':

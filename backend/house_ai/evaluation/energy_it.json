@@ -35,6 +35,12 @@
     {"id":"scene_all_on","question":"Accendi tutte le luci","operations":[{"tool":"set_light_scene","scene":"all_on"}]},
     {"id":"prolunga_off","question":"Spegni la prolunga","operations":[{"tool":"set_light_state","light":"lights_prolunga","state":"off"}]},
     {"id":"prolunga_state","question":"La prolunga è accesa?","operations":[{"tool":"current_lights","light":"lights_prolunga"}]},
-    {"id":"light_unmapped","question":"Accendi le luci della cucina","clarification":true}
+    {"id":"light_unmapped","question":"Accendi le luci della cucina","clarification":true},
+    {"id":"lights_overview","question":"Come sono le luci?","operations":[{"tool":"current_lights","light":"all"}]},
+    {"id":"env_living_temperature","question":"Qual è la temperatura del living?","operations":[{"tool":"current_environment","room":"living","metric":"temperature"}]},
+    {"id":"env_house_temperatures","question":"Quali sono le temperature in casa?","operations":[{"tool":"current_environment","room":"all","metric":"temperature"}]},
+    {"id":"env_room_overview","question":"Living?","operations":[{"tool":"current_environment","room":"living","metric":"all"}]},
+    {"id":"env_outdoor_humidity","question":"Che umidità c'è fuori?","operations":[{"tool":"current_environment","room":"outdoor","metric":"humidity"}]},
+    {"id":"env_kids_room","question":"Com'è la cameretta?","operations":[{"tool":"current_environment","room":"kids_room","metric":"all"}]}
   ]
 }

@@ -79,19 +79,20 @@ class ThermostatToolTests(unittest.TestCase):
         result = ask(None, Planner(read()), 'Che temperatura c’è in casa?', thermostats_snapshot=snapshot())
         self.assertEqual(result['status'], 'partial')  # current-state tools are never 'complete'
         text = result['answer']
-        self.assertIn('Termostato soggiorno: temperatura ambiente 22,4 °C, setpoint 18,0 °C, riscaldamento spento', text)
-        self.assertIn('Termostato bagno', text)
-        self.assertIn('timer delle fasce orarie 18,5 °C in fascia e 17,5 °C fuori fascia', text)
-        self.assertIn('non una lettura del termostato', text)
+        self.assertIn('Termostato del living: 22,4 gradi, setpoint 18 gradi, riscaldamento spento.', text)
+        self.assertIn('Termostato del bagno', text)
+        notes = ' '.join(result['results'][0]['result']['limitations'])
+        self.assertIn('timer delle fasce orarie 18,5 gradi in fascia e 17,5 gradi fuori fascia', notes)
+        self.assertIn('non una lettura del termostato', notes)
+        self.assertNotIn('fasce', text)
 
     def test_read_single_and_missing(self):
         bath = ask(None, Planner(read('thermostat_bath')), 'Il bagno è riscaldato?',
                    thermostats_snapshot=snapshot(only='thermostat_living'))
         self.assertEqual(bath['status'], 'insufficient_data')
-        self.assertIn('Termostato bagno: dati non disponibili', bath['answer'])
-        self.assertNotIn('soggiorno', bath['answer'])
+        self.assertEqual('Termostato del bagno: dati non disponibili.', bath['answer'])
         disconnected = ask(None, Planner(read()), 'Temperature?', thermostats_snapshot=snapshot(connected=False))
-        self.assertIn('Digital Twin disconnesso', disconnected['answer'])
+        self.assertIn('La casa non è collegata', disconnected['answer'])
 
     def test_command_result_has_no_topic(self):
         result = ask(None, Planner(command('thermostat_bath', '19.5')), 'Metti il bagno a 19 e mezzo')
@@ -100,8 +101,8 @@ class ThermostatToolTests(unittest.TestCase):
         self.assertEqual(item['schema'], 'house_ai.thermostat_command.v1')
         self.assertEqual((item['thermostat'], item['target_c']), ('thermostat_bath', '19.5'))
         self.assertNotIn('zara/', json.dumps(result))
-        self.assertIn('setpoint di termostato bagno a 19,5 °C', result['answer'])
-        self.assertIn('ripristino ogni 8 ore', result['answer'])
+        self.assertEqual('Ok, imposto il termostato del bagno a 19,5 gradi.', result['answer'])
+        self.assertIn('ripristino ogni 8 ore', ' '.join(item['limitations']))
 
 
 if __name__ == '__main__':

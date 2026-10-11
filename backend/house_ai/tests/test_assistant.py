@@ -21,6 +21,12 @@ class Client:
         return [[t * 1000, value] for t in range(start, end + 1, interval)]
 
 
+def diagnostics(result):
+    """Spoken answer plus the technical notes shown under provenance and limits."""
+    return result['answer'] + '\n' + '\n'.join(
+        note for item in result.get('results', []) for note in item['result'].get('limitations', []))
+
+
 class AssistantTests(unittest.TestCase):
     def test_arbitrary_wording_is_delegated_without_phrase_matching(self):
         planner = Planner({"operations": [{"id": "x", "tool": "energy_metric",
@@ -78,9 +84,9 @@ class AssistantTests(unittest.TestCase):
         result = ask(Client(), Planner({"operations": [operation]}),
                      "Quale giorno ha avuto il maggior prelievo?", date(2026, 9, 12))
         self.assertEqual(result["status"], "complete")
-        self.assertIn("tra i giorni con copertura completa", result["answer"].lower())
-        self.assertIn("Giorni completi confrontati: 3", result["answer"])
-        self.assertIn("Considerando tutti i dati EmonCMS disponibili", result["answer"])
+        self.assertIn("Il giorno con prelievo dalla rete maggiore dal 01/09 al 03/09 è stato il", result["answer"])
+        self.assertIn("Giorni completi confrontati: 3", diagnostics(result))
+        self.assertIn("Su tutti i dati disponibili", diagnostics(result))
         for invalid in ({**operation, "extremum": "largest"},
                         {**operation, "metric": "soc_mean_percent"},
                         {**operation, "extra": True}):
@@ -96,7 +102,7 @@ class AssistantTests(unittest.TestCase):
                         "source_topic": "zara/interface/energy/solar/power/stat"}}}
         result = ask(None, planner, "Come va il fotovoltaico adesso?",
                      date(2026, 9, 12), snapshot)
-        self.assertIn("3210,0 W", result["answer"])
+        self.assertEqual("Il fotovoltaico produce 3,2 kilowatt.", result["answer"])
         self.assertTrue(result["results"][0]["result"]["observation"]["retained"])
 
     def test_missing_and_disconnected_current_data_are_qualified(self):
@@ -108,7 +114,7 @@ class AssistantTests(unittest.TestCase):
         snapshot = {**empty, "observations": {"battery_soc_percent": {"value": 81.0,
             "received_at_ms": 1, "retained": False,
             "source_topic": "custom/energy/battery/soc/stat"}}}
-        self.assertIn("Digital Twin disconnesso", ask(None, planner, "carica?", date(2026,9,12), snapshot)["answer"])
+        self.assertIn("La casa non è collegata", ask(None, planner, "carica?", date(2026,9,12), snapshot)["answer"])
 
     def test_invalid_current_snapshot_is_rejected(self):
         operation = {"operations": [{"id": "x", "tool": "current_energy_metric",
@@ -134,9 +140,8 @@ class AssistantTests(unittest.TestCase):
                             "retained": False, "source_topic": "zara/interface/stato_condizionatore/motivo_logica/stat"}}}
         result = ask(None, planner, "Perché il condizionatore è acceso?", date(2026, 9, 12),
                      climate_snapshot=snapshot)
-        self.assertIn("Stato dichiarato: ACCESO", result["answer"])
-        self.assertIn("Motivo registrato dal controller: humidex sopra soglia", result["answer"])
-        self.assertIn("non una deduzione", result["answer"])
+        self.assertEqual("Il condizionatore è acceso: 25 gradi. Motivo: humidex sopra soglia.", result["answer"])
+        self.assertIn("non una deduzione", diagnostics(result))
         self.assertEqual(result["conversation_context"],
                          {"domain": "climate", "focus": "air_conditioner"})
 
@@ -172,9 +177,8 @@ class AssistantTests(unittest.TestCase):
                         "source_topic": "zara/interface/lights/libreria/power/stat"}}}
         result = ask(None, Planner(plan), "Quali luci sono accese?", date(2026, 9, 12),
                      lights_snapshot=snapshot)
-        self.assertIn("risultano accesi 1", result["answer"])
-        self.assertIn("Libreria", result["answer"])
-        self.assertIn("non prova freschezza, durata o stato fisico", result["answer"])
+        self.assertTrue(result["answer"].startswith("Accese: libreria."))
+        self.assertIn("non conferma fisica", diagnostics(result))
 
         invalid = {**snapshot, "observations": {"lights_libreria": {
             **snapshot["observations"]["lights_libreria"], "source_topic": "lights/libreria/power/cmnd"}}}

@@ -120,7 +120,7 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(checked_request(envelope())['calendar']['previous_week'],
                          {'start': '2026-08-31', 'end_exclusive': '2026-09-07'})
         variants = plan_schema()['properties']['operations']['items']['anyOf']
-        self.assertEqual(len(variants), 12)
+        self.assertEqual(len(variants), 13)
         for variant in variants:
             self.assertFalse(variant['additionalProperties'])
             self.assertEqual(set(variant['properties']), set(variant['required']))
@@ -201,9 +201,9 @@ class GatewayTests(unittest.TestCase):
                     outgoing = opener.return_value.open.call_args.args[0].data.decode()
                     for private in ['backend-secret', 'gateway-secret', 'received_at_ms', '1234']:
                         self.assertNotIn(private, outgoing)
-                    self.assertIn('1234,0 W', answer['answer'])
-                    self.assertIn('24,00 kWh', answer['answer'])
-                    self.assertIn('18,00 kWh', answer['answer'])
+                    self.assertIn('Il fotovoltaico produce 1,2 kilowatt.', answer['answer'])
+                    self.assertIn('24,0 kilowattora', answer['answer'])
+                    self.assertIn('Produzione prevista: 18,0 kilowattora.', answer['answer'])
 
 
 if __name__ == '__main__':
