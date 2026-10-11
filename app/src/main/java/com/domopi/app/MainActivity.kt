@@ -118,8 +118,8 @@ class MainActivity : ComponentActivity() {
             DomoPiTheme(darkTheme = isDarkMode) {
                 var currentScreen by rememberSaveable { mutableStateOf("home") }
                 // Memorizziamo la pagina del carosello per tornare esattamente dove eravamo
-                // Inizializziamo a un multiplo di 9 (numero attuale di schede) per partire da ENERGIA (indice 0)
-                var lastDashboardPage by rememberSaveable { mutableIntStateOf(1000 * 9) } 
+                // Inizializziamo a un multiplo di 10 (numero attuale di schede) per partire da ENERGIA (indice 0)
+                var lastDashboardPage by rememberSaveable { mutableIntStateOf(1000 * 10) } 
                 
                 Surface(color = MaterialTheme.colorScheme.background) {
                   Box(Modifier.fillMaxSize()) {
@@ -201,6 +201,10 @@ class MainActivity : ComponentActivity() {
                             onBack = { currentScreen = "home" },
                             buildAlignment = alignment,
                             onOpenBuildAlignment = { currentScreen = "build_alignment" }
+                        )
+                        "irrigation" -> IrrigationScreen(
+                            mqttManager = mqttManager,
+                            onBack = { currentScreen = "home" }
                         )
                         "pool" -> PoolScreen(
                             mqttManager = mqttManager,

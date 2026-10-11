@@ -81,6 +81,10 @@ class MqttManager {
     val energySmartState: StateFlow<EnergySmartState> = _energySmartState
     private val _climateSmartState = MutableStateFlow(ClimateSmartState())
     val climateSmartState: StateFlow<ClimateSmartState> = _climateSmartState
+    private val _irrigationState = MutableStateFlow<IrrigationState?>(null)
+    val irrigationState: StateFlow<IrrigationState?> = _irrigationState
+    private val _irrigationResult = MutableStateFlow<IrrigationCommandResult?>(null)
+    val irrigationResult: StateFlow<IrrigationCommandResult?> = _irrigationResult
 
     private val _predictiveReserveSmartState = MutableStateFlow(PredictiveReserveSmartState())
     val predictiveReserveSmartState: StateFlow<PredictiveReserveSmartState> = _predictiveReserveSmartState
@@ -344,6 +348,10 @@ class MqttManager {
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
             "ventilation" -> handleVentilationDomain(device, property, payload)
             "settings" -> handleSettingsDomain(device, isOn)
+            "irrigation" -> when (relativeTopic) {
+                "irrigation/state/stat" -> IrrigationState.parse(payload)?.let { _irrigationState.value = it }
+                "irrigation/last_command/stat" -> IrrigationCommandResult.parse(payload)?.let { _irrigationResult.value = it }
+            }
         }
     }
 
@@ -827,6 +835,16 @@ class MqttManager {
                 )
             )
         }
+    }
+
+    /**
+     * Irrigation commands are never queued: a start sent minutes later, when the connection
+     * comes back, would water at an unexpected time. Returns false when not connected.
+     */
+    fun sendIrrigationCommand(command: Pair<String, String>?): Boolean {
+        if (command == null || mqttClient?.isConnected != true) return false
+        publish(command.first, command.second)
+        return true
     }
 
     fun publish(topic: String, payload: String, retained: Boolean = false) {

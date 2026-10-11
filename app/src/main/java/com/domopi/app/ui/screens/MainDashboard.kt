@@ -540,7 +540,7 @@ fun MainDashboard(
 
             // Top 2/3: Horizontal Carousel (Circular/Infinite)
             Box(modifier = Modifier.weight(2f)) {
-                val actualPageCount = 9
+                val actualPageCount = 10
                 val pagerState = rememberPagerState(
                     initialPage = initialPage,
                     pageCount = { 10000 * actualPageCount }
@@ -797,6 +797,7 @@ fun DomainCard(
         6 -> "cameras"
         7 -> "domotica_settings"
         8 -> "garage"
+        9 -> "irrigation"
         else -> "dashboard"
     }
 
@@ -822,6 +823,7 @@ fun DomainCard(
                     6 -> "TELECAMERE"
                     7 -> "SETTAGGI CASA"
                     8 -> "GARAGE"
+                    9 -> "IRRIGAZIONE"
                     else -> ""
                 }
                 Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
@@ -968,6 +970,17 @@ fun DomainCard(
                     8 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Garage, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
                         Text("Controllo Garage", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    9 -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val irrigation by mqttManager.irrigationState.collectAsState()
+                        val running = irrigation?.zones?.filter { it.running }.orEmpty()
+                        Icon(Icons.Default.WaterDrop, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                        Text(when {
+                            irrigation == null -> "Stato non ricevuto"
+                            running.isNotEmpty() -> "In irrigazione: " + running.joinToString { it.name }
+                            irrigation?.controllerEnabled == true -> "Ferma · OpenSprinkler attivo"
+                            else -> "Ferma · OpenSprinkler disattivato"
+                        }, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
