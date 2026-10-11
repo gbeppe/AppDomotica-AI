@@ -1,0 +1,7 @@
+[Unit]
+Description=Refresh the House AI LAN certificate from Tailscale
+After=tailscaled.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/domopi-house-ai/current/deploy/lan_cert.sh

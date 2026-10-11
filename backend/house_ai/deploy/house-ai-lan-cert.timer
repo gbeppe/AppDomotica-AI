@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly refresh of the House AI LAN certificate
+
+[Timer]
+OnCalendar=weekly
+RandomizedDelaySec=6h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
