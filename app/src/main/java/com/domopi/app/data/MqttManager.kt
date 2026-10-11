@@ -561,7 +561,6 @@ class MqttManager {
             "deck" -> "lucipedanapiscina"
             "pump" -> "pompapiscina"
             "skimmer" -> "skimmerpiscina"
-            "hifi" -> "lampadahifi"
             "laundry", "lavanderia" -> "lavanderia"
             "porch_entrance", "porch", "portico", "portico_ingresso" -> "portico_ingresso"
             "service_entrance", "ingressoservizio", "ingresso_servizio" -> "ingressoservizio"
