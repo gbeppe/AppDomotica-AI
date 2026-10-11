@@ -16,6 +16,14 @@ class HouseAiErrorsTest {
     }
 
     @Test
+    fun shortWaitsAreNotCountedOut() {
+        listOf(1, 5).forEach {
+            assertEquals("Troppe domande ravvicinate: riprova tra qualche secondo.",
+                HouseAiErrors.http(429, """{"error": "rate_limited", "retry_after_s": $it}"""))
+        }
+    }
+
+    @Test
     fun rateLimitWithoutOrWithOddWaitFallsBackTo30Seconds() {
         listOf(null, "", "not json", """{"retry_after_s": 0}""", """{"retry_after_s": 900}""").forEach {
             assertEquals("Troppe domande ravvicinate: riprova tra 30 secondi.", HouseAiErrors.http(429, it))

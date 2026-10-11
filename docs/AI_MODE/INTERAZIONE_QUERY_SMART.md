@@ -119,7 +119,7 @@ lette anche ad alta voce:
 
 | Causa | Risposta HTTP del backend | Messaggio |
 |---|---|---|
-| quota Groq esaurita (gratuito ~2 domande/min) | 429 `rate_limited`, `retry_after_s` 1–60 (da `Retry-After` di Groq, altrimenti 30) | "Troppe domande ravvicinate: riprova tra N secondi." |
+| quota Groq esaurita (gratuito ~2 domande/min) | 429 `rate_limited`, `retry_after_s` 1–60 (da `Retry-After` di Groq, altrimenti 30) | "Troppe domande ravvicinate: riprova tra N secondi." (fino a 5 s: "tra qualche secondo") |
 | Groq o gateway non disponibili, piano non valido | 502 `planner_unavailable` | "Il servizio di intelligenza artificiale non risponde. Riprova tra poco." |
 | errore di I/O delle sorgenti fuori dai tool | 502 `source_unavailable` | "I dati di casa non sono raggiungibili in questo momento." |
 | backend fermo dietro `house-ai-lan` | 502 `Backend unavailable` | "Il backend di casa non risponde." |

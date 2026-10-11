@@ -29,7 +29,9 @@ object HouseAiErrors {
             code == 429 -> {
                 val seconds = body?.let { RETRY.find(it)?.groupValues?.get(1)?.toInt() }
                     ?.takeIf { it in 1..60 } ?: DEFAULT_RETRY_S
-                "Troppe domande ravvicinate: riprova tra $seconds secondi."
+                // Groq often asks for 1-2 s only: no "1 secondi", no false precision.
+                if (seconds <= 5) "Troppe domande ravvicinate: riprova tra qualche secondo."
+                else "Troppe domande ravvicinate: riprova tra $seconds secondi."
             }
             code == 502 && error == "planner_unavailable" ->
                 "Il servizio di intelligenza artificiale non risponde. Riprova tra poco."
