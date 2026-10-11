@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — prelievo giornaliero per la Home
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-grid-import`, commit
+`dc7d808`; `PREVIOUS_RELEASE` = `20261011-day-summary`. Test superati su `.20`;
+gateway, backend e `house-ai-lan` riavviati e `active`. Installati
+`house-ai-grid-import.service` / `.timer` (ogni 15 min a `:01`); prima esecuzione
+alle 15:52 `success`, retained `import_kwh_oggi` 0.07 e `import_kwh_ieri` 0.12. Dettagli e
+ripristino in [`PRELIEVO_RETE_GIORNALIERO.md`](PRELIEVO_RETE_GIORNALIERO.md).
+
 ## Release dell'11 ottobre 2026 — riepilogo del giorno (fase 3.5 C)
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-day-summary`, commit
