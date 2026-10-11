@@ -77,6 +77,19 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release dell'11 ottobre 2026 — risposte brevi e sensori ambiente
+
+Release attiva: `/opt/domopi-house-ai/releases/20261011-short-answers`, commit
+`1a34e09`; `PREVIOUS_RELEASE` = `20261011-light-scenes`. 110 test superati su
+`.20`, servizi `active`. Risposte lette brevi (comandi: "Ok, accendo …"); scene,
+timer, stadi dei comandi e copertura passano nei limiti mostrati in diagnostica.
+Nuovo strumento di lettura `current_environment` (living, camera da letto,
+cameretta, bagno servizio, locale tecnico, esterno). Prova reale con Groq: 7
+domande su 7 con piano atteso (stato luci, temperatura living, temperature casa,
+"Living?", umidità esterna, cameretta, accensione lampada TV). Nessun comando
+inviato dal backend. App `bld_fe52e869` (`6cefacf`) installata. Prima il
+backend: le release precedenti rifiutano `current_environment` (HTTP 400).
+
 ## Release dell'11 ottobre 2026 — scene luci e Prolunga (fase 3.3)
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-light-scenes`, commit
