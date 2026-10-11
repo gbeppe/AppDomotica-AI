@@ -6,6 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import com.domopi.app.ui.components.HouseAlertBanner
 import com.domopi.app.ui.theme.DomoPiTheme
 import com.domopi.app.ui.screens.*
 import com.domopi.app.data.ZaiConnectivityManager
@@ -117,6 +122,7 @@ class MainActivity : ComponentActivity() {
                 var lastDashboardPage by rememberSaveable { mutableIntStateOf(1000 * 9) } 
                 
                 Surface(color = MaterialTheme.colorScheme.background) {
+                  Box(Modifier.fillMaxSize()) {
                     when (currentScreen) {
                         "home" -> MainDashboard(
                             mqttManager = mqttManager,
@@ -218,6 +224,13 @@ class MainActivity : ComponentActivity() {
                             onBack = { currentScreen = "home" }
                         )
                     }
+                    // Fase 3.5 B: written alerts (house disconnected, battery full/low) on every screen.
+                    val alertConnected by mqttManager.isConnected.collectAsState()
+                    val alertEnergy by mqttManager.energySmartState.collectAsState()
+                    HouseAlertBanner(alertConnected,
+                        alertEnergy.validObservations()["battery_soc_percent"]?.value,
+                        Modifier.align(Alignment.TopCenter))
+                  }
                 }
             }
         }
