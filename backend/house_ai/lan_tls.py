@@ -15,7 +15,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
-ROUTES = {"GET": ("/v1/health", "/v1/health/details", "/v1/report", "/v1/energy/query"),
+ROUTES = {"GET": ("/v1/health", "/v1/health/details", "/v1/report", "/v1/energy/query", "/v1/summary/day"),
           "POST": ("/v1/assistant/query",)}
 MAX_BODY = 32768
 HANDSHAKE_TIMEOUT_S = 15

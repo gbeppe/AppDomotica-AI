@@ -499,7 +499,13 @@ def notes(item):
                     max(r['records'], key=lambda rec: numeric(rec['record'], key) or 0))
             extra.append(f"Ultimo record restituito: riga {last['source']['line']}.")
         if r['source'] == 'solar_forecast':
-            extra.append("È una previsione per il giorno indicato, non produzione misurata; ora di elaborazione non presente.")
+            computed = r['records'][-1]['record'].get('elaborata_alle') if r['records'] else None
+            try:  # SOLAR-FORECAST.1 (2026-10-11) records the computation time; older lines do not
+                when = ("elaborata il " + moment_text(
+                    int(datetime.fromisoformat(computed.replace('Z', '+00:00')).timestamp() * 1000)))
+            except (AttributeError, TypeError, ValueError):
+                when = "ora di elaborazione non presente"
+            extra.append(f"È una previsione per il giorno indicato, non produzione misurata; {when}.")
         if r['source'] == 'climate':
             extra.append("È un evento registrato, non una conferma fisica né una spiegazione causale aggiuntiva.")
         return extra + ["I log non garantiscono copertura continua e non sostituiscono lo stato corrente."]

@@ -29,3 +29,8 @@ Il controller e il Predictive Reserve leggono le stesse variabili: nessuna modif
 File: `function22.js` (corpo nuovo), `build.py`, `update.json`, `rollback.json`,
 `manifest.json`, `test.js` (9 test, `node --test test.js`), `deploy.py` (`prepare`,
 `apply BACKUP`, `rollback BACKUP`, da eseguire su `.20`).
+
+Applicata l'11/10/2026 alle 14:15 (revisione runtime `c800d9bd…`, backup
+`/home/pi/AI_backups/nodered/20261011T121401Z-before-solar-forecast`). Il lancio al
+deploy ha subito scritto la previsione per il 12/10 (10 kWh, 24 ore) e MQTT
+`previsione_solare_data` è passato da `2026-10-10` a `2026-10-12`.

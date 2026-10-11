@@ -11,6 +11,7 @@ from emoncms import Emoncms
 from energy_query import answer as energy_answer
 from service import report
 from assistant import ask as assistant_ask
+from day_summary import summary as day_summary
 from planner import HttpJsonPlanner, PlannerUnavailable, RateLimited
 from log_tools import SOURCES, source_status
 
@@ -98,6 +99,8 @@ def handler(client, token, log_path, planner=None, log_root=None):
                     self.send_json(200, {"status": "ok", "mode": "read_only",
                                          "planner_configured": planner is not None,
                                          "log_root_configured": log_root is not None})
+                elif url.path == "/v1/summary/day":
+                    self.send_json(200, day_summary(client, log_root))
                 elif url.path == "/v1/health/details":
                     self.send_json(200, detailed_health(client, planner, log_root))
                 elif url.path == "/v1/report":
