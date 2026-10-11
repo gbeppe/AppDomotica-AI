@@ -288,7 +288,8 @@ class MqttManager {
             "$p/settings/#", "$p/garage/#", 
             "$p/stato_condizionatore/#",
             "$p/logica_controllo/#",
-            "$p/predictive_reserve/#"
+            "$p/predictive_reserve/#",
+            "$p/irrigation/#"
         )
         mqttClient?.subscribe(topics, IntArray(topics.size) { 1 })
     }

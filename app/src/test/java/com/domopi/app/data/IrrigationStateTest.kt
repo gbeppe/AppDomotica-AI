@@ -55,6 +55,13 @@ class IrrigationStateTest {
         assertEquals("Avvio zona 1", IrrigationCommands.label(r.command))
     }
 
+    @Test fun appSubscribesToIrrigationTopics() {
+        val source = listOf(File("src/main/java/com/domopi/app/data/MqttManager.kt"),
+            File("app/src/main/java/com/domopi/app/data/MqttManager.kt")).first { it.exists() }.readText()
+        assertTrue(source.substringAfter("fun subscribeToUnifiedTopics").substringBefore("mqttClient?.subscribe")
+            .contains("\"${'$'}p/irrigation/#\""))
+    }
+
     @Test fun irrigationCommandsAreNeverQueuedOffline() {
         val source = listOf(File("src/main/java/com/domopi/app/data/MqttManager.kt"),
             File("app/src/main/java/com/domopi/app/data/MqttManager.kt")).first { it.exists() }.readText()
