@@ -51,6 +51,8 @@ Contenuto: app Android (Kotlin/Compose, `app/`), backend House AI (Python 3.9 st
 | `192.168.1.40` | PC di sviluppo (Ubuntu) | build e rilascio app, SSH senza password verso `pi@192.168.1.20` |
 | `192.168.1.121` | Telefono Realme GT (RMX2202) | app installata via adb wireless |
 | `192.168.1.4` | NAS QNAP | solo il container registry del progetto WallBox; il broker MQTT non c'è più |
+| `192.168.1.22` | ESP8266 caminetto Palazzetti (OTA `palazzetti`) | firmware `palazzetti_v2` dal 14/10, broker `.15`: [`firmware/palazzetti/`](../firmware/palazzetti/README.md) |
+| `192.168.1.23` | ESP8266 VMC Brink | sketch non ancora nel repository |
 | `192.168.1.3` | OpenSprinkler 2.2.1 (porta 9003) | 5 zone attive; controller **disattivato** per scelta |
 | `192.168.1.67/.68/.69` | Tasmota termostati (bagno servizio / bagno / living) | `.68` = `tasmota_F294D7` (BathroomThermostat), ancora in uso |
 | `192.168.1.252` | Tasmota frigorifero (`DVES_83430A`) | cambia IP via DHCP (visto anche come .2/.253) |
@@ -91,6 +93,11 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `irrigation` (IRRIGATION.1) | scheda OpenSprinkler: comandi, stato, registrazione EmonCMS | live dall'11/10 |
 | `ml_cleanup` (AI-CLIMATE-CLEANUP.1) | via 6 copie scollegate del controller ML | live dall'11/10 |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
+
+### Firmware delle schede ESP
+Sketch versionati in [`../firmware/`](../firmware/README.md) (credenziali solo in `secrets.h`
+locale, controllo `python3 firmware/check_firmware.py`). Caminetto: `palazzetti_v2` caricato e
+verificato il 14/10. VMC e pompa pavimento si aggiungeranno quando verranno verificati.
 
 ### Rete e sicurezza
 Vedi [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md): router chiuso,
@@ -163,8 +170,10 @@ Log broker: `sudo tail -f /var/log/mosquitto/mosquitto.log`. Il broker di `.15` 
 - Eventuale: riservare un IP fisso al dispositivo TinyCam e disattivare il suo MAC casuale.
 
 ## 7. Piano concordato (ordine)
-1. **Prove sul campo**: slider del livello caminetto; barra in alto (4G con e senza Tailscale);
-   poi **unione di `feature/ui-topbar` in `main`**.
+1. **Prove sul campo**: barra in alto (4G con e senza Tailscale); poi **unione di
+   `feature/ui-topbar` in `main`**. (Slider del caminetto verificato il 14/10, anche con il
+   firmware `palazzetti_v2`; restano da osservare `on`/`off` del caminetto col nuovo firmware al
+   primo uso reale.)
 2. **Predictive Reserve**: valutazione e piano di sviluppo definitivo (priorità bassa; include
    3.1-bis "registro decisioni PR"). Fatti runtime: [`DECISIONI_E_LEZIONI.md`](DECISIONI_E_LEZIONI.md#predictive-reserve).
 3. **Node-RED, voci minori** dalla verifica del Digital Twin Bridge: doppio percorso WP-C2 dei

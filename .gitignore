@@ -21,3 +21,6 @@ local.properties
 
 # Release records and local release log (tools/release_android.py)
 /work/
+
+# Firmware: credenziali locali, mai nel repository
+/firmware/**/secrets.h

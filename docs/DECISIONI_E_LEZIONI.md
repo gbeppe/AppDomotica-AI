@@ -27,6 +27,10 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 14/10 | **Tenere la chiave EmonCMS di sola lettura** pur se pubblicata nella storia GitHub | usata da molti sistemi; EmonCMS non più esposto su internet |
 | 14/10 | Port forwarding del router **disattivato**, DMZ e UPnP spenti | l'accesso remoto passa da Tailscale |
 | 14/10 | Bridge Mosquitto verso il QNAP **rimosso** | il broker sul QNAP non esiste più |
+| 14/10 | Caminetto: **riscrittura completa** dello sketch ESP8266 (`palazzetti_v2`), stessi topic; caricata e verificata | la versione di aprile bloccava e rieseguiva il comando retained |
+| 14/10 | Caminetto: niente "azzeramento" dal minimo né strada più corta | il pannello premendo "meno" a 1 riparte da 6 |
+| 14/10 | Firmware delle schede **nel repository pubblico** (`firmware/`), senza `secrets.h`; VMC e pompa pavimento da aggiungere man mano | un solo posto per il progetto |
+| 14/10 | Password Wi-Fi e `emonpi` (broker `.15`) stampate per errore in sessione: **rischio accettato**, non cambiate | |
 | 14/10 | Broker MQTT: **un solo utente** (`domotica`) per tutti i client, anonimo chiuso, `domopi` eliminato | semplicità |
 
 ## Lezioni tecniche
@@ -51,7 +55,9 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | Router / Tailscale | Dopo un riavvio del router (IP pubblico dinamico) `tailscaled` su `.20` può restare scollegato dal control plane: `sudo systemctl restart tailscaled`. |
 | Telefono | Una volta la rete mobile con Tailscale acceso non funzionava: si è risolto riavviando il telefono. |
 | Rete | Il redirect 80→8980 su `.20` (vecchia emulazione Alexa) dirottava il traffico Tailscale verso EmonCMS: rimosso il 10/10 (`docs/NETWORK/IPTABLES_ALEXA_REDIRECT_REMOVAL.md`). |
-| Sicurezza | Nella prima sessione sono state stampate per errore alcune credenziali (password del bridge QNAP, vecchie credenziali `domopi`, chiave EmonCMS): tutte ora non più valide o con rischio accettato. Leggere i file di configurazione filtrando le righe con segreti. |
+| Firmware caminetto | `/esp8266/palazzetti/command` è retained sul broker di `.15`: a ogni riconnessione la scheda lo riceve di nuovo. La versione di aprile lo rieseguiva (pressioni non volute, livello sfasato); la v2 lo usa solo per riallinearsi. Il livello è presunto: il caminetto non comunica nulla (`emon/focolare/powerraw` = livello richiesto). |
+| Arduino IDE | Editor senza testo (né GPU né Wayland né tema): risolto impostando il font dell'editor `'DejaVu Sans Mono', monospace`. |
+| Sicurezza | Nella prima sessione sono state stampate per errore alcune credenziali (password del bridge QNAP, vecchie credenziali `domopi`, chiave EmonCMS; il 14/10 password Wi-Fi ed `emonpi` leggendo uno sketch): tutte ora non più valide o con rischio accettato. Leggere i file di configurazione filtrando le righe con segreti. |
 
 ## Fatti utili sull'impianto
 
