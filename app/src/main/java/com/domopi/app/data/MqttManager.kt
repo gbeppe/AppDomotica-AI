@@ -92,6 +92,8 @@ class MqttManager {
     val thermostatSmartState: StateFlow<ThermostatSmartState> = _thermostatSmartState
     private val _environmentSmartState = MutableStateFlow(EnvironmentSmartState())
     val environmentSmartState: StateFlow<EnvironmentSmartState> = _environmentSmartState
+    private val _heatingSmartState = MutableStateFlow(HeatingSmartState())
+    val heatingSmartState: StateFlow<HeatingSmartState> = _heatingSmartState
 
     private var mqttClient: MqttAsyncClient? = null
     private val messageQueue = ConcurrentLinkedQueue<MqttQueuedMessage>()
@@ -221,6 +223,7 @@ class MqttManager {
                     _predictiveReserveSmartState.value = PredictiveReserveSmartState()
                     _thermostatSmartState.value = ThermostatSmartState()
                     _environmentSmartState.value = EnvironmentSmartState()
+                    _heatingSmartState.value = HeatingSmartState()
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     subscribeToBuildIdentity()
@@ -247,6 +250,7 @@ class MqttManager {
                             _predictiveReserveSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                             _thermostatSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                             _environmentSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
+                            _heatingSmartState.update { it.observe(topic.removePrefix(receivedPrefix), message.toString(), receivedAt, message.isRetained, topic) }
                         }
                         handleIncomingMessage(topic ?: "", message?.toString() ?: "")
                     }
@@ -280,6 +284,7 @@ class MqttManager {
             _predictiveReserveSmartState.value = PredictiveReserveSmartState()
             _thermostatSmartState.value = ThermostatSmartState()
             _environmentSmartState.value = EnvironmentSmartState()
+            _heatingSmartState.value = HeatingSmartState()
             digitalTwinPrefix = clean
             if (mqttClient?.isConnected == true) {
                 subscribeToUnifiedTopics()

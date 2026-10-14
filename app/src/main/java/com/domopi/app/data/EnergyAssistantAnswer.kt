@@ -120,6 +120,15 @@ data class EnergyAssistantAnswer(
                             "${observation.getString("source_topic")} = ${observation.get("value")}"
                         }.toList()
                     }
+                    "house_ai.current_heating.v1" -> {
+                        detail += "Digital Twin · impianto di riscaldamento (sola lettura) · " +
+                            if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
+                        val observations = result.getJSONObject("observations")
+                        detail += observations.keys().asSequence().sorted().map {
+                            val observation = observations.getJSONObject(it)
+                            "${observation.getString("source_topic")} = ${observation.get("value")}"
+                        }.toList()
+                    }
                     "house_ai.thermostat_command.v1" -> {
                         val thermostat = result.getString("thermostat")
                         val target = result.getString("target_c")
