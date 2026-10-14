@@ -1,16 +1,26 @@
 # Modalità AI della casa
 
+> **Per lo stato attuale (ottobre 2026) partire da [`../HANDOFF.md`](../HANDOFF.md).** Questo indice
+> raccoglie la documentazione di analisi di settembre; i nuovi documenti di ottobre sono:
+> [`FUNZIONI_APP_OTTOBRE_2026.md`](FUNZIONI_APP_OTTOBRE_2026.md),
+> [`ACCESSO_LAN_SENZA_TAILSCALE.md`](ACCESSO_LAN_SENZA_TAILSCALE.md),
+> [`RUNBOOK_ACCESSO_LAN.md`](RUNBOOK_ACCESSO_LAN.md),
+> [`PRELIEVO_RETE_GIORNALIERO.md`](PRELIEVO_RETE_GIORNALIERO.md),
+> [`../SICUREZZA_RETE_E_CREDENZIALI.md`](../SICUREZZA_RETE_E_CREDENZIALI.md),
+> [`../DECISIONI_E_LEZIONI.md`](../DECISIONI_E_LEZIONI.md). Il vincolo 7 qui sotto (nessun commit su
+> `main`) resta valido; la linea attiva è ora `feature/ui-topbar`.
+
 Documentazione di analisi e progetto — 11 settembre 2026.
 
 Stato: prototipo locale in corso nel branch `feature/ai-home-assistant`, con backend di consultazione e schermata Android. Deployment e integrazione con un modello restano da definire; flow Node-RED, dispositivi e archivi non sono modificati.
 
 ## Documenti
 
-- [Artefatto passivo Digital Twin Bridge](../../backend/nodered/semantic_bridge/README.md): primo incremento semantico, limiti e procedura di validazione; non distribuito.
+- Artefatti del Digital Twin Bridge semantico: cartelle in `backend/nodered/semantic_bridge/` (ognuna con il suo README); il README generale citato in origine non è più nel repository.
 
-- [Nuova architettura del registry semantico](ARCHITETTURA_REGISTRY_SEMANTICO.md):
-  decisioni concordate, responsabilità Node-RED/House AI/Android, domini,
-  migrazione e validazione; architettura obiettivo ancora da implementare.
+- Nuova architettura del registry semantico (`ARCHITETTURA_REGISTRY_SEMANTICO.md`): documento
+  citato a settembre ma non presente nel repository; l'architettura obiettivo resta da
+  implementare (vedi il contratto in `../Architecture/RUNTIME_MQTT_CONTRACT.md`).
 - [Analisi e architettura](ANALISI_ARCHITETTURA.md): obiettivi, componenti e confini.
 - [Audit delle evidenze](AUDIT_EVIDENZE.md): verifiche eseguite, risultati e limiti.
 - [Piano di lavoro](PIANO_DI_LAVORO.md): fasi, responsabilità e criteri di completamento.

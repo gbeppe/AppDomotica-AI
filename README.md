@@ -1,5 +1,8 @@
 # Z-AI Android App
 
+> **Stato attuale, procedure e piano: [`docs/HANDOFF.md`](docs/HANDOFF.md)** (aggiornato al 14/10/2026).
+> La descrizione qui sotto è la panoramica originale delle funzioni e non è aggiornata.
+
 Z-AI is a modern Android application built with Jetpack Compose to monitor and control a smart home ecosystem managed by Node-RED, EmonCMS, and Tesla Powerwall.
 
 ## Features

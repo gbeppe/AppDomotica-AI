@@ -1,0 +1,83 @@
+# Decisioni dell'utente e lezioni apprese
+
+Registro delle scelte prese con l'utente (con data e motivo) e degli errori o scoperte
+tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
+
+## Decisioni dell'utente
+
+| Data | Decisione | Motivo / note |
+|---|---|---|
+| 10/10 | Ordine di lavoro: git al sicuro → correggere ciò che è rotto → sviluppo; priorità app e AI Smart; Predictive Reserve solo se impattato | indicato dall'utente |
+| 10/10 | Termostati (3.2): lettura e setpoint 16–22 °C a passi di 0,5, esecuzione immediata; slider HVAC invia solo al rilascio | min/max dei termostati sono i setpoint del timer di `.15` (max in fascia, min fuori fascia) |
+| 11/10 | Date nelle risposte sempre come "gg/mm alle hh:mm" | lettura vocale naturale |
+| 11/10 | Scene luci tv/sleep/all_on/all_off e "prolunga" (presa RF Broadlink) in AI Smart, esecuzione immediata | |
+| 11/10 | Scheda AI Smart con pulsante "Parla" (nessun ascolto automatico); lettura automatica solo per domande vocali; tutti i comandi immediati | |
+| 11/10 | Risposte brevi ("Ok, accendo la lampada TV."); il dettaglio tecnico va nella diagnostica | stanze: living, camera da letto, cameretta, bagno servizio, locale tecnico, esterno |
+| 11/10 | Tailscale necessario **solo fuori casa** | realizzato con variante B (`house-ai-lan` + record Pi-hole) |
+| 11/10 | Fase 3.5: riepilogo all'apertura solo energia e temperature, **solo scritto**; avvisi solo casa scollegata e batteria (100% / <20%) in banner su ogni schermata, solo scritti; "Com'è andata oggi" come pulsante | |
+| 11/10 | Pompa pavimento: si comanda dall'app (gestita da `.15`) | serviva solo il ritorno di stato |
+| 11/10 | **Rimuovere** lampada HiFi e pompa di calore (dispositivi non più presenti) | ROUTER-CLEANUP.1 |
+| 11/10 | **Tenere** le altre voci morte del router (modulazione caldaia, humidex esterno, `climate/ai_enabling`) | potrebbero tornare |
+| 11/10 | **Tenere** la scheda Node-RED "Amazon Echo" (Alexa non usata), i nodi `tasmota_F294D7`/`shelly1-98F4ABF294D7`, i 55 nodi disattivati (promemoria) | `F294D7` si è rivelato il termostato del bagno (.68), ancora attivo |
+| 11/10 | Irrigazione: durata massima 60 min per zona, scheda nel carosello, interruttore controller nell'app | |
+| 11/10 | **Non abilitare mai il controller OpenSprinkler** (resta `en=0`) | richiesta esplicita |
+| 11/10 | Registrare su EmonCMS i tempi d'irrigazione per calcoli futuri sui consumi d'acqua; i feed li collega l'utente dall'interfaccia | portate per zona da fornire in futuro |
+| 11/10 | Robot (Ecovacs, MOVA) per ultimi, priorità bassissima | |
+| 11/10 | Grafica interattiva del giardino per l'irrigazione: idea per il futuro | |
+| 14/10 | **Tenere la chiave EmonCMS di sola lettura** pur se pubblicata nella storia GitHub | usata da molti sistemi; EmonCMS non più esposto su internet |
+| 14/10 | Port forwarding del router **disattivato**, DMZ e UPnP spenti | l'accesso remoto passa da Tailscale |
+| 14/10 | Bridge Mosquitto verso il QNAP **rimosso** | il broker sul QNAP non esiste più |
+| 14/10 | Broker MQTT: **un solo utente** (`domotica`) per tutti i client, anonimo chiuso, `domopi` eliminato | semplicità |
+
+## Lezioni tecniche
+
+| Tema | Lezione |
+|---|---|
+| Digital Twin Router | Le tabelle di traduzione sono in cache nel context del nodo e si ricostruiscono solo se cambia la chiave `router_initialized_vNNN`: incrementarla in ogni patch al registro (ROUTER-CLEANUP.2). I test offline devono simulare un context già inizializzato dal codice vecchio. |
+| Node-RED MQTT | I nodi `mqtt in` in auto-detect trasformano `"1"` nel numero `1`: le regole di stato devono accettare entrambe le forme. |
+| Node-RED deploy | Il flow live è quello del progetto (`~/.node-red/projects/domopi/`); `~/.node-red/flows_domopi.json` è una copia vecchia di giugno. |
+| App MQTT | Ogni nuovo dominio di topic va aggiunto a `MqttManager.subscribeToUnifiedTopics` (l'irrigazione all'inizio risultava "Stato non ricevuto"). |
+| App MQTT | I comandi d'irrigazione non vanno mai accodati offline (partirebbero più tardi a orari inattesi). |
+| App MQTT | Cambiando credenziali, `connect()` deve forzare la riconnessione (prima restava la sessione vecchia). |
+| App telecamere | La WebView di sistema non mostra un flusso MJPEG aperto come pagina: usare il lettore nativo (`TinyCamClient`). |
+| App campi password | Molte tastiere nascondono gli appunti nei campi password: serve un pulsante "Incolla" esplicito. |
+| App test | I test unitari Android non hanno `org.json` reale né `com.sun.net.httpserver`: usare `kotlinx.serialization`/regex e un mini server su socket. |
+| OpenSprinkler | L'API `/co?mqtt=` vuole il JSON **senza** graffe esterne, altrimenti salva un valore malformato che rompe `/jc` e `/ja`. OpenSprinkler pubblica su MQTT ma non accetta comandi MQTT. |
+| Tasmota | Le credenziali MQTT si cambiano dalla pagina web locale (`/cm?cmnd=Backlog MqttUser …; MqttPassword …`), così la password non passa sul broker. |
+| Mosquitto | Con un `password_file` attivo, un client che invia utente senza password viene rifiutato anche se l'anonimo è ammesso. Ricaricare (`systemctl reload`) non chiude le sessioni aperte. |
+| Backend `.20` | Python **3.9**: `HTTPError.close()` fallisce se l'errore non ha corpo; provare i test su `.20` prima del commit. |
+| Groq | Piano gratuito ~8000 token/min ≈ 2 domande al minuto; distanziare le prove di ~35 s. |
+| Previsione FV | Il flow falliva in silenzio e solo alle 23:00: ora ritenta fino alle 05:30 e registra gli errori (SOLAR-FORECAST.1). |
+| Router / Tailscale | Dopo un riavvio del router (IP pubblico dinamico) `tailscaled` su `.20` può restare scollegato dal control plane: `sudo systemctl restart tailscaled`. |
+| Telefono | Una volta la rete mobile con Tailscale acceso non funzionava: si è risolto riavviando il telefono. |
+| Rete | Il redirect 80→8980 su `.20` (vecchia emulazione Alexa) dirottava il traffico Tailscale verso EmonCMS: rimosso il 10/10 (`docs/NETWORK/IPTABLES_ALEXA_REDIRECT_REMOVAL.md`). |
+| Sicurezza | Nella prima sessione sono state stampate per errore alcune credenziali (password del bridge QNAP, vecchie credenziali `domopi`, chiave EmonCMS): tutte ora non più valide o con rischio accettato. Leggere i file di configurazione filtrando le righe con segreti. |
+
+## Fatti utili sull'impianto
+
+- Timer dei termostati su `.15` (light-scheduler "SOLO caminetto"/"Con Caldaia" secondo
+  `palazzettiModalita`): setpoint = max in fascia, min fuori fascia; riscrive al cambio fascia, al
+  cambio di min/max e ogni 8 h. La modalità vacanza su `.20` forza 17 °C ogni 2 h; gli scheduler
+  termostati di `.20` sono disattivati.
+- Scene luci (Scene Dispatcher Node-RED): tv (lampada TV + soggiorno accesi, libreria e lampadario
+  TV spenti), sleep (tutto spento dopo 2 min), all_on (niente in vacanza; con ECO solo lettura e
+  TV), all_off (tutto, ~35 s). "Prolunga" = presa RF Broadlink ("luce allarme"/"luci natale").
+- Topbar LOCALE/REMOTO, icona build e comando di rilascio sono portati dal progetto WallBox
+  (`/home/giuseppe/AndroidStudioProjects/new2/WallBox`, branch `develop`).
+- Grafica energia della Home ispirata all'artifact dell'utente "WallBox Home multi-sorgente";
+  tutte le icone modificabili tranne l'immagine della Tesla Powerwall.
+
+## Predictive Reserve
+
+Fatti runtime verificati il 10/10 su un export live (da riverificare prima di lavorarci):
+
+- Vive solo in Node-RED `.20`, scheda "AI Climate - Predictive Reserve"; la catena è: controller
+  clima (`61992c88…`, uscita 6) → link call (timeout 2 s) → SHADOW Engine → Final SHADOW Decision →
+  Arbitration Snapshot → Shared Arbitration Gate → Pre-start Result → "AI Climate NIGHT_DRY Commit"
+  → broadlink → `zara/domotics/AC/command`.
+- Due interruttori indipendenti: `pr_control_enabled` (dall'app via Router →
+  `casa/clima/cmnd/predictive_reserve_control_enabled`) e `pr_operating_mode` SHADOW/ACTIVE
+  (solo da un inject in Node-RED; l'app lo legge da PR-MODE.1). Controllo ON + SHADOW = avvio
+  notturno NIGHT_DRY sempre negato. Solo eco26dry è qualificato.
+- Nessun nodo scrive più `predictive_reserve_shadow.log` dal 06/09 (House AI lo dichiara archivio).
+- Il controller usa la previsione FV (`previsione_kwh_domani`) per il SOC minimo notturno.
