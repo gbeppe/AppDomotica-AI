@@ -67,7 +67,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_bb7f69aa`**. Funzioni principali e documenti:
+Installata sul telefono: **`bld_5db84829`** (commit `a18f08b`, 14/10: nuova immagine piscina). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -171,6 +171,13 @@ Log broker: `sudo tail -f /var/log/mosquitto/mosquitto.log`. Il broker di `.15` 
 - Eventuale: riservare un IP fisso al dispositivo TinyCam e disattivare il suo MAC casuale.
 
 ## 7. Piano concordato (ordine)
+**Punto di ripresa (14/10/2026, pomeriggio):** l'utente vuole prima continuare con **prove sul
+campo insieme**, poi riprendere lo sviluppo dai punti sotto. Da osservare: accensione e
+spegnimento programmati del caminetto (17:00–19:00, modalità acqua sanitaria) con il firmware
+`palazzetti_v2`. Idee fuori piano già discusse: nascondere le righe Piscina/Impianti e
+l'importato quando la casa è scollegata; portare nel repository gli sketch di VMC e pompa
+pavimento.
+
 1. ~~Prove sul campo e unione in `main`~~ fatte il 14/10 (barra in alto LOCALE/REMOTO nei tre
    casi, slider del caminetto anche con `palazzetti_v2`). Da osservare al primo uso reale:
    `on`/`off` del caminetto con il nuovo firmware.
