@@ -29,7 +29,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 14/10 | Bridge Mosquitto verso il QNAP **rimosso** | il broker sul QNAP non esiste più |
 | 14/10 | Caminetto: **riscrittura completa** dello sketch ESP8266 (`palazzetti_v2`), stessi topic; caricata e verificata | la versione di aprile bloccava e rieseguiva il comando retained |
 | 14/10 | Caminetto: niente "azzeramento" dal minimo né strada più corta | il pannello premendo "meno" a 1 riparte da 6 |
-| 14/10 | Firmware delle schede **nel repository pubblico** (`firmware/`), senza `secrets.h`; VMC e pompa pavimento da aggiungere man mano | un solo posto per il progetto |
+| 14/10 | Firmware delle schede **nel repository pubblico** (`firmware/`), senza `secrets.h`; **si lavora direttamente lì** (worktree di `feature/ui-topbar`, aperta in Arduino IDE dal percorso reale); anche gli altri sketch della domotica (VMC, pompa pavimento, …) vi verranno spostati | un solo posto per il progetto |
 | 14/10 | Password Wi-Fi e `emonpi` (broker `.15`) stampate per errore in sessione: **rischio accettato**, non cambiate | |
 | 14/10 | Broker MQTT: **un solo utente** (`domotica`) per tutti i client, anonimo chiuso, `domopi` eliminato | semplicità |
 
@@ -56,7 +56,8 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | Telefono | Una volta la rete mobile con Tailscale acceso non funzionava: si è risolto riavviando il telefono. |
 | Rete | Il redirect 80→8980 su `.20` (vecchia emulazione Alexa) dirottava il traffico Tailscale verso EmonCMS: rimosso il 10/10 (`docs/NETWORK/IPTABLES_ALEXA_REDIRECT_REMOVAL.md`). |
 | Firmware caminetto | `/esp8266/palazzetti/command` è retained sul broker di `.15`: a ogni riconnessione la scheda lo riceve di nuovo. La versione di aprile lo rieseguiva (pressioni non volute, livello sfasato); la v2 lo usa solo per riallinearsi. Il livello è presunto: il caminetto non comunica nulla (`emon/focolare/powerraw` = livello richiesto). |
-| Arduino IDE | Editor senza testo (né GPU né Wayland né tema): risolto impostando il font dell'editor `'DejaVu Sans Mono', monospace`. |
+| Arduino IDE | Uno sketch aperto tramite collegamento simbolico compare in sola lettura (lucchetto): l'IDE risolve il percorso reale e lo considera fuori dalla cartella aperta. Aprire sempre dal percorso reale. |
+| Arduino IDE | Su Ubuntu 26.04 l'IDE 2 non disegnava testi di editor, bottoni e menu (arduino-ide#2957): non era GPU, Wayland, tema GTK, nome del font né font mancanti. Risolto lanciandolo con un fontconfig ristretto (`~/.config/arduino-fontconfig`, icona di menu "Arduino IDE 2.3.10"); dettagli in `firmware/README.md`. |
 | Sicurezza | Nella prima sessione sono state stampate per errore alcune credenziali (password del bridge QNAP, vecchie credenziali `domopi`, chiave EmonCMS; il 14/10 password Wi-Fi ed `emonpi` leggendo uno sketch): tutte ora non più valide o con rischio accettato. Leggere i file di configurazione filtrando le righe con segreti. |
 
 ## Fatti utili sull'impianto

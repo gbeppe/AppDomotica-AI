@@ -54,8 +54,11 @@ resta `false`); l'utente ha scelto di non usare la strada più corta sfruttando 
 
 ## Caricare o tornare indietro
 
-1. Copia di lavoro: `~/Desktop/dev/palazzetti_v2/` (con `secrets.h`, da
-   `secrets.h.example`). Versione precedente: `~/Desktop/dev/palazzetti_upgrade/palazzetti/`.
+1. Sketch nel repository: [`palazzetti_v2/`](palazzetti_v2/) (aperto in Arduino IDE dal percorso reale
+   della worktree, vedi [`../README.md`](../README.md), con il suo `secrets.h`).
+   Versione precedente per tornare indietro: [`palazzetti_upgrade/`](palazzetti_upgrade/)
+   (codice di aprile 2026 invariato salvo le credenziali spostate in `secrets.h`; compila allo
+   stesso peso dell'originale).
 2. Arduino IDE: **Generic ESP8266 Module**, Flash Size **1MB (FS:64KB OTA:~470KB)**, Flash Mode
    **DOUT**, Crystal 26 MHz; porta di rete **palazzetti at 192.168.1.22**; Upload.
    (Lo sketch pesa ~332 KB e sta nei ~470 KB disponibili per l'OTA.)
@@ -69,7 +72,7 @@ Compilazione di verifica: FQBN `esp8266:esp8266:generic:eesz=1M64,FlashMode=dout
 
 Dal PC `.40`, leggendo le credenziali da `secrets.h` senza mostrarle:
 ```sh
-cd ~/Desktop/dev/palazzetti_v2
+cd ~/.cache/Google/AndroidStudio2026.1.4/aia/agents/DomoPiAndroidApp-ai-mode/firmware/palazzetti/palazzetti_v2
 U=$(sed -n 's/#define MQTT_USER "\(.*\)"/\1/p' secrets.h)
 P=$(sed -n 's/#define MQTT_PASSWORD "\(.*\)"/\1/p' secrets.h)
 mosquitto_sub -h 192.168.1.15 -u "$U" -P "$P" -v -t '/esp8266/palazzetti/#'
