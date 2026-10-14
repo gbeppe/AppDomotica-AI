@@ -67,7 +67,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_5db84829`** (commit `a18f08b`, 14/10: nuova immagine piscina). Funzioni principali e documenti:
+Installata sul telefono: **`bld_949c74ae`** (commit `6bec5d5`, 14/10: modalità caminetto e Manuale). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -95,6 +95,7 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `ml_cleanup` (AI-CLIMATE-CLEANUP.1) | via 6 copie scollegate del controller ML | live dall'11/10 |
 | `router_fireplace_mode` (ROUTER-FIREPLACE-MODE.1) | modalità caminetto dall'app tradotta e inviata a `.15` | live dal 14/10 |
 | `router_fireplace_power` (ROUTER-FIREPLACE-MODE.2) | "Manuale" → `manuale`; pulsante acceso/spento → `alexa/caminetto` on/off su `.15`; chiave `router_initialized_v121` | live dal 14/10 |
+| `router_fireplace_retain` (ROUTER-FIREPLACE-RETAIN.1) | modalità, orari e potenza automatica del caminetto **retained** sul broker di `.15`; chiave `router_initialized_v122` | pronta, non applicata |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
 
 ### Firmware delle schede ESP
@@ -158,7 +159,7 @@ da un export dei flow), `test.js` (`node --test`), `deploy.py` da eseguire su `.
 (dura 7 giorni; se 401 l'utente rifà
 `npx node-red-admin target https://domopi.tailf30ba8.ts.net:1880 && npx node-red-admin login`).
 **Ogni modifica al registro del Digital Twin Router deve incrementare `router_initialized_vNNN`**
-(oggi `v121`), altrimenti restano attive le tabelle in cache.
+(oggi `v121`; `v122` con ROUTER-FIREPLACE-RETAIN.1), altrimenti restano attive le tabelle in cache.
 
 ### Diagnostica MQTT su `.20`
 ```sh
@@ -179,6 +180,13 @@ spegnimento programmati del caminetto (17:00–19:00, modalità acqua sanitaria)
 `palazzetti_v2`. Idee fuori piano già discusse: nascondere le righe Piscina/Impianti e
 l'importato quando la casa è scollegata; portare nel repository gli sketch di VMC e pompa
 pavimento.
+
+**Prove del 14/10 sera:** ciclo automatico del caminetto riuscito (modalità Riscaldamento,
+`on` alle 16:30:42 a livello 3, potenza automatica 3 alle 16:35:42, `off` alle 16:55:12; app
+allineata). In corso: AI Smart con lettura dell'impianto di riscaldamento (`current_heating`,
+backend + app) e ROUTER-FIREPLACE-RETAIN.1, da rilasciare con conferma dell'utente; poi prova
+Manuale → acceso → spento. Da verificare: il comando "pompa pavimento abilitata" dell'app va al
+broker di `.20` (`broker: "home"`), mentre `.15` lo legge dal proprio broker.
 
 1. ~~Prove sul campo e unione in `main`~~ fatte il 14/10 (barra in alto LOCALE/REMOTO nei tre
    casi, slider del caminetto anche con `palazzetti_v2`). Da osservare al primo uso reale:

@@ -1,0 +1,17 @@
+{
+  "patch": "ROUTER-FIREPLACE-RETAIN.1",
+  "modified_ids": [
+    "5a7c1d360710ca21",
+    "6d4fa4d4930d5586"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "5a7c1d360710ca21": "6854c6c42e35fb322fd33a4df93e3044d576a6364b6c3188f35784d15c4921e9",
+    "6d4fa4d4930d5586": "25cc97a9f17fb8c8910e6bd453e3ee0d1c18a5c5c1919f60f8526683211b85ea"
+  },
+  "node_sha256_after": {
+    "5a7c1d360710ca21": "6232993efaec0f4b6e5d47a08d35d64c4e377035986248a6d7e2efd1cf9cf5ce",
+    "6d4fa4d4930d5586": "578ed2e9ce8416cfe4c91a06e50c9da4f68793ce40487a50ee9f1d0dc07612c7"
+  }
+}
