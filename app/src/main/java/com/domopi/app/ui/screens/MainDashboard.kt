@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.domopi.app.data.DashboardText
 import com.domopi.app.data.AcReasonCategory
 import com.domopi.app.data.TinyCamCameras
 import com.domopi.app.data.TinyCamClient
@@ -507,8 +508,8 @@ fun MainDashboard(
                         }
 
                         // Badge Stato AC -> Apre il Popup Stato Clima
-                        val acStatus = aiData.statoCondizionatore.statoAttuale.ifEmpty { if (aiSettings.systemEnabled) "ATTIVATO" else "DISATTIVATO" }
-                        val acStatusColor = when (aiData.statoCondizionatore.statoAttuale.uppercase()) {
+                        val acStatus = DashboardText.acBadge(isConnected, aiData.statoCondizionatore.statoAttuale, aiSettings.systemEnabled)
+                        val acStatusColor = if (!isConnected) Color.Gray else when (aiData.statoCondizionatore.statoAttuale.uppercase()) {
                             "COOLING_ON", "RAFFRESCAMENTO" -> Color(0xFF2196F3)
                             "NIGHT_DRY", "DEUMIDIFICAZIONE" -> Color(0xFF009688)
                             "STANDBY_INVERTER" -> Color(0xFFFFB300)
@@ -648,7 +649,7 @@ fun MainDashboard(
                         SummaryRow(
                             Icons.Default.Waves, 
                             "Puffer", 
-                            "${"%.1f".format(locale, energyData.pufferAcs)}° - ${"%.1f".format(locale, energyData.pufferAlto)}° - ${"%.1f".format(locale, energyData.pufferBasso)}°"
+                            DashboardText.puffer(isConnected, energyData.pufferAcs, energyData.pufferAlto, energyData.pufferBasso, locale)
                         )
                     }
                     
@@ -657,7 +658,7 @@ fun MainDashboard(
                         SummaryRow(
                             Icons.Default.Thermostat, 
                             "Soggiorno", 
-                            "%.1f°C".format(locale, envState.living.temperature)
+                            DashboardText.temperature(isConnected, envState.living.temperature, locale)
                         )
                     }
                     item {
@@ -665,7 +666,7 @@ fun MainDashboard(
                         SummaryRow(
                             Icons.Default.Bed, 
                             "Camera", 
-                            "%.1f°C".format(locale, envState.bedroom.temperature)
+                            DashboardText.temperature(isConnected, envState.bedroom.temperature, locale)
                         )
                     }
 
@@ -676,9 +677,7 @@ fun MainDashboard(
                         val nowTime = LocalTime.now()
                         val isTomorrow = nowTime.hour == 23 && nowTime.minute >= 1
                         val fvLabel = if (isTomorrow) "Previsione FV domani" else "Previsione FV oggi"
-                        val fvKwh = "%.1f".format(locale, logica.previsioneSolareDomaniKwh)
-                        val battPercent = logica.previsioneRicaricaBatteryPercent
-                        val fvText = "$fvKwh kWh (batt $battPercent%)"
+                        val fvText = DashboardText.pvForecast(isConnected, logica.previsioneSolareDomaniKwh, logica.previsioneRicaricaBatteryPercent, locale)
                         
                         Column(modifier = Modifier.padding(vertical = 1.dp)) {
                             SummaryRow(

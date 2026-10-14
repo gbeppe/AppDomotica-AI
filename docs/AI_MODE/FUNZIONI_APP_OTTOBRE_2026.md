@@ -18,6 +18,9 @@ risolto fuori casa senza Tailscale): `data/HouseAiErrors.kt` (`51eb224`, `528c55
 
 - **"Importato ieri / oggi"**: letto da EmonCMS all'avvio e aggiornato ogni 15 minuti via MQTT dal
   servizio `house-ai-grid-import` di `.20` ([`PRELIEVO_RETE_GIORNALIERO.md`](PRELIEVO_RETE_GIORNALIERO.md)).
+- **Senza broker** (fuori casa senza Tailscale) il riquadro "Stato casa" e il pulsante
+  "Climatizzazione AI" mostrano "—" invece di valori predefiniti che sembravano veri (0,0°,
+  "ATTIVATO"): `data/DashboardText.kt`.
 - **Carosello**: 10 schede; la decima è **IRRIGAZIONE**. La pagina iniziale è un multiplo di 10
   (`MainActivity`, `lastDashboardPage`).
 

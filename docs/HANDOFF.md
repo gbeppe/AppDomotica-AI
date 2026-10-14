@@ -29,13 +29,14 @@ dispositivi ha effetti fisici (luci, piscina, irrigazione, clima, caldaia).
 | Cosa | Dove |
 |---|---|
 | Repository | `github.com/gbeppe/AppDomotica-AI` (pubblico) |
-| Checkout `main` | `/home/giuseppe/AndroidStudioProjects/DomoPiAndroidApp` (app 9.6, vecchia) |
+| Checkout `main` | `/home/giuseppe/AndroidStudioProjects/DomoPiAndroidApp` |
 | **Linea attiva** | branch **`feature/ui-topbar`** nella worktree `~/.cache/Google/AndroidStudio2026.1.4/aia/agents/DomoPiAndroidApp-ai-mode` |
 | Altri branch | `feature/ai-home-assistant` (storico AI, fuso), `feature/ts-mig-1-subnet-routing` (fuso in ui-topbar) |
 
-`feature/ui-topbar` è >100 commit avanti a `main` e contiene tutto il lavoro di ottobre.
-**Unione in `main`**: prevista dopo la prova sul campo della barra in alto (sezione 7);
-non fare commit diretti su `main`.
+Il 14/10/2026, dopo le prove sul campo (slider caminetto e barra in alto), `main` è stato
+portato per avanzamento rapido su `feature/ui-topbar` (`e71ccef`). Si continua a lavorare su
+`feature/ui-topbar` e si riporta `main` in pari (`git merge --ff-only`) dopo le verifiche sul
+campo; niente commit diretti su `main`.
 
 Contenuto: app Android (Kotlin/Compose, `app/`), backend House AI (Python 3.9 stdlib,
 `backend/house_ai/`), patch Node-RED versionate (`backend/nodered/<patch>/`), documentazione
@@ -170,10 +171,9 @@ Log broker: `sudo tail -f /var/log/mosquitto/mosquitto.log`. Il broker di `.15` 
 - Eventuale: riservare un IP fisso al dispositivo TinyCam e disattivare il suo MAC casuale.
 
 ## 7. Piano concordato (ordine)
-1. **Prove sul campo**: barra in alto (4G con e senza Tailscale); poi **unione di
-   `feature/ui-topbar` in `main`**. (Slider del caminetto verificato il 14/10, anche con il
-   firmware `palazzetti_v2`; restano da osservare `on`/`off` del caminetto col nuovo firmware al
-   primo uso reale.)
+1. ~~Prove sul campo e unione in `main`~~ fatte il 14/10 (barra in alto LOCALE/REMOTO nei tre
+   casi, slider del caminetto anche con `palazzetti_v2`). Da osservare al primo uso reale:
+   `on`/`off` del caminetto con il nuovo firmware.
 2. **Predictive Reserve**: valutazione e piano di sviluppo definitivo (priorità bassa; include
    3.1-bis "registro decisioni PR"). Fatti runtime: [`DECISIONI_E_LEZIONI.md`](DECISIONI_E_LEZIONI.md#predictive-reserve).
 3. **Node-RED, voci minori** dalla verifica del Digital Twin Bridge: doppio percorso WP-C2 dei
