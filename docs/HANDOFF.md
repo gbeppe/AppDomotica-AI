@@ -67,7 +67,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_949c74ae`** (commit `6bec5d5`, 14/10: modalità caminetto e Manuale). Funzioni principali e documenti:
+Installata sul telefono: **`bld_1804d204`** (commit `8053672`, 14/10: AI Smart legge l'impianto di riscaldamento). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -78,7 +78,7 @@ Installata sul telefono: **`bld_949c74ae`** (commit `6bec5d5`, 14/10: modalità 
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261011-grid-import`** (commit `dc7d808`), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261014-heating`** (commit `8c193c7`, lettura dell'impianto di riscaldamento), in `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
@@ -95,7 +95,7 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `ml_cleanup` (AI-CLIMATE-CLEANUP.1) | via 6 copie scollegate del controller ML | live dall'11/10 |
 | `router_fireplace_mode` (ROUTER-FIREPLACE-MODE.1) | modalità caminetto dall'app tradotta e inviata a `.15` | live dal 14/10 |
 | `router_fireplace_power` (ROUTER-FIREPLACE-MODE.2) | "Manuale" → `manuale`; pulsante acceso/spento → `alexa/caminetto` on/off su `.15`; chiave `router_initialized_v121` | live dal 14/10 |
-| `router_fireplace_retain` (ROUTER-FIREPLACE-RETAIN.1) | modalità, orari e potenza automatica del caminetto **retained** sul broker di `.15`; chiave `router_initialized_v122` | pronta, non applicata |
+| `router_fireplace_retain` (ROUTER-FIREPLACE-RETAIN.1) | modalità, orari e potenza automatica del caminetto **retained** sul broker di `.15`; chiave `router_initialized_v122` | live dal 14/10 |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
 
 ### Firmware delle schede ESP
@@ -159,7 +159,7 @@ da un export dei flow), `test.js` (`node --test`), `deploy.py` da eseguire su `.
 (dura 7 giorni; se 401 l'utente rifà
 `npx node-red-admin target https://domopi.tailf30ba8.ts.net:1880 && npx node-red-admin login`).
 **Ogni modifica al registro del Digital Twin Router deve incrementare `router_initialized_vNNN`**
-(oggi `v121`; `v122` con ROUTER-FIREPLACE-RETAIN.1), altrimenti restano attive le tabelle in cache.
+(oggi `v122`), altrimenti restano attive le tabelle in cache.
 
 ### Diagnostica MQTT su `.20`
 ```sh
@@ -183,10 +183,26 @@ pavimento.
 
 **Prove del 14/10 sera:** ciclo automatico del caminetto riuscito (modalità Riscaldamento,
 `on` alle 16:30:42 a livello 3, potenza automatica 3 alle 16:35:42, `off` alle 16:55:12; app
-allineata). In corso: AI Smart con lettura dell'impianto di riscaldamento (`current_heating`,
-backend + app) e ROUTER-FIREPLACE-RETAIN.1, da rilasciare con conferma dell'utente; poi prova
-Manuale → acceso → spento. Da verificare: il comando "pompa pavimento abilitata" dell'app va al
-broker di `.20` (`broker: "home"`), mentre `.15` lo legge dal proprio broker.
+allineata). Rilasciati in giornata: ROUTER-FIREPLACE-RETAIN.1 (`v122`), house_ai
+`20261014-heating` (strumento `current_heating`), app `bld_1804d204`. `main` resta a `a18f08b`.
+
+**Punto di ripresa (15/10/2026), nell'ordine:**
+1. Ciclo di test sul caminetto, insieme all'utente.
+2. AI Smart dal telefono: «Com'è il riscaldamento in casa?», «Il caminetto è acceso?», «Quanto
+   è caldo il puffer?» (attesi caminetto, puffer, pompa pavimento, caldaia, solare termico e
+   termostati con "chiede / non chiede calore").
+3. Retain: l'utente reimposta dall'app gli orari del caminetto (sul `.20` sono ancora
+   16:30/16:55, sul broker di `.15` 17:00/19:00); poi verificare i retained su `.15`.
+4. Prova Manuale → acceso → spento, ascoltando entrambi i broker.
+5. Da decidere con l'utente: il comando "pompa pavimento abilitata" dell'app va al broker di `.20`
+   (`broker: "home"`), mentre `.15` lo legge dal proprio broker; probabile stesso difetto della
+   modalità caminetto. Non provarlo senza consenso: con il puffer sopra 35 °C la pompa partirebbe.
+6. Caldaia (Fondital Itaca KRB 24, senza alimentazione da marzo): l'utente invierà foto della
+   morsettiera della centralina e dell'OTGW e il manuale d'installazione. Poi: capire come parte
+   otmonitor su `.20` (non è un servizio systemd), progettare acceso/spento e modalità solo
+   ACS / solo riscaldamento / entrambi via `actions/otmonitor` (CH=, HW=, CS=, SW=) con isteresi e
+   tempi minimi, e preparare la prova di riaccensione (oggi il gateway chiede CH=0 e DHW=0).
+7. Poi unione in `main` con conferma dell'utente.
 
 1. ~~Prove sul campo e unione in `main`~~ fatte il 14/10 (barra in alto LOCALE/REMOTO nei tre
    casi, slider del caminetto anche con `palazzetti_v2`). Da osservare al primo uso reale:

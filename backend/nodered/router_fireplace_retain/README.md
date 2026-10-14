@@ -1,6 +1,7 @@
 # ROUTER-FIREPLACE-RETAIN.1 — impostazioni caminetto retained sul broker di .15
 
-Base: ROUTER-FIREPLACE-MODE.2 (`v121`). Non ancora applicata.
+Base: ROUTER-FIREPLACE-MODE.2 (`v121`). Applicata il 14/10/2026 (backup
+`/home/pi/AI_backups/nodered/20261014T150555Z-before-router-fireplace-retain`).
 
 - **Problema (test del 14/10/2026):** il router inoltrava modalità, orari e potenza automatica a
   `.15` senza retain (nodo "Legacy Cmd (Emon Broker)" con retain `false`). `.15` usava i nuovi

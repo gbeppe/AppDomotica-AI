@@ -77,6 +77,17 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 14 ottobre 2026 — impianto di riscaldamento in sola lettura
+
+Release attiva: `/opt/domopi-house-ai/releases/20261014-heating`, commit
+`8c193c7`; `PREVIOUS_RELEASE` = `20261011-grid-import`. 137 test superati su `.20`
+(Python 3.9); riavviati gateway, backend e `house-ai-lan`, tutti `active`. Nuovo strumento
+`current_heating` e termostato descritto come "chiede / non chiede calore". Prova reale sul
+backend con i valori live: «Com è il riscaldamento in casa?» → piano `current_heating` +
+`current_thermostats`, risposta «Caminetto spento, modalità Riscaldamento dalle 16:30 alle
+16:55, potenza automatica attiva. Puffer: alto 46 gradi, …». Le app precedenti non inviano
+`current_heating` (nessun errore); l'app con `8053672` richiede questa release.
+
 ## Release dell'11 ottobre 2026 — prelievo giornaliero per la Home
 
 Release attiva: `/opt/domopi-house-ai/releases/20261011-grid-import`, commit
