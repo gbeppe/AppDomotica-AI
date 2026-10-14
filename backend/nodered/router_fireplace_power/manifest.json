@@ -1,0 +1,14 @@
+{
+  "patch": "ROUTER-FIREPLACE-MODE.2",
+  "modified_ids": [
+    "5a7c1d360710ca21"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "5a7c1d360710ca21": "2b09c74e550cfb1e87063eb51ac2ee73b2085e4b0ba036fc31f68120f10ea0a7"
+  },
+  "node_sha256_after": {
+    "5a7c1d360710ca21": "6854c6c42e35fb322fd33a4df93e3044d576a6364b6c3188f35784d15c4921e9"
+  }
+}

@@ -31,6 +31,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 14/10 | Caminetto: niente "azzeramento" dal minimo né strada più corta | il pannello premendo "meno" a 1 riparte da 6 |
 | 14/10 | Firmware delle schede **nel repository pubblico** (`firmware/`), senza `secrets.h`; **si lavora direttamente lì** (worktree di `feature/ui-topbar`, aperta in Arduino IDE dal percorso reale); anche gli altri sketch della domotica (VMC, pompa pavimento, …) vi verranno spostati | un solo posto per il progetto |
 | 14/10 | Password Wi-Fi e `emonpi` (broker `.15`) stampate per errore in sessione: **rischio accettato**, non cambiate | |
+| 14/10 | Caminetto: modalità **"Manuale"** = `manuale` su `.15` (nessun automatismo, solo acceso/spento a mano); il **pulsante acceso/spento dell'app è attivo solo in "Manuale"** e invia `alexa/caminetto` on/off | prima il pulsante scriveva su un topic di stato e non comandava nulla (ROUTER-FIREPLACE-MODE.2) |
 | 14/10 | Broker MQTT: **un solo utente** (`domotica`) per tutti i client, anonimo chiuso, `domopi` eliminato | semplicità |
 
 ## Lezioni tecniche
@@ -38,6 +39,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | Tema | Lezione |
 |---|---|
 | Digital Twin Router | Le tabelle di traduzione sono in cache nel context del nodo e si ricostruiscono solo se cambia la chiave `router_initialized_vNNN`: incrementarla in ogni patch al registro (ROUTER-CLEANUP.2). I test offline devono simulare un context già inizializzato dal codice vecchio. |
+| Router e `.15` | Ogni voce del router ha il suo broker (`home` = `.20`, `emon` = `.15`): la logica di riscaldamento gira su `.15` e ascolta solo il suo broker. Il router legge invece gli stati `zara/domotics/#` da entrambi, quindi un valore retained sbagliato su uno dei due falsa lo stato. Verificare sempre su entrambi i broker che il comando arrivi a destinazione. |
 | Node-RED MQTT | I nodi `mqtt in` in auto-detect trasformano `"1"` nel numero `1`: le regole di stato devono accettare entrambe le forme. |
 | Node-RED deploy | Il flow live è quello del progetto (`~/.node-red/projects/domopi/`); `~/.node-red/flows_domopi.json` è una copia vecchia di giugno. |
 | App MQTT | Ogni nuovo dominio di topic va aggiunto a `MqttManager.subscribeToUnifiedTopics` (l'irrigazione all'inizio risultava "Stato non ricevuto"). |

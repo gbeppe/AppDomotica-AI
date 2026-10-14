@@ -505,8 +505,10 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
                     Text("Termocamino Palazzetti", style = MaterialTheme.typography.titleMedium)
                 }
 
+                // Manual on/off only in "Manuale": in the automatic modes .15 decides by itself.
                 FilledIconToggleButton(
                     checked = state.active,
+                    enabled = isFireplaceManual(state.mode),
                     onCheckedChange = { mqttManager.publish("zara/interface/fireplace/main/power/cmd", it.toString()) },
                     colors = IconButtonDefaults.filledIconToggleButtonColors(
                         checkedContainerColor = Color.Red.copy(alpha = 0.2f),
@@ -516,12 +518,21 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
                     Icon(Icons.Default.PowerSettingsNew, null)
                 }
             }
+            if (!isFireplaceManual(state.mode)) {
+                Text(
+                    "Acceso/spento a mano solo in modalità Manuale: nelle altre decide l'automatismo.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
             // Modalità Operativa
             var expanded by remember { mutableStateOf(value = false) }
-            val modes = listOf("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqua Sanitaria", "Manuale")
+            // Labels translated by the router (ROUTER-FIREPLACE-MODE.1/.2) into the .15 fireplace modes
+            // disattivato / inverno / conCaldaia / sanitaria / manuale.
+            val modes = listOf("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqua Sanitaria", FIREPLACE_MANUAL_MODE)
             
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -665,3 +676,8 @@ private fun FireplaceTimeField(
         shape = RoundedCornerShape(12.dp)
     )
 }
+
+/** Fireplace mode in which the app may switch the fireplace on and off by hand (.15 value `manuale`). */
+const val FIREPLACE_MANUAL_MODE = "Manuale"
+
+fun isFireplaceManual(mode: String): Boolean = mode.trim().equals(FIREPLACE_MANUAL_MODE, ignoreCase = true)

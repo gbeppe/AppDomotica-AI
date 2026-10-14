@@ -93,6 +93,8 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `router_cleanup` + `router_reinit` (ROUTER-CLEANUP.1/.2) | stati booleani numerici, via HiFi e pompa di calore, nodi inutili; chiave `router_initialized_v119` | live dall'11/10 |
 | `irrigation` (IRRIGATION.1) | scheda OpenSprinkler: comandi, stato, registrazione EmonCMS | live dall'11/10 |
 | `ml_cleanup` (AI-CLIMATE-CLEANUP.1) | via 6 copie scollegate del controller ML | live dall'11/10 |
+| `router_fireplace_mode` (ROUTER-FIREPLACE-MODE.1) | modalità caminetto dall'app tradotta e inviata a `.15` | live dal 14/10 |
+| `router_fireplace_power` (ROUTER-FIREPLACE-MODE.2) | "Manuale" → `manuale`; pulsante acceso/spento → `alexa/caminetto` on/off su `.15`; chiave `router_initialized_v121` | live dal 14/10 |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
 
 ### Firmware delle schede ESP
@@ -156,7 +158,7 @@ da un export dei flow), `test.js` (`node --test`), `deploy.py` da eseguire su `.
 (dura 7 giorni; se 401 l'utente rifà
 `npx node-red-admin target https://domopi.tailf30ba8.ts.net:1880 && npx node-red-admin login`).
 **Ogni modifica al registro del Digital Twin Router deve incrementare `router_initialized_vNNN`**
-(oggi `v119`), altrimenti restano attive le tabelle in cache.
+(oggi `v121`), altrimenti restano attive le tabelle in cache.
 
 ### Diagnostica MQTT su `.20`
 ```sh
