@@ -27,14 +27,17 @@ risolto fuori casa senza Tailscale): `data/HouseAiErrors.kt` (`51eb224`, `528c55
 ## Piscina interattiva (`64f2893`)
 
 La foto `pool_background.jpg` è disegnata in grigio; ogni elemento acceso è ridisegnato a colori
-dentro la sua forma: acqua (ellisse, con tinta azzurra), skimmer e pompa (ovali), pedana (anello +
-passerella meno gli altri elementi, con gli 8 faretti illuminati). Un tocco su un elemento lo
+dentro la sua forma: acqua (ellisse, con tinta azzurra), skimmer e pompa (contorno dell'oggetto),
+pedana (anello + passerella meno gli altri elementi, con i 7 faretti illuminati).
+Dal 14/10/2026 l'immagine è nuova (preparata dall'utente) con skimmer e pompa molto più grandi,
+perché sul telefono erano difficili da toccare; un test verifica che siano larghi almeno 48 dp.
+Simulazione approvata: `https://claude.ai/artifact/4npZWqb5FCqy6xgFbzC7wD`. Un tocco su un elemento lo
 accende/spegne (`lucipiscina`, `skimmerpiscina`, `pompapiscina`, `lucipedanapiscina`).
 
 - Forme misurate sulla foto in coordinate 0–1 e riconoscimento del tocco: `ui/components/PoolGeometry.kt`
   (test `PoolGeometryTest`); disegno: `ui/components/PoolInteractiveComponent.kt`.
-- Approvata dall'utente tramite una simulazione web (artifact privato
-  `https://claude.ai/artifact/8LYKhUBS2QPHyBJaQKoXbS`) con la stessa geometria.
+- Prima versione approvata tramite la simulazione `https://claude.ai/artifact/8LYKhUBS2QPHyBJaQKoXbS`
+  (immagine precedente).
 
 ## Irrigazione (`6dd6612`, `749b62b`)
 

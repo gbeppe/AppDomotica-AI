@@ -83,15 +83,16 @@ private fun DrawScope.regionPaths(size: Size): Map<String, Path> {
         addOval(Rect((e.cx - e.rx) * size.width, (e.cy - e.ry) * size.height,
             (e.cx + e.rx) * size.width, (e.cy + e.ry) * size.height))
     }
-    val water = oval(G.water)
-    val skimmer = oval(G.skimmer)
-    val pump = oval(G.pump)
-    val walkway = Path().apply {
-        G.walkway.forEachIndexed { i, (x, y) ->
+    fun outline(p: G.Polygon) = Path().apply {
+        p.points.forEachIndexed { i, (x, y) ->
             if (i == 0) moveTo(x * size.width, y * size.height) else lineTo(x * size.width, y * size.height)
         }
         close()
     }
+    val water = oval(G.water)
+    val skimmer = outline(G.skimmer)
+    val pump = outline(G.pump)
+    val walkway = outline(G.walkway)
     // Deck = ring + walkway, minus the elements drawn on their own.
     var deck = Path.combine(PathOperation.Union, oval(G.deckRing), walkway)
     for (hole in listOf(water, skimmer, pump)) deck = Path.combine(PathOperation.Difference, deck, hole)
