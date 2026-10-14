@@ -79,7 +79,7 @@ class ThermostatToolTests(unittest.TestCase):
         result = ask(None, Planner(read()), 'Che temperatura c’è in casa?', thermostats_snapshot=snapshot())
         self.assertEqual(result['status'], 'partial')  # current-state tools are never 'complete'
         text = result['answer']
-        self.assertIn('Termostato del living: 22,4 gradi, setpoint 18 gradi, riscaldamento spento.', text)
+        self.assertIn('Termostato del living: 22,4 gradi, setpoint 18 gradi, non chiede calore.', text)
         self.assertIn('Termostato del bagno', text)
         notes = ' '.join(result['results'][0]['result']['limitations'])
         self.assertIn('timer delle fasce orarie 18,5 gradi in fascia e 17,5 gradi fuori fascia', notes)

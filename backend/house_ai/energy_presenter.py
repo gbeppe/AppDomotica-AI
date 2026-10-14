@@ -227,8 +227,58 @@ def thermostat_facts(observations, thermostat, with_temperature=True):
     if value('target_temperature') is not None:
         facts.append(f"setpoint {spoken(value('target_temperature'))} gradi")
     if value('power') is not None:
-        facts.append('riscaldamento ' + ('acceso' if value('power') else 'spento'))
+        # Tasmota relay: the room asks for heat, not the state of the heating plant.
+        facts.append('chiede calore' if value('power') else 'non chiede calore')
     return facts
+
+
+def heating_text(r):
+    observations = r['observations']
+    if not observations:
+        return "Lo stato dell'impianto di riscaldamento non è disponibile."
+    value = lambda key: observations[key]['value'] if key in observations else None
+    parts = []
+    power, level, mode = value('fireplace.power'), value('fireplace.level'), value('fireplace.mode')
+    start, stop, auto = value('fireplace.start_time'), value('fireplace.stop_time'), value('fireplace.auto_power')
+    if power is not None or level is not None or mode is not None:
+        text = 'Caminetto ' + ('acceso' if power else 'spento' if power is False else 'stato non disponibile')
+        if power and level is not None:
+            text += f", livello {spoken(level, 0)}"
+        if mode is not None:
+            text += f", modalità {mode}"
+            if mode not in ('Disattivato', 'Manuale') and start and stop:
+                text += f" dalle {start} alle {stop}"
+        if auto is not None:
+            text += ', potenza automatica ' + ('attiva' if auto else 'disattivata')
+        parts.append(text + '.')
+    puffer = [f"{label} {spoken(value(key))} gradi" for key, label in (
+        ('puffer.top_temperature', 'alto'), ('puffer.bottom_temperature', 'basso'),
+        ('puffer.acs_temperature', 'acqua sanitaria')) if value(key) is not None]
+    if puffer:
+        parts.append('Puffer: ' + ', '.join(puffer) + '.')
+    enabled, running = value('floor_pump.enabled'), value('floor_pump.running')
+    if enabled is not None or running is not None:
+        facts = []
+        if enabled is not None:
+            facts.append('abilitata' if enabled else 'disabilitata')
+        if running is not None:
+            facts.append('in funzione' if running else 'ferma')
+        parts.append('Pompa pavimento ' + ' e '.join(facts) + '.')
+    flame, modulation = value('gas_boiler.flame'), value('gas_boiler.modulation')
+    if flame is not None:
+        text = 'Caldaia a gas: fiamma ' + ('accesa' if flame else 'spenta')
+        if flame and modulation is not None:
+            text += f", modulazione {spoken(modulation, 0)} per cento"
+        parts.append(text + '.')
+    pump, collector = value('solar_thermal.pump_speed'), value('solar_thermal.collector_temperature')
+    if pump is not None or collector is not None:
+        facts = []
+        if pump is not None:
+            facts.append(f"pompa al {spoken(pump, 0)} per cento" if pump > 0 else 'pompa ferma')
+        if collector is not None:
+            facts.append(f"collettore {spoken(collector)} gradi")
+        parts.append('Solare termico: ' + ', '.join(facts) + '.')
+    return ' '.join(parts) + ('' if r['connected'] else DISCONNECTED)
 
 
 def thermostats_text(item):
@@ -443,6 +493,8 @@ def describe(item):
         return predictive_reserve_text(r)
     if schema == 'house_ai.current_thermostats.v1':
         return thermostats_text(item)
+    if schema == 'house_ai.current_heating.v1':
+        return heating_text(r)
     if schema == 'house_ai.current_environment.v1':
         return environment_text(item)
     if schema == 'house_ai.current_air_conditioner.v1':
@@ -483,6 +535,8 @@ def notes(item):
         return lights_notes(item)
     if schema == 'house_ai.current_thermostats.v1':
         return thermostats_notes(item)
+    if schema == 'house_ai.current_heating.v1':
+        return received_note(r['observations'].values())
     if schema == 'house_ai.current_environment.v1':
         return received_note(list(r['observations'].values()) + list(r.get('thermostat', {}).values()))
     if schema == 'house_ai.current_air_conditioner.v1':

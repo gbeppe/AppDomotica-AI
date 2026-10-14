@@ -95,8 +95,13 @@ che il Router già instrada verso Tasmota (`TEMPTARGETSET`).
 
 | Tool | Parametri | Effetto |
 |---|---|---|
-| `current_thermostats` | `all`, `thermostat_living`, `thermostat_bath` | temperatura ambiente, setpoint, riscaldamento acceso/spento, min/max del timer |
+| `current_thermostats` | `all`, `thermostat_living`, `thermostat_bath` | temperatura ambiente, setpoint, richiesta di calore del termostato ("chiede / non chiede calore"), min/max del timer |
+| `current_heating` | nessuno | caminetto (acceso, livello, modalità, orari, potenza automatica), puffer alto/basso/ACS, pompa pavimento abilitata/in funzione, caldaia (fiamma, modulazione), solare termico; **solo lettura** |
 | `set_thermostat_target` | termostato + `target_c` da 16.0 a 22.0 a passi di 0.5 | comando `house_ai.thermostat_command.v1`, senza topic |
+
+Android invia `current_heating` (`house_ai.current_heating_input.v1`) con i topic `/stat` del
+Digital Twin elencati in `HEATING_METRICS` (`energy_tools.py`) e `HeatingSmartState.kt`; valori non
+validi vengono scartati dall'app e rifiutati dal backend (14/10/2026).
 
 Android invia `current_thermostats` (`house_ai.current_thermostats_input.v1`)
 con chiavi `thermostat_*.metrica` e il topic `/stat` esatto. Il backend rifiuta

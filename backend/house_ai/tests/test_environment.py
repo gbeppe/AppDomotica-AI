@@ -71,7 +71,7 @@ class EnvironmentToolTests(unittest.TestCase):
     def test_room_overview_includes_thermostat(self):
         answer = question('living', 'all')['answer']
         self.assertEqual(answer, 'Living: 22,4 gradi, umidità 67 per cento, humidex 27,1. '
-                                 'Termostato: setpoint 18 gradi, riscaldamento spento.')
+                                 'Termostato: setpoint 18 gradi, non chiede calore.')
         self.assertEqual(question('kids_room', 'all')['answer'], 'Cameretta: 22,1 gradi, umidità 63 per cento.')
 
     def test_house_lists_every_room_including_outdoor_and_technical(self):

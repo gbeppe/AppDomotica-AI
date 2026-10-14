@@ -1,6 +1,7 @@
 """Validated energy-domain tools called by a planner, never arbitrary code."""
 import json
 import math
+import re
 import time
 from pathlib import Path
 
@@ -51,6 +52,28 @@ ENV_METRICS = ("temperature", "humidity", "humidex")
 ENV_TOPICS = {f"{room}.{metric}": f"zara/interface/env/{room}/{metric}/stat"
               for room in ENV_ROOMS for metric in ENV_METRICS}
 ROOM_THERMOSTAT = {"living": "thermostat_living", "service_bathroom": "thermostat_bath"}
+# Heating plant read-only state (Digital Twin Router, live broker 2026-10-14): fireplace
+# settings and declared state from .15, puffer, floor pump, gas boiler, solar thermal.
+HEATING_METRICS = {
+    "fireplace.power": ("fireplace/main/power", "bool"),
+    "fireplace.level": ("fireplace/main/level", "level"),
+    "fireplace.mode": ("fireplace/main/mode", "mode"),
+    "fireplace.start_time": ("fireplace/main/start_time", "time"),
+    "fireplace.stop_time": ("fireplace/main/stop_time", "time"),
+    "fireplace.auto_power": ("fireplace/main/auto_power", "bool"),
+    "puffer.top_temperature": ("heating/puffer/top_temperature", "temperature"),
+    "puffer.bottom_temperature": ("heating/puffer/bottom_temperature", "temperature"),
+    "puffer.acs_temperature": ("energy/puffer_acs", "temperature"),
+    "floor_pump.enabled": ("heating/floor_pump/enabled", "bool"),
+    "floor_pump.running": ("heating/floor_pump/running", "bool"),
+    "gas_boiler.flame": ("heating/gas_boiler/flame", "bool"),
+    "gas_boiler.modulation": ("heating/gas_boiler/modulation", "percent"),
+    "solar_thermal.collector_temperature": ("heating/solar_thermal/collector_temperature", "temperature"),
+    "solar_thermal.pump_speed": ("heating/solar_thermal/pump_speed", "percent"),
+}
+HEATING_TOPICS = {key: f"zara/interface/{path}/stat" for key, (path, _) in HEATING_METRICS.items()}
+# App labels published by ROUTER-FIREPLACE-MODE.1/.2.
+FIREPLACE_MODES = ("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqua Sanitaria", "Manuale")
 LIGHT_TOPICS = {
     "lights_living": "zara/interface/lights/living/power/stat",
     "lights_libreria": "zara/interface/lights/libreria/power/stat",
@@ -80,7 +103,7 @@ DAILY_EXTREME_METRICS = {
 def catalog(path=CATALOG_PATH):
     sources = json.loads(path.read_text(encoding="utf-8"))["sources"]
     return {
-        "domains": ["energy", "climate", "lights"],
+        "domains": ["energy", "climate", "lights", "heating"],
         "tools": [{
             "name": "energy_metric",
             "description": "Calculate one validated historical energy metric",
@@ -118,6 +141,10 @@ def catalog(path=CATALOG_PATH):
             "description": "Read current declared air-conditioner state, mode, setpoint and recorded controller reason",
             "parameters": {}
         }, {
+            "name": "current_heating",
+            "description": "Read the heating plant: fireplace on/off, power level, mode, daily time window and automatic power control; puffer top, bottom and domestic hot water temperatures; floor pump enabled and running; gas boiler flame and modulation; solar thermal pump and collector. Read only",
+            "parameters": {}
+        }, {
             "name": "current_predictive_reserve",
             "description": "Read whether the Predictive Reserve control is enabled, its operating mode (SHADOW or ACTIVE), model readiness and what that means now for new night dehumidification starts",
             "parameters": {}
@@ -148,6 +175,7 @@ def catalog(path=CATALOG_PATH):
             "Today and the current month/week may be incomplete. End date is exclusive.",
             "Use backend_log_day for forecasts, recorded reasons, learning or SHADOW evidence. Never infer actions from SHADOW.",
             "Use current_predictive_reserve for the current Predictive Reserve state; it cannot explain past nights.",
+            "Use current_heating for the fireplace, puffer, floor pump, gas boiler and solar thermal; they cannot be commanded.",
             "The thermostats heat; the air conditioner is driven only by the AI Climate controller and cannot be commanded.",
             "No other control, cost, tariffs, unsupported metrics or causal speculation; clarify unsupported requests."
         ]
@@ -176,7 +204,7 @@ def validate_plan(plan, sources=None):
         expected = ({"id", "tool", "metric", "start", "end"}
                     if tool == "energy_metric" else {"id", "tool", "metric", "start", "end", "extremum"}
                     if tool == "energy_daily_extreme" else {"id", "tool"}
-                    if tool in ("current_air_conditioner", "current_predictive_reserve") else {"id", "tool", "light"}
+                    if tool in ("current_air_conditioner", "current_predictive_reserve", "current_heating") else {"id", "tool", "light"}
                     if tool == "current_lights" else {"id", "tool", "light", "state"}
                     if tool == "set_light_state" else {"id", "tool", "scene"}
                     if tool == "set_light_scene" else {"id", "tool", "room", "metric"}
@@ -384,6 +412,47 @@ def validate_thermostats_snapshot(snapshot):
     return clean
 
 
+TIME_PATTERN = re.compile(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
+
+
+def heating_value_ok(kind, value):
+    if kind == "bool":
+        return type(value) is bool
+    if kind == "mode":
+        return value in FIREPLACE_MODES
+    if kind == "time":
+        return isinstance(value, str) and TIME_PATTERN.fullmatch(value) is not None
+    if not finite_number(value):
+        return False
+    if kind == "level":
+        return value in (1, 2, 3, 4, 5, 6)
+    if kind == "percent":
+        return 0 <= value <= 100
+    return -40 <= value <= 200
+
+
+def validate_heating_snapshot(snapshot):
+    if snapshot is None:
+        return None
+    if (not isinstance(snapshot, dict) or set(snapshot) != {"schema", "connected", "observations"}
+            or snapshot["schema"] != "house_ai.current_heating_input.v1"
+            or type(snapshot["connected"]) is not bool or not isinstance(snapshot["observations"], dict)
+            or set(snapshot["observations"]) - set(HEATING_TOPICS)):
+        raise ValueError("Invalid current heating snapshot")
+    clean = {"schema": snapshot["schema"], "connected": snapshot["connected"], "observations": {}}
+    for key, observation in snapshot["observations"].items():
+        if (not isinstance(observation, dict)
+                or set(observation) != {"value", "received_at_ms", "retained", "source_topic"}
+                or not heating_value_ok(HEATING_METRICS[key][1], observation["value"])
+                or type(observation["received_at_ms"]) is not int
+                or not 0 <= observation["received_at_ms"] <= 253402214400000
+                or type(observation["retained"]) is not bool
+                or observation["source_topic"] != HEATING_TOPICS[key]):
+            raise ValueError("Invalid heating observation")
+        clean["observations"][key] = dict(observation)
+    return clean
+
+
 def validate_environment_snapshot(snapshot):
     if snapshot is None:
         return None
@@ -410,7 +479,7 @@ def validate_environment_snapshot(snapshot):
 
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
             lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
-            environment_snapshot=None):
+            environment_snapshot=None, heating_snapshot=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     current = validate_current_snapshot(current_snapshot)
@@ -419,6 +488,7 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
     reserve = validate_predictive_reserve_snapshot(pr_snapshot)
     thermostats = validate_thermostats_snapshot(thermostats_snapshot)
     environment = validate_environment_snapshot(environment_snapshot)
+    heating = validate_heating_snapshot(heating_snapshot)
     if checked["clarification"]:
         return checked
     results = []
@@ -477,6 +547,17 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "observations": observations,
                 "limitations": ["Stato dichiarato dal Digital Twin; la modalità si cambia solo dall'editor Node-RED.",
                     "Lo stato attuale non spiega decisioni di notti passate: il PR non registra le sue decisioni.",
+                    "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
+            continue
+        if operation["tool"] == "current_heating":
+            observations = heating["observations"] if heating else {}
+            results.append({"id": operation["id"], "result": {
+                "schema": "house_ai.current_heating.v1",
+                "status": "available" if observations else "missing",
+                "connected": heating["connected"] if heating else False,
+                "observations": observations,
+                "limitations": ["Stati dichiarati dal Digital Twin: acceso/spento e livello del caminetto sono gli ultimi comandi confermati dalla scheda, non una misura della fiamma.",
+                    "Caminetto, pompa pavimento e caldaia sono gestiti dalle logiche Node-RED di .15; AI Smart li legge soltanto.",
                     "Timestamp di ricezione Android; età delle misure sorgente ignota."]}})
             continue
         if operation["tool"] == "current_environment":
