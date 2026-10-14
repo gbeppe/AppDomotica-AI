@@ -66,3 +66,23 @@ class SecretFieldsTest {
         assertTrue(field.contains("PasswordVisualTransformation()"))
     }
 }
+
+/** Changing MQTT user/password in Configurazione must reconnect without restarting the app. */
+class MqttCredentialChangeTest {
+    private val root = listOf(File("src/main/java"), File("app/src/main/java")).first { it.exists() }
+
+    @Test fun newCredentialsForceAReconnect() {
+        val mqtt = File(root, "com/domopi/app/data/MqttManager.kt").readText()
+        assertTrue(mqtt.contains("val sameTarget = currentBrokerUrl == brokerUrl && currentLogin == login"))
+        assertTrue(mqtt.contains("if (mqttClient?.isConnected == true && sameTarget) return"))
+        val main = File(root, "com/domopi/app/MainActivity.kt").readText()
+        val loop = main.substringAfter(".collectLatest { params ->").substringBefore("while (true)")
+        assertTrue(loop.contains("mqttManager.connect(\"tcp://\$host:\$port\", user, pass)"))
+    }
+
+    @Test fun loginKeyDistinguishesPasswords() {
+        val m = MqttManager()
+        assertTrue(m.loginKey("domotica", "a") != m.loginKey("domotica", "b"))
+        assertTrue(m.loginKey("u", "p") == m.loginKey("u", "p"))
+    }
+}

@@ -73,6 +73,9 @@ class MainActivity : ComponentActivity() {
                     val user = params[2]
                     val pass = params[3]
 
+                    // New host or credentials: apply them now, even if a session is open.
+                    mqttManager.connect("tcp://$host:$port", user, pass)
+                    delay(8.seconds)
                     // Ciclo di riconnessione se fallisce
                     while (true) {
                         if (mqttManager.isConnected.value) {

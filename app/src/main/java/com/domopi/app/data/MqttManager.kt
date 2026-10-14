@@ -164,18 +164,26 @@ class MqttManager {
     }
 
     private var currentBrokerUrl: String? = null
+    // Hash of the login in use: new credentials force a reconnect (the old session keeps the old login).
+    private var currentLogin: Int? = null
     private var isConnecting = false
 
+    /** Identifies a login without keeping the password in plain text in this object. */
+    internal fun loginKey(user: String?, pass: String?): Int = "${user.orEmpty()}\u0000${pass.orEmpty()}".hashCode()
+
     fun connect(brokerUrl: String, user: String? = null, pass: String? = null) {
-        if (mqttClient?.isConnected == true && currentBrokerUrl == brokerUrl) return
-        
-        if (isConnecting && currentBrokerUrl == brokerUrl) {
+        val login = loginKey(user, pass)
+        val sameTarget = currentBrokerUrl == brokerUrl && currentLogin == login
+        if (mqttClient?.isConnected == true && sameTarget) return
+
+        if (isConnecting && sameTarget) {
             Log.d("MQTT", "Connessione già in corso per $brokerUrl")
             return
         }
 
         Log.d("MQTT", "Tentativo di connessione a $brokerUrl")
         currentBrokerUrl = brokerUrl
+        currentLogin = login
         isConnecting = true
         
         try {
