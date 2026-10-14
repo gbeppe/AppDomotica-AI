@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -415,9 +414,8 @@ internal fun AiSmartContent(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(serviceUrl, onServiceUrlChange,
                             label = { Text("Indirizzo backend AI") }, singleLine = true)
-                        OutlinedTextField(serviceToken, onServiceTokenChange,
-                            label = { Text("Token backend") }, singleLine = true,
-                            visualTransformation = PasswordVisualTransformation())
+                        com.domopi.app.ui.components.SecretTextField(serviceToken, onServiceTokenChange,
+                            "Token backend", testTag = "smart-token")
                         Text("Il token è salvato cifrato sul telefono (Android Keystore). Svuota il campo per cancellarlo.",
                             style = MaterialTheme.typography.bodySmall)
                     }

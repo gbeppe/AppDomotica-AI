@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.HouseAiRepository
 import kotlinx.coroutines.CancellationException
@@ -41,8 +40,8 @@ fun HouseAiScreen(onBack: () -> Unit) {
             Text("Consulta i dati della casa e le decisioni registrate tramite il servizio TLS privato.")
             OutlinedTextField(url, { url = it; result = null }, label = { Text("Indirizzo del servizio") },
                 placeholder = { Text("https://…") }, singleLine = true, enabled = !loading, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(token, { token = it }, label = { Text("Token di accesso") },
-                visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !loading, modifier = Modifier.fillMaxWidth())
+            com.domopi.app.ui.components.SecretTextField(token, { token = it }, "Token di accesso",
+                Modifier.fillMaxWidth(), enabled = !loading, testTag = "house-ai-token")
             OutlinedTextField(day, { day = it; result = null }, label = { Text("Giorno (AAAA-MM-GG)") },
                 singleLine = true, enabled = !loading, modifier = Modifier.fillMaxWidth())
             Button(enabled = !loading && url.isNotBlank() && token.isNotBlank(), onClick = {

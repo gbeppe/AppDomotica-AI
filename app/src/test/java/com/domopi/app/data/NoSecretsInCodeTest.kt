@@ -46,3 +46,23 @@ class NoSecretsInCodeTest {
         assertTrue(mqtt.contains("if (!user.isNullOrEmpty() && !pass.isNullOrEmpty()) {"))
     }
 }
+
+/** Every secret field uses SecretTextField (masked, explicit paste that clears the clipboard). */
+class SecretFieldsTest {
+    private val root = listOf(File("src/main/java"), File("app/src/main/java")).first { it.exists() }
+    private fun screen(name: String) = File(root, "com/domopi/app/ui/screens/$name").readText()
+
+    @Test fun secretsUseTheSecretField() {
+        val config = screen("ConfigurationScreen.kt")
+        for (tag in listOf("config-mqtt-password", "config-emoncms-key", "config-tinycam-password"))
+            assertTrue(tag, config.contains("testTag = \"$tag\""))
+        assertTrue(screen("AiSmartScreen.kt").contains("testTag = \"smart-token\""))
+        assertTrue(screen("HouseAiScreen.kt").contains("testTag = \"house-ai-token\""))
+    }
+
+    @Test fun pasteClearsTheClipboard() {
+        val field = File(root, "com/domopi/app/ui/components/SecretTextField.kt").readText()
+        assertTrue(field.contains("clipboard.clearPrimaryClip()"))
+        assertTrue(field.contains("PasswordVisualTransformation()"))
+    }
+}

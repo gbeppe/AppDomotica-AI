@@ -11,7 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.domopi.app.ui.components.SecretTextField
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.domopi.app.data.AppAlignmentStatus
@@ -263,8 +263,8 @@ fun ConfigurationScreen(
                 OutlinedTextField(value = domopiRemoteIp, onValueChange = { domopiRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiPort, onValueChange = { domopiPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = domopiUser, onValueChange = { domopiUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = domopiPass, onValueChange = { domopiPass = it }, label = { Text("Password (salvata cifrata)") },
-                    visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth())
+                SecretTextField(domopiPass, { domopiPass = it }, "Password (salvata cifrata)",
+                    Modifier.fillMaxWidth(), testTag = "config-mqtt-password")
                 OutlinedTextField(value = digitalTwinPrefix, onValueChange = { digitalTwinPrefix = it }, label = { Text("Prefisso Topic Digital Twin") }, modifier = Modifier.fillMaxWidth())
                 Text(
                     text = "⚠️ Modificare questo prefisso richiede il riavvio dell'applicazione per ri-sottoscrivere i topic con la nuova alberatura.",
@@ -324,9 +324,8 @@ fun ConfigurationScreen(
                 Text("EmonCMS", style = MaterialTheme.typography.titleMedium)
                 OutlinedTextField(value = emoncmsIp, onValueChange = { emoncmsIp = it }, label = { Text("IP Locale") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = emoncmsRemoteIp, onValueChange = { emoncmsRemoteIp = it }, label = { Text("IP Remoto / Tailscale") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = emoncmsApiKey, onValueChange = { emoncmsApiKey = it.trim() },
-                    label = { Text("Chiave API di lettura (salvata cifrata)") }, singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                SecretTextField(emoncmsApiKey, { emoncmsApiKey = it.trim() }, "Chiave API di lettura (salvata cifrata)",
+                    Modifier.fillMaxWidth(), testTag = "config-emoncms-key")
             }
 
             item {
@@ -336,8 +335,8 @@ fun ConfigurationScreen(
                 OutlinedTextField(value = tinycamRemoteIp, onValueChange = { tinycamRemoteIp = it }, label = { Text("IP Remoto / Cloud") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = tinycamPort, onValueChange = { tinycamPort = it }, label = { Text("Porta") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = tinycamUser, onValueChange = { tinycamUser = it }, label = { Text("Username") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = tinycamPass, onValueChange = { tinycamPass = it }, label = { Text("Password (salvata cifrata)") },
-                    visualTransformation = PasswordVisualTransformation(), singleLine = true, modifier = Modifier.fillMaxWidth())
+                SecretTextField(tinycamPass, { tinycamPass = it }, "Password (salvata cifrata)",
+                    Modifier.fillMaxWidth(), testTag = "config-tinycam-password")
                 OutlinedTextField(value = tinycamCameras, onValueChange = { tinycamCameras = it },
                     label = { Text("Telecamere (Nome=ID, separate da virgola; la prima va nella Home)") }, modifier = Modifier.fillMaxWidth())
             }
