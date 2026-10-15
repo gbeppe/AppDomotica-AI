@@ -170,6 +170,22 @@ class AiSmartScreenTest {
         screenshot("smart-dark-energy-dynamic.png")
     }
 
+    @Test fun fireplaceConfirmationSitsUnderParlaWithoutScrolling() {
+        var confirmed = false
+        val response = EnergyAssistantAnswer("Ok, metto il caminetto in modalità Manuale.\n\n" +
+            "Confermi l'accensione del caminetto? Tocca Conferma.", "complete", "metti il caminetto in manuale e accendilo",
+            "2026-10-15T16:56:00+02:00", emptyList(), fireplacePowerRequest = true)
+        compose.setContent {
+            DomoPiTheme(darkTheme = false) {
+                AiSmartContent(state(), false, "", {}, {}, {}, dynamicMode = true, dynamicResponse = response,
+                    dynamicAnswer = response.text, pendingFireplacePower = true, onConfirmFireplace = { confirmed = true })
+            }
+        }
+        compose.onNodeWithTag("smart-fireplace-confirm").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Periodo coperto").assertDoesNotExist()
+        compose.runOnIdle { assertTrue(confirmed) }
+    }
+
     @Test fun energyEvidenceAndVoiceUseTheExactAnswerAndKeepClassicNavigation() {
         var spoken = ""
         var classic = false

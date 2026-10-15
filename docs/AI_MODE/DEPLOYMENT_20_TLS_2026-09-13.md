@@ -77,6 +77,16 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 15 ottobre 2026 — comandi del caminetto
+
+Release attiva: `/opt/domopi-house-ai/releases/20261015-fireplace-commands`, commit
+`5b0d9f7`; `PREVIOUS_RELEASE` = `20261015-fireplace-wording`. 156 test superati su `.20`
+(attivazione condizionata all'esito); servizi riavviati e `active`. Prove reali (il backend non
+pubblica comandi): «metti il caminetto in modalità acqua sanitaria dalle 12:00 alle 13:00» →
+`command_ready` Acqua Sanitaria 12:00–13:00; «accendi il caminetto» in Riscaldamento →
+`rejected`, «…passa prima a Manuale.»; «metti il caminetto a 4» → chiarimento del modello
+(livello non disponibile). Richiede l'app `c27f0f5`.
+
 ## Release del 15 ottobre 2026 — modalità del caminetto in una frase propria
 
 Release attiva: `/opt/domopi-house-ai/releases/20261015-fireplace-wording`, commit

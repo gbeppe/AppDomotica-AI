@@ -16,9 +16,12 @@ data class EnergyAssistantAnswer(
     val fireplaceSettings: List<FireplaceSettingsCommand> = emptyList(),
     /** Manual on (true) / off (false) waiting for the user's confirmation; never sent before it. */
     val fireplacePowerRequest: Boolean? = null,
+    /** True when an evidence covers a time period (energy history, daily extremes). */
+    val coversPeriod: Boolean = false,
 ) {
-    val statusLabel: String get() = when (status) {
-        "complete" -> "Periodo coperto"
+    /** Null hides the label: "Periodo coperto" only makes sense for questions on a period. */
+    val statusLabel: String? get() = when (status) {
+        "complete" -> if (coversPeriod) "Periodo coperto" else null
         "partial" -> "Dati con limiti"
         "insufficient_data" -> "Dati insufficienti"
         "clarification_required" -> "Serve un chiarimento"
@@ -39,12 +42,14 @@ data class EnergyAssistantAnswer(
             val sceneCommands = mutableListOf<String>()
             val fireplaceSettings = mutableListOf<FireplaceSettingsCommand>()
             var fireplacePowerRequest: Boolean? = null
+            var coversPeriod = false
             val results = body.optJSONArray("results")
             require((results?.length() ?: 0) <= 6)
             for (i in 0 until (results?.length() ?: 0)) {
                 val item = results!!.getJSONObject(i)
                 val result = item.getJSONObject("result")
                 val detail = mutableListOf("Riferimento: ${item.getString("id")}")
+                if (result.has("period")) coversPeriod = true
                 when (result.getString("schema")) {
                     "house_ai.energy_history.v1" -> {
                         val period = result.getJSONObject("period")
@@ -218,7 +223,7 @@ data class EnergyAssistantAnswer(
                 parsed
             }
             return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands,
-                thermostatCommands, sceneCommands, fireplaceSettings, fireplacePowerRequest)
+                thermostatCommands, sceneCommands, fireplaceSettings, fireplacePowerRequest, coversPeriod)
         }
     }
 }

@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **15/10/2026** · app con i comandi del caminetto · backend House AI `20261015-fireplace-commands`.
+Aggiornata al **15/10/2026** · app `bld_07ad0a65` · backend House AI `20261015-fireplace-commands`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -140,6 +140,8 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
   In Manuale e Disattivato gli orari non contano.
 - **Acceso/spento** solo in modalità **Manuale** e **solo dopo aver toccato Conferma**; se il
   caminetto è già nello stato chiesto: «Il caminetto risulta già acceso.».
+- I tasti **Conferma** / **Annulla** compaiono **subito sotto Parla**, nel riquadro «Chiedi alla
+  casa», senza bisogno di scorrere; dopo il tocco spariscono e l'esito resta nella Risposta.
 - **Il livello di potenza non si imposta** da AI Smart (con la potenza automatica lo decide la
   casa): usa lo slider della scheda Impianti.
 
@@ -228,3 +230,4 @@ in cima.
 |---|---|
 | 15/10/2026 | Prima versione: energia adesso e flussi, riscaldamento in sola lettura, modalità del caminetto in una frase propria. |
 | 15/10/2026 | Comandi del caminetto (§4.5): modalità, orari e potenza automatica subito; acceso/spento solo in Manuale e con conferma; livello escluso. |
+| 15/10/2026 | Tasti Conferma/Annulla del caminetto spostati sotto Parla; l'etichetta «Periodo coperto» compare solo nelle risposte su un periodo (consumi, produzione), non nei comandi. |

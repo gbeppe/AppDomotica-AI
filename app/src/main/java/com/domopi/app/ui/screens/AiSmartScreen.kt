@@ -522,6 +522,19 @@ internal fun AiSmartContent(
                         Text("Parla", style = MaterialTheme.typography.titleMedium)
                     }
                     if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    // Right under "Parla" so the confirmation needs no scrolling.
+                    pendingFireplacePower?.let { on ->
+                        Text(if (on) "Confermi l'accensione del caminetto?" else "Confermi lo spegnimento del caminetto?",
+                            style = MaterialTheme.typography.titleSmall)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = onConfirmFireplace, modifier = Modifier.testTag("smart-fireplace-confirm")) {
+                                Text(if (on) "Conferma accensione" else "Conferma spegnimento")
+                            }
+                            OutlinedButton(onClick = onCancelFireplace, modifier = Modifier.testTag("smart-fireplace-cancel")) {
+                                Text("Annulla")
+                            }
+                        }
+                    }
                     voiceNotice?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                     OutlinedTextField(question, onQuestionChange, label = { Text("Oppure scrivi la domanda") },
                         modifier = Modifier.fillMaxWidth(), minLines = 1, maxLines = 5, enabled = !loading)
@@ -548,21 +561,11 @@ internal fun AiSmartContent(
                     }
                     answer?.let { text ->
                         dynamicResponse?.let { result ->
-                            Text(result.statusLabel, style = MaterialTheme.typography.labelLarge)
+                            result.statusLabel?.let { Text(it, style = MaterialTheme.typography.labelLarge) }
                             if (result.generatedAt.isNotBlank()) Text("Risposta del ${SpokenTime.moment(result.generatedAt)}", style = MaterialTheme.typography.bodySmall)
                         }
                         if (dynamicMode) Text("Risposta riferita alla richiesta, non aggiornata automaticamente.", style = MaterialTheme.typography.bodySmall)
                         Text(text, Modifier.testTag("smart-answer"))
-                        pendingFireplacePower?.let { on ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = onConfirmFireplace, modifier = Modifier.testTag("smart-fireplace-confirm")) {
-                                    Text(if (on) "Conferma accensione" else "Conferma spegnimento")
-                                }
-                                OutlinedButton(onClick = onCancelFireplace, modifier = Modifier.testTag("smart-fireplace-cancel")) {
-                                    Text("Annulla")
-                                }
-                            }
-                        }
                         fireplaceNotice?.let { Text(it, Modifier.testTag("smart-fireplace-notice")) }
                         TextButton(enabled = speechReady, onClick = { onSpeak(text) }) { Text("Leggi risposta") }
                     }
