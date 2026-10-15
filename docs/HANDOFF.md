@@ -67,7 +67,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_07ad0a65`** (commit `c27f0f5`, 15/10: comandi del caminetto in AI Smart). Funzioni principali e documenti:
+Installata sul telefono: **`bld_a823a74d`** (commit `8264686`, 15/10: comandi del caminetto in AI Smart, Conferma sotto Parla). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
