@@ -16,4 +16,6 @@ smista acceso/spento verso le catene Broadlink.
   meno di 10 s prima, e arrivato prima della sua eco, viene preso per l'eco.
 - Non tocca il registro del Digital Twin Router: nessun incremento di `router_initialized_vNNN`.
 
+Applicata il 15/10/2026 alle 23:29 (backup `/home/pi/AI_backups/nodered/20261015T212857Z-before-lights-echo-guard`).
+
 Test: `node --test test.js` (7 casi). Deploy: `deploy.py prepare`, poi `apply BACKUP`, `rollback BACKUP`.
