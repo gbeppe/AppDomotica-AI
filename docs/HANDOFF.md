@@ -73,12 +73,12 @@ Installata sul telefono: **`bld_1484ea94`** (commit `1726c2b`, 15/10: energia ad
 |---|---|
 | Home con carosello (energia stile WallBox, luci, clima, impianti, piscina, ambienti, telecamere, settaggi, garage, **irrigazione**) | [`AI_MODE/FUNZIONI_APP_OTTOBRE_2026.md`](AI_MODE/FUNZIONI_APP_OTTOBRE_2026.md) |
 | Barra in alto LOCALE/REMOTO e allineamento build | `docs/NETWORK/UI-TOPBAR.D1.md` |
-| **AI Smart** (domande vocali e scritte, comandi luci/scene/termostati, risposte brevi, riepilogo, avvisi, "Com'è andata oggi") | [`AI_MODE/INTERAZIONE_QUERY_SMART.md`](AI_MODE/INTERAZIONE_QUERY_SMART.md), `SMART_*.md` |
+| **AI Smart** (domande vocali e scritte, comandi luci/scene/termostati, risposte brevi, riepilogo, avvisi, "Com'è andata oggi") | **guida utente [`GUIDA_UTENTE_AI_SMART.md`](GUIDA_UTENTE_AI_SMART.md)** (da aggiornare a ogni modifica di AI Smart); tecnica: [`AI_MODE/INTERAZIONE_QUERY_SMART.md`](AI_MODE/INTERAZIONE_QUERY_SMART.md), `SMART_*.md` |
 | Piscina interattiva, Irrigazione, Telecamere native, campi segreti | [`AI_MODE/FUNZIONI_APP_OTTOBRE_2026.md`](AI_MODE/FUNZIONI_APP_OTTOBRE_2026.md) |
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261015-energy-overview`** (commit `66c4b9e`, energia adesso con flussi stimati), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261015-fireplace-wording`** (commit `fe484b1`; energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).

@@ -77,6 +77,14 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 15 ottobre 2026 — modalità del caminetto in una frase propria
+
+Release attiva: `/opt/domopi-house-ai/releases/20261015-fireplace-wording`, commit
+`fe484b1`; `PREVIOUS_RELEASE` = `20261015-energy-overview`. 148 test superati su `.20`;
+servizi riavviati e `active`. Prova reale: «Il caminetto è acceso?» → «Caminetto spento. È in
+modalità Riscaldamento, programmato dalle 16:30 alle 16:55, con potenza automatica attiva.»
+Solo testo della risposta: nessuna modifica all'app.
+
 ## Release del 15 ottobre 2026 — energia adesso con flussi stimati
 
 Release attiva: `/opt/domopi-house-ai/releases/20261015-energy-overview`, commit

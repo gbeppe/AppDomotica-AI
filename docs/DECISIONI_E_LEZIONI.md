@@ -37,6 +37,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 14/10 | AI Smart legge l'impianto di riscaldamento (caminetto, puffer, pompa pavimento, caldaia, solare termico) **solo in lettura**; il termostato si descrive come "chiede / non chiede calore" | "riscaldamento spento" era fuorviante con il caminetto acceso |
 | 14/10 | Broker MQTT: **un solo utente** (`domotica`) per tutti i client, anonimo chiuso, `domopi` eliminato | semplicità |
 | 15/10 | AI Smart energia: riepilogo e «energia?» con produzione, batteria (livello e carica/scarica), **consumo** e rete (**anche l'immissione**); «dettaglio energia» aggiunge **solo i flussi attivi, in italiano**; fatto prima dei test sul caminetto | flussi stimati, non misurati |
+| 15/10 | **Guida utente di AI Smart** (`docs/GUIDA_UTENTE_AI_SMART.md`): come si attiva, cosa fa, domande e risposte; **aggiornata a ogni modifica** delle funzioni di AI Smart (regola 9 di `CLAUDE.md`) | |
 
 ## Lezioni tecniche
 

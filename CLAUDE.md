@@ -21,3 +21,7 @@ Regole:
 8. Aggiornare la documentazione nello stesso commit del codice
    ([`docs/AI_MODE/POLITICA_FILE_E_RIPRESA.md`](docs/AI_MODE/POLITICA_FILE_E_RIPRESA.md)) e
    [`docs/HANDOFF.md`](docs/HANDOFF.md) quando cambiano stato, piano o procedure.
+9. Ogni modifica alle funzioni di AI Smart (domande, risposte, comandi, schermata, messaggi)
+   aggiorna nello stesso commit la guida utente
+   [`docs/GUIDA_UTENTE_AI_SMART.md`](docs/GUIDA_UTENTE_AI_SMART.md) (riga «Aggiornata al» e
+   tabella delle modifiche).
