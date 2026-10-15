@@ -13,6 +13,9 @@ data class EnergyAssistantAnswer(
     val lightCommands: List<LightCommand> = emptyList(),
     val thermostatCommands: List<ThermostatCommand> = emptyList(),
     val sceneCommands: List<String> = emptyList(),
+    val fireplaceSettings: List<FireplaceSettingsCommand> = emptyList(),
+    /** Manual on (true) / off (false) waiting for the user's confirmation; never sent before it. */
+    val fireplacePowerRequest: Boolean? = null,
 ) {
     val statusLabel: String get() = when (status) {
         "complete" -> "Periodo coperto"
@@ -34,6 +37,8 @@ data class EnergyAssistantAnswer(
             val lightCommands = mutableListOf<LightCommand>()
             val thermostatCommands = mutableListOf<ThermostatCommand>()
             val sceneCommands = mutableListOf<String>()
+            val fireplaceSettings = mutableListOf<FireplaceSettingsCommand>()
+            var fireplacePowerRequest: Boolean? = null
             val results = body.optJSONArray("results")
             require((results?.length() ?: 0) <= 6)
             for (i in 0 until (results?.length() ?: 0)) {
@@ -134,6 +139,26 @@ data class EnergyAssistantAnswer(
                                 " · differenza misure ${result.optInt("imbalance_w")} W"
                         }
                     }
+                    "house_ai.fireplace_settings_command.v1" -> {
+                        val text = { key: String -> if (result.isNull(key)) null else result.getString(key) }
+                        if (result.getString("status") == "command_ready") {
+                            val command = FireplaceSettingsCommand(text("mode"), text("start_time"), text("stop_time"),
+                                if (result.isNull("auto_power")) null else result.getBoolean("auto_power"))
+                            require(command.isValid())
+                            fireplaceSettings += command
+                            detail += "Comando caminetto validato · ${command.describe()}"
+                        } else {
+                            detail += "Comando caminetto non inviato · ${result.getString("status")}"
+                        }
+                    }
+                    "house_ai.fireplace_power_command.v1" -> {
+                        val state = result.getString("state")
+                        require(state in setOf("on", "off"))
+                        val status = result.getString("status")
+                        require(status in setOf("confirmation_required", "rejected", "unchanged"))
+                        if (status == "confirmation_required") fireplacePowerRequest = state == "on"
+                        detail += "Caminetto acceso/spento manuale · $state · $status"
+                    }
                     "house_ai.current_heating.v1" -> {
                         detail += "Digital Twin · impianto di riscaldamento (sola lettura) · " +
                             if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
@@ -193,7 +218,7 @@ data class EnergyAssistantAnswer(
                 parsed
             }
             return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands,
-                thermostatCommands, sceneCommands)
+                thermostatCommands, sceneCommands, fireplaceSettings, fireplacePowerRequest)
         }
     }
 }
@@ -201,3 +226,15 @@ data class EnergyAssistantAnswer(
 data class AssistantContext(val domain: String, val focus: String)
 data class LightCommand(val lightId: String, val state: Boolean)
 data class ThermostatCommand(val thermostat: String, val targetC: String)
+
+/** Fireplace settings from AI Smart; null = unchanged. The power level is never part of it. */
+data class FireplaceSettingsCommand(val mode: String?, val startTime: String?, val stopTime: String?, val autoPower: Boolean?) {
+    fun isValid(): Boolean =
+        (mode == null || mode in HeatingSmartState.FIREPLACE_MODES) &&
+            listOfNotNull(startTime, stopTime).all { HeatingSmartState.isTime(it) } &&
+            (startTime == null || stopTime == null || startTime < stopTime) &&
+            listOf(mode, startTime, stopTime, autoPower).any { it != null }
+
+    fun describe(): String = listOfNotNull(mode?.let { "modalità $it" }, startTime?.let { "avvio $it" },
+        stopTime?.let { "fine $it" }, autoPower?.let { "potenza automatica ${if (it) "on" else "off"}" }).joinToString(" · ")
+}

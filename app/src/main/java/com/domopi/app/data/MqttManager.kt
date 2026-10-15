@@ -825,6 +825,24 @@ class MqttManager {
         return true
     }
 
+    /** Fireplace settings from AI Smart: closed modes, HH:MM times, auto power; never the level. */
+    fun setSmartFireplaceSettings(command: FireplaceSettingsCommand): Boolean {
+        if (!command.isValid()) return false
+        val p = "zara/interface/fireplace/main"
+        command.mode?.let { publish("$p/mode/cmd", it) }
+        command.startTime?.let { publish("$p/start_time/cmd", it) }
+        command.stopTime?.let { publish("$p/stop_time/cmd", it) }
+        command.autoPower?.let { publish("$p/auto_power/cmd", it.toString()) }
+        return true
+    }
+
+    /** Manual on/off after the user's confirmation, only while .15 reports the "Manuale" mode. */
+    fun setSmartFireplacePower(on: Boolean): Boolean {
+        if (_heatingSmartState.value.fireplaceMode() != "Manuale") return false
+        publish("zara/interface/fireplace/main/power/cmd", on.toString())
+        return true
+    }
+
     /** Only the scenes accepted by the Node-RED Scene Dispatcher. */
     fun setSmartLightScene(scene: String): Boolean {
         if (scene !in AiSmartState.lightScenes) return false

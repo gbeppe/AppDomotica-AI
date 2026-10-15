@@ -177,7 +177,9 @@ class MainActivity : ComponentActivity() {
                                 onThermostatCommand = mqttManager::setSmartThermostatTarget,
                                 onSceneCommand = mqttManager::setSmartLightScene,
                                 environmentState = environmentState,
-                                heatingState = heatingState)
+                                heatingState = heatingState,
+                                onFireplaceSettings = mqttManager::setSmartFireplaceSettings,
+                                onFireplacePower = mqttManager::setSmartFireplacePower)
                         }
                         "house_ai" -> HouseAiScreen(onBack = { currentScreen = "ai_smart" })
                         "lights" -> LightsScreen(

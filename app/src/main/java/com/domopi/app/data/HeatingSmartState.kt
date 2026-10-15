@@ -34,6 +34,9 @@ data class HeatingSmartState(
 
     fun validObservations(): Map<String, HeatingObservation> = observations
 
+    /** Current fireplace mode label, or null when not received. */
+    fun fireplaceMode(): String? = observations["fireplace.mode"]?.value as? String
+
     enum class Kind { BOOL, LEVEL, PERCENT, TEMPERATURE, MODE, TIME }
 
     companion object {
@@ -58,5 +61,6 @@ data class HeatingSmartState(
         /** App labels of the fireplace modes (ROUTER-FIREPLACE-MODE.1/.2). */
         val FIREPLACE_MODES = setOf("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqua Sanitaria", "Manuale")
         private val TIME = Regex("(?:[01][0-9]|2[0-3]):[0-5][0-9]")
+        fun isTime(value: String): Boolean = TIME.matches(value)
     }
 }

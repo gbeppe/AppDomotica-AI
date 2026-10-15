@@ -59,6 +59,8 @@ fun AiSmartScreen(
     onSceneCommand: (String) -> Boolean = { false },
     environmentState: EnvironmentSmartState = EnvironmentSmartState(),
     heatingState: HeatingSmartState = HeatingSmartState(),
+    onFireplaceSettings: (FireplaceSettingsCommand) -> Boolean = { false },
+    onFireplacePower: (Boolean) -> Boolean = { false },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -84,6 +86,9 @@ fun AiSmartScreen(
         }
     }
     var response by remember { mutableStateOf<EnergyAssistantAnswer?>(null) }
+    // Manual fireplace on/off proposed by the backend: sent only after "Conferma".
+    var pendingFireplacePower by remember { mutableStateOf<Boolean?>(null) }
+    var fireplaceNotice by remember { mutableStateOf<String?>(null) }
     var assistantContext by remember { mutableStateOf<AssistantContext?>(null) }
     var dynamicError by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
@@ -174,6 +179,8 @@ fun AiSmartScreen(
             loading = true
             dynamicError = null
             response = null
+            pendingFireplacePower = null
+            fireplaceNotice = null
             try {
                 val started = System.currentTimeMillis()
                 val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
@@ -194,6 +201,12 @@ fun AiSmartScreen(
                         "Scena luci non inviata: connessione o scena non valida."
                     }
                 }
+                result.fireplaceSettings.forEach { command ->
+                    check(connected && onFireplaceSettings(command)) {
+                        "Comando caminetto non inviato: connessione o valori non validi."
+                    }
+                }
+                pendingFireplacePower = result.fireplacePowerRequest
                 response = result
                 assistantContext = result.context ?: assistantContext
                 stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
@@ -217,6 +230,17 @@ fun AiSmartScreen(
                 if (spoken && speechReady) (response?.text ?: dynamicError)?.let(::speak)
             }
         }
+    }
+    fun confirmFireplace() {
+        val on = pendingFireplacePower ?: return
+        pendingFireplacePower = null
+        fireplaceNotice = when {
+            !connected -> "Comando non inviato: la casa non è collegata."
+            !onFireplacePower(on) -> "Comando non inviato: il caminetto non è in modalità Manuale."
+            on -> "Ok, accendo il caminetto."
+            else -> "Ok, spengo il caminetto."
+        }
+        if (speechReady) fireplaceNotice?.let(::speak)
     }
     val recognizer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim()
@@ -313,7 +337,11 @@ fun AiSmartScreen(
             catch (_: SecurityException) { voiceNotice = "Accesso al riconoscimento vocale negato. Puoi scrivere la domanda." }
         },
         onSpeak = { speak(it) },
-        onStopSpeaking = { speech?.stop(); voiceNotice = "Lettura interrotta." }
+        onStopSpeaking = { speech?.stop(); voiceNotice = "Lettura interrotta." },
+        pendingFireplacePower = pendingFireplacePower,
+        fireplaceNotice = fireplaceNotice,
+        onConfirmFireplace = { confirmFireplace() },
+        onCancelFireplace = { pendingFireplacePower = null; fireplaceNotice = "Comando annullato." }
     )
 }
 
@@ -351,6 +379,10 @@ internal fun AiSmartContent(
     onAskDynamic: (String) -> Unit = {},
     onDaySummary: () -> Unit = {},
     askedQuestion: String? = null,
+    pendingFireplacePower: Boolean? = null,
+    fireplaceNotice: String? = null,
+    onConfirmFireplace: () -> Unit = {},
+    onCancelFireplace: () -> Unit = {},
 ) {
     BackHandler(onBack = onClassic)
     var submittedQuestion by rememberSaveable { mutableStateOf<String?>(null) }
@@ -480,7 +512,7 @@ internal fun AiSmartContent(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Chiedi alla casa", style = MaterialTheme.typography.titleMedium)
                     Text(if (dynamicMode) "Tocca Parla e fai la tua domanda: parte da sola e la risposta viene letta. " +
-                        "Puoi comandare luci, scene luci e termostati."
+                        "Puoi comandare luci, scene luci, termostati e caminetto."
                         else "Puoi chiedere luci e temperature disponibili.", style = MaterialTheme.typography.bodySmall)
                     // Voice is the primary input: the recognized question is sent without a second tap.
                     Button(enabled = !loading, onClick = onDictate,
@@ -521,6 +553,17 @@ internal fun AiSmartContent(
                         }
                         if (dynamicMode) Text("Risposta riferita alla richiesta, non aggiornata automaticamente.", style = MaterialTheme.typography.bodySmall)
                         Text(text, Modifier.testTag("smart-answer"))
+                        pendingFireplacePower?.let { on ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = onConfirmFireplace, modifier = Modifier.testTag("smart-fireplace-confirm")) {
+                                    Text(if (on) "Conferma accensione" else "Conferma spegnimento")
+                                }
+                                OutlinedButton(onClick = onCancelFireplace, modifier = Modifier.testTag("smart-fireplace-cancel")) {
+                                    Text("Annulla")
+                                }
+                            }
+                        }
+                        fireplaceNotice?.let { Text(it, Modifier.testTag("smart-fireplace-notice")) }
                         TextButton(enabled = speechReady, onClick = { onSpeak(text) }) { Text("Leggi risposta") }
                     }
                     TextButton(enabled = speechReady, onClick = onStopSpeaking) { Text("Ferma lettura") }
@@ -556,7 +599,7 @@ internal fun AiSmartContent(
                             }
                         }
                     }
-                    Text("I comandi ON/OFF sono abilitati solo per le luci mappate; gli altri domini restano in consultazione.",
+                    Text("Comandi: luci, scene luci, termostati, modalità e orari del caminetto; acceso/spento del caminetto solo in Manuale e con conferma. Gli altri impianti sono in sola lettura.",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }
