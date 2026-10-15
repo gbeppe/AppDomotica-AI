@@ -430,6 +430,52 @@ def air_conditioner_text(r):
     return text + ('' if r['connected'] else DISCONNECTED)
 
 
+FLOW_SOURCES = (("solar", "Dal fotovoltaico"), ("battery", "Dalla batteria"), ("grid", "Dalla rete"))
+FLOW_SINKS = {"home": "alla casa", "battery": "alla batteria", "grid": "in rete"}
+STALE_NAMES = {"solar_power_w": "fotovoltaico", "battery_soc_percent": "livello della batteria",
+               "battery_power_w": "batteria", "home_consumption_w": "consumo della casa", "grid_power_w": "rete"}
+IDLE_W = 50
+
+
+def energy_overview_text(item):
+    r = item['result']
+    value = lambda metric: r['observations'][metric]['value'] if metric in r['observations'] else None
+    parts = []
+    solar = value('solar_power_w')
+    if solar is not None:
+        parts.append(f"il fotovoltaico produce {power(solar)}" if solar >= IDLE_W else "il fotovoltaico è fermo")
+    soc, battery = value('battery_soc_percent'), value('battery_power_w')
+    if soc is not None or battery is not None:
+        flow = ("si sta caricando" if battery is not None and battery <= -IDLE_W else
+                "si sta scaricando" if battery is not None and battery >= IDLE_W else None)
+        if soc is None:
+            parts.append(f"la batteria {flow or 'è ferma'}")
+        else:
+            parts.append(f"la batteria è al {spoken(soc, 0)} per cento" + (f" e {flow}" if flow else ""))
+    home = value('home_consumption_w')
+    if home is not None:
+        parts.append(f"la casa consuma {power(home)}")
+    grid = value('grid_power_w')
+    if grid is not None:
+        parts.append(f"stai importando {power(grid)} dalla rete" if grid >= IDLE_W else
+                     f"stai immettendo {power(grid)} in rete" if grid <= -IDLE_W else
+                     "non stai importando dalla rete")
+    sentences = [capitalize(', '.join(parts)) + '.'] if parts else ["I dati energetici attuali non sono disponibili."]
+    if r['stale']:
+        sentences.append("Non aggiornati da più di 3 minuti: " + join_it([STALE_NAMES[m] for m in r['stale']]) + ".")
+    if item.get('detail') == 'flows':
+        flows = r.get('flows')
+        if flows is None:
+            sentences.append("Flussi non calcolabili: mancano dati aggiornati.")
+        else:
+            for source, title in FLOW_SOURCES:
+                listed = [f"{power(watts)} {FLOW_SINKS[name.split('_to_')[1]]}"
+                          for name, watts in flows.items() if name.startswith(source + '_to_')]
+                if listed:
+                    sentences.append(f"{title}: {join_it(listed)}.")
+    return ' '.join(sentences) + ('' if r['connected'] else DISCONNECTED)
+
+
 def current_energy_text(item):
     r = item['result']
     obs = r['observation']
@@ -489,6 +535,8 @@ def describe(item):
         return f"{LABELS.get(item.get('metric'), item.get('id', 'Dato'))}: sorgente non disponibile, riprova più tardi."
     if schema == 'house_ai.current_energy_result.v1':
         return current_energy_text(item)
+    if schema == 'house_ai.current_energy_overview.v1':
+        return energy_overview_text(item)
     if schema == 'house_ai.current_predictive_reserve.v1':
         return predictive_reserve_text(r)
     if schema == 'house_ai.current_thermostats.v1':
@@ -545,6 +593,8 @@ def notes(item):
         return predictive_reserve_notes(r)
     if schema == 'house_ai.current_energy_result.v1':
         return received_note([r['observation']] if r['observation'] else [])
+    if schema == 'house_ai.current_energy_overview.v1':
+        return received_note(r['observations'].values())
     if schema == 'house_ai.backend_log_evidence.v1':
         extra = []
         if r['records']:

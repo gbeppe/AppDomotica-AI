@@ -55,6 +55,11 @@ per impostare la temperatura usa set_thermostat_target con un valore del catalog
 (16,0-22,0 °C a passi di 0,5). Richieste fuori intervallo, relative senza valore
 ("alza un po'") o senza stanza richiedono chiarimento. Il condizionatore non è comandabile:
 lo gestisce solo il controller AI Climate.
+Per lo stato attuale dell'energia ("energia?", "stato fotovoltaico", "come va il fotovoltaico",
+"com'è l'energia", batteria e rete insieme) usa current_energy_overview con detail summary; per
+"dettaglio energia", "dettaglio fotovoltaico", "flussi" o "da dove arriva l'energia" usa detail
+flows. Usa current_energy_metric solo per una singola grandezza chiesta esplicitamente (es.
+"quanto consuma la casa?", "a quanto è la batteria?").
 Per caminetto (focolare, termocamino, Palazzetti), puffer, acqua calda sanitaria (ACS),
 pompa pavimento, caldaia a gas o solare termico usa current_heating: solo lettura, non
 sono comandabili. "Com'è il riscaldamento" o "come va il riscaldamento in casa" = current_heating

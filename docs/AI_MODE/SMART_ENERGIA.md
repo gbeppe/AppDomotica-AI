@@ -14,6 +14,19 @@ in TLS privato tramite Tailscale Serve.
 - Cinque letture del Digital Twin: FV, consumo casa, scambio rete, scambio
   batteria, livello Powerwall. Segni rete/batteria spiegati come prelievo,
   immissione, carica e scarica. Zero, invalido e mai ricevuto rimangono distinti.
+- **Energia adesso in una risposta (15/10/2026, `current_energy_overview`)**, frase composta
+  dal codice e identica al riepilogo all'apertura della scheda: «Il fotovoltaico produce X, la
+  batteria è al X per cento e si sta caricando/scaricando, la casa consuma X, stai importando X
+  dalla rete / stai immettendo X in rete / non stai importando dalla rete.» Con `detail=flows`
+  («dettaglio energia», «dettaglio fotovoltaico») aggiunge i **soli flussi attivi**, in italiano:
+  «Dal fotovoltaico: … alla casa, … alla batteria e … in rete. Dalla batteria: … Dalla rete: …».
+  I flussi sono **stimati** con regole fisse (`energy_flows.py`): il fotovoltaico va prima alla
+  casa, poi alla batteria in carica, poi in rete; la casa riceve poi dalla batteria e infine dalla
+  rete; gestiti anche rete → batteria e batteria → rete. Sotto 50 W rete, batteria e flussi sono
+  fermi (come il diagramma della Home). Se sorgenti e consumi differiscono entro
+  max(150 W, 5%) le sorgenti sono riportate ai consumi misurati; oltre, nessuna correzione e la
+  differenza va nei limiti. Letture più vecchie di 3 minuti non sono usate e vengono nominate.
+  `current_energy_metric` resta per una singola grandezza chiesta esplicitamente.
 - Sette metriche EmonCMS: produzione, consumo, prelievo, immissione, carica,
   scarica e SOC medio ponderato nel tempo. Periodi Europe/Rome con fine esclusa,
   buchi espliciti e nessun conteggio di campioni futuri. Sono stime da campioni,

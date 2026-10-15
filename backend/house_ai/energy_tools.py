@@ -9,6 +9,7 @@ from energy_history import daily_extreme_report, energy_report, period_bounds
 from log_tools import SOURCES as LOG_SOURCES, tool_catalog, read_day
 from evidence import day_bounds
 from light_semantics import validate_commands
+from energy_flows import allocate
 
 
 CATALOG_PATH = Path(__file__).with_name("energy_sources.json")
@@ -17,6 +18,9 @@ CURRENT_METRICS = {
     "solar_power_w", "home_consumption_w", "grid_power_w",
     "battery_power_w", "battery_soc_percent"
 }
+# Same freshness rule as the app energy diagram: older readings are not used.
+ENERGY_STALE_AFTER_MS = 180_000
+ENERGY_DETAILS = ("summary", "flows")
 CLIMATE_METRICS = {"current_state", "air_mode", "temperature_set_c", "recorded_reason"}
 CLIMATE_TOPICS = {
     "current_state": "zara/interface/stato_condizionatore/stato_attuale/stat",
@@ -149,6 +153,10 @@ def catalog(path=CATALOG_PATH):
             "description": "Read whether the Predictive Reserve control is enabled, its operating mode (SHADOW or ACTIVE), model readiness and what that means now for new night dehumidification starts",
             "parameters": {}
         }, {
+            "name": "current_energy_overview",
+            "description": "Read the energy of the house now in one answer: solar production, battery level and charging/discharging, house consumption, grid import or export. detail=flows adds the estimated flows (solar to house/battery/grid, battery to house, grid to house)",
+            "parameters": {"detail": list(ENERGY_DETAILS)}
+        }, {
             "name": "current_energy_metric",
             "description": "Read one current Digital Twin energy metric",
             "parameters": {"metric": sorted(CURRENT_METRICS)}
@@ -175,6 +183,7 @@ def catalog(path=CATALOG_PATH):
             "Today and the current month/week may be incomplete. End date is exclusive.",
             "Use backend_log_day for forecasts, recorded reasons, learning or SHADOW evidence. Never infer actions from SHADOW.",
             "Use current_predictive_reserve for the current Predictive Reserve state; it cannot explain past nights.",
+            "Use current_energy_overview for the energy of the house now; current_energy_metric only for one explicit quantity.",
             "Use current_heating for the fireplace, puffer, floor pump, gas boiler and solar thermal; they cannot be commanded.",
             "The thermostats heat; the air conditioner is driven only by the AI Climate controller and cannot be commanded.",
             "No other control, cost, tariffs, unsupported metrics or causal speculation; clarify unsupported requests."
@@ -211,7 +220,8 @@ def validate_plan(plan, sources=None):
                     if tool == "current_environment" else {"id", "tool", "thermostat"}
                     if tool == "current_thermostats" else {"id", "tool", "thermostat", "target_c"}
                     if tool == "set_thermostat_target" else {"id", "tool", "metric"}
-                    if tool == "current_energy_metric" else {"id", "tool", "source", "day"}
+                    if tool == "current_energy_metric" else {"id", "tool", "detail"}
+                    if tool == "current_energy_overview" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
                     if tool == "energy_comparison" else None)
         if expected is None or set(operation) != expected:
@@ -225,6 +235,8 @@ def validate_plan(plan, sources=None):
         if ((tool == "energy_metric" and operation["metric"] not in sources)
                 or (tool == "current_energy_metric" and operation["metric"] not in CURRENT_METRICS)):
             raise ValueError("Unknown tool or metric")
+        if tool == "current_energy_overview" and operation["detail"] not in ENERGY_DETAILS:
+            raise ValueError("Unknown energy detail")
         if tool == "current_lights" and operation["light"] not in (["all"] + sorted(LIGHT_TOPICS)):
             raise ValueError("Unknown light")
         if tool == "set_light_state" and (operation["light"] not in LIGHT_TOPICS
@@ -477,6 +489,33 @@ def validate_environment_snapshot(snapshot):
     return clean
 
 
+def energy_overview(current, detail, now_ms):
+    observations = current["observations"] if current else {}
+    fresh = {metric: o for metric, o in observations.items()
+             if 0 <= now_ms - o["received_at_ms"] <= ENERGY_STALE_AFTER_MS}
+    result = {"schema": "house_ai.current_energy_overview.v1",
+              "status": "available" if fresh else "missing",
+              "connected": current["connected"] if current else False,
+              "observations": fresh, "stale": sorted(set(observations) - set(fresh)),
+              "limitations": ["Timestamp di ricezione Android; letture più vecchie di 3 minuti non usate.",
+                              "Sotto 50 watt rete, batteria e flussi sono considerati fermi."]}
+    if detail == "flows":
+        powers = ("solar_power_w", "battery_power_w", "grid_power_w", "home_consumption_w")
+        if all(metric in fresh for metric in powers):
+            allocation = allocate(*(fresh[metric]["value"] for metric in powers))
+            result["flows"] = allocation["flows"]
+            result["imbalance_w"] = allocation["imbalance_w"]
+            result["limitations"].append(
+                "Flussi stimati con regole fisse (fotovoltaico prima alla casa, poi alla batteria, poi in rete); "
+                "nessun contatore li misura direttamente.")
+            if not allocation["consistent"]:
+                result["limitations"].append(
+                    f"Le misure non tornano: differenza fra sorgenti e consumi di {abs(allocation['imbalance_w'])} watt.")
+        else:
+            result["flows"] = None
+    return result
+
+
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
             lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
             environment_snapshot=None, heating_snapshot=None):
@@ -537,6 +576,10 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                                 "observation": observation,
                                 "limitations": ["Timestamp di ricezione Android; età della misura sorgente ignota.",
                                                 "Retained non costituisce conferma fisica o di freschezza."]}})
+            continue
+        if operation["tool"] == "current_energy_overview":
+            results.append({"id": operation["id"], "detail": operation["detail"],
+                            "result": energy_overview(current, operation["detail"], int(time.time() * 1000))})
             continue
         if operation["tool"] == "current_predictive_reserve":
             observations = reserve["observations"] if reserve else {}
