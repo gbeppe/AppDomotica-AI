@@ -77,6 +77,17 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 15 ottobre 2026 — livello del caminetto in Manuale
+
+Release attiva: `/opt/domopi-house-ai/releases/20261015-fireplace-level`, commit
+`290906f`; `PREVIOUS_RELEASE` = `20261015-fireplace-commands`. 159 test superati su `.20`
+(attivazione condizionata all'esito); servizi riavviati e `active`. Prove reali (il backend non
+pubblica comandi): «metti il caminetto a 4» in Manuale acceso → `command_ready`, «Ok, imposto il
+caminetto al livello 4.»; in Riscaldamento → `rejected`, «…il livello si cambia solo in Manuale.
+Con la potenza automatica attiva il livello lo decide la casa.»; «alza il caminetto» →
+chiarimento «A quale livello vuoi impostare il caminetto (1-6)?». Richiede l'app `290906f`
+(`bld_9e3985c3`).
+
 ## Release del 15 ottobre 2026 — comandi del caminetto
 
 Release attiva: `/opt/domopi-house-ai/releases/20261015-fireplace-commands`, commit
