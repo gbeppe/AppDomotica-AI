@@ -241,16 +241,19 @@ def heating_text(r):
     power, level, mode = value('fireplace.power'), value('fireplace.level'), value('fireplace.mode')
     start, stop, auto = value('fireplace.start_time'), value('fireplace.stop_time'), value('fireplace.auto_power')
     if power is not None or level is not None or mode is not None:
+        # Two sentences so the mode name is heard as a name when read aloud.
         text = 'Caminetto ' + ('acceso' if power else 'spento' if power is False else 'stato non disponibile')
         if power and level is not None:
-            text += f", livello {spoken(level, 0)}"
-        if mode is not None:
-            text += f", modalità {mode}"
-            if mode not in ('Disattivato', 'Manuale') and start and stop:
-                text += f" dalle {start} alle {stop}"
-        if auto is not None:
-            text += ', potenza automatica ' + ('attiva' if auto else 'disattivata')
+            text += f" a livello {spoken(level, 0)}"
         parts.append(text + '.')
+        auto_text = None if auto is None else 'potenza automatica ' + ('attiva' if auto else 'disattivata')
+        if mode is not None:
+            text = f"È in modalità {mode}"
+            if mode not in ('Disattivato', 'Manuale') and start and stop:
+                text += f", programmato dalle {start} alle {stop}"
+            parts.append(text + (f", con {auto_text}" if auto_text else '') + '.')
+        elif auto_text:
+            parts.append(capitalize(auto_text) + '.')
     puffer = [f"{label} {spoken(value(key))} gradi" for key, label in (
         ('puffer.top_temperature', 'alto'), ('puffer.bottom_temperature', 'basso'),
         ('puffer.acs_temperature', 'acqua sanitaria')) if value(key) is not None]

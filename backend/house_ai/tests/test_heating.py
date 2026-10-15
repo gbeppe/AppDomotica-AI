@@ -71,7 +71,8 @@ class HeatingToolTests(unittest.TestCase):
         result = answer()
         self.assertNotEqual(result['status'], 'insufficient_data')
         self.assertEqual(result['answer'],
-            'Caminetto acceso, livello 3, modalità Riscaldamento dalle 16:30 alle 17:30, potenza automatica attiva. '
+            'Caminetto acceso a livello 3. È in modalità Riscaldamento, programmato dalle 16:30 alle 17:30, '
+            'con potenza automatica attiva. '
             'Puffer: alto 42,9 gradi, basso 44,3 gradi, acqua sanitaria 47 gradi. '
             'Pompa pavimento disabilitata e ferma. Caldaia a gas: fiamma spenta. '
             'Solare termico: pompa ferma, collettore 21,7 gradi.')
@@ -81,10 +82,12 @@ class HeatingToolTests(unittest.TestCase):
 
     def test_off_hides_level_and_manual_has_no_window(self):
         text = answer(**{'fireplace.power': False})['answer']
-        self.assertTrue(text.startswith('Caminetto spento, modalità Riscaldamento dalle 16:30 alle 17:30'))
+        self.assertTrue(text.startswith('Caminetto spento. È in modalità Riscaldamento, programmato dalle 16:30 alle 17:30'))
         self.assertNotIn('livello', text)
         manual = answer(**{'fireplace.mode': 'Manuale'})['answer']
-        self.assertIn('modalità Manuale, potenza automatica', manual)
+        self.assertIn('È in modalità Manuale, con potenza automatica attiva.', manual)
+        no_mode = answer(**{'fireplace.mode': None, 'fireplace.auto_power': False})['answer']
+        self.assertTrue(no_mode.startswith('Caminetto acceso a livello 3. Potenza automatica disattivata. Puffer'))
 
     def test_running_pump_boiler_and_solar(self):
         text = answer(**{'floor_pump.enabled': True, 'floor_pump.running': True, 'gas_boiler.flame': True,

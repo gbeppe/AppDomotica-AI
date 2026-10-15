@@ -77,6 +77,17 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 15 ottobre 2026 — energia adesso con flussi stimati
+
+Release attiva: `/opt/domopi-house-ai/releases/20261015-energy-overview`, commit
+`66c4b9e`; `PREVIOUS_RELEASE` = `20261014-heating`. 148 test superati su `.20`
+(Python 3.9); riavviati gateway, backend e `house-ai-lan`, tutti `active`. Nuovo strumento
+`current_energy_overview`. Prova reale con i valori live: «energia?» → `summary`, «Il
+fotovoltaico produce 3,5 kilowatt, la batteria è al 48 per cento e si sta caricando, la casa
+consuma 516 watt, non stai importando dalla rete.»; «dettaglio energia» → `flows`, stessa frase
+più «Dal fotovoltaico: 516 watt alla casa e 3 kilowatt alla batteria.». Le app precedenti a
+`1726c2b` non riconoscono il nuovo risultato: installare subito l'app aggiornata.
+
 ## Release del 14 ottobre 2026 — impianto di riscaldamento in sola lettura
 
 Release attiva: `/opt/domopi-house-ai/releases/20261014-heating`, commit

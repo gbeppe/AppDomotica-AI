@@ -67,7 +67,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_1804d204`** (commit `8053672`, 14/10: AI Smart legge l'impianto di riscaldamento). Funzioni principali e documenti:
+Installata sul telefono: **`bld_1484ea94`** (commit `1726c2b`, 15/10: energia adesso e flussi in AI Smart). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -78,7 +78,7 @@ Installata sul telefono: **`bld_1804d204`** (commit `8053672`, 14/10: AI Smart l
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261014-heating`** (commit `8c193c7`, lettura dell'impianto di riscaldamento), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261015-energy-overview`** (commit `66c4b9e`, energia adesso con flussi stimati), in `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
