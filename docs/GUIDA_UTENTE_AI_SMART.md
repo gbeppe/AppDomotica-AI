@@ -132,6 +132,9 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
 | «spegni il caminetto» (in modalità Manuale) | Confermi lo spegnimento del caminetto? Tocca Conferma. → **Conferma spegnimento** / **Annulla** |
 | «accendi il caminetto» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: per accenderlo a mano passa prima a Manuale. |
 | «metti il caminetto in manuale e accendilo» | Ok, metto il caminetto in modalità Manuale. Confermi l'accensione del caminetto? Tocca Conferma. |
+| «metti il caminetto a 4» (in Manuale, acceso) | Ok, imposto il caminetto al livello 4. |
+| «metti il caminetto a 4» (in Manuale, spento) | Il caminetto è spento: il livello si cambia quando è acceso. |
+| «metti il caminetto a 4» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: il livello si cambia solo in Manuale. Con la potenza automatica attiva il livello lo decide la casa. |
 
 - **Modalità:** Riscaldamento, Acqua Sanitaria, Integrazione Caldaia, Manuale, Disattivato.
   Modalità, orari e potenza automatica partono **subito**, come le luci.
@@ -142,8 +145,10 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
   caminetto è già nello stato chiesto: «Il caminetto risulta già acceso.».
 - I tasti **Conferma** / **Annulla** compaiono **subito sotto Parla**, nel riquadro «Chiedi alla
   casa», senza bisogno di scorrere; dopo il tocco spariscono e l'esito resta nella Risposta.
-- **Il livello di potenza non si imposta** da AI Smart (con la potenza automatica lo decide la
-  casa): usa lo slider della scheda Impianti.
+- **Livello di potenza (1–6):** solo in modalità **Manuale** e a caminetto **acceso**; parte
+  subito, senza conferma. Nelle altre modalità non si cambia da AI Smart e vale la potenza
+  automatica: attiva, il livello lo decide la casa; disattivata, resta quello impostato (slider
+  della scheda Impianti). In Manuale la casa non cambia il livello da sola.
 
 ### 4.6 Termostati (lettura e comando)
 
@@ -199,7 +204,7 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 ## 5. Cosa AI Smart non fa
 
 - Non comanda caldaia, pompa pavimento, condizionatore, VMC, piscina (pompa e skimmer),
-  irrigazione, garage, Predictive Reserve; del caminetto non imposta il livello di potenza.
+  irrigazione, garage, Predictive Reserve; il livello del caminetto solo in Manuale.
 - Non inventa numeri, costi o tariffe e non fa ipotesi sulle cause.
 - Non ha memoria delle domande precedenti.
 - A una richiesta non disponibile risponde che l'azione non è disponibile o chiede un chiarimento.
@@ -231,3 +236,4 @@ in cima.
 | 15/10/2026 | Prima versione: energia adesso e flussi, riscaldamento in sola lettura, modalità del caminetto in una frase propria. |
 | 15/10/2026 | Comandi del caminetto (§4.5): modalità, orari e potenza automatica subito; acceso/spento solo in Manuale e con conferma; livello escluso. |
 | 15/10/2026 | Tasti Conferma/Annulla del caminetto spostati sotto Parla; l'etichetta «Periodo coperto» compare solo nelle risposte su un periodo (consumi, produzione), non nei comandi. |
+| 15/10/2026 | Livello di potenza del caminetto (1–6) da AI Smart, solo in Manuale e a caminetto acceso (§4.5). |

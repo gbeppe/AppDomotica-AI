@@ -6,8 +6,8 @@ from energy_tools import HEATING_TOPICS, catalog, validate_plan
 from model_gateway import SYSTEM, plan_schema
 
 
-def heating(mode='Riscaldamento', power=False, start='16:30', stop='16:55'):
-    values = {'fireplace.mode': mode, 'fireplace.power': power,
+def heating(mode='Riscaldamento', power=False, start='16:30', stop='16:55', level=3, auto=True):
+    values = {'fireplace.mode': mode, 'fireplace.power': power, 'fireplace.level': level, 'fireplace.auto_power': auto,
               'fireplace.start_time': start, 'fireplace.stop_time': stop}
     return {'schema': 'house_ai.current_heating_input.v1', 'connected': True,
             'observations': {k: {'value': v, 'received_at_ms': 1_792_000_000_000, 'retained': True,
@@ -31,6 +31,10 @@ def power(state, id='p'):
     return {'id': id, 'tool': 'set_fireplace_power', 'state': state}
 
 
+def level(value, id='l'):
+    return {'id': id, 'tool': 'set_fireplace_level', 'level': value}
+
+
 def run(*operations, **snapshot):
     return ask(None, Planner({'operations': list(operations)}), 'caminetto', heating_snapshot=heating(**snapshot))
 
@@ -41,14 +45,14 @@ class FireplaceCommandTests(unittest.TestCase):
         self.assertEqual(tools['set_fireplace_power']['parameters'], {'state': ['on', 'off']})
         self.assertIn('Acqua Sanitaria', tools['set_fireplace_settings']['parameters']['mode'])
         self.assertEqual(set(tools['set_fireplace_settings']['parameters']), {'mode', 'start_time', 'stop_time', 'auto_power'})
-        self.assertFalse(any('level' in name for name in tools))
-        self.assertIn('set_fireplace_settings', json.dumps(plan_schema()))
-        self.assertIn('Il livello di\npotenza del caminetto non si imposta', SYSTEM)
+        self.assertEqual(tools['set_fireplace_level']['parameters'], {'level': ['1', '2', '3', '4', '5', '6']})
+        self.assertIn('set_fireplace_level', json.dumps(plan_schema()))
+        self.assertIn('usa\nset_fireplace_level', SYSTEM)
 
     def test_plan_validation(self):
         validate_plan({'operations': [settings(mode='Acqua Sanitaria', start='12:00', stop='13:00')]})
         for bad in (settings(), settings(mode='inverno'), settings(start='12'), settings(start='24:00'),
-                    settings(auto='true'), power('toggle')):
+                    settings(auto='true'), power('toggle'), level('0'), level('7'), level(4)):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 validate_plan({'operations': [bad]})
 
@@ -91,6 +95,29 @@ class FireplaceCommandTests(unittest.TestCase):
         result = run(settings(mode='Manuale'), power('on'))
         self.assertEqual(result['answer'], "Ok, metto il caminetto in modalità Manuale.\n\n"
                                            "Confermi l'accensione del caminetto? Tocca Conferma.")
+
+
+    def test_level_only_in_manual_with_the_fireplace_on(self):
+        result = run(level('4'), mode='Manuale', power=True)
+        self.assertEqual(result['answer'], 'Ok, imposto il caminetto al livello 4.')
+        command = result['results'][0]['result']
+        self.assertEqual((command['status'], command['level']), ('command_ready', 4))
+        self.assertEqual(run(level('3'), mode='Manuale', power=True)['answer'], 'Il caminetto è già al livello 3.')
+        self.assertEqual(run(level('4'), mode='Manuale')['answer'],
+                         'Il caminetto è spento: il livello si cambia quando è acceso.')
+
+    def test_level_outside_manual_follows_the_automatic_power(self):
+        self.assertEqual(run(level('4'), power=True)['answer'],
+                         'Il caminetto è in modalità Riscaldamento: il livello si cambia solo in Manuale. '
+                         'Con la potenza automatica attiva il livello lo decide la casa.')
+        self.assertEqual(run(level('4'), auto=False)['answer'],
+                         'Il caminetto è in modalità Riscaldamento: il livello si cambia solo in Manuale. '
+                         'La potenza automatica è disattivata.')
+        self.assertEqual(run(level('4'), mode=None)['results'][0]['result']['status'], 'rejected')
+
+    def test_manual_then_level_in_one_request(self):
+        result = run(settings(mode='Manuale'), level('5'), power=True)
+        self.assertEqual(result['answer'], 'Ok, metto il caminetto in modalità Manuale e imposto il caminetto al livello 5.')
 
 
 if __name__ == '__main__':

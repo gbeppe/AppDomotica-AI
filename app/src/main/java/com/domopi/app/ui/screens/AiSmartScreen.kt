@@ -61,6 +61,7 @@ fun AiSmartScreen(
     heatingState: HeatingSmartState = HeatingSmartState(),
     onFireplaceSettings: (FireplaceSettingsCommand) -> Boolean = { false },
     onFireplacePower: (Boolean) -> Boolean = { false },
+    onFireplaceLevel: (Int, Boolean) -> Boolean = { _, _ -> false },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -204,6 +205,12 @@ fun AiSmartScreen(
                 result.fireplaceSettings.forEach { command ->
                     check(connected && onFireplaceSettings(command)) {
                         "Comando caminetto non inviato: connessione o valori non validi."
+                    }
+                }
+                result.fireplaceLevel?.let { level ->
+                    val manual = result.fireplaceSettings.any { it.mode == "Manuale" }
+                    check(connected && onFireplaceLevel(level, manual)) {
+                        "Livello del caminetto non inviato: connessione o modalità non Manuale."
                     }
                 }
                 pendingFireplacePower = result.fireplacePowerRequest
@@ -602,7 +609,7 @@ internal fun AiSmartContent(
                             }
                         }
                     }
-                    Text("Comandi: luci, scene luci, termostati, modalità e orari del caminetto; acceso/spento del caminetto solo in Manuale e con conferma. Gli altri impianti sono in sola lettura.",
+                    Text("Comandi: luci, scene luci, termostati, modalità e orari del caminetto; acceso/spento (con conferma) e livello del caminetto solo in Manuale. Gli altri impianti sono in sola lettura.",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }

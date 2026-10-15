@@ -843,6 +843,13 @@ class MqttManager {
         return true
     }
 
+    /** Power level from AI Smart, only in "Manuale" (seen from .15 or set by the same answer). */
+    fun setSmartFireplaceLevel(level: Int, manualInSameAnswer: Boolean = false): Boolean {
+        if (level !in 1..6 || !manualInSameAnswer && _heatingSmartState.value.fireplaceMode() != "Manuale") return false
+        publish("zara/interface/fireplace/main/level/cmd", level.toString())
+        return true
+    }
+
     /** Only the scenes accepted by the Node-RED Scene Dispatcher. */
     fun setSmartLightScene(scene: String): Boolean {
         if (scene !in AiSmartState.lightScenes) return false

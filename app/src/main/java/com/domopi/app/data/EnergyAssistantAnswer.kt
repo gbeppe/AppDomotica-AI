@@ -16,6 +16,8 @@ data class EnergyAssistantAnswer(
     val fireplaceSettings: List<FireplaceSettingsCommand> = emptyList(),
     /** Manual on (true) / off (false) waiting for the user's confirmation; never sent before it. */
     val fireplacePowerRequest: Boolean? = null,
+    /** Power level 1-6 validated by the backend (Manuale, fireplace on); sent at once. */
+    val fireplaceLevel: Int? = null,
     /** True when an evidence covers a time period (energy history, daily extremes). */
     val coversPeriod: Boolean = false,
 ) {
@@ -43,6 +45,7 @@ data class EnergyAssistantAnswer(
             val fireplaceSettings = mutableListOf<FireplaceSettingsCommand>()
             var fireplacePowerRequest: Boolean? = null
             var coversPeriod = false
+            var fireplaceLevel: Int? = null
             val results = body.optJSONArray("results")
             require((results?.length() ?: 0) <= 6)
             for (i in 0 until (results?.length() ?: 0)) {
@@ -164,6 +167,14 @@ data class EnergyAssistantAnswer(
                         if (status == "confirmation_required") fireplacePowerRequest = state == "on"
                         detail += "Caminetto acceso/spento manuale · $state · $status"
                     }
+                    "house_ai.fireplace_level_command.v1" -> {
+                        val level = result.getInt("level")
+                        require(level in 1..6)
+                        val status = result.getString("status")
+                        require(status in setOf("command_ready", "rejected", "unchanged"))
+                        if (status == "command_ready") fireplaceLevel = level
+                        detail += "Livello caminetto · $level · $status"
+                    }
                     "house_ai.current_heating.v1" -> {
                         detail += "Digital Twin · impianto di riscaldamento (sola lettura) · " +
                             if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
@@ -223,7 +234,7 @@ data class EnergyAssistantAnswer(
                 parsed
             }
             return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands,
-                thermostatCommands, sceneCommands, fireplaceSettings, fireplacePowerRequest, coversPeriod)
+                thermostatCommands, sceneCommands, fireplaceSettings, fireplacePowerRequest, fireplaceLevel, coversPeriod)
         }
     }
 }

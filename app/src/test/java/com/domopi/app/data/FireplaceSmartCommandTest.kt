@@ -50,4 +50,16 @@ class FireplaceSmartCommandTest {
         assertTrue(manager.setSmartFireplacePower(false))
         assertEquals(listOf(MqttQueuedMessage(p + "power/cmd", "false", false)), manager.queue().toList())
     }
+
+    @Test fun levelOnlyInManualeOrWithManualeInTheSameAnswer() {
+        val manager = MqttManager()
+        manager.seeMode("Riscaldamento")
+        assertFalse(manager.setSmartFireplaceLevel(4))
+        assertTrue(manager.setSmartFireplaceLevel(5, manualInSameAnswer = true))
+        manager.seeMode("Manuale")
+        assertFalse(manager.setSmartFireplaceLevel(7))
+        assertTrue(manager.setSmartFireplaceLevel(4))
+        assertEquals(listOf(MqttQueuedMessage(p + "level/cmd", "5", false),
+            MqttQueuedMessage(p + "level/cmd", "4", false)), manager.queue().toList())
+    }
 }

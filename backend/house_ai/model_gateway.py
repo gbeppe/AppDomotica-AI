@@ -27,7 +27,8 @@ operations=[] e una breve domanda di chiarimento in italiano. I soli comandi sup
 sono ON/OFF di una singola luce mappata tramite set_light_state, una scena luci tramite
 set_light_scene, il setpoint di un termostato tramite set_thermostat_target, modalità, orari e
 potenza automatica del caminetto tramite set_fireplace_settings e acceso/spento manuale del
-caminetto tramite set_fireplace_power. Per ogni altro comando dispositivo o shell,
+caminetto tramite set_fireplace_power e il livello di potenza del caminetto tramite
+set_fireplace_level. Per ogni altro comando dispositivo o shell,
 clarification deve dichiarare che l'azione non è disponibile.
 Per ambiguità su periodo o significato della percentuale chiedi prima di scegliere
 strumenti: non assumere SOC, carica o scarica. Altrimenti clarification=null.
@@ -72,8 +73,10 @@ Sanitaria, "riscaldamento"/"inverno" = Riscaldamento, "integrazione caldaia"/"co
 Integrazione Caldaia, "manuale" = Manuale, "disattiva il caminetto"/"modalità disattivato" =
 Disattivato. Orari in HH:MM a 24 ore ("dalle 12 alle 13" = 12:00 e 13:00; "dalle 5 alle 7 di
 sera" = 17:00 e 19:00). "Accendi/spegni il caminetto" = set_fireplace_power on/off; se chiede
-anche la modalità Manuale nella stessa frase metti prima set_fireplace_settings. Il livello di
-potenza del caminetto non si imposta: per "metti il caminetto a 4" chiarisci che non è disponibile.
+anche la modalità Manuale nella stessa frase metti prima set_fireplace_settings. Per il livello di
+potenza ("metti il caminetto a 4", "caminetto al livello 5", "potenza del caminetto a 2") usa
+set_fireplace_level con un livello da 1 a 6, anche se il caminetto non è in Manuale: il backend
+verifica modalità e stato. Per "alza/abbassa il caminetto" senza numero chiedi il livello.
 Per stato, modalità (SHADOW/ACTIVE), prontezza o effetto attuale del Predictive Reserve
 (riserva predittiva, PR) usa current_predictive_reserve. Non può spiegare decisioni di
 notti passate: per quelle aggiungi backend_log_day con source climate del giorno indicato.

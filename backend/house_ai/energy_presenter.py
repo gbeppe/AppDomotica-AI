@@ -510,7 +510,8 @@ def describe(item):
     schema = r['schema']
     if is_action(r):
         return capitalize(command_action(r)) + '.'
-    if schema in ('house_ai.fireplace_settings_command.v1', 'house_ai.fireplace_power_command.v1'):
+    if schema in ('house_ai.fireplace_settings_command.v1', 'house_ai.fireplace_power_command.v1',
+                  'house_ai.fireplace_level_command.v1'):
         return fireplace_command_text(r)
     if schema == 'house_ai.backend_log_evidence.v1':
         return log_text(r)
@@ -565,7 +566,7 @@ def describe(item):
 
 
 COMMAND_SCHEMAS = ('house_ai.light_command.v1', 'house_ai.light_scene_command.v1', 'house_ai.thermostat_command.v1',
-                   'house_ai.fireplace_settings_command.v1')
+                   'house_ai.fireplace_settings_command.v1', 'house_ai.fireplace_level_command.v1')
 
 
 def is_action(r):
@@ -590,6 +591,8 @@ def fireplace_command_text(r):
     if r['schema'] == 'house_ai.fireplace_settings_command.v1':
         return (f"Non imposto gli orari del caminetto: l'avvio alle {r['start_time']} deve essere prima "
                 f"dello spegnimento alle {r['stop_time']}.")
+    if r['schema'] == 'house_ai.fireplace_level_command.v1':
+        return fireplace_level_text(r)
     on = r['state'] == 'on'
     if r['status'] == 'confirmation_required':
         action = "l'accensione" if on else "lo spegnimento"
@@ -602,7 +605,24 @@ def fireplace_command_text(r):
             "passa prima a Manuale.")
 
 
+def fireplace_level_text(r):
+    if r['status'] == 'unchanged':
+        return f"Il caminetto è già al livello {r['level']}."
+    if r['reason'] == 'mode_unknown':
+        return "Non conosco la modalità del caminetto: non posso cambiarne il livello."
+    if r['reason'] == 'off':
+        return "Il caminetto è spento: il livello si cambia quando è acceso."
+    text = f"Il caminetto è in modalità {r['mode']}: il livello si cambia solo in Manuale."
+    if r['auto_power'] is True:
+        text += " Con la potenza automatica attiva il livello lo decide la casa."
+    elif r['auto_power'] is False:
+        text += " La potenza automatica è disattivata."
+    return text
+
+
 def command_action(r):
+    if r['schema'] == 'house_ai.fireplace_level_command.v1':
+        return f"imposto il caminetto al livello {r['level']}"
     if r['schema'] == 'house_ai.fireplace_settings_command.v1':
         return fireplace_settings_action(r)
     if r['schema'] == 'house_ai.light_command.v1':
