@@ -128,10 +128,10 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
 | «metti il caminetto in riscaldamento» | Ok, metto il caminetto in modalità Riscaldamento. |
 | «il caminetto si spenga alle 17:30» | Ok, imposto gli orari del caminetto con spegnimento alle 17:30. |
 | «disattiva la potenza automatica del caminetto» | Ok, disattivo la potenza automatica del caminetto. |
-| «accendi il caminetto» (in modalità Manuale) | Confermi l'accensione del caminetto? Tocca Conferma. → tasti **Conferma accensione** / **Annulla** → «Ok, accendo il caminetto.» |
-| «spegni il caminetto» (in modalità Manuale) | Confermi lo spegnimento del caminetto? Tocca Conferma. → **Conferma spegnimento** / **Annulla** |
+| «accendi il caminetto» (in modalità Manuale) | Confermi l'accensione del caminetto? Di' confermo o tocca Conferma. → tasti **Conferma accensione** / **Annulla** → «Ok, accendo il caminetto.» |
+| «spegni il caminetto» (in modalità Manuale) | Confermi lo spegnimento del caminetto? Di' confermo o tocca Conferma. → **Conferma spegnimento** / **Annulla** |
 | «accendi il caminetto» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: per accenderlo a mano passa prima a Manuale. |
-| «metti il caminetto in manuale e accendilo» | Ok, metto il caminetto in modalità Manuale. Confermi l'accensione del caminetto? Tocca Conferma. |
+| «metti il caminetto in manuale e accendilo» | Ok, metto il caminetto in modalità Manuale. Confermi l'accensione del caminetto? Di' confermo o tocca Conferma. |
 | «metti il caminetto a 4» (in Manuale, acceso) | Ok, imposto il caminetto al livello 4. |
 | «metti il caminetto a 4» (in Manuale, spento) | Il caminetto è spento: il livello si cambia quando è acceso. |
 | «metti il caminetto a 4» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: il livello si cambia solo in Manuale. Con la potenza automatica attiva il livello lo decide la casa. |
@@ -145,6 +145,13 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
   caminetto è già nello stato chiesto: «Il caminetto risulta già acceso.».
 - I tasti **Conferma** / **Annulla** compaiono **subito sotto Parla**, nel riquadro «Chiedi alla
   casa», senza bisogno di scorrere; dopo il tocco spariscono e l'esito resta nella Risposta.
+- **Conferma a voce:** se il comando è stato detto a voce, finita la lettura della domanda di
+  conferma il microfono si apre da solo. Rispondi solo **«confermo»** o **«conferma»** (una
+  parola sola; «sì» o frasi più lunghe non valgono) oppure **«annulla»** / **«no»**. Se non
+  rispondi o l'app non capisce: «Nessuna risposta: tocca Conferma o Annulla.» / «Non ho capito:
+  tocca Conferma o Annulla.», e non invia nulla. Con un comando scritto puoi toccare Parla e dire
+  «confermo». La conferma vale **60 secondi**: dopo, «Conferma scaduta: nessun comando inviato.
+  Ripeti la richiesta.».
 - **Livello di potenza (1–6):** solo in modalità **Manuale** e a caminetto **acceso**; parte
   subito, senza conferma. Nelle altre modalità non si cambia da AI Smart e vale la potenza
   automatica: attiva, il livello lo decide la casa; disattivata, resta quello impostato (slider
@@ -237,3 +244,4 @@ in cima.
 | 15/10/2026 | Comandi del caminetto (§4.5): modalità, orari e potenza automatica subito; acceso/spento solo in Manuale e con conferma; livello escluso. |
 | 15/10/2026 | Tasti Conferma/Annulla del caminetto spostati sotto Parla; l'etichetta «Periodo coperto» compare solo nelle risposte su un periodo (consumi, produzione), non nei comandi. |
 | 15/10/2026 | Livello di potenza del caminetto (1–6) da AI Smart, solo in Manuale e a caminetto acceso (§4.5). |
+| 15/10/2026 | Conferma a voce di acceso/spento del caminetto («confermo»/«conferma»), ascolto automatico dopo la domanda, validità 60 secondi (§4.5). |

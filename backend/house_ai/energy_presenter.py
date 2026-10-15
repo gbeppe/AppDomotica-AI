@@ -596,7 +596,7 @@ def fireplace_command_text(r):
     on = r['state'] == 'on'
     if r['status'] == 'confirmation_required':
         action = "l'accensione" if on else "lo spegnimento"
-        return f"Confermi {action} del caminetto? Tocca Conferma."
+        return f"Confermi {action} del caminetto? Di' confermo o tocca Conferma."
     if r['status'] == 'unchanged':
         return f"Il caminetto risulta già {'acceso' if on else 'spento'}."
     if r['reason'] == 'mode_unknown':

@@ -86,15 +86,15 @@ class FireplaceCommandTests(unittest.TestCase):
     def test_power_in_manual_asks_for_confirmation(self):
         result = run(power('on'), mode='Manuale')
         self.assertEqual(result['results'][0]['result']['status'], 'confirmation_required')
-        self.assertEqual(result['answer'], "Confermi l'accensione del caminetto? Tocca Conferma.")
+        self.assertEqual(result['answer'], "Confermi l'accensione del caminetto? Di' confermo o tocca Conferma.")
         self.assertEqual(run(power('off'), mode='Manuale', power=True)['answer'],
-                         'Confermi lo spegnimento del caminetto? Tocca Conferma.')
+                         "Confermi lo spegnimento del caminetto? Di' confermo o tocca Conferma.")
         self.assertEqual(run(power('on'), mode='Manuale', power=True)['answer'], 'Il caminetto risulta già acceso.')
 
     def test_manual_then_on_in_one_request(self):
         result = run(settings(mode='Manuale'), power('on'))
         self.assertEqual(result['answer'], "Ok, metto il caminetto in modalità Manuale.\n\n"
-                                           "Confermi l'accensione del caminetto? Tocca Conferma.")
+                                           "Confermi l'accensione del caminetto? Di' confermo o tocca Conferma.")
 
 
     def test_level_only_in_manual_with_the_fireplace_on(self):

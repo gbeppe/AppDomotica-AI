@@ -173,7 +173,7 @@ class AiSmartScreenTest {
     @Test fun fireplaceConfirmationSitsUnderParlaWithoutScrolling() {
         var confirmed = false
         val response = EnergyAssistantAnswer("Ok, metto il caminetto in modalità Manuale.\n\n" +
-            "Confermi l'accensione del caminetto? Tocca Conferma.", "complete", "metti il caminetto in manuale e accendilo",
+            "Confermi l'accensione del caminetto? Di' confermo o tocca Conferma.", "complete", "metti il caminetto in manuale e accendilo",
             "2026-10-15T16:56:00+02:00", emptyList(), fireplacePowerRequest = true)
         compose.setContent {
             DomoPiTheme(darkTheme = false) {

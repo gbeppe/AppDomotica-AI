@@ -89,6 +89,12 @@ fun AiSmartScreen(
     var response by remember { mutableStateOf<EnergyAssistantAnswer?>(null) }
     // Manual fireplace on/off proposed by the backend: sent only after "Conferma".
     var pendingFireplacePower by remember { mutableStateOf<Boolean?>(null) }
+    var pendingSinceMs by remember { mutableLongStateOf(0L) }
+    // After a spoken question the confirmation is asked aloud and the microphone opens when the
+    // reading ends (never during it, so the app does not hear itself).
+    var listenAfterSpeech by remember { mutableStateOf(false) }
+    var voiceConfirming by remember { mutableStateOf(false) }
+    var speechFinished by remember { mutableIntStateOf(0) }
     var fireplaceNotice by remember { mutableStateOf<String?>(null) }
     var assistantContext by remember { mutableStateOf<AssistantContext?>(null) }
     var dynamicError by remember { mutableStateOf<String?>(null) }
@@ -214,6 +220,8 @@ fun AiSmartScreen(
                     }
                 }
                 pendingFireplacePower = result.fireplacePowerRequest
+                pendingSinceMs = System.currentTimeMillis()
+                listenAfterSpeech = spoken && result.fireplacePowerRequest != null
                 response = result
                 assistantContext = result.context ?: assistantContext
                 stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
@@ -241,7 +249,10 @@ fun AiSmartScreen(
     fun confirmFireplace() {
         val on = pendingFireplacePower ?: return
         pendingFireplacePower = null
+        listenAfterSpeech = false
         fireplaceNotice = when {
+            VoiceConfirmation.expired(pendingSinceMs, System.currentTimeMillis()) ->
+                "Conferma scaduta: nessun comando inviato. Ripeti la richiesta."
             !connected -> "Comando non inviato: la casa non è collegata."
             !onFireplacePower(on) -> "Comando non inviato: il caminetto non è in modalità Manuale."
             on -> "Ok, accendo il caminetto."
@@ -249,9 +260,25 @@ fun AiSmartScreen(
         }
         if (speechReady) fireplaceNotice?.let(::speak)
     }
+    fun cancelFireplace() {
+        pendingFireplacePower = null
+        listenAfterSpeech = false
+        fireplaceNotice = "Comando annullato."
+    }
     val recognizer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim()
-        if (result.resultCode == Activity.RESULT_OK && !text.isNullOrBlank()) {
+        val confirming = voiceConfirming
+        voiceConfirming = false
+        // A pending fireplace on/off: the spoken "confermo"/"annulla" is handled here, never sent to the backend.
+        val answer = if (pendingFireplacePower != null) VoiceConfirmation.classify(text) else null
+        if (answer == true) confirmFireplace()
+        else if (answer == false) { cancelFireplace(); if (speechReady) speak("Comando annullato.") }
+        else if (confirming) {
+            fireplaceNotice = if (text.isNullOrBlank()) "Nessuna risposta: tocca Conferma o Annulla."
+                else "Non ho capito: tocca Conferma o Annulla."
+            if (speechReady) fireplaceNotice?.let(::speak)
+        }
+        else if (result.resultCode == Activity.RESULT_OK && !text.isNullOrBlank()) {
             question = text
             when {
                 text.length > 1000 -> voiceNotice = "Domanda troppo lunga: al massimo 1000 caratteri."
@@ -280,7 +307,12 @@ fun AiSmartScreen(
         engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             private fun notice(text: String) { main.post { if (!disposed) voiceNotice = text } }
             override fun onStart(utteranceId: String?) { notice("Lettura in corso…") }
-            override fun onDone(utteranceId: String?) { if (utteranceId?.endsWith("-last") == true) notice("Lettura terminata.") }
+            override fun onDone(utteranceId: String?) {
+                if (utteranceId?.endsWith("-last") == true) {
+                    notice("Lettura terminata.")
+                    main.post { if (!disposed) speechFinished++ }
+                }
+            }
             @Deprecated("Required by the platform listener")
             override fun onError(utteranceId: String?) { notice("Lettura vocale non riuscita. La risposta resta a schermo.") }
         })
@@ -295,6 +327,25 @@ fun AiSmartScreen(
             main.removeCallbacksAndMessages(null)
             engine?.stop()
             engine?.shutdown()
+        }
+    }
+    fun listen(confirmation: Boolean) {
+        speech?.stop()
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "it-IT")
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, if (confirmation) "Di' confermo o annulla" else "Chiedi o comanda la casa")
+        }
+        voiceConfirming = confirmation
+        try { recognizer.launch(intent) }
+        catch (_: ActivityNotFoundException) { voiceConfirming = false; voiceNotice = "Riconoscimento vocale non disponibile. Puoi scrivere la domanda." }
+        catch (_: SecurityException) { voiceConfirming = false; voiceNotice = "Accesso al riconoscimento vocale negato. Puoi scrivere la domanda." }
+    }
+    LaunchedEffect(speechFinished) {
+        if (speechFinished > 0 && listenAfterSpeech && pendingFireplacePower != null) {
+            listenAfterSpeech = false
+            listen(true)
         }
     }
     // Do not keep speaking a response after the connection status changes.
@@ -331,24 +382,13 @@ fun AiSmartScreen(
         },
         onAskDynamic = { ask(it, spoken = false) },
         onDaySummary = { daySummary() },
-        onDictate = {
-            speech?.stop()
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "it-IT")
-                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "Chiedi o comanda la casa")
-            }
-            try { recognizer.launch(intent) }
-            catch (_: ActivityNotFoundException) { voiceNotice = "Riconoscimento vocale non disponibile. Puoi scrivere la domanda." }
-            catch (_: SecurityException) { voiceNotice = "Accesso al riconoscimento vocale negato. Puoi scrivere la domanda." }
-        },
+        onDictate = { listen(false) },
         onSpeak = { speak(it) },
         onStopSpeaking = { speech?.stop(); voiceNotice = "Lettura interrotta." },
         pendingFireplacePower = pendingFireplacePower,
         fireplaceNotice = fireplaceNotice,
         onConfirmFireplace = { confirmFireplace() },
-        onCancelFireplace = { pendingFireplacePower = null; fireplaceNotice = "Comando annullato." }
+        onCancelFireplace = { cancelFireplace() }
     )
 }
 

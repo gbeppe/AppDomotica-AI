@@ -40,6 +40,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 15/10 | **Guida utente di AI Smart** (`docs/GUIDA_UTENTE_AI_SMART.md`): come si attiva, cosa fa, domande e risposte; **aggiornata a ogni modifica** delle funzioni di AI Smart (regola 9 di `CLAUDE.md`) | |
 | 15/10 | AI Smart comanda il caminetto: modalità, orari e potenza automatica **subito**; acceso/spento **solo in Manuale** (fuori da Manuale risponde di passare prima a Manuale, opzione A) e **solo dopo la conferma** nell'app; **livello di potenza escluso** | il caminetto è un apparecchio a combustione |
 | 15/10 | Livello di potenza del caminetto da AI Smart **solo in Manuale** e a caminetto acceso, subito e senza conferma; nelle altre modalità vale la potenza automatica attiva/disattiva | decisione dell'utente; verificato 15/10 che in Manuale .15 non cambia il livello (rimasto a 3 dalle 16:57 alle 17:23 con potenza automatica attiva, nessun comando di livello) |
+| 15/10 | Conferma di acceso/spento del caminetto anche **a voce**: dopo un comando vocale il microfono si apre a lettura finita; vale solo la parola singola «confermo»/«conferma» («sì» escluso), riconosciuta nell'app e mai inviata al backend; tasti sempre disponibili; validità 60 s | scelta dell'utente: «sì» è troppo facile da sentire per sbaglio (TV, altre persone) |
 
 ## Lezioni tecniche
 
