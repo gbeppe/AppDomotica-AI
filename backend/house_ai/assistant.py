@@ -59,7 +59,8 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
     statuses = [item['result']['status'] for item in execution['results']]
     overall = ('insufficient_data' if all(s in ('insufficient_data', 'missing', 'unavailable', 'source_rejected',
                                                 'source_not_updated') for s in statuses)
-               else 'partial' if any(s not in ('complete', 'command_ready') for s in statuses) else 'complete')
+               else 'partial' if any(s not in ('complete', 'command_ready', 'confirmation_required', 'rejected', 'unchanged')
+                                     for s in statuses) else 'complete')
     context = ({'domain': 'climate', 'focus': 'air_conditioner'}
                if any(op['tool'] == 'current_air_conditioner' for op in execution['operations']) else None)
     return {**base, 'status': overall,

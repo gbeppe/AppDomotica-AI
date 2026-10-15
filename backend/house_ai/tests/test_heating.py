@@ -44,7 +44,9 @@ class HeatingToolTests(unittest.TestCase):
         self.assertIn('heating', catalog()['domains'])
         self.assertIn('current_heating', json.dumps(plan_schema()))
         self.assertIn('current_heating', SYSTEM)
-        self.assertNotIn('set_fireplace', json.dumps(catalog()))
+        # Fireplace commands are separate tools (set_fireplace_*); puffer, pumps and boiler have none.
+        self.assertFalse(any(t['name'].startswith(('set_puffer', 'set_floor', 'set_boiler', 'set_solar'))
+                             for t in catalog()['tools']))
         self.assertEqual(validate_plan(PLAN)['operations'][0]['tool'], 'current_heating')
         with self.assertRaises(ValueError):
             validate_plan({'operations': [{'id': 'h', 'tool': 'current_heating', 'level': '6'}]})

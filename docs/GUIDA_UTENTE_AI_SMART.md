@@ -1,11 +1,12 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **15/10/2026** · app `bld_1484ea94` · backend House AI `20261015-fireplace-wording`.
+Aggiornata al **15/10/2026** · app con i comandi del caminetto · backend House AI `20261015-fireplace-commands`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
-avviare le scene luci e cambiare la temperatura dei termostati. Gli altri impianti li legge
-soltanto.
+avviare le scene luci, cambiare la temperatura dei termostati e impostare il caminetto
+(modalità, orari, potenza automatica; acceso/spento solo in modalità Manuale e dopo la tua
+conferma). Gli altri impianti li legge soltanto.
 
 > I numeri delle risposte sono sempre quelli misurati dalla casa: li scrive il programma, non
 > l'intelligenza artificiale. L'intelligenza artificiale capisce solo **cosa** stai chiedendo.
@@ -37,7 +38,7 @@ soltanto.
 |---|---|
 | **Stato della domotica** | riepilogo scritto all'apertura: temperature ed energia del momento. Si può ridurre toccando la freccia. |
 | **Leggi riepilogo** | legge a voce il riepilogo (all'apertura non parla da solo). |
-| **Com'è andata oggi** | bilancio energetico della giornata, vedi §4.9. |
+| **Com'è andata oggi** | bilancio energetico della giornata, vedi §4.10. |
 | **Parla** | tasto grande: tocca, fai la domanda, la domanda parte da sola e la risposta viene letta a voce. |
 | **Oppure scrivi la domanda** + **Invia** | domanda scritta: la risposta compare ma **non** viene letta (c'è **Leggi risposta**). |
 | **Risposta** | testo della risposta, ora della risposta, **Leggi risposta** / **Ferma lettura**. |
@@ -116,11 +117,33 @@ Stanze: living (soggiorno, sala), camera da letto, cameretta, bagno servizio, lo
 | «com'è il riscaldamento in casa?», «stato del riscaldamento?» | Caminetto spento. È in modalità Riscaldamento, programmato dalle 16:30 alle 16:55, con potenza automatica attiva. Puffer: alto 35,2 gradi, basso 33,1 gradi, acqua sanitaria 36 gradi. Pompa pavimento disabilitata e ferma. Caldaia a gas: fiamma spenta. Solare termico: pompa al 30 per cento, collettore 40,8 gradi. — più i due termostati. |
 | «il caminetto è acceso?», «quanto è caldo il puffer?», «la caldaia è accesa?» | la stessa descrizione dell'impianto. |
 
-Con il caminetto acceso: «Caminetto acceso a livello 3. …». Caminetto, puffer, pompa pavimento,
-caldaia e solare termico **non si comandano** da AI Smart (si usano la scheda Impianti
-dell'app e le logiche della casa).
+Con il caminetto acceso: «Caminetto acceso a livello 3. …». Puffer, pompa pavimento, caldaia e
+solare termico **non si comandano** da AI Smart; il caminetto si imposta come al §4.5.
 
-### 4.5 Termostati (lettura e comando)
+### 4.5 Caminetto (comandi)
+
+| Domande | Risposta |
+|---|---|
+| «metti il caminetto in modalità acqua sanitaria dalle 12:00 alle 13:00» | Ok, metto il caminetto in modalità Acqua Sanitaria, dalle 12:00 alle 13:00. |
+| «metti il caminetto in riscaldamento» | Ok, metto il caminetto in modalità Riscaldamento. |
+| «il caminetto si spenga alle 17:30» | Ok, imposto gli orari del caminetto con spegnimento alle 17:30. |
+| «disattiva la potenza automatica del caminetto» | Ok, disattivo la potenza automatica del caminetto. |
+| «accendi il caminetto» (in modalità Manuale) | Confermi l'accensione del caminetto? Tocca Conferma. → tasti **Conferma accensione** / **Annulla** → «Ok, accendo il caminetto.» |
+| «spegni il caminetto» (in modalità Manuale) | Confermi lo spegnimento del caminetto? Tocca Conferma. → **Conferma spegnimento** / **Annulla** |
+| «accendi il caminetto» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: per accenderlo a mano passa prima a Manuale. |
+| «metti il caminetto in manuale e accendilo» | Ok, metto il caminetto in modalità Manuale. Confermi l'accensione del caminetto? Tocca Conferma. |
+
+- **Modalità:** Riscaldamento, Acqua Sanitaria, Integrazione Caldaia, Manuale, Disattivato.
+  Modalità, orari e potenza automatica partono **subito**, come le luci.
+- **Orari:** a 24 ore; l'avvio deve essere prima dello spegnimento, altrimenti: «Non imposto
+  gli orari del caminetto: l'avvio alle 17:00 deve essere prima dello spegnimento alle 16:55.».
+  In Manuale e Disattivato gli orari non contano.
+- **Acceso/spento** solo in modalità **Manuale** e **solo dopo aver toccato Conferma**; se il
+  caminetto è già nello stato chiesto: «Il caminetto risulta già acceso.».
+- **Il livello di potenza non si imposta** da AI Smart (con la potenza automatica lo decide la
+  casa): usa lo slider della scheda Impianti.
+
+### 4.6 Termostati (lettura e comando)
 
 | Domande | Esempio di risposta |
 |---|---|
@@ -131,7 +154,7 @@ dell'app e le logiche della casa).
 - «Chiede / non chiede calore» indica se il termostato della stanza sta chiedendo riscaldamento.
 - Il timer delle fasce orarie e la modalità vacanza possono poi reimpostare il setpoint.
 
-### 4.6 Luci (lettura e comando)
+### 4.7 Luci (lettura e comando)
 
 | Domande | Esempio di risposta |
 |---|---|
@@ -142,7 +165,7 @@ dell'app e le logiche della casa).
 Luci comandabili: soggiorno, libreria, lampada TV, tavolino lettura, lavanderia, portico
 ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 
-### 4.7 Scene luci
+### 4.8 Scene luci
 
 | Domande | Cosa succede |
 |---|---|
@@ -151,7 +174,7 @@ ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 | «accendi tutte le luci» | accende le luci principali e della piscina (niente in modalità vacanza, meno luci con luci ECO) |
 | «spegni tutte le luci» | spegne tutte le luci interne, esterne e della piscina (circa 35 secondi) |
 
-### 4.8 Condizionatore e Predictive Reserve (solo lettura)
+### 4.9 Condizionatore e Predictive Reserve (solo lettura)
 
 | Domande | Esempio di risposta |
 |---|---|
@@ -161,7 +184,7 @@ ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 
 Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller AI Climate.
 
-### 4.9 «Com'è andata oggi» e log della casa
+### 4.10 «Com'è andata oggi» e log della casa
 
 - Tasto **Com'è andata oggi** (non usa l'intelligenza artificiale):
   > Oggi fino alle 15:14: prodotti 14,7 kilowattora, consumati 6,4, prelevati 0,1, immessi 3,1.
@@ -173,8 +196,8 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 
 ## 5. Cosa AI Smart non fa
 
-- Non comanda caminetto, caldaia, pompa pavimento, condizionatore, VMC, piscina (pompa e
-  skimmer), irrigazione, garage, Predictive Reserve.
+- Non comanda caldaia, pompa pavimento, condizionatore, VMC, piscina (pompa e skimmer),
+  irrigazione, garage, Predictive Reserve; del caminetto non imposta il livello di potenza.
 - Non inventa numeri, costi o tariffe e non fa ipotesi sulle cause.
 - Non ha memoria delle domande precedenti.
 - A una richiesta non disponibile risponde che l'azione non è disponibile o chiede un chiarimento.
@@ -204,3 +227,4 @@ in cima.
 | Data | Modifica |
 |---|---|
 | 15/10/2026 | Prima versione: energia adesso e flussi, riscaldamento in sola lettura, modalità del caminetto in una frase propria. |
+| 15/10/2026 | Comandi del caminetto (§4.5): modalità, orari e potenza automatica subito; acceso/spento solo in Manuale e con conferma; livello escluso. |

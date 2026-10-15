@@ -508,8 +508,10 @@ def energy_value(value, unit):
 def describe(item):
     r = item['result']
     schema = r['schema']
-    if schema in COMMAND_SCHEMAS:
+    if is_action(r):
         return capitalize(command_action(r)) + '.'
+    if schema in ('house_ai.fireplace_settings_command.v1', 'house_ai.fireplace_power_command.v1'):
+        return fireplace_command_text(r)
     if schema == 'house_ai.backend_log_evidence.v1':
         return log_text(r)
     if schema == 'house_ai.energy_comparison.v1':
@@ -562,10 +564,47 @@ def describe(item):
     return text
 
 
-COMMAND_SCHEMAS = ('house_ai.light_command.v1', 'house_ai.light_scene_command.v1', 'house_ai.thermostat_command.v1')
+COMMAND_SCHEMAS = ('house_ai.light_command.v1', 'house_ai.light_scene_command.v1', 'house_ai.thermostat_command.v1',
+                   'house_ai.fireplace_settings_command.v1')
+
+
+def is_action(r):
+    return r['schema'] in COMMAND_SCHEMAS and r['status'] == 'command_ready'
+
+
+def fireplace_settings_action(r):
+    mode, start, stop, auto = r['mode'], r['start_time'], r['stop_time'], r['auto_power']
+    times = (f"dalle {start} alle {stop}" if start and stop else
+             f"con avvio alle {start}" if start else f"con spegnimento alle {stop}" if stop else "")
+    actions = []
+    if mode:
+        actions.append(f"metto il caminetto in modalità {mode}" + (f", {times}" if times else ""))
+    elif times:
+        actions.append(f"imposto gli orari del caminetto {times}")
+    if auto is not None:
+        actions.append(f"{'attivo' if auto else 'disattivo'} la potenza automatica del caminetto")
+    return join_it(actions)
+
+
+def fireplace_command_text(r):
+    if r['schema'] == 'house_ai.fireplace_settings_command.v1':
+        return (f"Non imposto gli orari del caminetto: l'avvio alle {r['start_time']} deve essere prima "
+                f"dello spegnimento alle {r['stop_time']}.")
+    on = r['state'] == 'on'
+    if r['status'] == 'confirmation_required':
+        action = "l'accensione" if on else "lo spegnimento"
+        return f"Confermi {action} del caminetto? Tocca Conferma."
+    if r['status'] == 'unchanged':
+        return f"Il caminetto risulta già {'acceso' if on else 'spento'}."
+    if r['reason'] == 'mode_unknown':
+        return "Non conosco la modalità del caminetto: non posso accenderlo o spegnerlo a mano."
+    return (f"Il caminetto è in modalità {r['mode']}: per {'accenderlo' if on else 'spegnerlo'} a mano "
+            "passa prima a Manuale.")
 
 
 def command_action(r):
+    if r['schema'] == 'house_ai.fireplace_settings_command.v1':
+        return fireplace_settings_action(r)
     if r['schema'] == 'house_ai.light_command.v1':
         return f"{'accendo' if r['state'] == 'on' else 'spengo'} {LIGHT_SPOKEN[r['light']][0]}"
     if r['schema'] == 'house_ai.light_scene_command.v1':
@@ -579,6 +618,9 @@ def notes(item):
     schema = r['schema']
     if schema == 'house_ai.light_scene_command.v1':
         return [SCENE_DETAILS[r['scene']]]
+    if schema == 'house_ai.fireplace_settings_command.v1' and r['status'] == 'command_ready':
+        return (["Le modalità Manuale e Disattivato non usano gli orari."]
+                if r['mode'] in ('Manuale', 'Disattivato') and (r['start_time'] or r['stop_time']) else [])
     if schema == 'house_ai.thermostat_command.v1':
         return ["Il setpoint resta valido fino al prossimo intervento del timer delle fasce orarie (cambio fascia, "
                 "modifica dei valori in/fuori fascia o ripristino ogni 8 ore) o della modalità vacanza."]
@@ -633,8 +675,8 @@ def notes(item):
 
 def compose(results):
     """One answer: all commands in a single "Ok, …" sentence, then each reading."""
-    actions = [command_action(item['result']) for item in results if item['result']['schema'] in COMMAND_SCHEMAS]
-    texts = [describe(item) for item in results if item['result']['schema'] not in COMMAND_SCHEMAS]
+    actions = [command_action(item['result']) for item in results if is_action(item['result'])]
+    texts = [describe(item) for item in results if not is_action(item['result'])]
     if actions:
         texts.insert(0, f"Ok, {join_it(actions)}.")
     return '\n\n'.join(texts)

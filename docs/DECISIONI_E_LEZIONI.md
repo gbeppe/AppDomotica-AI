@@ -38,6 +38,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 14/10 | Broker MQTT: **un solo utente** (`domotica`) per tutti i client, anonimo chiuso, `domopi` eliminato | semplicità |
 | 15/10 | AI Smart energia: riepilogo e «energia?» con produzione, batteria (livello e carica/scarica), **consumo** e rete (**anche l'immissione**); «dettaglio energia» aggiunge **solo i flussi attivi, in italiano**; fatto prima dei test sul caminetto | flussi stimati, non misurati |
 | 15/10 | **Guida utente di AI Smart** (`docs/GUIDA_UTENTE_AI_SMART.md`): come si attiva, cosa fa, domande e risposte; **aggiornata a ogni modifica** delle funzioni di AI Smart (regola 9 di `CLAUDE.md`) | |
+| 15/10 | AI Smart comanda il caminetto: modalità, orari e potenza automatica **subito**; acceso/spento **solo in Manuale** (fuori da Manuale risponde di passare prima a Manuale, opzione A) e **solo dopo la conferma** nell'app; **livello di potenza escluso** | il caminetto è un apparecchio a combustione |
 
 ## Lezioni tecniche
 

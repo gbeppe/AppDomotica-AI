@@ -78,6 +78,11 @@ HEATING_METRICS = {
 HEATING_TOPICS = {key: f"zara/interface/{path}/stat" for key, (path, _) in HEATING_METRICS.items()}
 # App labels published by ROUTER-FIREPLACE-MODE.1/.2.
 FIREPLACE_MODES = ("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqua Sanitaria", "Manuale")
+TIME_PATTERN = re.compile(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
+# Fireplace commands (15/10/2026): settings run at once; manual on/off only in "Manuale" and
+# only after the user confirms in the app. The power level is never set from AI Smart.
+FIREPLACE_MANUAL = "Manuale"
+UNCHANGED = "unchanged"
 LIGHT_TOPICS = {
     "lights_living": "zara/interface/lights/living/power/stat",
     "lights_libreria": "zara/interface/lights/libreria/power/stat",
@@ -149,6 +154,15 @@ def catalog(path=CATALOG_PATH):
             "description": "Read the heating plant: fireplace on/off, power level, mode, daily time window and automatic power control; puffer top, bottom and domestic hot water temperatures; floor pump enabled and running; gas boiler flame and modulation; solar thermal pump and collector. Read only",
             "parameters": {}
         }, {
+            "name": "set_fireplace_settings",
+            "description": "Set the fireplace mode, daily start/stop time (HH:MM, start before stop) and/or automatic power control; unchanged for what the user did not ask. Never sets the power level",
+            "parameters": {"mode": [UNCHANGED, *FIREPLACE_MODES], "start_time": "HH:MM or unchanged",
+                           "stop_time": "HH:MM or unchanged", "auto_power": [UNCHANGED, "on", "off"]}
+        }, {
+            "name": "set_fireplace_power",
+            "description": "Switch the fireplace on or off by hand; allowed only in mode Manuale and executed only after the user confirms in the app",
+            "parameters": {"state": ["on", "off"]}
+        }, {
             "name": "current_predictive_reserve",
             "description": "Read whether the Predictive Reserve control is enabled, its operating mode (SHADOW or ACTIVE), model readiness and what that means now for new night dehumidification starts",
             "parameters": {}
@@ -184,7 +198,7 @@ def catalog(path=CATALOG_PATH):
             "Use backend_log_day for forecasts, recorded reasons, learning or SHADOW evidence. Never infer actions from SHADOW.",
             "Use current_predictive_reserve for the current Predictive Reserve state; it cannot explain past nights.",
             "Use current_energy_overview for the energy of the house now; current_energy_metric only for one explicit quantity.",
-            "Use current_heating for the fireplace, puffer, floor pump, gas boiler and solar thermal; they cannot be commanded.",
+            "Use current_heating to read the fireplace, puffer, floor pump, gas boiler and solar thermal; only the fireplace settings and manual on/off can be commanded.",
             "The thermostats heat; the air conditioner is driven only by the AI Climate controller and cannot be commanded.",
             "No other control, cost, tariffs, unsupported metrics or causal speculation; clarify unsupported requests."
         ]
@@ -221,7 +235,9 @@ def validate_plan(plan, sources=None):
                     if tool == "current_thermostats" else {"id", "tool", "thermostat", "target_c"}
                     if tool == "set_thermostat_target" else {"id", "tool", "metric"}
                     if tool == "current_energy_metric" else {"id", "tool", "detail"}
-                    if tool == "current_energy_overview" else {"id", "tool", "source", "day"}
+                    if tool == "current_energy_overview" else {"id", "tool", "mode", "start_time", "stop_time", "auto_power"}
+                    if tool == "set_fireplace_settings" else {"id", "tool", "state"}
+                    if tool == "set_fireplace_power" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
                     if tool == "energy_comparison" else None)
         if expected is None or set(operation) != expected:
@@ -235,6 +251,15 @@ def validate_plan(plan, sources=None):
         if ((tool == "energy_metric" and operation["metric"] not in sources)
                 or (tool == "current_energy_metric" and operation["metric"] not in CURRENT_METRICS)):
             raise ValueError("Unknown tool or metric")
+        if tool == "set_fireplace_settings":
+            times = [operation[k] for k in ("start_time", "stop_time")]
+            if (operation["mode"] not in (UNCHANGED, *FIREPLACE_MODES)
+                    or operation["auto_power"] not in (UNCHANGED, "on", "off")
+                    or not all(isinstance(t, str) and (t == UNCHANGED or TIME_PATTERN.fullmatch(t)) for t in times)
+                    or all(operation[k] == UNCHANGED for k in ("mode", "start_time", "stop_time", "auto_power"))):
+                raise ValueError("Unknown fireplace settings")
+        if tool == "set_fireplace_power" and operation["state"] not in ("on", "off"):
+            raise ValueError("Unknown fireplace power command")
         if tool == "current_energy_overview" and operation["detail"] not in ENERGY_DETAILS:
             raise ValueError("Unknown energy detail")
         if tool == "current_lights" and operation["light"] not in (["all"] + sorted(LIGHT_TOPICS)):
@@ -424,7 +449,6 @@ def validate_thermostats_snapshot(snapshot):
     return clean
 
 
-TIME_PATTERN = re.compile(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]")
 
 
 def heating_value_ok(kind, value):
@@ -489,6 +513,43 @@ def validate_environment_snapshot(snapshot):
     return clean
 
 
+def heating_value(heating, key):
+    observation = (heating["observations"] if heating else {}).get(key)
+    return observation["value"] if observation else None
+
+
+def fireplace_settings(operation, heating):
+    pick = lambda key: None if operation[key] == UNCHANGED else operation[key]
+    mode, start, stop, auto = pick("mode"), pick("start_time"), pick("stop_time"), pick("auto_power")
+    result = {"schema": "house_ai.fireplace_settings_command.v1", "status": "command_ready",
+              "mode": mode, "start_time": start, "stop_time": stop,
+              "auto_power": None if auto is None else auto == "on",
+              "limitations": ["Il backend seleziona solo modalità, orari e potenza automatica; topic e payload sono risolti dall'app.",
+                              "Il livello di potenza non si imposta da AI Smart; con la potenza automatica attiva lo decide .15.",
+                              "Il successivo /stat è l'eco del comando, non una conferma di .15."]}
+    # .15 compares HH:MM strings within one day: the start must come before the stop.
+    first = start or heating_value(heating, "fireplace.start_time")
+    last = stop or heating_value(heating, "fireplace.stop_time")
+    if (start or stop) and first and last and first >= last:
+        result.update(status="rejected", reason="time_order", start_time=first, stop_time=last)
+    return result
+
+
+def fireplace_power(state, heating, planned_mode):
+    mode = planned_mode or heating_value(heating, "fireplace.mode")
+    power = heating_value(heating, "fireplace.power")
+    result = {"schema": "house_ai.fireplace_power_command.v1", "state": state, "mode": mode,
+              "limitations": ["Acceso e spento manuali valgono solo in modalità Manuale; l'app li invia solo dopo la conferma.",
+                              "Lo stato acceso/spento è quello dichiarato da .15, non una misura della fiamma."]}
+    if mode != FIREPLACE_MANUAL:
+        result.update(status="rejected", reason="mode_unknown" if mode is None else "not_manual")
+    elif power is (state == "on") and planned_mode is None:
+        result.update(status="unchanged")
+    else:
+        result.update(status="confirmation_required")
+    return result
+
+
 def energy_overview(current, detail, now_ms):
     observations = current["observations"] if current else {}
     fresh = {metric: o for metric, o in observations.items()
@@ -531,6 +592,7 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
     if checked["clarification"]:
         return checked
     results = []
+    planned_mode = None  # a mode set earlier in the same plan counts for set_fireplace_power
     # Cache identical feed windows only within one request (import/export share a feed).
     class CachedClient:
         def __init__(self):
@@ -576,6 +638,15 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                                 "observation": observation,
                                 "limitations": ["Timestamp di ricezione Android; età della misura sorgente ignota.",
                                                 "Retained non costituisce conferma fisica o di freschezza."]}})
+            continue
+        if operation["tool"] == "set_fireplace_settings":
+            result = fireplace_settings(operation, heating)
+            if result["status"] == "command_ready" and result["mode"]:
+                planned_mode = result["mode"]
+            results.append({"id": operation["id"], "result": result})
+            continue
+        if operation["tool"] == "set_fireplace_power":
+            results.append({"id": operation["id"], "result": fireplace_power(operation["state"], heating, planned_mode)})
             continue
         if operation["tool"] == "current_energy_overview":
             results.append({"id": operation["id"], "detail": operation["detail"],

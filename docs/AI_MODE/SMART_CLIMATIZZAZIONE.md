@@ -97,6 +97,8 @@ che il Router già instrada verso Tasmota (`TEMPTARGETSET`).
 |---|---|---|
 | `current_thermostats` | `all`, `thermostat_living`, `thermostat_bath` | temperatura ambiente, setpoint, richiesta di calore del termostato ("chiede / non chiede calore"), min/max del timer |
 | `current_heating` | nessuno | caminetto (acceso, livello, modalità, orari, potenza automatica), puffer alto/basso/ACS, pompa pavimento abilitata/in funzione, caldaia (fiamma, modulazione), solare termico; **solo lettura** |
+| `set_fireplace_settings` | `mode` (5 etichette o `unchanged`), `start_time`/`stop_time` (HH:MM o `unchanged`), `auto_power` (`on`/`off`/`unchanged`) | `command_ready` → l'app pubblica su `zara/interface/fireplace/main/{mode,start_time,stop_time,auto_power}/cmd`; `rejected` se l'avvio non precede lo spegnimento (con gli orari attuali) |
+| `set_fireplace_power` | `state` `on`/`off` | `confirmation_required` solo se la modalità è `Manuale` (o messa a Manuale nello stesso piano); `rejected` altrimenti, `unchanged` se già nello stato chiesto; l'app invia `power/cmd` solo dopo "Conferma" e solo se riceve ancora `Manuale` |
 | `set_thermostat_target` | termostato + `target_c` da 16.0 a 22.0 a passi di 0.5 | comando `house_ai.thermostat_command.v1`, senza topic |
 
 Android invia `current_heating` (`house_ai.current_heating_input.v1`) con i topic `/stat` del
