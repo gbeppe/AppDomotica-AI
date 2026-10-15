@@ -33,38 +33,34 @@ object HouseSummary {
         }
     }
 
+    /** Same sentence as the House AI energy overview (current_energy_overview, detail summary). */
     fun energyText(energy: EnergySmartState): String {
         val value = { metric: String -> energy.validObservations()[metric]?.value }
-        val sentences = mutableListOf<String>()
-        val solar = value("solar_power_w")
-        val home = value("home_consumption_w")
-        val production = when {
-            solar == null -> null
-            solar < IDLE_W -> "Fotovoltaico fermo"
-            else -> "Il fotovoltaico produce ${power(solar)}"
-        }
-        val consumption = home?.let { "la casa consuma ${power(it)}" }
-        listOfNotNull(production, consumption).takeIf { it.isNotEmpty() }?.let {
-            sentences += it.joinToString(", ").replaceFirstChar(Char::uppercase) + "."
+        val parts = mutableListOf<String>()
+        value("solar_power_w")?.let { solar ->
+            parts += if (solar < IDLE_W) "il fotovoltaico è fermo" else "il fotovoltaico produce ${power(solar)}"
         }
         val soc = value("battery_soc_percent")
         val battery = value("battery_power_w")
-        if (soc != null) {
+        if (soc != null || battery != null) {
             val flow = when {
-                battery == null || abs(battery) < IDLE_W -> ""
-                battery < 0 -> ", in carica"
-                else -> ", in scarica"
+                battery == null || abs(battery) < IDLE_W -> null
+                battery < 0 -> "si sta caricando"
+                else -> "si sta scaricando"
             }
-            sentences += "Batteria al ${spoken(soc, 0)} per cento$flow."
+            parts += if (soc == null) "la batteria ${flow ?: "è ferma"}"
+            else "la batteria è al ${spoken(soc, 0)} per cento" + (flow?.let { " e $it" } ?: "")
         }
+        value("home_consumption_w")?.let { parts += "la casa consuma ${power(it)}" }
         value("grid_power_w")?.let { grid ->
-            sentences += when {
-                grid >= IDLE_W -> "Prelievo dalla rete: ${power(grid)}."
-                grid <= -IDLE_W -> "Immissione in rete: ${power(grid)}."
-                else -> "Nessun prelievo dalla rete."
+            parts += when {
+                grid >= IDLE_W -> "stai importando ${power(grid)} dalla rete"
+                grid <= -IDLE_W -> "stai immettendo ${power(grid)} in rete"
+                else -> "non stai importando dalla rete"
             }
         }
-        return if (sentences.isEmpty()) "Dati energetici non disponibili." else sentences.joinToString(" ")
+        return if (parts.isEmpty()) "Dati energetici non disponibili."
+        else parts.joinToString(", ").replaceFirstChar(Char::uppercase) + "."
     }
 
     private fun degrees(value: Double) = "${spoken(value)} gradi"

@@ -120,6 +120,20 @@ data class EnergyAssistantAnswer(
                             "${observation.getString("source_topic")} = ${observation.get("value")}"
                         }.toList()
                     }
+                    "house_ai.current_energy_overview.v1" -> {
+                        detail += "Digital Twin · energia attuale · " +
+                            if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
+                        val observations = result.getJSONObject("observations")
+                        detail += observations.keys().asSequence().sorted().map {
+                            val observation = observations.getJSONObject(it)
+                            "${observation.getString("source_topic")} = ${observation.get("value")}"
+                        }.toList()
+                        result.optJSONObject("flows")?.let { flows ->
+                            detail += "Flussi stimati: " + flows.keys().asSequence()
+                                .joinToString(" · ") { "$it ${flows.getInt(it)} W" } +
+                                " · differenza misure ${result.optInt("imbalance_w")} W"
+                        }
+                    }
                     "house_ai.current_heating.v1" -> {
                         detail += "Digital Twin · impianto di riscaldamento (sola lettura) · " +
                             if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
