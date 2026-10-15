@@ -1,0 +1,14 @@
+{
+  "patch": "LIGHTS-ECHO-GUARD.1",
+  "modified_ids": [
+    "ea8307d48995ca93"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "ea8307d48995ca93": "ff331b94b9804945d6abdbda286ec09d79fe3f17206e63ce98e8db2b3b0f5221"
+  },
+  "node_sha256_after": {
+    "ea8307d48995ca93": "278e6e39b13644246aba8514f470bf0a05f175cf0c2ee5cf007548ae7ef87614"
+  }
+}
