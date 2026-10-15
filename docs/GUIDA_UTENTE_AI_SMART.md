@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **15/10/2026** · app `bld_9e3985c3` · backend House AI `20261015-fireplace-level`.
+Aggiornata al **15/10/2026** · app `bld_67a6ea29` · backend House AI `20261015-voice-confirm`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,

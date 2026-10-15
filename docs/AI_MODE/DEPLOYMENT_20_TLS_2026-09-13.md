@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 15 ottobre 2026 — conferma a voce
+
+Release attiva: `/opt/domopi-house-ai/releases/20261015-voice-confirm`, commit `5caf031`;
+`PREVIOUS_RELEASE` = `20261015-fireplace-level`. Test superati su `.20` (attivazione
+condizionata all'esito); servizi riavviati e `active`. Cambia solo il testo della richiesta di
+conferma: «spegni il caminetto» in Manuale → `confirmation_required`, «Confermi lo spegnimento
+del caminetto? Di' confermo o tocca Conferma.». La parola «confermo» è riconosciuta dall'app
+(`bld_67a6ea29`) e non arriva al backend. Prova reale dell'accensione con «confermo»: 16/10.
+
 ## Release del 15 ottobre 2026 — livello del caminetto in Manuale
 
 Release attiva: `/opt/domopi-house-ai/releases/20261015-fireplace-level`, commit
