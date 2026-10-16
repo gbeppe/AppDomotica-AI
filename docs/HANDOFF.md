@@ -53,6 +53,7 @@ Contenuto: app Android (Kotlin/Compose, `app/`), backend House AI (Python 3.9 st
 | `192.168.1.121` | Telefono Realme GT (RMX2202) | app installata via adb wireless |
 | `192.168.1.4` | NAS QNAP | solo il container registry del progetto WallBox; il broker MQTT non c'è più |
 | `192.168.1.22` | ESP8266 caminetto Palazzetti (OTA `palazzetti`) | firmware `palazzetti_v2` dal 14/10, broker `.15`: [`firmware/palazzetti/`](../firmware/palazzetti/README.md) |
+| `192.168.1.21` | ESP8266 pompa pavimento (OTA `floorPump`) | `floorpump_v2` dal 16/10, broker `.15`, rete `TP-Link_SalaTecnica` (TL-WA850RE `192.168.1.236`, access point): [`firmware/floorpump/`](../firmware/floorpump/README.md) |
 | `192.168.1.23` | ESP8266 VMC Brink | sketch non ancora nel repository |
 | `192.168.1.3` | OpenSprinkler 2.2.1 (porta 9003) | 5 zone attive; controller **disattivato** per scelta |
 | `192.168.1.67/.68/.69` | Tasmota termostati (bagno servizio / bagno / living) | `.68` = `tasmota_F294D7` (BathroomThermostat), ancora in uso |
