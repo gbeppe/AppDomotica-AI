@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 16 ottobre 2026 — richieste di regole automatiche
+
+Release attiva: `/opt/domopi-house-ai/releases/20261016-rules-guard`, commit `4d898e8`;
+`PREVIOUS_RELEASE` = `20261016-confirm-safe`. Test superati su `.20`; servizi `active`. Prove
+reali: «quando la temperatura del puffer alto raggiunge i 42 gradi spegni il caminetto» e «voglio
+impostare una automazione per spegnere il caminetto quando il puffer alto raggiunge i 40 gradi» →
+`clarification_required`, «Le regole automatiche non sono disponibili; posso eseguire solo comandi
+immediati…», nessuna conferma proposta; «spegni il caminetto» → «Spengo il caminetto. Confermi?».
+
 ## Release del 16 ottobre 2026 — domanda di conferma senza parola di conferma
 
 Release attiva: `/opt/domopi-house-ai/releases/20261016-confirm-safe`, commit `d8b1787`;

@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_16382c06`** (commit `bf116c8`, 16/10: profilo di
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261016-confirm-safe`** (commit `d8b1787`; domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261016-rules-guard`** (commit `4d898e8`; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
