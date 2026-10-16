@@ -1,11 +1,12 @@
 # Firmware delle schede della casa
 
 Sketch Arduino delle schede ESP che il progetto comanda via MQTT. Si aggiungono qui man mano che
-vengono verificati o riscritti (prossimi: VMC Brink `.23`, pompa pavimento).
+vengono verificati o riscritti (prossimo: VMC Brink `.23`).
 
 | Scheda | Cartella | IP / OTA | Broker | Stato |
 |---|---|---|---|---|
 | Caminetto Palazzetti Idro 45 (ESP8266) | [`palazzetti/`](palazzetti/README.md) | `192.168.1.22`, `palazzetti` | `.15` | `palazzetti_v2` caricato il 14/10/2026 (precedente: `palazzetti_upgrade`) |
+| Pompa pavimento (ESP8266) | [`floorpump/`](floorpump/README.md) | OTA `floorPump` | `.15` | in uso `pompapavimento_switch`; `floorpump_v2` pronto, non caricato |
 
 ## Regole
 
