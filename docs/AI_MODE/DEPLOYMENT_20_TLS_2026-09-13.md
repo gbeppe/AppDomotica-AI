@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 16 ottobre 2026 — domanda di conferma senza parola di conferma
+
+Release attiva: `/opt/domopi-house-ai/releases/20261016-confirm-safe`, commit `d8b1787`;
+`PREVIOUS_RELEASE` = `20261016-heating-confirm`. Test superati su `.20`; servizi `active`.
+Prova reale: «metti il bagno a 21 gradi» → «Imposto il termostato del bagno a 21 gradi.
+Confermi?» (`confirmation_required`). Motivo: alle 09:16 lo stesso comando era partito senza
+conferma, quasi certamente per l'eco di «…tocca Conferma.». Richiede l'app `bld_40937b38`
+(microfono 1 s dopo la lettura).
+
 ## Release del 16 ottobre 2026 — conferma per tutti i comandi del riscaldamento
 
 Release attiva: `/opt/domopi-house-ai/releases/20261016-heating-confirm`, commit `30f1aa1`;
