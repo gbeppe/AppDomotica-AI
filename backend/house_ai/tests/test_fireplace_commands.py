@@ -133,5 +133,27 @@ class FireplaceCommandTests(unittest.TestCase):
             self.assertFalse(words & {'confermo', 'conferma'}, result['answer'])
 
 
+    def test_rule_requests_never_become_immediate_commands(self):
+        # Field test 16/10/2026: the second sentence became an immediate "off".
+        for q in ("quando la temperatura del puffer alto raggiunge i 42 gradi spegni il caminetto",
+                  "voglio impostare una automazione per spegnere il caminetto quando il puffer alto raggiunge i 40 gradi",
+                  "appena fuori scende sotto 5 gradi metti il bagno a 21",
+                  "crea una regola: se la batteria è piena allora accendi la piscina"):
+            result = ask(None, Planner({'operations': [power('off')]}), q, heating_snapshot=heating(mode='Manuale', power=True))
+            self.assertEqual(result['status'], 'clarification_required', q)
+            self.assertIn('regole automatiche', result['answer'])
+            self.assertNotIn('confirmation', result)
+            self.assertEqual(result['results'], [])
+
+    def test_immediate_commands_and_questions_still_work(self):
+        thermostat = {'id': 't', 'tool': 'set_thermostat_target', 'thermostat': 'thermostat_bath', 'target_c': '20.0'}
+        result = ask(None, Planner({'operations': [thermostat]}), 'regola il bagno a 20 gradi')
+        self.assertEqual(result['results'][0]['result']['status'], 'confirmation_required')
+        self.assertEqual(run(power('off'), mode='Manuale', power=True)['results'][0]['result']['status'], 'confirmation_required')
+        read = ask(None, Planner({'operations': [{'id': 'h', 'tool': 'current_heating'}]}), 'quando si accende il caminetto?',
+                   heating_snapshot=heating())
+        self.assertNotEqual(read['status'], 'clarification_required')
+
+
 if __name__ == '__main__':
     unittest.main()

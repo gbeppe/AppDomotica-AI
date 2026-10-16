@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **16/10/2026** · app `bld_16382c06` · backend House AI `20261016-confirm-safe`.
+Aggiornata al **16/10/2026** · app `bld_16382c06` · backend House AI `20261016-rules-guard`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -234,6 +234,10 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
   irrigazione, garage, Predictive Reserve; il livello del caminetto solo in Manuale.
 - Non inventa numeri, costi o tariffe e non fa ipotesi sulle cause.
 - Non ha memoria delle domande precedenti.
+- **Non crea regole automatiche** («quando il puffer arriva a 42 gradi spegni il caminetto», «appena
+  fuori scende sotto 5 gradi…», «imposta un'automazione…»): risponde «Le regole automatiche
+  ("quando… allora…") non sono ancora disponibili: posso eseguire solo comandi immediati. Non ho
+  fatto niente.» e non esegue nulla. Le regole sono previste in una fase successiva.
 - A una richiesta non disponibile risponde che l'azione non è disponibile o chiede un chiarimento.
 
 ---
@@ -268,3 +272,4 @@ in cima.
 | 16/10/2026 | **Tutti i comandi del riscaldamento** (termostati, modalità, orari, potenza automatica, livello e acceso/spento del caminetto) chiedono conferma, una sola per richiesta; luci e scene restano immediate (§4.7). |
 | 16/10/2026 | Conferma a voce più tollerante: accenti e spazi ignorati, alternative del riconoscimento vocale, frase capita mostrata se non è una conferma. |
 | 16/10/2026 | Sicurezza: la domanda letta finisce con «Confermi?» senza «confermo»/«conferma» e il microfono si apre dopo 1 secondo (una prova aveva confermato da sola un termostato). |
+| 16/10/2026 | Le richieste di regole automatiche («quando…», «appena…», «se… allora…», «automazione») non diventano mai un comando immediato: risposta che non sono ancora disponibili (§5). |

@@ -1,4 +1,5 @@
 """Dynamic interpretation followed by validated tools and deterministic answers."""
+import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from energy_tools import (catalog, execute, validate_climate_snapshot, validate_current_snapshot,
@@ -7,6 +8,16 @@ from energy_tools import (catalog, execute, validate_climate_snapshot, validate_
                           validate_heating_snapshot)
 from energy_presenter import compose, confirmation, notes
 from planner import PlannerUnavailable
+
+# Conditional or future requests ("quando…", "appena…", "se… allora…", automations) are rules,
+# which are not available yet: a command planned from one of them is never executed
+# (field test 16/10/2026: "...imposta un'automazione per spegnere il caminetto" became an
+# immediate off, stopped only by the confirmation).
+# "regola" alone is also the verb "adjust" ("regola il bagno a 20"): only the noun counts.
+RULE_REQUEST = re.compile(r"\b(automazion\w*|(?:una|la|le|nuova|nuove) regol[ae]|quando|appena|ogni volta|se\b.+\ballora)\b",
+                          re.IGNORECASE)
+RULES_UNAVAILABLE = ("Le regole automatiche (\"quando… allora…\") non sono ancora disponibili: posso eseguire solo "
+                     "comandi immediati. Non ho fatto niente.")
 
 
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
@@ -52,6 +63,8 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
         raise PlannerUnavailable('Planner returned an invalid plan') from None
     if execution['clarification']:
         return {**base, 'status': 'clarification_required', 'answer': execution['clarification']}
+    if RULE_REQUEST.search(question) and any(op['tool'].startswith('set_') for op in execution['operations']):
+        return {**base, 'status': 'clarification_required', 'answer': RULES_UNAVAILABLE}
     # Spoken answers stay short; technical caveats travel with each result for the diagnostics view.
     for item in execution['results']:
         result = item['result']

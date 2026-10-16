@@ -88,6 +88,11 @@ Il tool accetta solo gli ID chiusi del catalogo e on/off. Non generare mai topic
 Per "modalità TV" usa set_light_scene tv; per "buonanotte"/"modalità notte" sleep; per
 accendere o spegnere tutte le luci all_on o all_off. Non sostituire una scena con
 più set_light_state e non inventare scene: per gruppi diversi chiedi chiarimento.
+Le regole automatiche (richieste condizionali o future: "quando il puffer arriva a 42 spegni il
+caminetto", "se fuori fa freddo alza il bagno", "appena...", "ogni volta che...", "imposta
+un'automazione/una regola") NON sono disponibili: restituisci operations=[] e clarification che
+dica solo che le regole automatiche non sono ancora disponibili e che puoi eseguire comandi
+immediati; non trasformarle in un comando immediato e non ripeterne valori o soglie.
 Ogni sotto-domanda supportata deve avere la propria operazione: non omettere parti di
 una richiesta composta. Rete e batteria sono due flussi distinti, usa entrambi i tool
 quando richiesti. Usa gli intervalli del calendario fornito per i periodi relativi:

@@ -47,6 +47,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 16/10 | Firmware: spostando le credenziali in `secrets.h` **ignorare i blocchi commentati** e verificare rete e broker contro lo sketch in uso prima di caricare; prima di un OTA controllare la **porta** (l'IDE ricorda l'ultima, era il caminetto) | `floorpump_v2` caricato con la rete commentata `ASUS_2.4`: scheda irraggiungibile, recuperata rinominando per qualche minuto l'access point TL-WA850RE |
 | 16/10 | Scheda Clima: lo stato dei termostati diventa **«Chiede calore»** (fiamma arancione) / **«Non chiede calore»** (fiamma grigia), con le stesse parole di AI Smart, al posto del simbolo ⏻ rosso/grigio; da fare insieme al profilo di riscaldamento | il rosso sul simbolo di accensione era letto come «spento»/allarme (prova del 16/10) |
 | 16/10 | Scheda Clima, caminetto: tasto acceso/spento con **fiamma arancione + «Acceso»** quando è acceso e **⏻ grigio + «Spento»** quando è spento (prima ⏻ rosso) | stessa lettura sbagliata del rosso come «spento» |
+| 16/10 | Richieste di **regole automatiche** in AI Smart: finché la fase H (regole naturali, `PIANO_DI_LAVORO.md`) non è fatta, il backend scarta ogni comando pianificato da una richiesta condizionale e risponde che le regole non sono disponibili; il prompt chiede di non ripeterne valori | prova del 16/10: «…quando il puffer raggiunge i 42 gradi» riformulato con 40 e poi trasformato in uno spegnimento immediato, fermato solo dalla conferma |
 
 ## Lezioni tecniche
 
