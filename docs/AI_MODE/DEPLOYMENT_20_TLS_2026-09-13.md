@@ -77,6 +77,16 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 16 ottobre 2026 — conferma per tutti i comandi del riscaldamento
+
+Release attiva: `/opt/domopi-house-ai/releases/20261016-heating-confirm`, commit `30f1aa1`;
+`PREVIOUS_RELEASE` = `20261015-voice-confirm`. Test superati su `.20` (attivazione
+condizionata all'esito); servizi riavviati e `active`. Prove reali: «metti il soggiorno a 20
+gradi» → `confirmation_required`, «Imposto il termostato del living a 20 gradi. Confermi? Di'
+confermo o tocca Conferma.»; «metti il caminetto in manuale e accendilo» (in Riscaldamento) →
+due `confirmation_required`, una sola domanda «Metto il caminetto in modalità Manuale e lo
+accendo. Confermi? …». Nuovo campo `confirmation` {prompt, done}. Richiede l'app `bld_64bec1e3`.
+
 ## Release del 15 ottobre 2026 — conferma a voce
 
 Release attiva: `/opt/domopi-house-ai/releases/20261015-voice-confirm`, commit `5caf031`;
