@@ -1,0 +1,15 @@
+{
+  "patch": "FLOORPUMP-REPEAT.1",
+  "host": "192.168.1.15",
+  "modified_ids": [
+    "1572e937.c23a67"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "1572e937.c23a67": "396a0b641e81ee88e5d4d0e663aae6a9d7044a2f8387be121b751e0fb6813165"
+  },
+  "node_sha256_after": {
+    "1572e937.c23a67": "ddc4836968dce2978ea7fa6b6e148f8f3ed0b9d557d4353fc639223ceb2f186e"
+  }
+}

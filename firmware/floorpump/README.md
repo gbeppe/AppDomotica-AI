@@ -23,7 +23,7 @@ alimentazione (pompa ferma dal 5 marzo 2026).
   manca da 10 minuti; relè aperto all'avvio e durante l'OTA; niente attesa fissa di 9 s.
 - Credenziali in `secrets.h`; password OTA facoltativa (`OTA_PASSWORD`).
 
-**Prima di caricarla** il `.15` deve ripetere l'ultimo comando anche nella fascia 30–35 °C: oggi
+**Prerequisito sul `.15`** (FLOORPUMP-REPEAT.1, applicata il 16/10/2026): ripetere l'ultimo comando anche nella fascia 30–35 °C; prima
 in quella fascia non invia nulla e lo spegnimento di sicurezza fermerebbe la pompa dopo 15 minuti.
 
 ## Caricare o tornare indietro
