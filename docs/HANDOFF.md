@@ -98,7 +98,7 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `router_fireplace_retain` (ROUTER-FIREPLACE-RETAIN.1) | modalità, orari e potenza automatica del caminetto **retained** sul broker di `.15`; chiave `router_initialized_v122` | live dal 14/10 |
 | `lights_echo_guard` (LIGHTS-ECHO-GUARD.1) | "function 17" consuma per 10 s l'eco dello stato pubblicato dalle catene IR: niente ping-pong accendi/spegni con due comandi opposti ravvicinati (incidente 15/10 21:27); backup `/home/pi/AI_backups/nodered/20261015T212857Z-before-lights-echo-guard` | live dal 15/10 23:29; prova del 16/10 08:46 superata (doppio tocco: 4 invii IR, poi silenzio) |
 | `heating_profile` (HEATING-PROFILE.1) | nuovo tab: profilo di riscaldamento Spento/Ridotto/Pieno (auto da media esterna 72 h, soglie 10/16 °C da EmonCMS) e timer dei termostati (fascia → massimo, fuori → minimo), parte in **shadow**; sostituirà i timer del `.15`, che oggi non inviano nulla | pronta, da applicare |
-| `router_floor_pump` (ROUTER-FLOOR-PUMP.1) | abilitazione pompa pavimento instradata sul broker di `.15`, retained (prima andava sul `.20` e non arrivava); chiave `router_initialized_v123` | pronta, da applicare |
+| `router_floor_pump` (ROUTER-FLOOR-PUMP.1) | abilitazione pompa pavimento instradata sul broker di `.15`, retained (prima andava sul `.20` e non arrivava); chiave `router_initialized_v123`; backup `/home/pi/AI_backups/nodered/20261016T105204Z-before-router-floor-pump` | live dal 16/10 12:52; prova 12:53 superata (abilita/disabilita dall'app arrivano al `.15`, retained; «disabilita» manda 0 all'ESP) |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
 
 ### Firmware delle schede ESP
