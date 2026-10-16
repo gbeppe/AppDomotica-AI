@@ -1,0 +1,14 @@
+{
+  "patch": "ROUTER-FLOOR-PUMP.1",
+  "modified_ids": [
+    "5a7c1d360710ca21"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "5a7c1d360710ca21": "6232993efaec0f4b6e5d47a08d35d64c4e377035986248a6d7e2efd1cf9cf5ce"
+  },
+  "node_sha256_after": {
+    "5a7c1d360710ca21": "58b6b2d2df87e9dd0be2d5f9facc747d15207962d7a9fc9ce8cb1fcc4d9a684f"
+  }
+}
