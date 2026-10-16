@@ -176,8 +176,10 @@ luci e scene partono subito.
 - **Conferma a voce:** se il comando è stato detto a voce, finita la lettura della domanda il
   microfono si apre da solo. Rispondi solo **«confermo»** o **«conferma»** (una parola sola; «sì»
   o frasi più lunghe non valgono) oppure **«annulla»** / **«no»**. Se non rispondi o l'app non
-  capisce: «Nessuna risposta: tocca Conferma o Annulla.» / «Non ho capito: tocca Conferma o
-  Annulla.», e non invia nulla. Con un comando scritto puoi toccare Parla e dire «confermo».
+  capisce: «Nessuna risposta: tocca Conferma o Annulla.» / «Ho sentito «…»: non è una conferma.
+  Tocca Conferma o Annulla.» (con la frase capita), e non invia nulla. Accenti e spazi non
+  contano («confermò», «con fermo») e vale anche un'alternativa del riconoscimento vocale. Con un
+  comando scritto puoi toccare Parla e dire «confermo».
 - Dopo la conferma l'app risponde con «Ok, …» e invia i comandi; se la casa non è collegata:
   «Comando non inviato: la casa non è collegata.».
 - La conferma vale **60 secondi**: dopo, «Conferma scaduta: nessun comando inviato. Ripeti la
@@ -261,3 +263,4 @@ in cima.
 | 15/10/2026 | Livello di potenza del caminetto (1–6) da AI Smart, solo in Manuale e a caminetto acceso (§4.5). |
 | 15/10/2026 | Conferma a voce di acceso/spento del caminetto («confermo»/«conferma»), ascolto automatico dopo la domanda, validità 60 secondi (§4.5). |
 | 16/10/2026 | **Tutti i comandi del riscaldamento** (termostati, modalità, orari, potenza automatica, livello e acceso/spento del caminetto) chiedono conferma, una sola per richiesta; luci e scene restano immediate (§4.7). |
+| 16/10/2026 | Conferma a voce più tollerante: accenti e spazi ignorati, alternative del riconoscimento vocale, frase capita mostrata se non è una conferma. |

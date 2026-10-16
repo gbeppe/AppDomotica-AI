@@ -270,16 +270,17 @@ fun AiSmartScreen(
         heatingNotice = "Comando annullato."
     }
     val recognizer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim()
+        val alternatives = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).orEmpty()
+        val text = alternatives.firstOrNull()?.trim()
         val confirming = voiceConfirming
         voiceConfirming = false
         // Pending heating commands: the spoken "confermo"/"annulla" is handled here, never sent to the backend.
-        val answer = if (pendingHeating != null) VoiceConfirmation.classify(text) else null
+        val answer = if (pendingHeating != null) VoiceConfirmation.classify(alternatives) else null
         if (answer == true) confirmHeating()
         else if (answer == false) { cancelHeating(); if (speechReady) speak("Comando annullato.") }
         else if (confirming) {
             heatingNotice = if (text.isNullOrBlank()) "Nessuna risposta: tocca Conferma o Annulla."
-                else "Non ho capito: tocca Conferma o Annulla."
+                else "Ho sentito «$text»: non è una conferma. Tocca Conferma o Annulla."
             if (speechReady) heatingNotice?.let(::speak)
         }
         else if (result.resultCode == Activity.RESULT_OK && !text.isNullOrBlank()) {
@@ -340,6 +341,7 @@ fun AiSmartScreen(
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "it-IT")
             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             putExtra(RecognizerIntent.EXTRA_PROMPT, if (confirmation) "Di' confermo o annulla" else "Chiedi o comanda la casa")
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
         }
         voiceConfirming = confirmation
         try { recognizer.launch(intent) }
@@ -349,6 +351,7 @@ fun AiSmartScreen(
     LaunchedEffect(speechFinished) {
         if (speechFinished > 0 && listenAfterSpeech && pendingHeating != null) {
             listenAfterSpeech = false
+            delay(400) // let the last syllable of the reading fade before the microphone opens
             listen(true)
         }
     }
