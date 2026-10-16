@@ -56,18 +56,18 @@ class FireplaceCommandTests(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 validate_plan({'operations': [bad]})
 
-    def test_mode_and_window_run_at_once(self):
+    def test_mode_and_window_wait_for_confirmation(self):
         result = run(settings(mode='Acqua Sanitaria', start='12:00', stop='13:00'))
-        self.assertEqual(result['answer'], 'Ok, metto il caminetto in modalità Acqua Sanitaria, dalle 12:00 alle 13:00.')
+        self.assertEqual(result['answer'], "Metto il caminetto in modalità Acqua Sanitaria, dalle 12:00 alle 13:00. Confermi? Di' confermo o tocca Conferma.")
         command = result['results'][0]['result']
         self.assertEqual((command['status'], command['mode'], command['start_time'], command['stop_time'],
-                          command['auto_power']), ('command_ready', 'Acqua Sanitaria', '12:00', '13:00', None))
+                          command['auto_power']), ('confirmation_required', 'Acqua Sanitaria', '12:00', '13:00', None))
         self.assertEqual(result['status'], 'complete')
 
     def test_single_settings(self):
-        self.assertEqual(run(settings(mode='Riscaldamento'))['answer'], 'Ok, metto il caminetto in modalità Riscaldamento.')
-        self.assertEqual(run(settings(stop='17:30'))['answer'], 'Ok, imposto gli orari del caminetto con spegnimento alle 17:30.')
-        self.assertEqual(run(settings(auto='off'))['answer'], 'Ok, disattivo la potenza automatica del caminetto.')
+        self.assertEqual(run(settings(mode='Riscaldamento'))['answer'], "Metto il caminetto in modalità Riscaldamento. Confermi? Di' confermo o tocca Conferma.")
+        self.assertEqual(run(settings(stop='17:30'))['answer'], "Imposto gli orari del caminetto con spegnimento alle 17:30. Confermi? Di' confermo o tocca Conferma.")
+        self.assertEqual(run(settings(auto='off'))['answer'], "Disattivo la potenza automatica del caminetto. Confermi? Di' confermo o tocca Conferma.")
 
     def test_time_order_uses_the_current_window(self):
         result = run(settings(start='17:00'))
@@ -86,22 +86,23 @@ class FireplaceCommandTests(unittest.TestCase):
     def test_power_in_manual_asks_for_confirmation(self):
         result = run(power('on'), mode='Manuale')
         self.assertEqual(result['results'][0]['result']['status'], 'confirmation_required')
-        self.assertEqual(result['answer'], "Confermi l'accensione del caminetto? Di' confermo o tocca Conferma.")
-        self.assertEqual(run(power('off'), mode='Manuale', power=True)['answer'],
-                         "Confermi lo spegnimento del caminetto? Di' confermo o tocca Conferma.")
+        self.assertEqual(result['answer'], "Accendo il caminetto. Confermi? Di' confermo o tocca Conferma.")
+        self.assertEqual(result['confirmation'], {'prompt': 'Accendo il caminetto. Confermi?',
+                                                  'done': 'Ok, accendo il caminetto.'})
+        self.assertEqual(run(power('off'), mode='Manuale', power=True)['answer'], "Spengo il caminetto. Confermi? Di' confermo o tocca Conferma.")
         self.assertEqual(run(power('on'), mode='Manuale', power=True)['answer'], 'Il caminetto risulta già acceso.')
+        self.assertNotIn('confirmation', run(power('on'), mode='Manuale', power=True))
 
-    def test_manual_then_on_in_one_request(self):
+    def test_manual_then_on_in_one_request_one_confirmation(self):
         result = run(settings(mode='Manuale'), power('on'))
-        self.assertEqual(result['answer'], "Ok, metto il caminetto in modalità Manuale.\n\n"
-                                           "Confermi l'accensione del caminetto? Di' confermo o tocca Conferma.")
-
+        self.assertEqual(result['answer'], "Metto il caminetto in modalità Manuale e lo accendo. Confermi? Di' confermo o tocca Conferma.")
+        self.assertEqual(result['confirmation']['done'], 'Ok, metto il caminetto in modalità Manuale e lo accendo.')
 
     def test_level_only_in_manual_with_the_fireplace_on(self):
         result = run(level('4'), mode='Manuale', power=True)
-        self.assertEqual(result['answer'], 'Ok, imposto il caminetto al livello 4.')
+        self.assertEqual(result['answer'], "Imposto il caminetto al livello 4. Confermi? Di' confermo o tocca Conferma.")
         command = result['results'][0]['result']
-        self.assertEqual((command['status'], command['level']), ('command_ready', 4))
+        self.assertEqual((command['status'], command['level']), ('confirmation_required', 4))
         self.assertEqual(run(level('3'), mode='Manuale', power=True)['answer'], 'Il caminetto è già al livello 3.')
         self.assertEqual(run(level('4'), mode='Manuale')['answer'],
                          'Il caminetto è spento: il livello si cambia quando è acceso.')
@@ -117,7 +118,7 @@ class FireplaceCommandTests(unittest.TestCase):
 
     def test_manual_then_level_in_one_request(self):
         result = run(settings(mode='Manuale'), level('5'), power=True)
-        self.assertEqual(result['answer'], 'Ok, metto il caminetto in modalità Manuale e imposto il caminetto al livello 5.')
+        self.assertEqual(result['answer'], "Metto il caminetto in modalità Manuale e imposto il caminetto al livello 5. Confermi? Di' confermo o tocca Conferma.")
 
 
 if __name__ == '__main__':

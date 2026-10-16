@@ -5,7 +5,7 @@ from energy_tools import (catalog, execute, validate_climate_snapshot, validate_
                           validate_lights_snapshot, validate_predictive_reserve_snapshot,
                           validate_thermostats_snapshot, validate_environment_snapshot,
                           validate_heating_snapshot)
-from energy_presenter import compose, notes
+from energy_presenter import compose, confirmation, notes
 from planner import PlannerUnavailable
 
 
@@ -65,6 +65,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
                if any(op['tool'] == 'current_air_conditioner' for op in execution['operations']) else None)
     return {**base, 'status': overall,
             'answer': compose(execution['results']),
+            **({'confirmation': confirmation(execution['results'])} if confirmation(execution['results']) else {}),
             'plan': execution['operations'], 'results': execution['results'],
             **({'conversation_context': context} if context else {}),
             'limitations': ['Il pianificatore interpreta; i valori sono calcolati dagli strumenti validati.',

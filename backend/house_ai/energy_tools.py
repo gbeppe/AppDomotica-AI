@@ -165,7 +165,7 @@ def catalog(path=CATALOG_PATH):
             "parameters": {"state": ["on", "off"]}
         }, {
             "name": "set_fireplace_level",
-            "description": "Set the fireplace power level 1-6; allowed only in mode Manuale with the fireplace on, executed at once",
+            "description": "Set the fireplace power level 1-6; allowed only in mode Manuale with the fireplace on, executed after the user confirms in the app",
             "parameters": {"level": list(FIREPLACE_LEVELS)}
         }, {
             "name": "current_predictive_reserve",
@@ -529,7 +529,7 @@ def heating_value(heating, key):
 def fireplace_settings(operation, heating):
     pick = lambda key: None if operation[key] == UNCHANGED else operation[key]
     mode, start, stop, auto = pick("mode"), pick("start_time"), pick("stop_time"), pick("auto_power")
-    result = {"schema": "house_ai.fireplace_settings_command.v1", "status": "command_ready",
+    result = {"schema": "house_ai.fireplace_settings_command.v1", "status": "confirmation_required",
               "mode": mode, "start_time": start, "stop_time": stop,
               "auto_power": None if auto is None else auto == "on",
               "limitations": ["Il backend seleziona solo modalità, orari e potenza automatica; topic e payload sono risolti dall'app.",
@@ -573,7 +573,7 @@ def fireplace_level(level, heating, planned_mode):
     elif heating_value(heating, "fireplace.level") == int(level):
         result.update(status="unchanged")
     else:
-        result.update(status="command_ready")
+        result.update(status="confirmation_required")
     return result
 
 
@@ -668,7 +668,7 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
             continue
         if operation["tool"] == "set_fireplace_settings":
             result = fireplace_settings(operation, heating)
-            if result["status"] == "command_ready" and result["mode"]:
+            if result["status"] == "confirmation_required" and result["mode"]:
                 planned_mode = result["mode"]
             results.append({"id": operation["id"], "result": result})
             continue
@@ -743,7 +743,7 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
             continue
         if operation["tool"] == "set_thermostat_target":
             results.append({"id": operation["id"], "thermostat": operation["thermostat"], "result": {
-                "schema": "house_ai.thermostat_command.v1", "status": "command_ready",
+                "schema": "house_ai.thermostat_command.v1", "status": "confirmation_required",
                 "thermostat": operation["thermostat"], "target_c": operation["target_c"],
                 "limitations": ["Il backend seleziona solo termostato e setpoint; topic e payload sono risolti dall'app.",
                                 "Il timer delle fasce orarie (Node-RED .15) e la modalità vacanza possono reimpostare il setpoint.",

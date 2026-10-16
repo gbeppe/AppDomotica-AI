@@ -101,7 +101,9 @@ class ThermostatToolTests(unittest.TestCase):
         self.assertEqual(item['schema'], 'house_ai.thermostat_command.v1')
         self.assertEqual((item['thermostat'], item['target_c']), ('thermostat_bath', '19.5'))
         self.assertNotIn('zara/', json.dumps(result))
-        self.assertEqual('Ok, imposto il termostato del bagno a 19,5 gradi.', result['answer'])
+        self.assertEqual("Imposto il termostato del bagno a 19,5 gradi. Confermi? Di' confermo o tocca Conferma.", result['answer'])
+        self.assertEqual(item['status'], 'confirmation_required')
+        self.assertEqual(result['confirmation']['done'], 'Ok, imposto il termostato del bagno a 19,5 gradi.')
         self.assertIn('ripristino ogni 8 ore', ' '.join(item['limitations']))
 
 

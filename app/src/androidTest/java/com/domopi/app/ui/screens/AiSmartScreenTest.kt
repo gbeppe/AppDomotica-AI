@@ -9,6 +9,8 @@ import com.domopi.app.data.AiSmartState
 import com.domopi.app.data.ClimateSmartState
 import com.domopi.app.data.EnergySmartState
 import com.domopi.app.data.EnergyAssistantAnswer
+import com.domopi.app.data.FireplaceSettingsCommand
+import com.domopi.app.data.HeatingConfirmation
 import com.domopi.app.data.StackHealthState
 import com.domopi.app.data.StackOverallStatus
 import com.domopi.app.ui.theme.DomoPiTheme
@@ -170,18 +172,21 @@ class AiSmartScreenTest {
         screenshot("smart-dark-energy-dynamic.png")
     }
 
-    @Test fun fireplaceConfirmationSitsUnderParlaWithoutScrolling() {
+    @Test fun heatingConfirmationSitsUnderParlaWithoutScrolling() {
         var confirmed = false
-        val response = EnergyAssistantAnswer("Ok, metto il caminetto in modalità Manuale.\n\n" +
-            "Confermi l'accensione del caminetto? Di' confermo o tocca Conferma.", "complete", "metti il caminetto in manuale e accendilo",
-            "2026-10-15T16:56:00+02:00", emptyList(), fireplacePowerRequest = true)
+        val pending = HeatingConfirmation("Metto il caminetto in modalità Manuale e lo accendo. Confermi?",
+            "Ok, metto il caminetto in modalità Manuale e lo accendo.",
+            fireplaceSettings = listOf(FireplaceSettingsCommand("Manuale", null, null, null)), fireplacePower = true)
+        val response = EnergyAssistantAnswer(pending.prompt + " Di' confermo o tocca Conferma.", "complete",
+            "metti il caminetto in manuale e accendilo", "2026-10-16T09:30:00+02:00", emptyList(), heatingConfirmation = pending)
         compose.setContent {
             DomoPiTheme(darkTheme = false) {
                 AiSmartContent(state(), false, "", {}, {}, {}, dynamicMode = true, dynamicResponse = response,
-                    dynamicAnswer = response.text, pendingFireplacePower = true, onConfirmFireplace = { confirmed = true })
+                    dynamicAnswer = response.text, pendingHeating = pending, onConfirmHeating = { confirmed = true })
             }
         }
-        compose.onNodeWithTag("smart-fireplace-confirm").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("smart-heating-prompt").assertIsDisplayed().assertTextEquals(pending.prompt)
+        compose.onNodeWithTag("smart-heating-confirm").assertIsDisplayed().performClick()
         compose.onNodeWithText("Periodo coperto").assertDoesNotExist()
         compose.runOnIdle { assertTrue(confirmed) }
     }

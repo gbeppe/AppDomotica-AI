@@ -836,9 +836,9 @@ class MqttManager {
         return true
     }
 
-    /** Manual on/off after the user's confirmation, only while .15 reports the "Manuale" mode. */
-    fun setSmartFireplacePower(on: Boolean): Boolean {
-        if (_heatingSmartState.value.fireplaceMode() != "Manuale") return false
+    /** Manual on/off after the user's confirmation, only in "Manuale" (seen from .15 or set by the same confirmation). */
+    fun setSmartFireplacePower(on: Boolean, manualInSameAnswer: Boolean = false): Boolean {
+        if (!manualInSameAnswer && _heatingSmartState.value.fireplaceMode() != "Manuale") return false
         publish("zara/interface/fireplace/main/power/cmd", on.toString())
         return true
     }

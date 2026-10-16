@@ -25,3 +25,6 @@ Regole:
    aggiorna nello stesso commit la guida utente
    [`docs/GUIDA_UTENTE_AI_SMART.md`](docs/GUIDA_UTENTE_AI_SMART.md) (riga «Aggiornata al» e
    tabella delle modifiche).
+10. Ogni comando di AI Smart sugli **impianti di riscaldamento** (caminetto, termostati e in futuro
+    pompa pavimento, caldaia o pompa di calore) parte **solo dopo la conferma** dell'utente (tasto o
+    «confermo»), una sola per richiesta; luci e scene restano immediate.

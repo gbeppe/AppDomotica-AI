@@ -10,14 +10,11 @@ data class EnergyAssistantAnswer(
     val generatedAt: String,
     val evidence: List<String>,
     val context: AssistantContext? = null,
+    /** Lights and scenes are sent at once. */
     val lightCommands: List<LightCommand> = emptyList(),
-    val thermostatCommands: List<ThermostatCommand> = emptyList(),
     val sceneCommands: List<String> = emptyList(),
-    val fireplaceSettings: List<FireplaceSettingsCommand> = emptyList(),
-    /** Manual on (true) / off (false) waiting for the user's confirmation; never sent before it. */
-    val fireplacePowerRequest: Boolean? = null,
-    /** Power level 1-6 validated by the backend (Manuale, fireplace on); sent at once. */
-    val fireplaceLevel: Int? = null,
+    /** Heating commands (thermostats, fireplace): sent only after the user's confirmation. */
+    val heatingConfirmation: HeatingConfirmation? = null,
     /** True when an evidence covers a time period (energy history, daily extremes). */
     val coversPeriod: Boolean = false,
 ) {
@@ -149,7 +146,7 @@ data class EnergyAssistantAnswer(
                     }
                     "house_ai.fireplace_settings_command.v1" -> {
                         val text = { key: String -> if (result.isNull(key)) null else result.getString(key) }
-                        if (result.getString("status") == "command_ready") {
+                        if (result.getString("status") == "confirmation_required") {
                             val command = FireplaceSettingsCommand(text("mode"), text("start_time"), text("stop_time"),
                                 if (result.isNull("auto_power")) null else result.getBoolean("auto_power"))
                             require(command.isValid())
@@ -171,8 +168,8 @@ data class EnergyAssistantAnswer(
                         val level = result.getInt("level")
                         require(level in 1..6)
                         val status = result.getString("status")
-                        require(status in setOf("command_ready", "rejected", "unchanged"))
-                        if (status == "command_ready") fireplaceLevel = level
+                        require(status in setOf("confirmation_required", "rejected", "unchanged"))
+                        if (status == "confirmation_required") fireplaceLevel = level
                         detail += "Livello caminetto · $level · $status"
                     }
                     "house_ai.current_heating.v1" -> {
@@ -188,6 +185,7 @@ data class EnergyAssistantAnswer(
                         val thermostat = result.getString("thermostat")
                         val target = result.getString("target_c")
                         require(thermostat in ThermostatSmartState.THERMOSTATS && target in ThermostatSmartState.TARGETS)
+                        require(result.getString("status") == "confirmation_required")
                         thermostatCommands += ThermostatCommand(thermostat, target)
                         detail += "Comando setpoint validato · $thermostat · $target °C"
                     }
@@ -233,8 +231,18 @@ data class EnergyAssistantAnswer(
                 require(parsed == AssistantContext("climate", "air_conditioner"))
                 parsed
             }
-            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context, lightCommands,
-                thermostatCommands, sceneCommands, fireplaceSettings, fireplacePowerRequest, fireplaceLevel, coversPeriod)
+            val waiting = thermostatCommands.isNotEmpty() || fireplaceSettings.isNotEmpty() ||
+                fireplaceLevel != null || fireplacePowerRequest != null
+            val confirmation = body.optJSONObject("confirmation")
+            require(waiting == (confirmation != null))
+            val heating = confirmation?.let {
+                val prompt = it.getString("prompt")
+                val done = it.getString("done")
+                require(prompt.isNotBlank() && prompt.length <= 500 && done.isNotBlank() && done.length <= 500)
+                HeatingConfirmation(prompt, done, thermostatCommands, fireplaceSettings, fireplaceLevel, fireplacePowerRequest)
+            }
+            return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context,
+                lightCommands, sceneCommands, heating, coversPeriod)
         }
     }
 }
@@ -242,6 +250,23 @@ data class EnergyAssistantAnswer(
 data class AssistantContext(val domain: String, val focus: String)
 data class LightCommand(val lightId: String, val state: Boolean)
 data class ThermostatCommand(val thermostat: String, val targetC: String)
+
+/**
+ * Heating commands of one answer waiting for a single confirmation (button or spoken "confermo").
+ * prompt sits beside the buttons; done is said once the commands are sent.
+ */
+data class HeatingConfirmation(
+    val prompt: String,
+    val done: String,
+    val thermostats: List<ThermostatCommand> = emptyList(),
+    val fireplaceSettings: List<FireplaceSettingsCommand> = emptyList(),
+    val fireplaceLevel: Int? = null,
+    /** Manual on (true) / off (false). */
+    val fireplacePower: Boolean? = null,
+) {
+    /** Manuale is set by this same confirmation, so level and on/off do not wait for .15's echo. */
+    val setsManual: Boolean get() = fireplaceSettings.any { it.mode == "Manuale" }
+}
 
 /** Fireplace settings from AI Smart; null = unchanged. The power level is never part of it. */
 data class FireplaceSettingsCommand(val mode: String?, val startTime: String?, val stopTime: String?, val autoPower: Boolean?) {

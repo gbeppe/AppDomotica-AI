@@ -573,6 +573,34 @@ def is_action(r):
     return r['schema'] in COMMAND_SCHEMAS and r['status'] == 'command_ready'
 
 
+def needs_confirmation(r):
+    """Heating commands (thermostats, fireplace) wait for the user's confirmation in the app."""
+    return r['status'] == 'confirmation_required'
+
+
+def confirmation_actions(results):
+    actions, fireplace = [], False
+    for item in results:
+        r = item['result']
+        if not needs_confirmation(r):
+            continue
+        if r['schema'] == 'house_ai.fireplace_power_command.v1':
+            verb = 'accendo' if r['state'] == 'on' else 'spengo'
+            actions.append(f"lo {verb}" if fireplace else f"{verb} il caminetto")
+        else:
+            actions.append(command_action(r))
+        fireplace = fireplace or r['schema'].startswith('house_ai.fireplace_')
+    return actions
+
+
+def confirmation(results):
+    """Prompt shown beside Conferma/Annulla and the sentence said once confirmed; None if nothing waits."""
+    actions = confirmation_actions(results)
+    if not actions:
+        return None
+    return {'prompt': f"{capitalize(join_it(actions))}. Confermi?", 'done': f"Ok, {join_it(actions)}."}
+
+
 def fireplace_settings_action(r):
     mode, start, stop, auto = r['mode'], r['start_time'], r['stop_time'], r['auto_power']
     times = (f"dalle {start} alle {stop}" if start and stop else
@@ -594,9 +622,6 @@ def fireplace_command_text(r):
     if r['schema'] == 'house_ai.fireplace_level_command.v1':
         return fireplace_level_text(r)
     on = r['state'] == 'on'
-    if r['status'] == 'confirmation_required':
-        action = "l'accensione" if on else "lo spegnimento"
-        return f"Confermi {action} del caminetto? Di' confermo o tocca Conferma."
     if r['status'] == 'unchanged':
         return f"Il caminetto risulta già {'acceso' if on else 'spento'}."
     if r['reason'] == 'mode_unknown':
@@ -638,7 +663,7 @@ def notes(item):
     schema = r['schema']
     if schema == 'house_ai.light_scene_command.v1':
         return [SCENE_DETAILS[r['scene']]]
-    if schema == 'house_ai.fireplace_settings_command.v1' and r['status'] == 'command_ready':
+    if schema == 'house_ai.fireplace_settings_command.v1' and r['status'] == 'confirmation_required':
         return (["Le modalità Manuale e Disattivato non usano gli orari."]
                 if r['mode'] in ('Manuale', 'Disattivato') and (r['start_time'] or r['stop_time']) else [])
     if schema == 'house_ai.thermostat_command.v1':
@@ -694,9 +719,14 @@ def notes(item):
 
 
 def compose(results):
-    """One answer: all commands in a single "Ok, …" sentence, then each reading."""
+    """One answer: immediate commands in a single "Ok, …" sentence, then each reading, then the
+    heating commands waiting for confirmation (last, so the spoken question ends the answer)."""
     actions = [command_action(item['result']) for item in results if is_action(item['result'])]
-    texts = [describe(item) for item in results if not is_action(item['result'])]
+    texts = [describe(item) for item in results
+             if not is_action(item['result']) and not needs_confirmation(item['result'])]
     if actions:
         texts.insert(0, f"Ok, {join_it(actions)}.")
+    pending = confirmation(results)
+    if pending:
+        texts.append(f"{pending['prompt']} Di' confermo o tocca Conferma.")
     return '\n\n'.join(texts)

@@ -47,7 +47,7 @@ Contenuto: app Android (Kotlin/Compose, `app/`), backend House AI (Python 3.9 st
 | IP | Cosa | Note |
 |---|---|---|
 | `192.168.1.1` | Router ASUS | port forwarding OFF, DMZ off, UPnP off dal 14/10; IP pubblico dinamico |
-| `192.168.1.20` | **Raspberry "domopi"** | Node-RED (projects mode, flow live in `~/.node-red/projects/domopi/flows_domopi.json`), Mosquitto (1883 autenticato, 1884 sola lettura c1321), Pi-hole (DNS di casa), Apache, backend House AI, Tailscale (subnet router `192.168.1.0/24`, Serve) |
+| `192.168.1.20` | **Raspberry "domopi"** | Node-RED (projects mode, flow live in `~/.node-red/projects/domopi/flows_domopi.json`), Mosquitto (1883 autenticato, 1884 sola lettura c1321), Pi-hole (DNS di casa), Apache, backend House AI, Tailscale (subnet router `192.168.1.0/24`, Serve). Grafana **disinstallata** il 15/10 (leggeva ~7 MB/s dalla SD: attesa I/O al 95%, luci IR in ritardo di 4-5 s); restano configurazione e `/var/lib/grafana` (543 MB). Memoria scarsa (1,9 GB, swap 100 MB pieno): evitare `journalctl -f` lunghi |
 | `192.168.1.15` | emonPi / EmonCMS | broker MQTT "emon" con autenticazione, Node-RED proprio (timer termostati), EmonCMS `/emoncms` |
 | `192.168.1.40` | PC di sviluppo (Ubuntu) | build e rilascio app, SSH senza password verso `pi@192.168.1.20` |
 | `192.168.1.121` | Telefono Realme GT (RMX2202) | app installata via adb wireless |
@@ -96,7 +96,7 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `router_fireplace_mode` (ROUTER-FIREPLACE-MODE.1) | modalità caminetto dall'app tradotta e inviata a `.15` | live dal 14/10 |
 | `router_fireplace_power` (ROUTER-FIREPLACE-MODE.2) | "Manuale" → `manuale`; pulsante acceso/spento → `alexa/caminetto` on/off su `.15`; chiave `router_initialized_v121` | live dal 14/10 |
 | `router_fireplace_retain` (ROUTER-FIREPLACE-RETAIN.1) | modalità, orari e potenza automatica del caminetto **retained** sul broker di `.15`; chiave `router_initialized_v122` | live dal 14/10 |
-| `lights_echo_guard` (LIGHTS-ECHO-GUARD.1) | "function 17" consuma per 10 s l'eco dello stato pubblicato dalle catene IR: niente ping-pong accendi/spegni con due comandi opposti ravvicinati (incidente 15/10 21:27); backup `/home/pi/AI_backups/nodered/20261015T212857Z-before-lights-echo-guard` | live dal 15/10 23:29 |
+| `lights_echo_guard` (LIGHTS-ECHO-GUARD.1) | "function 17" consuma per 10 s l'eco dello stato pubblicato dalle catene IR: niente ping-pong accendi/spegni con due comandi opposti ravvicinati (incidente 15/10 21:27); backup `/home/pi/AI_backups/nodered/20261015T212857Z-before-lights-echo-guard` | live dal 15/10 23:29; prova del 16/10 08:46 superata (doppio tocco: 4 invii IR, poi silenzio) |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
 
 ### Firmware delle schede ESP

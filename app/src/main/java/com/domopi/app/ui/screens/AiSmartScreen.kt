@@ -42,6 +42,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /** Uses the existing state observer. This screen has no command or MQTT client capability. */
+/** Time for .15 to apply "Manuale" before a manual on/off or level sent by the same confirmation. */
+private const val MANUAL_SETTLE_MS = 3_000L
+
 @Composable
 fun AiSmartScreen(
     state: AiSmartState,
@@ -60,7 +63,7 @@ fun AiSmartScreen(
     environmentState: EnvironmentSmartState = EnvironmentSmartState(),
     heatingState: HeatingSmartState = HeatingSmartState(),
     onFireplaceSettings: (FireplaceSettingsCommand) -> Boolean = { false },
-    onFireplacePower: (Boolean) -> Boolean = { false },
+    onFireplacePower: (Boolean, Boolean) -> Boolean = { _, _ -> false },
     onFireplaceLevel: (Int, Boolean) -> Boolean = { _, _ -> false },
 ) {
     val context = LocalContext.current
@@ -87,15 +90,15 @@ fun AiSmartScreen(
         }
     }
     var response by remember { mutableStateOf<EnergyAssistantAnswer?>(null) }
-    // Manual fireplace on/off proposed by the backend: sent only after "Conferma".
-    var pendingFireplacePower by remember { mutableStateOf<Boolean?>(null) }
+    // Heating commands proposed by the backend: sent only after "Conferma" (button or spoken).
+    var pendingHeating by remember { mutableStateOf<HeatingConfirmation?>(null) }
     var pendingSinceMs by remember { mutableLongStateOf(0L) }
     // After a spoken question the confirmation is asked aloud and the microphone opens when the
     // reading ends (never during it, so the app does not hear itself).
     var listenAfterSpeech by remember { mutableStateOf(false) }
     var voiceConfirming by remember { mutableStateOf(false) }
     var speechFinished by remember { mutableIntStateOf(0) }
-    var fireplaceNotice by remember { mutableStateOf<String?>(null) }
+    var heatingNotice by remember { mutableStateOf<String?>(null) }
     var assistantContext by remember { mutableStateOf<AssistantContext?>(null) }
     var dynamicError by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
@@ -186,8 +189,8 @@ fun AiSmartScreen(
             loading = true
             dynamicError = null
             response = null
-            pendingFireplacePower = null
-            fireplaceNotice = null
+            pendingHeating = null
+            heatingNotice = null
             try {
                 val started = System.currentTimeMillis()
                 val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
@@ -198,30 +201,14 @@ fun AiSmartScreen(
                         "Comando luce non inviato: connessione o target non valido."
                     }
                 }
-                result.thermostatCommands.forEach { command ->
-                    check(connected && onThermostatCommand(command.thermostat, command.targetC)) {
-                        "Comando termostato non inviato: connessione o valore non valido."
-                    }
-                }
                 result.sceneCommands.forEach { scene ->
                     check(connected && onSceneCommand(scene)) {
                         "Scena luci non inviata: connessione o scena non valida."
                     }
                 }
-                result.fireplaceSettings.forEach { command ->
-                    check(connected && onFireplaceSettings(command)) {
-                        "Comando caminetto non inviato: connessione o valori non validi."
-                    }
-                }
-                result.fireplaceLevel?.let { level ->
-                    val manual = result.fireplaceSettings.any { it.mode == "Manuale" }
-                    check(connected && onFireplaceLevel(level, manual)) {
-                        "Livello del caminetto non inviato: connessione o modalità non Manuale."
-                    }
-                }
-                pendingFireplacePower = result.fireplacePowerRequest
+                pendingHeating = result.heatingConfirmation
                 pendingSinceMs = System.currentTimeMillis()
-                listenAfterSpeech = spoken && result.fireplacePowerRequest != null
+                listenAfterSpeech = spoken && result.heatingConfirmation != null
                 response = result
                 assistantContext = result.context ?: assistantContext
                 stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
@@ -246,37 +233,54 @@ fun AiSmartScreen(
             }
         }
     }
-    fun confirmFireplace() {
-        val on = pendingFireplacePower ?: return
-        pendingFireplacePower = null
-        listenAfterSpeech = false
-        fireplaceNotice = when {
-            VoiceConfirmation.expired(pendingSinceMs, System.currentTimeMillis()) ->
-                "Conferma scaduta: nessun comando inviato. Ripeti la richiesta."
-            !connected -> "Comando non inviato: la casa non è collegata."
-            !onFireplacePower(on) -> "Comando non inviato: il caminetto non è in modalità Manuale."
-            on -> "Ok, accendo il caminetto."
-            else -> "Ok, spengo il caminetto."
+    // Thermostats and fireplace settings first; with Manuale set by this same confirmation, on/off and
+    // level wait a few seconds so that .15 has applied the mode.
+    suspend fun sendHeating(pending: HeatingConfirmation) {
+        pending.thermostats.forEach {
+            check(onThermostatCommand(it.thermostat, it.targetC)) { "Comando termostato non inviato: valore non valido." }
         }
-        if (speechReady) fireplaceNotice?.let(::speak)
+        pending.fireplaceSettings.forEach {
+            check(onFireplaceSettings(it)) { "Comando caminetto non inviato: valori non validi." }
+        }
+        if (pending.setsManual && (pending.fireplacePower != null || pending.fireplaceLevel != null)) delay(MANUAL_SETTLE_MS)
+        pending.fireplacePower?.let {
+            check(onFireplacePower(it, pending.setsManual)) { "Comando non inviato: il caminetto non è in modalità Manuale." }
+        }
+        pending.fireplaceLevel?.let {
+            check(onFireplaceLevel(it, pending.setsManual)) { "Livello non inviato: il caminetto non è in modalità Manuale." }
+        }
     }
-    fun cancelFireplace() {
-        pendingFireplacePower = null
+    fun confirmHeating() {
+        val pending = pendingHeating ?: return
+        pendingHeating = null
         listenAfterSpeech = false
-        fireplaceNotice = "Comando annullato."
+        scope.launch {
+            heatingNotice = when {
+                VoiceConfirmation.expired(pendingSinceMs, System.currentTimeMillis()) ->
+                    "Conferma scaduta: nessun comando inviato. Ripeti la richiesta."
+                !connected -> "Comando non inviato: la casa non è collegata."
+                else -> try { sendHeating(pending); pending.done } catch (e: IllegalStateException) { e.message }
+            }
+            if (speechReady) heatingNotice?.let(::speak)
+        }
+    }
+    fun cancelHeating() {
+        pendingHeating = null
+        listenAfterSpeech = false
+        heatingNotice = "Comando annullato."
     }
     val recognizer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val text = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.trim()
         val confirming = voiceConfirming
         voiceConfirming = false
-        // A pending fireplace on/off: the spoken "confermo"/"annulla" is handled here, never sent to the backend.
-        val answer = if (pendingFireplacePower != null) VoiceConfirmation.classify(text) else null
-        if (answer == true) confirmFireplace()
-        else if (answer == false) { cancelFireplace(); if (speechReady) speak("Comando annullato.") }
+        // Pending heating commands: the spoken "confermo"/"annulla" is handled here, never sent to the backend.
+        val answer = if (pendingHeating != null) VoiceConfirmation.classify(text) else null
+        if (answer == true) confirmHeating()
+        else if (answer == false) { cancelHeating(); if (speechReady) speak("Comando annullato.") }
         else if (confirming) {
-            fireplaceNotice = if (text.isNullOrBlank()) "Nessuna risposta: tocca Conferma o Annulla."
+            heatingNotice = if (text.isNullOrBlank()) "Nessuna risposta: tocca Conferma o Annulla."
                 else "Non ho capito: tocca Conferma o Annulla."
-            if (speechReady) fireplaceNotice?.let(::speak)
+            if (speechReady) heatingNotice?.let(::speak)
         }
         else if (result.resultCode == Activity.RESULT_OK && !text.isNullOrBlank()) {
             question = text
@@ -343,7 +347,7 @@ fun AiSmartScreen(
         catch (_: SecurityException) { voiceConfirming = false; voiceNotice = "Accesso al riconoscimento vocale negato. Puoi scrivere la domanda." }
     }
     LaunchedEffect(speechFinished) {
-        if (speechFinished > 0 && listenAfterSpeech && pendingFireplacePower != null) {
+        if (speechFinished > 0 && listenAfterSpeech && pendingHeating != null) {
             listenAfterSpeech = false
             listen(true)
         }
@@ -385,10 +389,10 @@ fun AiSmartScreen(
         onDictate = { listen(false) },
         onSpeak = { speak(it) },
         onStopSpeaking = { speech?.stop(); voiceNotice = "Lettura interrotta." },
-        pendingFireplacePower = pendingFireplacePower,
-        fireplaceNotice = fireplaceNotice,
-        onConfirmFireplace = { confirmFireplace() },
-        onCancelFireplace = { cancelFireplace() }
+        pendingHeating = pendingHeating,
+        heatingNotice = heatingNotice,
+        onConfirmHeating = { confirmHeating() },
+        onCancelHeating = { cancelHeating() }
     )
 }
 
@@ -426,10 +430,10 @@ internal fun AiSmartContent(
     onAskDynamic: (String) -> Unit = {},
     onDaySummary: () -> Unit = {},
     askedQuestion: String? = null,
-    pendingFireplacePower: Boolean? = null,
-    fireplaceNotice: String? = null,
-    onConfirmFireplace: () -> Unit = {},
-    onCancelFireplace: () -> Unit = {},
+    pendingHeating: HeatingConfirmation? = null,
+    heatingNotice: String? = null,
+    onConfirmHeating: () -> Unit = {},
+    onCancelHeating: () -> Unit = {},
 ) {
     BackHandler(onBack = onClassic)
     var submittedQuestion by rememberSaveable { mutableStateOf<String?>(null) }
@@ -570,14 +574,13 @@ internal fun AiSmartContent(
                     }
                     if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
                     // Right under "Parla" so the confirmation needs no scrolling.
-                    pendingFireplacePower?.let { on ->
-                        Text(if (on) "Confermi l'accensione del caminetto?" else "Confermi lo spegnimento del caminetto?",
-                            style = MaterialTheme.typography.titleSmall)
+                    pendingHeating?.let { pending ->
+                        Text(pending.prompt, Modifier.testTag("smart-heating-prompt"), style = MaterialTheme.typography.titleSmall)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = onConfirmFireplace, modifier = Modifier.testTag("smart-fireplace-confirm")) {
-                                Text(if (on) "Conferma accensione" else "Conferma spegnimento")
+                            Button(onClick = onConfirmHeating, modifier = Modifier.testTag("smart-heating-confirm")) {
+                                Text("Conferma")
                             }
-                            OutlinedButton(onClick = onCancelFireplace, modifier = Modifier.testTag("smart-fireplace-cancel")) {
+                            OutlinedButton(onClick = onCancelHeating, modifier = Modifier.testTag("smart-heating-cancel")) {
                                 Text("Annulla")
                             }
                         }
@@ -613,7 +616,7 @@ internal fun AiSmartContent(
                         }
                         if (dynamicMode) Text("Risposta riferita alla richiesta, non aggiornata automaticamente.", style = MaterialTheme.typography.bodySmall)
                         Text(text, Modifier.testTag("smart-answer"))
-                        fireplaceNotice?.let { Text(it, Modifier.testTag("smart-fireplace-notice")) }
+                        heatingNotice?.let { Text(it, Modifier.testTag("smart-heating-notice")) }
                         TextButton(enabled = speechReady, onClick = { onSpeak(text) }) { Text("Leggi risposta") }
                     }
                     TextButton(enabled = speechReady, onClick = onStopSpeaking) { Text("Ferma lettura") }
@@ -649,7 +652,7 @@ internal fun AiSmartContent(
                             }
                         }
                     }
-                    Text("Comandi: luci, scene luci, termostati, modalità e orari del caminetto; acceso/spento (con conferma) e livello del caminetto solo in Manuale. Gli altri impianti sono in sola lettura.",
+                    Text("Comandi: luci, scene luci, termostati, modalità e orari del caminetto; acceso/spento e livello del caminetto solo in Manuale; termostati e caminetto sempre con conferma. Gli altri impianti sono in sola lettura.",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }

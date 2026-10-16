@@ -91,14 +91,15 @@ class EnvironmentToolTests(unittest.TestCase):
 
 
 class ComposeTests(unittest.TestCase):
-    def test_commands_become_one_sentence_before_readings(self):
+    def test_lights_at_once_readings_then_heating_confirmation_last(self):
         plan = {'operations': [{'id': 'a', 'tool': 'set_light_state', 'light': 'lights_tv', 'state': 'on'},
                                {'id': 'b', 'tool': 'set_light_state', 'light': 'lights_libreria', 'state': 'off'},
                                {'id': 'c', 'tool': 'set_thermostat_target', 'thermostat': 'thermostat_bath', 'target_c': '20.0'},
                                {'id': 'd', 'tool': 'current_environment', 'room': 'living', 'metric': 'temperature'}]}
         result = ask(None, Planner(plan), 'tutto', environment_snapshot=env())
-        self.assertEqual(result['answer'], 'Ok, accendo la lampada TV, spengo la luce della libreria e imposto '
-                                           'il termostato del bagno a 20 gradi.\n\nNel living ci sono 22,4 gradi.')
+        self.assertEqual(result['answer'], "Ok, accendo la lampada TV e spengo la luce della libreria.\n\n"
+                                           "Nel living ci sono 22,4 gradi.\n\n"
+                                           "Imposto il termostato del bagno a 20 gradi. Confermi? Di' confermo o tocca Conferma.")
 
 
 if __name__ == '__main__':

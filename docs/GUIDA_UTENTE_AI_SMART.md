@@ -122,51 +122,66 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
 
 ### 4.5 Caminetto (comandi)
 
+**Ogni comando del caminetto chiede conferma** (vedi §4.7): niente parte finché non dici
+«confermo» o tocchi **Conferma**.
+
 | Domande | Risposta |
 |---|---|
-| «metti il caminetto in modalità acqua sanitaria dalle 12:00 alle 13:00» | Ok, metto il caminetto in modalità Acqua Sanitaria, dalle 12:00 alle 13:00. |
-| «metti il caminetto in riscaldamento» | Ok, metto il caminetto in modalità Riscaldamento. |
-| «il caminetto si spenga alle 17:30» | Ok, imposto gli orari del caminetto con spegnimento alle 17:30. |
-| «disattiva la potenza automatica del caminetto» | Ok, disattivo la potenza automatica del caminetto. |
-| «accendi il caminetto» (in modalità Manuale) | Confermi l'accensione del caminetto? Di' confermo o tocca Conferma. → tasti **Conferma accensione** / **Annulla** → «Ok, accendo il caminetto.» |
-| «spegni il caminetto» (in modalità Manuale) | Confermi lo spegnimento del caminetto? Di' confermo o tocca Conferma. → **Conferma spegnimento** / **Annulla** |
+| «metti il caminetto in modalità acqua sanitaria dalle 12:00 alle 13:00» | Metto il caminetto in modalità Acqua Sanitaria, dalle 12:00 alle 13:00. Confermi? Di' confermo o tocca Conferma. |
+| «metti il caminetto in riscaldamento» | Metto il caminetto in modalità Riscaldamento. Confermi? Di' confermo o tocca Conferma. |
+| «il caminetto si spenga alle 17:30» | Imposto gli orari del caminetto con spegnimento alle 17:30. Confermi? Di' confermo o tocca Conferma. |
+| «disattiva la potenza automatica del caminetto» | Disattivo la potenza automatica del caminetto. Confermi? Di' confermo o tocca Conferma. |
+| «accendi il caminetto» (in modalità Manuale) | Accendo il caminetto. Confermi? Di' confermo o tocca Conferma. → dopo la conferma «Ok, accendo il caminetto.» |
+| «spegni il caminetto» (in modalità Manuale) | Spengo il caminetto. Confermi? Di' confermo o tocca Conferma. |
 | «accendi il caminetto» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: per accenderlo a mano passa prima a Manuale. |
-| «metti il caminetto in manuale e accendilo» | Ok, metto il caminetto in modalità Manuale. Confermi l'accensione del caminetto? Di' confermo o tocca Conferma. |
-| «metti il caminetto a 4» (in Manuale, acceso) | Ok, imposto il caminetto al livello 4. |
+| «metti il caminetto in manuale e accendilo» | Metto il caminetto in modalità Manuale e lo accendo. Confermi? Di' confermo o tocca Conferma. |
+| «metti il caminetto a 4» (in Manuale, acceso) | Imposto il caminetto al livello 4. Confermi? Di' confermo o tocca Conferma. |
 | «metti il caminetto a 4» (in Manuale, spento) | Il caminetto è spento: il livello si cambia quando è acceso. |
 | «metti il caminetto a 4» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: il livello si cambia solo in Manuale. Con la potenza automatica attiva il livello lo decide la casa. |
 
 - **Modalità:** Riscaldamento, Acqua Sanitaria, Integrazione Caldaia, Manuale, Disattivato.
-  Modalità, orari e potenza automatica partono **subito**, come le luci.
 - **Orari:** a 24 ore; l'avvio deve essere prima dello spegnimento, altrimenti: «Non imposto
   gli orari del caminetto: l'avvio alle 17:00 deve essere prima dello spegnimento alle 16:55.».
   In Manuale e Disattivato gli orari non contano.
-- **Acceso/spento** solo in modalità **Manuale** e **solo dopo aver toccato Conferma**; se il
-  caminetto è già nello stato chiesto: «Il caminetto risulta già acceso.».
-- I tasti **Conferma** / **Annulla** compaiono **subito sotto Parla**, nel riquadro «Chiedi alla
-  casa», senza bisogno di scorrere; dopo il tocco spariscono e l'esito resta nella Risposta.
-- **Conferma a voce:** se il comando è stato detto a voce, finita la lettura della domanda di
-  conferma il microfono si apre da solo. Rispondi solo **«confermo»** o **«conferma»** (una
-  parola sola; «sì» o frasi più lunghe non valgono) oppure **«annulla»** / **«no»**. Se non
-  rispondi o l'app non capisce: «Nessuna risposta: tocca Conferma o Annulla.» / «Non ho capito:
-  tocca Conferma o Annulla.», e non invia nulla. Con un comando scritto puoi toccare Parla e dire
-  «confermo». La conferma vale **60 secondi**: dopo, «Conferma scaduta: nessun comando inviato.
-  Ripeti la richiesta.».
-- **Livello di potenza (1–6):** solo in modalità **Manuale** e a caminetto **acceso**; parte
-  subito, senza conferma. Nelle altre modalità non si cambia da AI Smart e vale la potenza
-  automatica: attiva, il livello lo decide la casa; disattivata, resta quello impostato (slider
-  della scheda Impianti). In Manuale la casa non cambia il livello da sola.
+- **Acceso/spento** solo in modalità **Manuale**; se il caminetto è già nello stato chiesto:
+  «Il caminetto risulta già acceso.» (nessuna conferma, non c'è nulla da inviare).
+- **Manuale e accensione insieme:** dopo la conferma l'app invia la modalità, aspetta 3 secondi
+  che la casa la applichi, poi l'accensione.
+- **Livello di potenza (1–6):** solo in modalità **Manuale** e a caminetto **acceso**. Nelle
+  altre modalità non si cambia da AI Smart e vale la potenza automatica: attiva, il livello lo
+  decide la casa; disattivata, resta quello impostato (slider della scheda Impianti). In Manuale
+  la casa non cambia il livello da sola.
 
 ### 4.6 Termostati (lettura e comando)
 
 | Domande | Esempio di risposta |
 |---|---|
 | «come sono i termostati?», «termostato del bagno?» | Termostato del living: 20,6 gradi, setpoint 18 gradi, non chiede calore. |
-| «metti il living a 20 gradi», «imposta il bagno a 19,5» | Ok, imposto il termostato del living a 20 gradi. |
+| «metti il living a 20 gradi», «imposta il bagno a 19,5» | Imposto il termostato del living a 20 gradi. Confermi? Di' confermo o tocca Conferma. → dopo la conferma «Ok, imposto il termostato del living a 20 gradi.» |
 
 - Valori ammessi: **da 16 a 22 gradi a passi di 0,5**; serve dire la stanza (living o bagno).
 - «Chiede / non chiede calore» indica se il termostato della stanza sta chiedendo riscaldamento.
 - Il timer delle fasce orarie e la modalità vacanza possono poi reimpostare il setpoint.
+- Come il caminetto, **ogni comando dei termostati chiede conferma** (§4.7).
+
+### 4.7 Conferma dei comandi del riscaldamento
+
+Termostati e caminetto (e in futuro pompa pavimento e caldaia) **non partono senza conferma**;
+luci e scene partono subito.
+
+- Una **sola conferma per richiesta**, anche con più comandi: la domanda compare **subito sotto
+  Parla** con i tasti **Conferma** / **Annulla**, senza bisogno di scorrere.
+- In una richiesta mista («accendi la luce della libreria e metti il bagno a 20 gradi») la luce
+  parte subito, il termostato aspetta la conferma; la domanda di conferma chiude la risposta.
+- **Conferma a voce:** se il comando è stato detto a voce, finita la lettura della domanda il
+  microfono si apre da solo. Rispondi solo **«confermo»** o **«conferma»** (una parola sola; «sì»
+  o frasi più lunghe non valgono) oppure **«annulla»** / **«no»**. Se non rispondi o l'app non
+  capisce: «Nessuna risposta: tocca Conferma o Annulla.» / «Non ho capito: tocca Conferma o
+  Annulla.», e non invia nulla. Con un comando scritto puoi toccare Parla e dire «confermo».
+- Dopo la conferma l'app risponde con «Ok, …» e invia i comandi; se la casa non è collegata:
+  «Comando non inviato: la casa non è collegata.».
+- La conferma vale **60 secondi**: dopo, «Conferma scaduta: nessun comando inviato. Ripeti la
+  richiesta.».
 
 ### 4.7 Luci (lettura e comando)
 
@@ -245,3 +260,4 @@ in cima.
 | 15/10/2026 | Tasti Conferma/Annulla del caminetto spostati sotto Parla; l'etichetta «Periodo coperto» compare solo nelle risposte su un periodo (consumi, produzione), non nei comandi. |
 | 15/10/2026 | Livello di potenza del caminetto (1–6) da AI Smart, solo in Manuale e a caminetto acceso (§4.5). |
 | 15/10/2026 | Conferma a voce di acceso/spento del caminetto («confermo»/«conferma»), ascolto automatico dopo la domanda, validità 60 secondi (§4.5). |
+| 16/10/2026 | **Tutti i comandi del riscaldamento** (termostati, modalità, orari, potenza automatica, livello e acceso/spento del caminetto) chiedono conferma, una sola per richiesta; luci e scene restano immediate (§4.7). |
