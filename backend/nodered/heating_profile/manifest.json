@@ -1,0 +1,29 @@
+{
+  "patch": "HEATING-PROFILE.1",
+  "modified_ids": [],
+  "removed_ids": [],
+  "added_ids": [
+    "b31c8b71fb85c910",
+    "872b6e296e900154",
+    "d5024ee2d0b83f4a",
+    "d7fd7e2f94e9e76c",
+    "36462bb7fc0e6c33",
+    "3825f23cb43ff1bc",
+    "43f3b2d84f200141",
+    "accb5a16a372529f",
+    "63bb706d49accc35",
+    "57789e436ba6aea1"
+  ],
+  "node_sha256_after": {
+    "b31c8b71fb85c910": "a1910fe89fae6e620999065b0d8d04fe2efb78291a81abc156e3abd50ad78e43",
+    "872b6e296e900154": "81b4f77abed6ae14646f9b66b9b486ea136de0dbd309440fc8926204e4b2b3d6",
+    "d5024ee2d0b83f4a": "ff7a8590d23a8c94705d4600317213dce97f965dcb449377d46277356eb0ad79",
+    "d7fd7e2f94e9e76c": "8002fce230e36ba6502b1bad26ac5a978c6e40fe20cf1e64decd59d3ec9c6c56",
+    "36462bb7fc0e6c33": "2e0cd0e3fdc3bcdd422b7feac9e7aa343b238e689fddd66c6834cc6128711ac0",
+    "3825f23cb43ff1bc": "0b164a9b86a07ed6095a96ed0425bfa613667781321b4e6f83f382e3c7f5b896",
+    "43f3b2d84f200141": "50c06470b60158e67f1a56b9f42bece75c5f71b0dc27d1852843f391a4857674",
+    "accb5a16a372529f": "53271ba5ddb3bbcadfd337d18288a6bdfbaef59302c871b46f4aa05a39188bac",
+    "63bb706d49accc35": "b09154cf991f9c7530627e2a46a9bf58dca5f2c6db8954ca34f681fb6b9e6faa",
+    "57789e436ba6aea1": "e780701ccb52da7e044fed807b958222b479affa32f6f8b044f0b35ef3cbe8a1"
+  }
+}
