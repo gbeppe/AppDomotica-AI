@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1572e937.c23a67",
+    "type": "function",
+    "z": "a5ce04b2.5a31f8",
+    "name": "",
+    "func": "// FLOORPUMP-REPEAT.3 (2026-10-16): the floor pump depends only on \"enabled\" and the puffer top\n// temperature (on above 35 °C, off below 30 °C, the last command repeated in between, so the\n// 15-minute safety stop of floorpump_v2 does not stop the pump early). The fireplace times are\n// no longer read: they were only used by code that had been commented out.\n// As before, the fireplace mode is recorded only while the pump is enabled: the old thermostat\n// timers (tab TASMOTAs) read it, and recording it always would wake them up.\nvar pompapavimentoenabled = global.get(\"pompapavimentoenabled\", 'file');\n\nif (!pompapavimentoenabled) {\n    msg.payload = 0;\n    context.set(\"lastPump\", 0);\n    return msg;\n}\n\nif (msg.topic == \"zara/domotics/palazzetti/modalita\") {\n    global.set(\"palazzettiModalita\", msg.payload);\n} else if (msg.topic == \"emon/resolDL2/sensor3\") {\n    global.set(\"tempPufferSup\", msg.payload);\n}\n\nvar tempPufferSup = global.get(\"tempPufferSup\");\n\nif (tempPufferSup > 35) msg.payload = 1;\nelse if (tempPufferSup < 30) msg.payload = 0;\nelse if (context.get(\"lastPump\") !== undefined) msg.payload = context.get(\"lastPump\");\nelse return null;\n\ncontext.set(\"lastPump\", msg.payload);\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "x": 550,
+    "y": 560,
+    "wires": [
+      [
+        "c38e09e1.2ce58"
+      ]
+    ]
+  }
+]

@@ -17,7 +17,9 @@ I timer dei termostati sul `.15` (tab «TASMOTAs», flussi attivi in
 
 ## Il profilo
 
-Un parametro unico per la casa, indipendente dal caminetto.
+Un parametro unico per la casa (la **stagione**), indipendente dal caminetto; **ogni stanza ha le
+sue fasce** per ciascun profilo (decisione dell'utente del 16/10/2026: profilo unico, fasce per
+stanza, niente profili separati per stanza).
 
 | Profilo | Fasce soggiorno | Fasce bagno |
 |---|---|---|
