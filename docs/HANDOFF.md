@@ -67,7 +67,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_64bec1e3`** (commit `30f1aa1`, 16/10: comandi del riscaldamento sempre con una conferma, tasto sotto Parla o «confermo»). Funzioni principali e documenti:
+Installata sul telefono: **`bld_ed5ec5b3`** (commit `074f18f`, 16/10: comandi del riscaldamento sempre con una conferma, tasto sotto Parla o «confermo» riconosciuto anche con accenti, spazi o alternative). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
