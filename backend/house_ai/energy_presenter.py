@@ -720,7 +720,9 @@ def notes(item):
 
 def compose(results):
     """One answer: immediate commands in a single "Ok, …" sentence, then each reading, then the
-    heating commands waiting for confirmation (last, so the spoken question ends the answer)."""
+    heating commands waiting for confirmation (last, so the spoken question ends the answer).
+    The spoken text never contains "confermo"/"conferma": the microphone opens right after the
+    reading and must not hear the phone itself confirm (field test 16/10, "bagno a 21")."""
     actions = [command_action(item['result']) for item in results if is_action(item['result'])]
     texts = [describe(item) for item in results
              if not is_action(item['result']) and not needs_confirmation(item['result'])]
@@ -728,5 +730,5 @@ def compose(results):
         texts.insert(0, f"Ok, {join_it(actions)}.")
     pending = confirmation(results)
     if pending:
-        texts.append(f"{pending['prompt']} Di' confermo o tocca Conferma.")
+        texts.append(pending['prompt'])
     return '\n\n'.join(texts)

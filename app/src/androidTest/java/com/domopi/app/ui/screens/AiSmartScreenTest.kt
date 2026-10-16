@@ -177,7 +177,7 @@ class AiSmartScreenTest {
         val pending = HeatingConfirmation("Metto il caminetto in modalità Manuale e lo accendo. Confermi?",
             "Ok, metto il caminetto in modalità Manuale e lo accendo.",
             fireplaceSettings = listOf(FireplaceSettingsCommand("Manuale", null, null, null)), fireplacePower = true)
-        val response = EnergyAssistantAnswer(pending.prompt + " Di' confermo o tocca Conferma.", "complete",
+        val response = EnergyAssistantAnswer(pending.prompt + "", "complete",
             "metti il caminetto in manuale e accendilo", "2026-10-16T09:30:00+02:00", emptyList(), heatingConfirmation = pending)
         compose.setContent {
             DomoPiTheme(darkTheme = false) {

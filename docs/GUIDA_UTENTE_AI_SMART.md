@@ -127,15 +127,15 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
 
 | Domande | Risposta |
 |---|---|
-| «metti il caminetto in modalità acqua sanitaria dalle 12:00 alle 13:00» | Metto il caminetto in modalità Acqua Sanitaria, dalle 12:00 alle 13:00. Confermi? Di' confermo o tocca Conferma. |
-| «metti il caminetto in riscaldamento» | Metto il caminetto in modalità Riscaldamento. Confermi? Di' confermo o tocca Conferma. |
-| «il caminetto si spenga alle 17:30» | Imposto gli orari del caminetto con spegnimento alle 17:30. Confermi? Di' confermo o tocca Conferma. |
-| «disattiva la potenza automatica del caminetto» | Disattivo la potenza automatica del caminetto. Confermi? Di' confermo o tocca Conferma. |
-| «accendi il caminetto» (in modalità Manuale) | Accendo il caminetto. Confermi? Di' confermo o tocca Conferma. → dopo la conferma «Ok, accendo il caminetto.» |
-| «spegni il caminetto» (in modalità Manuale) | Spengo il caminetto. Confermi? Di' confermo o tocca Conferma. |
+| «metti il caminetto in modalità acqua sanitaria dalle 12:00 alle 13:00» | Metto il caminetto in modalità Acqua Sanitaria, dalle 12:00 alle 13:00. Confermi? |
+| «metti il caminetto in riscaldamento» | Metto il caminetto in modalità Riscaldamento. Confermi? |
+| «il caminetto si spenga alle 17:30» | Imposto gli orari del caminetto con spegnimento alle 17:30. Confermi? |
+| «disattiva la potenza automatica del caminetto» | Disattivo la potenza automatica del caminetto. Confermi? |
+| «accendi il caminetto» (in modalità Manuale) | Accendo il caminetto. Confermi? → dopo la conferma «Ok, accendo il caminetto.» |
+| «spegni il caminetto» (in modalità Manuale) | Spengo il caminetto. Confermi? |
 | «accendi il caminetto» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: per accenderlo a mano passa prima a Manuale. |
-| «metti il caminetto in manuale e accendilo» | Metto il caminetto in modalità Manuale e lo accendo. Confermi? Di' confermo o tocca Conferma. |
-| «metti il caminetto a 4» (in Manuale, acceso) | Imposto il caminetto al livello 4. Confermi? Di' confermo o tocca Conferma. |
+| «metti il caminetto in manuale e accendilo» | Metto il caminetto in modalità Manuale e lo accendo. Confermi? |
+| «metti il caminetto a 4» (in Manuale, acceso) | Imposto il caminetto al livello 4. Confermi? |
 | «metti il caminetto a 4» (in Manuale, spento) | Il caminetto è spento: il livello si cambia quando è acceso. |
 | «metti il caminetto a 4» (in un'altra modalità) | Il caminetto è in modalità Riscaldamento: il livello si cambia solo in Manuale. Con la potenza automatica attiva il livello lo decide la casa. |
 
@@ -157,7 +157,7 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
 | Domande | Esempio di risposta |
 |---|---|
 | «come sono i termostati?», «termostato del bagno?» | Termostato del living: 20,6 gradi, setpoint 18 gradi, non chiede calore. |
-| «metti il living a 20 gradi», «imposta il bagno a 19,5» | Imposto il termostato del living a 20 gradi. Confermi? Di' confermo o tocca Conferma. → dopo la conferma «Ok, imposto il termostato del living a 20 gradi.» |
+| «metti il living a 20 gradi», «imposta il bagno a 19,5» | Imposto il termostato del living a 20 gradi. Confermi? → dopo la conferma «Ok, imposto il termostato del living a 20 gradi.» |
 
 - Valori ammessi: **da 16 a 22 gradi a passi di 0,5**; serve dire la stanza (living o bagno).
 - «Chiede / non chiede calore» indica se il termostato della stanza sta chiedendo riscaldamento.
@@ -173,8 +173,11 @@ luci e scene partono subito.
   Parla** con i tasti **Conferma** / **Annulla**, senza bisogno di scorrere.
 - In una richiesta mista («accendi la luce della libreria e metti il bagno a 20 gradi») la luce
   parte subito, il termostato aspetta la conferma; la domanda di conferma chiude la risposta.
-- **Conferma a voce:** se il comando è stato detto a voce, finita la lettura della domanda il
-  microfono si apre da solo. Rispondi solo **«confermo»** o **«conferma»** (una parola sola; «sì»
+- La domanda letta finisce con «…Confermi?» e **non contiene mai «confermo» o «conferma»**: così
+  il microfono non può sentire il telefono confermare da solo.
+- **Conferma a voce:** se il comando è stato detto a voce, **1 secondo** dopo la fine della
+  lettura il microfono si apre da solo, con la finestra «Di' confermo o annulla»: parla solo
+  quando la vedi. Rispondi solo **«confermo»** o **«conferma»** (una parola sola; «sì»
   o frasi più lunghe non valgono) oppure **«annulla»** / **«no»**. Se non rispondi o l'app non
   capisce: «Nessuna risposta: tocca Conferma o Annulla.» / «Ho sentito «…»: non è una conferma.
   Tocca Conferma o Annulla.» (con la frase capita), e non invia nulla. Accenti e spazi non
@@ -264,3 +267,4 @@ in cima.
 | 15/10/2026 | Conferma a voce di acceso/spento del caminetto («confermo»/«conferma»), ascolto automatico dopo la domanda, validità 60 secondi (§4.5). |
 | 16/10/2026 | **Tutti i comandi del riscaldamento** (termostati, modalità, orari, potenza automatica, livello e acceso/spento del caminetto) chiedono conferma, una sola per richiesta; luci e scene restano immediate (§4.7). |
 | 16/10/2026 | Conferma a voce più tollerante: accenti e spazi ignorati, alternative del riconoscimento vocale, frase capita mostrata se non è una conferma. |
+| 16/10/2026 | Sicurezza: la domanda letta finisce con «Confermi?» senza «confermo»/«conferma» e il microfono si apre dopo 1 secondo (una prova aveva confermato da sola un termostato). |

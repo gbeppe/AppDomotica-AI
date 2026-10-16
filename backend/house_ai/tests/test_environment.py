@@ -99,7 +99,7 @@ class ComposeTests(unittest.TestCase):
         result = ask(None, Planner(plan), 'tutto', environment_snapshot=env())
         self.assertEqual(result['answer'], "Ok, accendo la lampada TV e spengo la luce della libreria.\n\n"
                                            "Nel living ci sono 22,4 gradi.\n\n"
-                                           "Imposto il termostato del bagno a 20 gradi. Confermi? Di' confermo o tocca Conferma.")
+                                           "Imposto il termostato del bagno a 20 gradi. Confermi?")
 
 
 if __name__ == '__main__':

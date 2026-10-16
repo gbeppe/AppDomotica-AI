@@ -351,7 +351,7 @@ fun AiSmartScreen(
     LaunchedEffect(speechFinished) {
         if (speechFinished > 0 && listenAfterSpeech && pendingHeating != null) {
             listenAfterSpeech = false
-            delay(400) // let the last syllable of the reading fade before the microphone opens
+            delay(1_000) // the reading must have faded (Bluetooth or speaker lag) before the microphone opens
             listen(true)
         }
     }

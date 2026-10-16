@@ -12,7 +12,7 @@ class VoiceConfirmationTest {
         assertEquals(true, VoiceConfirmation.classify("Confermò"))
         assertEquals(true, VoiceConfirmation.classify("con fermo"))
         listOf("sì", "ok", "va bene", "sì confermo", "non confermo", "confermo lo spegnimento",
-            "tocca conferma", "", null).forEach {
+            "tocca conferma", "Confermi?", "confermi", "", null).forEach {
             assertEquals(it, null, VoiceConfirmation.classify(it as String?))
         }
         assertEquals(true, VoiceConfirmation.classify(listOf("con ferma lo", "confermo")))
