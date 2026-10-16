@@ -47,3 +47,17 @@ caricamento di `floorpump_v2` non si collegava (ASUS_2.4 non arriva in sala tecn
 raggiungibile via OTA. Recupero senza cavo: il TL-WA850RE è stato rinominato per qualche minuto
 `ASUS_2.4` con la password dell'ASUS, la scheda si è collegata, è stata caricata la versione con
 `TP-Link_SalaTecnica` e il nome dell'access point è stato ripristinato.
+
+## Catena di accensione (provata il 16/10/2026)
+
+1. App «pompa abilitata» → router → `zara/domotics/pompapavimento/abilitata` sul `.15`.
+2. Logica del `.15`: puffer alto > 35 °C (isteresi fino a 30 °C) → `1` all'ESP → relè chiuso
+   (un comando al minuto al massimo, ripetuto ogni 3 minuti; fino a ~90 s fra abilitazione e clic).
+3. La pompa è **in serie ai termostati delle stanze**: parte solo se un termostato chiede calore,
+   dopo l'apertura delle valvole del collettore (circa 3 minuti). Con il relè chiuso e nessuna
+   richiesta di calore la pompa resta ferma: è il comportamento previsto.
+4. `zara/domotics/floorpumpstate` (pompa in funzione, misurata dal `.15`) passa a `1`.
+
+Prova del 16/10: soggiorno portato a 22 °C alle 14:51 → pompa partita, `floorpumpstate` 1 alle
+14:55; setpoint rimesso a 18 °C → pompa ferma dopo ~2 minuti. Pompa poi disabilitata e
+`floorpump_v2` ricaricato (online alle 15:07).

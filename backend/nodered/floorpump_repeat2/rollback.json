@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1572e937.c23a67",
+    "type": "function",
+    "z": "a5ce04b2.5a31f8",
+    "name": "",
+    "func": "var pompapavimentoenabled = global.get(\"pompapavimentoenabled\",'file');\n\nif (!pompapavimentoenabled) {\n    msg.payload = 0;\n    context.set(\"lastPump\", 0);  // FLOORPUMP-REPEAT.1\n    return msg;\n}\n\n\nvar d = new Date();\nvar hour = d.getHours();\nvar minute = d.getMinutes();\nvar second = d.getSeconds();\nif (hour.toString().length == 1)   hour   = '0'+hour;\nif (minute.toString().length == 1) minute = '0'+minute;\nif (second.toString().length == 1) second = '0'+second;\nvar currTime = hour + \":\" + minute + \":\" + second;\n\n\n\nif (msg.topic == \"zara/domotics/palazzetti/oraspegnimento\") {\n    global.set(\"palazzettiOraSpegnimento\",msg.payload);\n} else if (msg.topic == \"zara/domotics/palazzetti/oraavvio\") {\n    global.set(\"palazzettiOraAvvio\",msg.payload);\n} else if (msg.topic == \"zara/domotics/palazzetti/modalita\") {\n    global.set(\"palazzettiModalita\",msg.payload);\n} else if (msg.topic == \"emon/resolDL2/sensor3\") {\n    global.set(\"tempPufferSup\",msg.payload);\n}\n\nvar palazzettiModalita = global.get(\"palazzettiModalita\");\nvar palazzettiOraSpegnimento = global.get(\"palazzettiOraSpegnimento\");\nvar palazzettiOraAvvio = global.get(\"palazzettiOraAvvio\");\nvar tempPufferSup=global.get(\"tempPufferSup\");\n\nlet dd = new Date(); // creates a Date Object using the clients current time\n\nlet [hours,minutes,seconds] = palazzettiOraSpegnimento.split(':'); // using ES6 destructuring\n// var time = \"18:19:02\".split(':'); // \"old\" ES5 version\n\ndd.setHours(+hours-1); // set the hours, using implicit type coercion\ndd.setMinutes(minutes); // you can pass Number or String, it doesn't really matter\ndd.setSeconds(seconds);\nvar Dhour = dd.getHours();\nvar Dminute = dd.getMinutes();\nvar Dsecond = dd.getSeconds();\nif (Dhour.toString().length == 1)   Dhour   = '0'+Dhour;\nif (Dminute.toString().length == 1) Dminute = '0'+Dminute;\nif (Dsecond.toString().length == 1) Dsecond = '0'+Dsecond;\nvar stopTime = Dhour + \":\" + Dminute + \":\" + Dsecond;\n\n/*\nglobal.set(\"zz1\",currTime);\nglobal.set(\"zz2\",stopTime);\nglobal.set(\"zz3\",palazzettiOraAvvio);\n*/\n\n/*\nif (palazzettiModalita == \"inverno\") {\n    if (tempPufferSup > 38) msg.payload = 1;\n    else if (tempPufferSup < 33) msg.payload = 0;\n    else return null;\n//} else if (palazzettiModalita == \"inverno\" && (currTime >= stopTime && currTime <= palazzettiOraSpegnimento)) {\n//    msg.topic = \"forcedStop\";\n//    msg.payload = 0;\n//    return msg;\n \n} else {\n    if (tempPufferSup > 38) msg.payload = 1;\n    else if (tempPufferSup < 33) msg.payload = 0;\n    else return null;\n}\n*/\n\n// FLOORPUMP-REPEAT.1: in the 30-35 °C band repeat the last command, so the 15-minute safety\n// stop of floorpump_v2 does not switch the pump off before 30 °C.\nif (tempPufferSup > 35) msg.payload = 1;\nelse if (tempPufferSup < 30) msg.payload = 0;\nelse if (context.get(\"lastPump\") !== undefined) msg.payload = context.get(\"lastPump\");\nelse return null;\n\ncontext.set(\"lastPump\", msg.payload);\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "x": 550,
+    "y": 560,
+    "wires": [
+      [
+        "c38e09e1.2ce58"
+      ]
+    ]
+  }
+]

@@ -101,6 +101,7 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `heating_profile` (HEATING-PROFILE.1) | nuovo tab: profilo di riscaldamento Spento/Ridotto/Pieno (auto da media esterna 72 h, soglie 10/16 °C da EmonCMS) e timer dei termostati (fascia → massimo, fuori → minimo), parte in **shadow**; sostituirà i timer del `.15`, che oggi non inviano nulla | pronta, da applicare |
 | `router_floor_pump` (ROUTER-FLOOR-PUMP.1) | abilitazione pompa pavimento instradata sul broker di `.15`, retained (prima andava sul `.20` e non arrivava); chiave `router_initialized_v123`; backup `/home/pi/AI_backups/nodered/20261016T105204Z-before-router-floor-pump` | live dal 16/10 12:52; prova 12:53 superata (abilita/disabilita dall'app arrivano al `.15`, retained; «disabilita» manda 0 all'ESP) |
 | `floorpump_repeat` (FLOORPUMP-REPEAT.1, **sul `.15`**) | la logica della pompa ripete l'ultimo comando nella fascia 30–35 °C, necessario per lo spegnimento di sicurezza di `floorpump_v2`; backup sul `.15` `/home/pi/AI_backups/nodered/20261016T112048Z-before-floorpump-repeat` | live sul `.15` dal 16/10 13:21 |
+| `floorpump_repeat2` (FLOORPUMP-REPEAT.2, **sul `.15`**) | la function della pompa non va più in errore senza l'ora di spegnimento del caminetto (bloccava ogni comando con la pompa abilitata) | live sul `.15` dal 16/10 14:25 |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
 
 ### Firmware delle schede ESP
@@ -222,6 +223,13 @@ allineata). Rilasciati in giornata: ROUTER-FIREPLACE-RETAIN.1 (`v122`), house_ai
 5. **Robot** (priorità bassissima): Ecovacs Deebot T9 Max Pro Omni e N8 Pro tramite libreria non
    ufficiale (`node-red-contrib-ecovacs-deebot`), MOVA LiDAX Ultra 800 da verificare; Alexa come
    ripiego (il suo login va rifatto).
+
+### Da indagare (16/10/2026)
+
+- **Indicatore del termostato del soggiorno nell'app rimasto spento** mentre il Tasmota era acceso e
+  la pompa girava (14:51–14:57). Il codice dell'app è corretto; sul `.15` `emon/TermostatLiving/Switch`
+  ha pubblicato 100 e 5 s dopo 0 (14:58:45/50): probabile secondo pubblicatore con un valore vecchio
+  che sovrascrive lo stato. Possibile legame con i setpoint scritti alle 09:18 da una fonte ignota.
 
 ## 8. Note di ripresa
 - Memoria dell'agente precedente (Claude Code) in
