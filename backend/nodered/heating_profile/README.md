@@ -18,5 +18,7 @@ router non toccato (nessun incremento di `router_initialized_vNNN`).
 - Stato persistente nel context store `file`. Parte in **shadow**: per passare ad active,
   dopo il confronto e con conferma, pubblicare `active` su `zara/interface/heating/timer/mode/cmd`.
 
+Applicata in shadow il 16/10/2026 alle 12:44 (backup `/home/pi/AI_backups/nodered/20261016T104325Z-before-heating-profile`).
+
 Test: `TZ=Europe/Rome node --test test.js` (9 casi). Deploy: `deploy.py prepare`, poi
 `apply BACKUP`, `rollback BACKUP` (rimuove il tab).
