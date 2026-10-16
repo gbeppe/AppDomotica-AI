@@ -1,0 +1,231 @@
+[
+  {
+    "id": "251ac6d21041c4e1",
+    "type": "tab",
+    "label": "Regole (DomoPi)",
+    "disabled": false,
+    "info": "RULES-ENGINE.1 (2026-10-16): regole naturali, fase H1. Trigger a soglia/orario, una azione ammessa, durata, attesa minima; ogni regola nuova in prova 24 h; motore in shadow finché non si pubblica \"active\" su zara/interface/rules/engine/cmd. Repository: backend/nodered/rules_engine/."
+  },
+  {
+    "id": "ef9c5ba4af13a54e",
+    "type": "comment",
+    "z": "251ac6d21041c4e1",
+    "name": "RULES-ENGINE.1 — vedi docs/AI_MODE/REGOLE_NATURALI.md",
+    "info": "",
+    "x": 290,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "2f740cd3e6239529",
+    "type": "inject",
+    "z": "251ac6d21041c4e1",
+    "name": "ogni 30 s",
+    "props": [
+      {
+        "p": "tick",
+        "v": "true",
+        "vt": "bool"
+      }
+    ],
+    "repeat": "30",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "20",
+    "topic": "",
+    "x": 160,
+    "y": 100,
+    "wires": [
+      [
+        "941a8adf652f60bd"
+      ]
+    ]
+  },
+  {
+    "id": "4628e14d14ecc254",
+    "type": "mqtt in",
+    "z": "251ac6d21041c4e1",
+    "name": "puffer",
+    "topic": "zara/interface/heating/puffer/+/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 160,
+    "wires": [
+      [
+        "941a8adf652f60bd"
+      ]
+    ]
+  },
+  {
+    "id": "d90d8ed901912f21",
+    "type": "mqtt in",
+    "z": "251ac6d21041c4e1",
+    "name": "temperature ambienti ed esterna",
+    "topic": "zara/interface/env/+/temperature/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 210,
+    "wires": [
+      [
+        "941a8adf652f60bd"
+      ]
+    ]
+  },
+  {
+    "id": "ca8cf92e5a04ec7b",
+    "type": "mqtt in",
+    "z": "251ac6d21041c4e1",
+    "name": "batteria, FV, consumo",
+    "topic": "zara/interface/energy/+/+/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 260,
+    "wires": [
+      [
+        "941a8adf652f60bd"
+      ]
+    ]
+  },
+  {
+    "id": "300694b54a7501d5",
+    "type": "mqtt in",
+    "z": "251ac6d21041c4e1",
+    "name": "stato caminetto",
+    "topic": "zara/interface/fireplace/main/+/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 310,
+    "wires": [
+      [
+        "941a8adf652f60bd"
+      ]
+    ]
+  },
+  {
+    "id": "944f3275f221442a",
+    "type": "mqtt in",
+    "z": "251ac6d21041c4e1",
+    "name": "comandi regole",
+    "topic": "zara/interface/rules/+/cmd",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 360,
+    "wires": [
+      [
+        "941a8adf652f60bd"
+      ]
+    ]
+  },
+  {
+    "id": "941a8adf652f60bd",
+    "type": "function",
+    "z": "251ac6d21041c4e1",
+    "name": "motore regole",
+    "func": "// RULES-ENGINE.1 (2026-10-16): natural-language rules, phase H1. See docs/AI_MODE/REGOLE_NATURALI.md.\n// A rule = one trigger (threshold on an allowed measure, or a time of day), up to 2 conditions, one\n// allowed action, a lifetime (once by default), a cooldown. Every new rule is \"in test\" for 24 h:\n// it logs and announces what it would do, then becomes active. The engine itself starts in\n// \"shadow\": no rule sends commands until the engine is switched to \"active\".\n// Inputs: measures (retained /stat topics), zara/interface/rules/<verb>/cmd, a tick every 30 s.\n// Outputs: [commands, retained states, JSONL log lines, events for notifications].\nconst S = 'file';\nconst P = 'zara/interface/';\nconst MAX_ACTIVE = 10, TEST_MS = 24 * 3600000, DEFAULT_COOLDOWN_MIN = 30;\n// measure -> [topic, min, max, stale after ms, re-arm margin]\nconst MEASURES = {\n    puffer_top: ['heating/puffer/top_temperature/stat', 10, 95, 600000, 0.5],\n    puffer_bottom: ['heating/puffer/bottom_temperature/stat', 10, 95, 600000, 0.5],\n    outdoor: ['env/outdoor/temperature/stat', -20, 45, 900000, 0.5],\n    living: ['env/living/temperature/stat', 5, 35, 900000, 0.5],\n    bedroom: ['env/bedroom/temperature/stat', 5, 35, 900000, 0.5],\n    kids_room: ['env/kids_room/temperature/stat', 5, 35, 900000, 0.5],\n    service_bathroom: ['env/service_bathroom/temperature/stat', 5, 35, 900000, 0.5],\n    battery_soc: ['energy/battery/soc/stat', 0, 100, 300000, 2],\n    solar_power: ['energy/solar/power/stat', 0, 15000, 300000, 200],\n    home_power: ['energy/home/consumption/stat', 0, 15000, 300000, 200],\n};\nconst BY_TOPIC = Object.fromEntries(Object.entries(MEASURES).map(([k, v]) => [P + v[0], k]));\nconst LIGHTS = ['lights_living', 'lights_libreria', 'lights_tv', 'lights_reading', 'lights_laundry',\n    'lights_porch_entrance', 'lights_service_entrance', 'lights_prolunga'];\nconst SCENES = ['tv', 'sleep', 'all_on', 'all_off'];\nconst THERMOSTATS = ['thermostat_living', 'thermostat_bath'];\nconst FIREPLACE_MODES = ['Disattivato', 'Riscaldamento', 'Integrazione Caldaia', 'Acqua Sanitaria', 'Manuale'];\nconst PROFILE_MODES = ['auto', 'spento', 'ridotto', 'pieno'];\nconst TIME = /^([01]\\d|2[0-3]):[0-5]\\d$/;\n\nconst now = Date.now();\nconst local = new Date(now);\nconst pad = n => String(n).padStart(2, '0');\nconst today = local.getFullYear() + '-' + pad(local.getMonth() + 1) + '-' + pad(local.getDate());\nconst hhmm = pad(local.getHours()) + ':' + pad(local.getMinutes());\nconst get = (k, d) => { const v = context.get(k, S); return v === undefined ? d : v; };\nconst set = (k, v) => context.set(k, v, S);\nconst cmds = [], states = [], logs = [], events = [];\nconst log = (event, data) => logs.push({filename: '/home/pi/AI_climate/rules-' + today + '.jsonl',\n    payload: JSON.stringify(Object.assign({at: new Date(now).toISOString(), event}, data))});\nconst announce = (kind, rule, extra) => {\n    const e = Object.assign({schema: 'domopi.rule_event.v1', at: new Date(now).toISOString(), kind,\n        rule_id: rule.id, text: rule.text}, extra || {});\n    events.push({topic: P + 'rules/events', payload: JSON.stringify(e)});\n    states.push({topic: P + 'rules/last_event/stat', payload: JSON.stringify(e), retain: true});\n};\nconst num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };\n\nlet engineMode = get('engineMode', 'shadow');   // shadow | active\nlet rules = get('rules', {});                    // id -> rule (validated)\nlet st = get('ruleState', {});                   // id -> {armed, lastFired, lastFiredDay, testUntil, status}\nlet devices = get('devices', {});                // fireplace mode / power, for action guards\nlet measures = context.get('measures') || {};    // memory: refilled from retained topics\nlet changed = false;\n\n// ---------------------------------------------------------------- validation\nfunction validMeasure(m) { return Object.prototype.hasOwnProperty.call(MEASURES, m); }\nfunction validThreshold(t) {\n    if (!t || typeof t !== 'object') return false;\n    if (t.kind === 'threshold') {\n        const v = num(t.value), lim = MEASURES[t.metric];\n        return validMeasure(t.metric) && (t.op === 'above' || t.op === 'below') && v !== null && v >= lim[1] && v <= lim[2];\n    }\n    if (t.kind === 'time') return TIME.test(t.at || '') && Array.isArray(t.days) && t.days.length > 0 &&\n        t.days.every(d => Number.isInteger(d) && d >= 0 && d <= 6);\n    return false;\n}\nfunction validCondition(c) {\n    if (!c || typeof c !== 'object') return false;\n    if (c.kind === 'threshold') return validThreshold(c);\n    if (c.kind === 'time_window') return TIME.test(c.from || '') && TIME.test(c.to || '') && c.from !== c.to;\n    if (c.kind === 'fireplace_mode') return FIREPLACE_MODES.includes(c.value);\n    return false;\n}\nfunction validAction(a) {\n    if (!a || typeof a !== 'object') return false;\n    switch (a.tool) {\n        case 'set_light_state': return LIGHTS.includes(a.light) && (a.state === 'on' || a.state === 'off');\n        case 'set_light_scene': return SCENES.includes(a.scene);\n        case 'set_thermostat_target': {\n            const v = num(a.target_c);\n            return THERMOSTATS.includes(a.thermostat) && v !== null && v >= 16 && v <= 22 && Math.round(v * 2) === v * 2;\n        }\n        case 'set_fireplace_power': return a.state === 'on' || a.state === 'off';\n        case 'set_fireplace_level': return Number.isInteger(a.level) && a.level >= 1 && a.level <= 6;\n        case 'set_fireplace_mode': return FIREPLACE_MODES.includes(a.mode);\n        case 'set_heating_profile': return PROFILE_MODES.includes(a.mode);\n        default: return false;\n    }\n}\nfunction validate(r) {\n    if (!r || typeof r !== 'object') return 'regola non valida';\n    if (typeof r.text !== 'string' || !r.text.trim() || r.text.length > 300) return 'manca il testo della regola';\n    if (!validThreshold(r.trigger)) return 'trigger non ammesso';\n    const conds = r.conditions || [];\n    if (!Array.isArray(conds) || conds.length > 2 || !conds.every(validCondition)) return 'condizioni non ammesse';\n    if (!validAction(r.action)) return 'azione non ammessa';\n    const life = r.lifetime || {kind: 'once'};\n    if (!['once', 'until', 'always'].includes(life.kind)) return 'durata non ammessa';\n    if (life.kind === 'until' && !(Date.parse(life.until) > now)) return 'data di scadenza non valida';\n    const cd = r.cooldown_min === undefined ? DEFAULT_COOLDOWN_MIN : r.cooldown_min;\n    if (!Number.isInteger(cd) || cd < 1 || cd > 1440) return 'attesa minima non valida';\n    return null;\n}\n\n// ---------------------------------------------------------------- evaluation\nfunction reading(m) {\n    const r = measures[m];\n    if (!r) return {value: null, stale: true};\n    return {value: r.value, stale: now - r.at > MEASURES[m][3]};\n}\nfunction thresholdTrue(t) {\n    const r = reading(t.metric);\n    if (r.stale) return null;                    // unknown: never fire on old or missing data\n    return t.op === 'above' ? r.value > t.value : r.value < t.value;\n}\nfunction rearmed(t) {\n    const r = reading(t.metric);\n    if (r.stale) return false;\n    const margin = MEASURES[t.metric][4];\n    return t.op === 'above' ? r.value <= t.value - margin : r.value >= t.value + margin;\n}\nfunction inWindow(from, to) { return from < to ? hhmm >= from && hhmm < to : hhmm >= from || hhmm < to; }\nfunction conditionsTrue(r) {\n    return (r.conditions || []).every(c => {\n        if (c.kind === 'threshold') return thresholdTrue(c) === true;\n        if (c.kind === 'time_window') return inWindow(c.from, c.to);\n        if (c.kind === 'fireplace_mode') return devices.fireplaceMode === c.value;\n        return false;\n    });\n}\n// The same limits AI Smart applies today; null = allowed.\nfunction actionBlocked(a) {\n    if (a.tool === 'set_fireplace_power' && devices.fireplaceMode !== 'Manuale') return 'caminetto non in Manuale';\n    if (a.tool === 'set_fireplace_level' && (devices.fireplaceMode !== 'Manuale' || devices.fireplacePower !== true))\n        return 'livello solo in Manuale a caminetto acceso';\n    return null;\n}\nfunction commandOf(a) {\n    switch (a.tool) {\n        case 'set_light_state': return {topic: P + 'lights/' + a.light.replace(/^lights_/, '') + '/power/cmd', payload: String(a.state === 'on')};\n        case 'set_light_scene': return {topic: P + 'lights/scene/cmd', payload: a.scene};\n        case 'set_thermostat_target': return {topic: P + 'climate/' + a.thermostat + '/target_temperature/cmd', payload: num(a.target_c).toFixed(1)};\n        case 'set_fireplace_power': return {topic: P + 'fireplace/main/power/cmd', payload: String(a.state === 'on')};\n        case 'set_fireplace_level': return {topic: P + 'fireplace/main/level/cmd', payload: String(a.level)};\n        case 'set_fireplace_mode': return {topic: P + 'fireplace/main/mode/cmd', payload: a.mode};\n        case 'set_heating_profile': return {topic: P + 'heating/profile/mode/cmd', payload: a.mode};\n    }\n    return null;\n}\nfunction activeCount() { return Object.keys(rules).filter(id => st[id] && st[id].status !== 'expired').length; }\nfunction expire(id, why) {\n    st[id].status = 'expired'; changed = true;\n    log('rule_expired', {rule_id: id, reason: why});\n}\nfunction fire(id, r, s) {\n    const testing = engineMode !== 'active' || now < s.testUntil;\n    const blocked = actionBlocked(r.action);\n    const cmd = commandOf(r.action);\n    s.armed = false; s.lastFired = now; s.lastFiredDay = today; changed = true;\n    if (blocked) {\n        log('rule_blocked', {rule_id: id, reason: blocked, testing});\n        announce('blocked', r, {reason: blocked, testing});\n        return;\n    }\n    if (testing) {\n        log('rule_would_fire', {rule_id: id, command: cmd, measures: snapshot(r)});\n        announce('would_fire', r, {command: cmd});\n        return;                                   // in test nothing is sent and \"once\" is not consumed\n    }\n    cmds.push(cmd);\n    log('rule_fired', {rule_id: id, command: cmd, measures: snapshot(r)});\n    announce('fired', r, {command: cmd});\n    if ((r.lifetime || {}).kind === 'once' || !(r.lifetime)) expire(id, 'once');\n}\nfunction snapshot(r) {\n    const ms = [r.trigger, ...(r.conditions || [])].filter(t => t.kind === 'threshold').map(t => t.metric);\n    return Object.fromEntries(ms.map(m => [m, measures[m] ? measures[m].value : null]));\n}\n\n// ---------------------------------------------------------------- inputs\nconst topic = msg.topic || '';\nif (BY_TOPIC[topic]) {\n    const v = num(msg.payload), m = BY_TOPIC[topic], lim = MEASURES[m];\n    if (v !== null && v >= lim[1] - 10 && v <= lim[2] + 10) { measures[m] = {value: v, at: now}; context.set('measures', measures); }\n} else if (topic === P + 'fireplace/main/mode/stat') {\n    devices.fireplaceMode = String(msg.payload); set('devices', devices);\n} else if (topic === P + 'fireplace/main/power/stat') {\n    devices.fireplacePower = String(msg.payload) === 'true'; set('devices', devices);\n} else if (topic.startsWith(P + 'rules/') && topic.endsWith('/cmd')) {\n    const verb = topic.slice((P + 'rules/').length, -'/cmd'.length);\n    let body = msg.payload;\n    if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = body.trim(); } }\n    if (verb === 'engine') {\n        if (['shadow', 'active'].includes(body) && body !== engineMode) {\n            engineMode = body; set('engineMode', engineMode); log('engine_mode', {mode: engineMode}); changed = true;\n        }\n    } else if (verb === 'create') {\n        const why = validate(body);\n        const id = body && typeof body.id === 'string' && /^[a-z0-9-]{3,40}$/.test(body.id) ? body.id : 'r-' + now.toString(36);\n        if (!why && activeCount() >= MAX_ACTIVE) {\n            log('rule_rejected', {reason: 'max_rules'});\n            events.push({topic: P + 'rules/events', payload: JSON.stringify({schema: 'domopi.rule_event.v1', kind: 'rejected', reason: 'Ci sono già 10 regole attive: cancellane una.'})});\n        } else if (why || rules[id]) {\n            log('rule_rejected', {reason: why || 'id esistente'});\n            events.push({topic: P + 'rules/events', payload: JSON.stringify({schema: 'domopi.rule_event.v1', kind: 'rejected', reason: why || 'regola già esistente'})});\n        } else {\n            const rule = {id, text: body.text.trim(), trigger: body.trigger, conditions: body.conditions || [],\n                action: body.action, lifetime: body.lifetime || {kind: 'once'},\n                cooldown_min: body.cooldown_min === undefined ? DEFAULT_COOLDOWN_MIN : body.cooldown_min,\n                created_at: new Date(now).toISOString()};\n            rules[id] = rule;\n            // Decision of 16/10/2026: a condition already true at creation acts at once (armed).\n            st[id] = {armed: true, lastFired: null, lastFiredDay: null, testUntil: now + TEST_MS, status: 'test'};\n            changed = true;\n            log('rule_created', {rule});\n            announce('created', rule, {test_until: new Date(now + TEST_MS).toISOString()});\n        }\n    } else if ((verb === 'delete' || verb === 'activate' || verb === 'pause' || verb === 'resume') && rules[body]) {\n        const id = body;\n        if (verb === 'delete') { log('rule_deleted', {rule_id: id}); announce('deleted', rules[id]); delete rules[id]; delete st[id]; }\n        else if (verb === 'activate') {          // a would-fire in test does not delay the first real action\n            Object.assign(st[id], {testUntil: now, status: 'active', armed: true, lastFired: null, lastFiredDay: null});\n            log('rule_activated', {rule_id: id});\n        }\n        else if (verb === 'pause') { st[id].status = 'paused'; log('rule_paused', {rule_id: id}); }\n        else if (verb === 'resume' && st[id].status === 'paused') { st[id].status = 'test'; log('rule_resumed', {rule_id: id}); }\n        changed = true;\n    }\n}\n\n// ---------------------------------------------------------------- evaluate every rule\nfor (const [id, r] of Object.entries(rules)) {\n    const s = st[id];\n    if (!s || s.status === 'expired' || s.status === 'paused') continue;\n    const life = r.lifetime || {kind: 'once'};\n    if (life.kind === 'until' && now > Date.parse(life.until)) { expire(id, 'until'); continue; }\n    if (s.status === 'test' && now >= s.testUntil) {\n        Object.assign(s, {status: 'active', armed: true, lastFired: null, lastFiredDay: null});   // re-evaluate from scratch\n        changed = true;\n        log('rule_test_ended', {rule_id: id});\n        announce('activated', r);\n    }\n    const cooled = !s.lastFired || now - s.lastFired >= r.cooldown_min * 60000;\n    if (r.trigger.kind === 'threshold') {\n        if (!s.armed && rearmed(r.trigger)) { s.armed = true; changed = true; }\n        if (s.armed && cooled && thresholdTrue(r.trigger) === true && conditionsTrue(r)) fire(id, r, s);\n    } else if (r.trigger.kind === 'time') {\n        const due = hhmm === r.trigger.at && r.trigger.days.includes(local.getDay()) && s.lastFiredDay !== today;\n        if (due && conditionsTrue(r)) fire(id, r, s);\n    }\n}\n\nif (changed) { set('rules', rules); set('ruleState', st); }\nconst list = {schema: 'domopi.rules.v1', engine_mode: engineMode, max_active: MAX_ACTIVE,\n    rules: Object.values(rules).map(r => {\n        const s = st[r.id] || {};\n        return {id: r.id, text: r.text, status: s.status, armed: s.armed,\n            test_until: s.testUntil ? new Date(s.testUntil).toISOString() : null,\n            last_fired: s.lastFired ? new Date(s.lastFired).toISOString() : null,\n            trigger: r.trigger, conditions: r.conditions, action: r.action, lifetime: r.lifetime};\n    })};\nconst text = JSON.stringify(list);\nif (text !== context.get('lastList') || (msg.tick && local.getMinutes() === 0 && local.getSeconds() < 30)) {\n    context.set('lastList', text);\n    states.push({topic: P + 'rules/list/stat', payload: text, retain: true});\n}\nreturn [cmds, states, logs, events];\n",
+    "outputs": 4,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 500,
+    "y": 230,
+    "wires": [
+      [
+        "885243a98b4a085e"
+      ],
+      [
+        "d2809fcce6a0ca58"
+      ],
+      [
+        "5147b70367eb712a"
+      ],
+      [
+        "d2809fcce6a0ca58"
+      ]
+    ]
+  },
+  {
+    "id": "885243a98b4a085e",
+    "type": "mqtt out",
+    "z": "251ac6d21041c4e1",
+    "name": "comandi (solo regole attive, motore active)",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "3ed6302a.5af928",
+    "x": 800,
+    "y": 180,
+    "wires": []
+  },
+  {
+    "id": "d2809fcce6a0ca58",
+    "type": "mqtt out",
+    "z": "251ac6d21041c4e1",
+    "name": "elenco, ultimo evento, eventi",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "3ed6302a.5af928",
+    "x": 800,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "5147b70367eb712a",
+    "type": "file",
+    "z": "251ac6d21041c4e1",
+    "name": "registro rules-YYYY-MM-DD.jsonl",
+    "filename": "filename",
+    "filenameType": "msg",
+    "appendNewline": true,
+    "createDir": true,
+    "overwriteFile": "false",
+    "encoding": "none",
+    "x": 810,
+    "y": 300,
+    "wires": [
+      []
+    ]
+  }
+]

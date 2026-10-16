@@ -1,6 +1,7 @@
 # Regole naturali (fase H) — progetto
 
-Stato: **progetto approvato** (decisioni dell'utente del 16/10/2026, sotto). Nessun codice scritto. Riprende la
+Stato: **progetto approvato** (decisioni dell'utente del 16/10/2026, sotto). Fase H1: patch
+`RULES-ENGINE.1` in [`backend/nodered/rules_engine/`](../../backend/nodered/rules_engine/README.md). Riprende la
 fase H di [`PIANO_DI_LAVORO.md`](PIANO_DI_LAVORO.md), il punto 8 di
 [`ANALISI_ARCHITETTURA.md`](ANALISI_ARCHITETTURA.md) e il vincolo 4 di [`README.md`](README.md):
 le regole si conservano ed eseguono nel backend, indipendenti da Android e dal modello generativo.
