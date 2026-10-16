@@ -33,14 +33,25 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.domopi.app.data.ControlInputs
+import com.domopi.app.data.HeatingProfileText
+import com.domopi.app.data.ThermostatPlan
+import com.domopi.app.ui.components.HeatDemandChip
+import com.domopi.app.ui.components.HeatingProfileCard
+import com.domopi.app.ui.components.HeatingProfileSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
     val hvacState by mqttManager.hvacState.collectAsState()
     val energyData by mqttManager.energyData.collectAsState()
+    val heatingProfile by mqttManager.heatingProfile.collectAsState()
+    var profileSheet by remember { mutableStateOf<Boolean?>(null) }   // null closed, true legend, false selector
 
     BackHandler { onBack() }
+    profileSheet?.let { legend ->
+        HeatingProfileSheet(heatingProfile, startOnLegend = legend, onDismiss = { profileSheet = null },
+            onConfirm = { mqttManager.setHeatingProfileMode(it); profileSheet = null })
+    }
 
     Scaffold(
         topBar = {
@@ -331,12 +342,15 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 )
             }
             
+            item { HeatingProfileCard(heatingProfile, onOpen = { profileSheet = false }) }
+
             item {
                 ThermostatCard(
                     title = "Soggiorno",
                     state = hvacState.thermostatLiving,
                     deviceId = "thermostat_living",
-                    mqttManager = mqttManager
+                    mqttManager = mqttManager,
+                    plan = heatingProfile.plan["thermostat_living"]
                 )
             }
             
@@ -345,7 +359,8 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                     title = "Bagno Servizio",
                     state = hvacState.thermostatBath,
                     deviceId = "thermostat_bath",
-                    mqttManager = mqttManager
+                    mqttManager = mqttManager,
+                    plan = heatingProfile.plan["thermostat_bath"]
                 )
             }
         }
@@ -357,7 +372,8 @@ fun ThermostatCard(
     title: String,
     state: ThermostatStatus,
     deviceId: String,
-    mqttManager: MqttManager
+    mqttManager: MqttManager,
+    plan: ThermostatPlan? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -371,13 +387,16 @@ fun ThermostatCard(
             ) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 
-                // Indicatore Power (Stato)
-                Icon(
-                    Icons.Default.PowerSettingsNew,
-                    null,
-                    tint = if (state.power) Color.Red else Color.Gray,
-                    modifier = Modifier.size(28.dp)
-                )
+                // "Chiede / non chiede calore": same words as AI Smart (decision of 16/10/2026).
+                HeatDemandChip(state.power)
+            }
+
+            HeatingProfileText.timerLine(plan)?.let {
+                Spacer(Modifier.height(8.dp))
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp))
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -395,7 +414,7 @@ fun ThermostatCard(
                         text = "${"%.1f".format(locale, state.currentTemp)}°",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
-                        color = if (state.power) Color.Red else MaterialTheme.colorScheme.onSurface
+                        color = if (state.power) Color(0xFFFFB86C) else MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -506,16 +525,23 @@ fun FireplaceCard(state: PalazzettiStatus, mqttManager: MqttManager) {
                 }
 
                 // Manual on/off only in "Manuale": in the automatic modes .15 decides by itself.
-                FilledIconToggleButton(
-                    checked = state.active,
-                    enabled = isFireplaceManual(state.mode),
-                    onCheckedChange = { mqttManager.publish("zara/interface/fireplace/main/power/cmd", it.toString()) },
-                    colors = IconButtonDefaults.filledIconToggleButtonColors(
-                        checkedContainerColor = Color.Red.copy(alpha = 0.2f),
-                        checkedContentColor = Color.Red
-                    )
-                ) {
-                    Icon(Icons.Default.PowerSettingsNew, null)
+                // On: orange flame + "Acceso"; off: grey power symbol + "Spento" (decision of 16/10/2026).
+                val flame = Color(0xFFFFB86C)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (state.active) "Acceso" else "Spento", style = MaterialTheme.typography.labelLarge,
+                        color = if (state.active) flame else MaterialTheme.colorScheme.onSurfaceVariant)
+                    FilledIconToggleButton(
+                        checked = state.active,
+                        enabled = isFireplaceManual(state.mode),
+                        onCheckedChange = { mqttManager.publish("zara/interface/fireplace/main/power/cmd", it.toString()) },
+                        colors = IconButtonDefaults.filledIconToggleButtonColors(
+                            checkedContainerColor = Color(0xFF3A2A12),
+                            checkedContentColor = flame
+                        )
+                    ) {
+                        Icon(if (state.active) Icons.Default.LocalFireDepartment else Icons.Default.PowerSettingsNew,
+                            contentDescription = if (state.active) "Spegni il caminetto" else "Accendi il caminetto")
+                    }
                 }
             }
             if (!isFireplaceManual(state.mode)) {

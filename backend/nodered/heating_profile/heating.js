@@ -3,6 +3,8 @@
 // max, outside its min. Setpoints are written only on events (slot start/end, profile change,
 // min/max change), so a manual or spoken setpoint lasts until the next event. In "shadow" mode
 // nothing is sent: decisions are only published and logged. See docs/AI_MODE/PROFILO_RISCALDAMENTO.md.
+// HEATING-PROFILE.2 (2026-10-16): the plan also gives each thermostat's next change (for the app)
+// and the last user corrections are published for the app's "what it learned" section.
 // Outputs: [setpoint commands, retained states, JSONL log lines].
 const S = 'file';
 const P = 'zara/interface/';
@@ -41,6 +43,7 @@ let inside = get('inside', {});                 // thermostat -> bool at the las
 let targets = get('targets', {});               // thermostat -> last setpoint seen
 let sent = get('sent', {});                     // thermostat -> {value, at} last command of the timer
 let lastProfile = get('lastProfile', null);
+let corrections = get('corrections', []);       // last user setpoint changes, newest first
 const changed = new Set();                      // thermostats whose min/max changed now
 let reason = null;
 
@@ -52,6 +55,21 @@ function outdoorMean() {
 }
 function slotOf(profile, t) {
     return SCHEDULES[profile][t].find(([a, b, days]) => days.includes(day) && minute >= a && minute < b) || null;
+}
+function insideAt(profile, t, d, m) {
+    return SCHEDULES[profile][t].some(([a, b, days]) => days.includes(d) && m >= a && m < b);
+}
+// First slot boundary after now (within a week) where the thermostat changes inside/outside.
+function nextChange(profile, t, isInside) {
+    const marks = [...new Set(SCHEDULES[profile][t].flatMap(([a, b]) => [a, b]))].sort((x, y) => x - y);
+    for (let off = 0; off <= 7; off++) {
+        const d = (day + off) % 7;
+        for (const m of marks) {
+            if (off === 0 && m <= minute) continue;
+            if (insideAt(profile, t, d, m) !== isInside) return {day_offset: off, at: pad(Math.floor(m / 60)) + ':' + pad(m % 60), inside: !isInside};
+        }
+    }
+    return null;
 }
 
 const topic = msg.topic || '';
@@ -86,8 +104,13 @@ if (topic === P + 'env/outdoor/temperature/stat') {
             if (targets[t] !== undefined && targets[t] !== v && !echo) {
                 const l = limits[t] || {};
                 const expected = inside[t] === undefined ? null : (inside[t] ? l.max : l.min);
-                log('setpoint_change', {thermostat: t, value: v, previous: targets[t], timer_value: expected,
-                    profile: lastProfile, outdoor_mean_72h: outdoorMean().mean});
+                const change = {thermostat: t, value: v, previous: targets[t], timer_value: expected,
+                    profile: lastProfile, outdoor_mean_72h: outdoorMean().mean};
+                log('setpoint_change', change);
+                const mean = change.outdoor_mean_72h;
+                corrections = [Object.assign({at: new Date(now).toISOString()}, change,
+                    {outdoor_mean_72h: mean === null ? null : Math.round(mean * 10) / 10})].concat(corrections).slice(0, 10);
+                set('corrections', corrections);
             }
             targets[t] = v; set('targets', targets);
         } else {
@@ -125,8 +148,14 @@ for (const t of THERMOSTATS) {
     const l = limits[t] || {};
     const value = isInside ? l.max : l.min;
     const boundary = inside[t] !== undefined && inside[t] !== isInside;
+    const next = nextChange(profile, t, isInside);
+    if (next) {
+        const nv = next.inside ? l.max : l.min;
+        next.value = nv === undefined ? null : nv;
+    }
     plan[t] = {inside: isInside, value: value === undefined ? null : value,
-               slot: slot ? `${pad(Math.floor(slot[0] / 60))}:${pad(slot[0] % 60)}-${pad(Math.floor(slot[1] / 60))}:${pad(slot[1] % 60)}` : null};
+               slot: slot ? `${pad(Math.floor(slot[0] / 60))}:${pad(slot[0] % 60)}-${pad(Math.floor(slot[1] / 60))}:${pad(slot[1] % 60)}` : null,
+               min: l.min === undefined ? null : l.min, max: l.max === undefined ? null : l.max, next};
     const why = boundary ? (isInside ? 'slot_start' : 'slot_end') : profileChanged ? reason : changed.has(t) ? 'limits_changed' : null;
     if (why && value !== undefined) {
         if (timerMode === 'active') {
@@ -145,7 +174,8 @@ const state = {schema: 'domopi.heating_profile.v1', profile, mode, auto_profile:
     outdoor_mean_72h: outdoor.mean === null ? null : Math.round(outdoor.mean * 10) / 10,
     hours_of_data: outdoor.hours, thresholds: T, timer_mode: timerMode};
 const planState = {schema: 'domopi.heating_timer_plan.v1', profile, timer_mode: timerMode, thermostats: plan};
-const text = JSON.stringify([state, planState]);
+const learning = {schema: 'domopi.heating_learning.v1', learning_active: false, corrections};
+const text = JSON.stringify([state, planState, learning]);
 const lastState = context.get('lastState');   // memory: republished after every restart
 if (text !== lastState || minute % 60 === 0 && msg.tick) {
     context.set('lastState', text);
@@ -153,5 +183,6 @@ if (text !== lastState || minute % 60 === 0 && msg.tick) {
     states.push({topic: P + 'heating/timer/plan/stat', payload: JSON.stringify(planState), retain: true});
     states.push({topic: P + 'heating/profile/mode/stat', payload: mode, retain: true});
     states.push({topic: P + 'heating/timer/mode/stat', payload: timerMode, retain: true});
+    states.push({topic: P + 'heating/profile/learning/stat', payload: JSON.stringify(learning), retain: true});
 }
 return [cmds, states, logs];

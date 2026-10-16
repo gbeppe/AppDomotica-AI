@@ -1,7 +1,7 @@
 // Offline tests for HEATING-PROFILE.1: TZ=Europe/Rome node --test test.js
 const {test} = require('node:test'), a = require('node:assert/strict'), fs = require('node:fs');
 const nodes = JSON.parse(fs.readFileSync(__dirname + '/update.json'));
-const fn = nodes.find(n => n.type === 'function');
+const fn = {func: fs.readFileSync(__dirname + '/heating.js', 'utf8')};   // current source (update.json = deployed build)
 const P = 'zara/interface/';
 let clock = 0;
 class FakeDate extends Date {
@@ -112,6 +112,28 @@ test('user setpoint changes are logged, the timer echo is not', () => {
   const change = r.logs.find(l => l.event === 'setpoint_change');
   a.deepEqual([change.thermostat, change.value, change.timer_value, change.profile], ['thermostat_living', 20, 18.5, 'ridotto']);
   a.deepEqual(r.cmds, []);                                          // never fights the user
+});
+
+test('the plan gives the next change; corrections are published newest first', () => {
+  at('2026-10-19T15:00'); const store = setup(); tick(store);
+  let plan;
+  at('2026-10-19T15:01');
+  stat(store, 'thermostat_living', 'target', 20);
+  at('2026-10-19T15:02');
+  const r = stat(store, 'thermostat_bath', 'target', 19);
+  plan = JSON.parse(r.states.find(s => s.topic.endsWith('timer/plan/stat')).payload);
+  a.deepEqual(plan.thermostats.thermostat_living.next, {day_offset: 0, at: '17:00', inside: true, value: 18.5});
+  a.deepEqual([plan.thermostats.thermostat_bath.min, plan.thermostats.thermostat_bath.max], [17, 18]);
+  const learning = JSON.parse(r.states.find(s => s.topic.endsWith('profile/learning/stat')).payload);
+  a.deepEqual(learning.corrections.map(c => [c.thermostat, c.value]), [['thermostat_bath', 19], ['thermostat_living', 20]]);
+  a.equal(learning.learning_active, false);
+});
+
+test('Pieno bath next change crosses to the next morning', () => {
+  at('2026-10-19T22:30'); const store = setup();
+  const r = run(store, {topic: P + 'heating/profile/mode/cmd', payload: 'pieno'});
+  const plan = JSON.parse(r.states.find(s => s.topic.endsWith('timer/plan/stat')).payload);
+  a.deepEqual(plan.thermostats.thermostat_bath.next, {day_offset: 1, at: '05:05', inside: true, value: 18});
 });
 
 test('without min/max nothing is sent', () => {

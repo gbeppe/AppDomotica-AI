@@ -92,6 +92,9 @@ class MqttManager {
     val thermostatSmartState: StateFlow<ThermostatSmartState> = _thermostatSmartState
     private val _environmentSmartState = MutableStateFlow(EnvironmentSmartState())
     val environmentSmartState: StateFlow<EnvironmentSmartState> = _environmentSmartState
+    private val _heatingProfile = MutableStateFlow(HeatingProfileState())
+    val heatingProfile: StateFlow<HeatingProfileState> = _heatingProfile
+
     private val _heatingSmartState = MutableStateFlow(HeatingSmartState())
     val heatingSmartState: StateFlow<HeatingSmartState> = _heatingSmartState
 
@@ -639,6 +642,12 @@ class MqttManager {
 
     private fun handleHeatingDomain(device: String, prop: String, value: Float, raw: String) {
         when (device) {
+            // HEATING-PROFILE on .20: profile (season), timer plan and the user's corrections.
+            "profile" -> when (prop) {
+                "profile" -> _heatingProfile.update { it.withProfile(raw) }
+                "learning" -> _heatingProfile.update { it.withLearning(raw) }
+            }
+            "timer" -> if (prop == "plan") _heatingProfile.update { it.withPlan(raw) }
             "puffer" -> _energyData.update { current ->
                 when (prop) {
                     "top_temperature" -> current.copy(pufferAlto = value)
@@ -847,6 +856,13 @@ class MqttManager {
     fun setSmartFireplaceLevel(level: Int, manualInSameAnswer: Boolean = false): Boolean {
         if (level !in 1..6 || !manualInSameAnswer && _heatingSmartState.value.fireplaceMode() != "Manuale") return false
         publish("zara/interface/fireplace/main/level/cmd", level.toString())
+        return true
+    }
+
+    /** Heating profile chosen in the Clima sheet after "Conferma": auto, spento, ridotto or pieno. */
+    fun setHeatingProfileMode(mode: String): Boolean {
+        if (mode !in HeatingProfileState.MODES) return false
+        publish("zara/interface/heating/profile/mode/cmd", mode)
         return true
     }
 

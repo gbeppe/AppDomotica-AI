@@ -1,0 +1,14 @@
+{
+  "patch": "HEATING-PROFILE.2",
+  "modified_ids": [
+    "43f3b2d84f200141"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "43f3b2d84f200141": "50c06470b60158e67f1a56b9f42bece75c5f71b0dc27d1852843f391a4857674"
+  },
+  "node_sha256_after": {
+    "43f3b2d84f200141": "8dc8ae93689192e7dde85d94a8685590b84540c209acd8102c1b85c9d67ca8f0"
+  }
+}

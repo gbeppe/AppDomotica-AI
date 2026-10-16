@@ -85,9 +85,24 @@ File giornaliero JSONL in `/home/pi/AI_climate/heating-YYYY-MM-DD.jsonl` (stessa
 che `house_ai` già legge): cambi di profilo con la media esterna, decisioni del timer, e
 **correzioni dell'utente** (setpoint cambiato fuori da un evento del timer, profilo forzato).
 
+## Nell'app (scheda Clima, 16/10/2026)
+
+Progetto delle schermate: https://claude.ai/artifact/2rAG5monYc7gEsBdtKt4xr (privato).
+
+- Riquadro «Profilo riscaldamento» sopra i termostati: profilo in esecuzione (colore per profilo),
+  «Automatico» o «Scelto da te», «In prova» finché il timer è in shadow, motivo (media esterna o
+  ore di dati mancanti) e prossimo cambio di fascia.
+- Tocco sul riquadro o su ⓘ: foglio dal basso con la scelta del profilo (Automatico, Spento,
+  Ridotto, Pieno) e **Conferma**, che pubblica `zara/interface/heating/profile/mode/cmd`; da lì la
+  legenda: fasce per stanza, come decide l'automatico, ultime correzioni registrate.
+- In ogni termostato: «Chiede calore» / «Non chiede calore» e la riga del timer (fascia, valore,
+  prossimo cambio).
+- Dati: `heating/profile/stat`, `heating/timer/plan/stat`, `heating/profile/learning/stat`
+  (HEATING-PROFILE.2).
+
 ## Fasi successive
 
-1. App: profilo nella scheda Clima, con selettore.
+1. ~~App: profilo nella scheda Clima, con selettore~~ (fatto il 16/10/2026).
 2. AI Smart: «com'è il profilo di riscaldamento?» e «metti il riscaldamento in ridotto», con
    conferma (regola 10).
 3. Apprendimento: ricalcolo notturno delle soglie dai dati e spostamento di mezzo grado dopo
