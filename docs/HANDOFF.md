@@ -235,6 +235,11 @@ allineata). Rilasciati in giornata: ROUTER-FIREPLACE-RETAIN.1 (`v122`), house_ai
    ufficiale (`node-red-contrib-ecovacs-deebot`), MOVA LiDAX Ultra 800 da verificare; Alexa come
    ripiego (il suo login va rifatto).
 
+**Fase P — preriscaldo del puffer con il caminetto (17/10/2026):** idea dell'utente approvata a
+tappe (dati → avviso caldaia oltre il 20 % → consiglio del giorno → automatico con ritorno a Manuale).
+Diario: [`AI_MODE/PRERISCALDO_PUFFER.md`](AI_MODE/PRERISCALDO_PUFFER.md). Prossimo: tappa 0 (storico
+EmonCMS, sola lettura). Prerequisito per le misure dal vivo: caldaia riaccesa.
+
 ### Da indagare (16/10/2026)
 
 - **Broker `.20`, sessioni orfane (17/10):** 362 sessioni conservate, 8 collegate; Mosquitto 146 MB,
