@@ -68,7 +68,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_16382c06`** (commit `bf116c8`, 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
+Installata sul telefono: **`bld_955d49d8`** (commit `4c866da`, 17/10: regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_16382c06`** (commit `bf116c8`, 16/10: profilo di
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261016-rules-guard`** (commit `4d898e8`; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261017-rules-voice2`** (commit `4c866da`; regole a voce con conferma, durata una volta salvo «ogni/sempre»; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).

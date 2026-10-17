@@ -77,6 +77,18 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 17 ottobre 2026 — regole a voce (fase H2)
+
+Release attiva: `/opt/domopi-house-ai/releases/20261017-rules-voice2`, commit `4c866da`
+(prima `20261017-rules-voice`, commit `668b908`); `PREVIOUS_RELEASE` = `20261017-rules-voice`.
+Test superati su `.20`; servizi `active`. Prove reali: «quando la temperatura del puffer alto
+raggiunge i 42 gradi spegni il caminetto» → «Creo questa regola: quando il puffer alto supera 42
+gradi spengo il caminetto, una volta. Confermi?»; «se fuori scende sotto 5 gradi metti il bagno a
+21» → regola con termostato del bagno a 21, **una volta** (la prima release la rendeva «ogni
+volta», corretto); «ogni sera alle 22 spegni tutte le luci» → regola a orario ogni giorno, ogni
+volta; «che regole ci sono?» → elenco; «cancella la regola del caminetto» → conferma della
+cancellazione. Richiede l'app `bld_955d49d8`.
+
 ## Release del 16 ottobre 2026 — richieste di regole automatiche
 
 Release attiva: `/opt/domopi-house-ai/releases/20261016-rules-guard`, commit `4d898e8`;
