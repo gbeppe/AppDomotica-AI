@@ -18,7 +18,8 @@ TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 CATALOG = [{
     "name": "current_heating_profile",
     "description": "Read the heating profile (season: Spento/Ridotto/Pieno, automatic or fixed), why it was chosen, "
-                   "and the thermostat timer plan: current setpoint, time slot, next change. Read only",
+                   "and the thermostat timer plan: current setpoint, time slot, next change ('quando cambia il bagno?' = "
+                   "next change, not the past). Read only",
     "parameters": {"about": list(ABOUT)}
 }]
 TOOL_NAMES = ("current_heating_profile",)
