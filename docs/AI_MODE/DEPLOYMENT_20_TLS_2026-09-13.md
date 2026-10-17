@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 17 ottobre 2026 — profilo di riscaldamento in lettura
+
+Release attiva: `/opt/domopi-house-ai/releases/20261017-heating-profile2` (prima
+`20261017-heating-profile`, commit `e1070b7`). Nuovo strumento `current_heating_profile` (solo
+lettura). Prove reali con il profilo e il piano retained del `.20`: «che profilo di riscaldamento è
+attivo?» → Ridotto, automatico con 34 ore di dati su 48; «quando cambia il termostato del bagno?»
+→ prossimo cambio domani alle 17:00 a 18 gradi (la prima release chiedeva il periodo: corretto);
+«perché il soggiorno è a 17,5 gradi?» → fuori fascia, prossimo cambio. Richiede l'app `bld_bff71307`.
+
 ## Release del 17 ottobre 2026 — regole a voce (fase H2)
 
 Release attiva: `/opt/domopi-house-ai/releases/20261017-rules-voice2`, commit `4c866da`

@@ -68,7 +68,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_955d49d8`** (commit `4c866da`, 17/10: regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
+Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_955d49d8`** (commit `4c866da`, 17/10: regole a v
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261017-rules-voice2`** (commit `4c866da`; regole a voce con conferma, durata una volta salvo «ogni/sempre»; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261017-heating-profile2`** (commit `34a1b8d`; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma, durata una volta salvo «ogni/sempre»; regole a voce con conferma, durata una volta salvo «ogni/sempre»; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
@@ -235,6 +235,16 @@ allineata). Rilasciati in giornata: ROUTER-FIREPLACE-RETAIN.1 (`v122`), house_ai
    ripiego (il suo login va rifatto).
 
 ### Da indagare (16/10/2026)
+
+- **Broker `.20`, sessioni orfane (17/10):** 362 sessioni conservate, 8 collegate; Mosquitto 146 MB,
+  `mosquitto.db` 54 MB. Causa: l'app si collegava con nome casuale e sessione persistente (corretto in
+  `bld_bff71307`, sessione pulita). **Da fare con l'utente:** `persistent_client_expiration 2d` in
+  `/etc/mosquitto/conf.d/50-session-expiry.conf`, copia di `/etc/mosquitto` e `mosquitto.db`, riavvio.
+- **`.15`, pulizia del 17/10:** `pompaPavimento.log` (40 MB, 897.759 righe dal 2021) compresso in
+  `/home/pi/data/pompaPavimento.log-20261017.gz` (2,7 MB, verificato) e svuotato; rotazione in
+  `/etc/logrotate.d/pompaPavimento` (mensile o 5 MB, 12 archivi, `copytruncate`). Nodo «SC1 | SOE Debug»
+  disattivato dall'Admin API (era acceso a runtime; nel flow è già spento). Restano errori ogni 20 s
+  di «parse sensorN» e «parse speed pump N» (`TypeError`), da guardare.
 
 - ~~Indicatore del termostato del soggiorno rimasto spento~~ (risolto 16/10): la prova registrata
   delle 15:24 è corretta (`POWER ON` → app «acceso» in 10 ms, il ripetitore del `.15` ogni 20 s
