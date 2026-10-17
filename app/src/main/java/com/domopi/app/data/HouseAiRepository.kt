@@ -151,6 +151,7 @@ class HouseAiRepository {
         thermostats: ThermostatSmartState = ThermostatSmartState(),
         environment: EnvironmentSmartState = EnvironmentSmartState(),
         heating: HeatingSmartState = HeatingSmartState(),
+        rules: RulesState = RulesState(),
     ): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
         val base = validatedBase(baseUrl)
         require(token.isNotBlank() && question.isNotBlank() && question.length <= 1000)
@@ -212,6 +213,15 @@ class HouseAiRepository {
         body.put("current_heating", JSONObject()
             .put("schema", "house_ai.current_heating_input.v1")
             .put("connected", connected).put("observations", heatingObservations))
+        if (rules.known) {
+            val list = org.json.JSONArray()
+            rules.rules.forEach {
+                list.put(JSONObject().put("id", it.id).put("text", it.text).put("status", it.status)
+                    .put("action", JSONObject().put("tool", it.actionTool)))
+            }
+            body.put("current_rules", JSONObject().put("schema", "house_ai.current_rules_input.v1")
+                .put("engine_mode", rules.engineMode).put("rules", list))
+        }
         val lightObservations = JSONObject()
         lights.validLightObservations().forEach { (light, observation) ->
             val item = JSONObject().put("value", observation.payload.toBooleanStrict())

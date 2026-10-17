@@ -8,21 +8,25 @@ from energy_tools import (catalog, execute, validate_climate_snapshot, validate_
                           validate_heating_snapshot)
 from energy_presenter import compose, confirmation, notes
 from planner import PlannerUnavailable
+import rules_tools
 
 # Conditional or future requests ("quando…", "appena…", "se… allora…", automations) are rules,
 # which are not available yet: a command planned from one of them is never executed
 # (field test 16/10/2026: "...imposta un'automazione per spegnere il caminetto" became an
 # immediate off, stopped only by the confirmation).
 # "regola" alone is also the verb "adjust" ("regola il bagno a 20"): only the noun counts.
-RULE_REQUEST = re.compile(r"\b(automazion\w*|(?:una|la|le|nuova|nuove) regol[ae]|quando|appena|ogni volta|se\b.+\ballora)\b",
+# A sentence starting with "alle 22" or "ogni sera" is a time rule; "dalle 12 alle 13" (fireplace
+# times) is not.
+RULE_REQUEST = re.compile(r"\b(automazion\w*|(?:una|la|le|nuova|nuove) regol[ae]|quando|appena|ogni volta|"
+                          r"ogni (?:sera|mattina|giorno|notte)|(?:stasera|domani) alle|se\b.+\ballora)\b|^\s*alle\s+\d",
                           re.IGNORECASE)
-RULES_UNAVAILABLE = ("Le regole automatiche (\"quando… allora…\") non sono ancora disponibili: posso eseguire solo "
-                     "comandi immediati. Non ho fatto niente.")
+RULES_UNAVAILABLE = ("Questa è una regola («quando… allora…»): non la eseguo come comando immediato. "
+                     "Ripetila e la creo come regola, con la tua conferma. Non ho fatto niente.")
 
 
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
         conversation_context=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
-        environment_snapshot=None, heating_snapshot=None):
+        environment_snapshot=None, heating_snapshot=None, rules_snapshot=None):
     if not isinstance(question, str) or not question.strip() or len(question) > 1000:
         raise ValueError('Invalid question')
     validate_current_snapshot(current_snapshot)
@@ -32,6 +36,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
     validate_thermostats_snapshot(thermostats_snapshot)
     validate_environment_snapshot(environment_snapshot)
     validate_heating_snapshot(heating_snapshot)
+    rules_tools.validate_rules_snapshot(rules_snapshot)
     if conversation_context is not None and conversation_context != {
             'domain': 'climate', 'focus': 'air_conditioner'}:
         raise ValueError('Invalid conversation context')
@@ -58,7 +63,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
                             log_root=log_root, pr_snapshot=pr_snapshot,
                             thermostats_snapshot=thermostats_snapshot,
                             environment_snapshot=environment_snapshot,
-                            heating_snapshot=heating_snapshot)
+                            heating_snapshot=heating_snapshot, rules_snapshot=rules_snapshot)
     except (ValueError, TypeError, OverflowError):
         raise PlannerUnavailable('Planner returned an invalid plan') from None
     if execution['clarification']:

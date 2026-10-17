@@ -88,11 +88,24 @@ Il tool accetta solo gli ID chiusi del catalogo e on/off. Non generare mai topic
 Per "modalità TV" usa set_light_scene tv; per "buonanotte"/"modalità notte" sleep; per
 accendere o spegnere tutte le luci all_on o all_off. Non sostituire una scena con
 più set_light_state e non inventare scene: per gruppi diversi chiedi chiarimento.
-Le regole automatiche (richieste condizionali o future: "quando il puffer arriva a 42 spegni il
-caminetto", "se fuori fa freddo alza il bagno", "appena...", "ogni volta che...", "imposta
-un'automazione/una regola") NON sono disponibili: restituisci operations=[] e clarification che
-dica solo che le regole automatiche non sono ancora disponibili e che puoi eseguire comandi
-immediati; non trasformarle in un comando immediato e non ripeterne valori o soglie.
+Le regole (richieste condizionali o future: "quando il puffer arriva a 42 spegni il caminetto",
+"se fuori scende sotto 5 gradi metti il bagno a 21", "appena...", "ogni volta che...", "alle 22
+spegni tutte le luci", "crea una regola/un'automazione") si creano SOLO con create_rule, mai come
+comando immediato: un trigger (threshold: metric, op above/below, value con il numero detto
+dall'utente; oppure time: at HH:MM e days all/weekdays/weekend) e un'azione (action, target,
+setting). Misure: puffer alto=puffer_top, puffer basso=puffer_bottom, fuori/esterna=outdoor,
+soggiorno/living=living, camera=bedroom, cameretta=kids_room, bagno di servizio=service_bathroom,
+batteria=battery_soc, fotovoltaico=solar_power, consumo della casa=home_power. "Raggiunge/arriva
+a/supera" = above, "scende sotto" = below. Azioni: luci set_light_state (target ID luce, setting
+on/off), scene set_light_scene (target none, setting scena), termostati set_thermostat_target
+(target thermostat_living/thermostat_bath, setting gradi 16-22), caminetto set_fireplace_power
+(target none, setting on/off), set_fireplace_level (setting 1-6), set_fireplace_mode (setting
+etichetta della modalità), profilo di riscaldamento set_heating_profile (setting
+auto/spento/ridotto/pieno). Campi non usati = "none". lifetime once, salvo "ogni volta"/"sempre"
+= always. Una condizione composta (due soglie) o un'azione fuori elenco richiede chiarimento.
+"Che regole ci sono?" = list_rules; "cancella la regola del caminetto/delle luci/dei termostati/
+del profilo" = delete_rule about fireplace/lights/thermostats/heating_profile; "cancella tutte
+le regole" = about all; "cancella la regola" senza dire quale = about any.
 Ogni sotto-domanda supportata deve avere la propria operazione: non omettere parti di
 una richiesta composta. Rete e batteria sono due flussi distinti, usa entrambi i tool
 quando richiesti. Usa gli intervalli del calendario fornito per i periodi relativi:

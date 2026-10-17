@@ -7,6 +7,7 @@ app shows under "Mostra provenienza e limiti".
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 import math
+import rules_tools
 
 LABELS = {
     "grid_import_kwh": "Prelievo dalla rete", "grid_export_kwh": "Energia immessa in rete",
@@ -510,6 +511,10 @@ def describe(item):
     schema = r['schema']
     if is_action(r):
         return capitalize(command_action(r)) + '.'
+    if schema == 'house_ai.rules_list.v1':
+        return rules_tools.list_text(r)
+    if schema == 'house_ai.rule_command.v1':
+        return rules_tools.rejected_text(r)
     if schema in ('house_ai.fireplace_settings_command.v1', 'house_ai.fireplace_power_command.v1',
                   'house_ai.fireplace_level_command.v1'):
         return fireplace_command_text(r)
@@ -583,6 +588,11 @@ def confirmation_actions(results):
     for item in results:
         r = item['result']
         if not needs_confirmation(r):
+            continue
+        if r['schema'] == 'house_ai.rule_command.v1':
+            actions.append(f"creo questa regola: {r['text']}" if r['verb'] == 'create'
+                           else "cancello " + ("la regola «" + r['texts'][0] + "»" if len(r['texts']) == 1
+                                               else f"{len(r['texts'])} regole"))
             continue
         if r['schema'] == 'house_ai.fireplace_power_command.v1':
             verb = 'accendo' if r['state'] == 'on' else 'spengo'

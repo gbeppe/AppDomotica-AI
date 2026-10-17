@@ -141,7 +141,7 @@ class FireplaceCommandTests(unittest.TestCase):
                   "crea una regola: se la batteria è piena allora accendi la piscina"):
             result = ask(None, Planner({'operations': [power('off')]}), q, heating_snapshot=heating(mode='Manuale', power=True))
             self.assertEqual(result['status'], 'clarification_required', q)
-            self.assertIn('regole automatiche', result['answer'])
+            self.assertIn('non la eseguo come comando immediato', result['answer'])
             self.assertNotIn('confirmation', result)
             self.assertEqual(result['results'], [])
 

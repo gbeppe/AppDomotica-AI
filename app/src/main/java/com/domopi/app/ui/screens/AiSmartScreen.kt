@@ -65,6 +65,8 @@ fun AiSmartScreen(
     onFireplaceSettings: (FireplaceSettingsCommand) -> Boolean = { false },
     onFireplacePower: (Boolean, Boolean) -> Boolean = { _, _ -> false },
     onFireplaceLevel: (Int, Boolean) -> Boolean = { _, _ -> false },
+    rulesState: RulesState = RulesState(),
+    onRuleAction: (RuleAction) -> Boolean = { false },
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -195,7 +197,8 @@ fun AiSmartScreen(
                 val started = System.currentTimeMillis()
                 val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
                     climateState, state, assistantContext, reserve = reserveState,
-                    thermostats = thermostatState, environment = environmentState, heating = heatingState)
+                    thermostats = thermostatState, environment = environmentState, heating = heatingState,
+                    rules = rulesState)
                 result.lightCommands.forEach { command ->
                     check(connected && onLightCommand(command.lightId, command.state)) {
                         "Comando luce non inviato: connessione o target non valido."
@@ -248,6 +251,9 @@ fun AiSmartScreen(
         }
         pending.fireplaceLevel?.let {
             check(onFireplaceLevel(it, pending.setsManual)) { "Livello non inviato: il caminetto non è in modalità Manuale." }
+        }
+        pending.rules.forEach {
+            check(onRuleAction(it)) { "Regola non inviata: dati non validi." }
         }
     }
     fun confirmHeating() {
@@ -566,7 +572,7 @@ internal fun AiSmartContent(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Chiedi alla casa", style = MaterialTheme.typography.titleMedium)
                     Text(if (dynamicMode) "Tocca Parla e fai la tua domanda: parte da sola e la risposta viene letta. " +
-                        "Puoi comandare luci, scene luci, termostati e caminetto."
+                        "Puoi comandare luci, scene luci, termostati e caminetto, e creare regole «quando… allora…»."
                         else "Puoi chiedere luci e temperature disponibili.", style = MaterialTheme.typography.bodySmall)
                     // Voice is the primary input: the recognized question is sent without a second tap.
                     Button(enabled = !loading, onClick = onDictate,
@@ -655,7 +661,7 @@ internal fun AiSmartContent(
                             }
                         }
                     }
-                    Text("Comandi: luci, scene luci, termostati, modalità e orari del caminetto; acceso/spento e livello del caminetto solo in Manuale; termostati e caminetto sempre con conferma. Gli altri impianti sono in sola lettura.",
+                    Text("Comandi: luci, scene luci, termostati, modalità e orari del caminetto; acceso/spento e livello del caminetto solo in Manuale; termostati e caminetto sempre con conferma. Regole «quando… allora…» create con conferma, in prova per un giorno. Gli altri impianti sono in sola lettura.",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }

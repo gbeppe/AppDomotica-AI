@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **16/10/2026** · app `bld_16382c06` · backend House AI `20261016-rules-guard`.
+Aggiornata al **16/10/2026** · app `bld_16382c06` · backend House AI `20261017-rules-voice`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -188,7 +188,7 @@ luci e scene partono subito.
 - La conferma vale **60 secondi**: dopo, «Conferma scaduta: nessun comando inviato. Ripeti la
   richiesta.».
 
-### 4.7 Luci (lettura e comando)
+### 4.8 Luci (lettura e comando)
 
 | Domande | Esempio di risposta |
 |---|---|
@@ -199,7 +199,7 @@ luci e scene partono subito.
 Luci comandabili: soggiorno, libreria, lampada TV, tavolino lettura, lavanderia, portico
 ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 
-### 4.8 Scene luci
+### 4.9 Scene luci
 
 | Domande | Cosa succede |
 |---|---|
@@ -208,7 +208,7 @@ ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 | «accendi tutte le luci» | accende le luci principali e della piscina (niente in modalità vacanza, meno luci con luci ECO) |
 | «spegni tutte le luci» | spegne tutte le luci interne, esterne e della piscina (circa 35 secondi) |
 
-### 4.9 Condizionatore e Predictive Reserve (solo lettura)
+### 4.10 Condizionatore e Predictive Reserve (solo lettura)
 
 | Domande | Esempio di risposta |
 |---|---|
@@ -218,7 +218,7 @@ ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 
 Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller AI Climate.
 
-### 4.10 «Com'è andata oggi» e log della casa
+### 4.11 «Com'è andata oggi» e log della casa
 
 - Tasto **Com'è andata oggi** (non usa l'intelligenza artificiale):
   > Oggi fino alle 15:14: prodotti 14,7 kilowattora, consumati 6,4, prelevati 0,1, immessi 3,1.
@@ -228,16 +228,39 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 
 ---
 
+### 4.12 Regole «quando… allora…»
+
+| Domande | Risposta |
+|---|---|
+| «quando il puffer alto arriva a 42 gradi spegni il caminetto» | Creo questa regola: quando il puffer alto supera 42 gradi spengo il caminetto, una volta. Confermi? |
+| «se fuori scende sotto 5 gradi metti il bagno a 21» | Creo questa regola: quando la temperatura esterna scende sotto 5 gradi imposto il termostato del bagno a 21 gradi, una volta. Confermi? |
+| «ogni sera alle 22 spegni tutte le luci» | Creo questa regola: alle 22:00 ogni giorno spengo tutte le luci, ogni volta. Confermi? |
+| «che regole ci sono?» | Ci sono 2 regole: 1) … (in prova); 2) … (attiva). |
+| «cancella la regola del caminetto» / «cancella tutte le regole» | Cancello la regola «…». Confermi? / Cancello 2 regole. Confermi? |
+
+- Una regola ha **una condizione** (una misura che supera o scende sotto un valore, oppure un
+  orario con i giorni) e **una azione** fra quelle che AI Smart sa già fare. Misure: puffer alto e
+  basso, temperatura esterna, soggiorno, camera, cameretta, bagno di servizio, batteria,
+  fotovoltaico, consumo della casa.
+- Vale **una volta**, salvo «ogni volta» o «sempre». Se la condizione è già vera quando la crei,
+  interviene subito.
+- **Si crea solo dopo «confermo»** (o il tasto); poi resta **un giorno in prova**: annuncia cosa
+  farebbe senza farlo, quindi si attiva da sola. All'intervento non chiede conferma.
+- Al massimo **10 regole**. Le azioni sul caminetto seguono le stesse regole dei comandi
+  (acceso/spento e livello solo in Manuale).
+- Il motore delle regole sul `.20` è **anch'esso in prova** finché non lo attiviamo: per ora le
+  regole annunciano soltanto.
+
 ## 5. Cosa AI Smart non fa
 
 - Non comanda caldaia, pompa pavimento, condizionatore, VMC, piscina (pompa e skimmer),
   irrigazione, garage, Predictive Reserve; il livello del caminetto solo in Manuale.
 - Non inventa numeri, costi o tariffe e non fa ipotesi sulle cause.
 - Non ha memoria delle domande precedenti.
-- **Non crea regole automatiche** («quando il puffer arriva a 42 gradi spegni il caminetto», «appena
-  fuori scende sotto 5 gradi…», «imposta un'automazione…»): risponde «Le regole automatiche
-  ("quando… allora…") non sono ancora disponibili: posso eseguire solo comandi immediati. Non ho
-  fatto niente.» e non esegue nulla. Le regole sono previste in una fase successiva.
+- **Non esegue subito una richiesta detta come regola**: «quando…», «appena…», «alle 22…»
+  diventano sempre una regola da confermare (§4.12), mai un comando immediato.
+- Non crea regole con due condizioni insieme o con azioni fuori elenco (irrigazione, piscina,
+  garage, condizionatore, caldaia).
 - A una richiesta non disponibile risponde che l'azione non è disponibile o chiede un chiarimento.
 
 ---
@@ -273,3 +296,4 @@ in cima.
 | 16/10/2026 | Conferma a voce più tollerante: accenti e spazi ignorati, alternative del riconoscimento vocale, frase capita mostrata se non è una conferma. |
 | 16/10/2026 | Sicurezza: la domanda letta finisce con «Confermi?» senza «confermo»/«conferma» e il microfono si apre dopo 1 secondo (una prova aveva confermato da sola un termostato). |
 | 16/10/2026 | Le richieste di regole automatiche («quando…», «appena…», «se… allora…», «automazione») non diventano mai un comando immediato: risposta che non sono ancora disponibili (§5). |
+| 17/10/2026 | **Regole a voce** (§4.12): creare, elencare e cancellare regole «quando… allora…», con rilettura e conferma; un giorno in prova. Numerazione delle sezioni 4.8–4.11 corretta. |

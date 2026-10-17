@@ -43,6 +43,7 @@ data class EnergyAssistantAnswer(
             var fireplacePowerRequest: Boolean? = null
             var coversPeriod = false
             var fireplaceLevel: Int? = null
+            val ruleActions = mutableListOf<RuleAction>()
             val results = body.optJSONArray("results")
             require((results?.length() ?: 0) <= 6)
             for (i in 0 until (results?.length() ?: 0)) {
@@ -172,6 +173,21 @@ data class EnergyAssistantAnswer(
                         if (status == "confirmation_required") fireplaceLevel = level
                         detail += "Livello caminetto · $level · $status"
                     }
+                    "house_ai.rule_command.v1" -> {
+                        val status = result.getString("status")
+                        if (status == "confirmation_required") {
+                            when (result.getString("verb")) {
+                                "create" -> ruleActions += RuleAction("create", result.getJSONObject("rule").toString())
+                                "delete" -> result.getJSONArray("ids").let { ids ->
+                                    for (k in 0 until ids.length()) ruleActions += RuleAction("delete", ids.getString(k))
+                                }
+                                else -> error("Verbo regola non valido")
+                            }
+                        }
+                        detail += "Regola · ${result.getString("verb")} · $status"
+                    }
+                    "house_ai.rules_list.v1" -> detail += "Regole · motore ${result.optString("engine_mode", "—")} · " +
+                        "${result.optJSONArray("rules")?.length() ?: 0} regole"
                     "house_ai.current_heating.v1" -> {
                         detail += "Digital Twin · impianto di riscaldamento (sola lettura) · " +
                             if (result.optBoolean("connected")) "collegato alla richiesta" else "disconnesso alla richiesta"
@@ -232,14 +248,14 @@ data class EnergyAssistantAnswer(
                 parsed
             }
             val waiting = thermostatCommands.isNotEmpty() || fireplaceSettings.isNotEmpty() ||
-                fireplaceLevel != null || fireplacePowerRequest != null
+                fireplaceLevel != null || fireplacePowerRequest != null || ruleActions.isNotEmpty()
             val confirmation = body.optJSONObject("confirmation")
             require(waiting == (confirmation != null))
             val heating = confirmation?.let {
                 val prompt = it.getString("prompt")
                 val done = it.getString("done")
                 require(prompt.isNotBlank() && prompt.length <= 500 && done.isNotBlank() && done.length <= 500)
-                HeatingConfirmation(prompt, done, thermostatCommands, fireplaceSettings, fireplaceLevel, fireplacePowerRequest)
+                HeatingConfirmation(prompt, done, thermostatCommands, fireplaceSettings, fireplaceLevel, fireplacePowerRequest, ruleActions)
             }
             return EnergyAssistantAnswer(text, status, body.optString("question"), body.optString("generated_at"), sources, context,
                 lightCommands, sceneCommands, heating, coversPeriod)
@@ -263,6 +279,8 @@ data class HeatingConfirmation(
     val fireplaceLevel: Int? = null,
     /** Manual on (true) / off (false). */
     val fireplacePower: Boolean? = null,
+    /** Rules to create or delete (phase H2): every rule change is confirmed like a heating command. */
+    val rules: List<RuleAction> = emptyList(),
 ) {
     /** Manuale is set by this same confirmation, so level and on/off do not wait for .15's echo. */
     val setsManual: Boolean get() = fireplaceSettings.any { it.mode == "Manuale" }

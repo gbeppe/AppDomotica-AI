@@ -92,6 +92,9 @@ class MqttManager {
     val thermostatSmartState: StateFlow<ThermostatSmartState> = _thermostatSmartState
     private val _environmentSmartState = MutableStateFlow(EnvironmentSmartState())
     val environmentSmartState: StateFlow<EnvironmentSmartState> = _environmentSmartState
+    private val _rulesState = MutableStateFlow(RulesState())
+    val rulesState: StateFlow<RulesState> = _rulesState
+
     private val _heatingProfile = MutableStateFlow(HeatingProfileState())
     val heatingProfile: StateFlow<HeatingProfileState> = _heatingProfile
 
@@ -309,7 +312,8 @@ class MqttManager {
             "$p/stato_condizionatore/#",
             "$p/logica_controllo/#",
             "$p/predictive_reserve/#",
-            "$p/irrigation/#"
+            "$p/irrigation/#",
+            "$p/rules/list/stat"
         )
         mqttClient?.subscribe(topics, IntArray(topics.size) { 1 })
     }
@@ -369,6 +373,7 @@ class MqttManager {
             "fireplace" -> handleFireplaceDomain(device, property, payload, isOn)
             "ventilation" -> handleVentilationDomain(device, property, payload)
             "settings" -> handleSettingsDomain(device, isOn)
+            "rules" -> if (relativeTopic == "rules/list/stat") RulesState.parse(payload)?.let { _rulesState.value = it }
             "irrigation" -> when (relativeTopic) {
                 "irrigation/state/stat" -> IrrigationState.parse(payload)?.let { _irrigationState.value = it }
                 "irrigation/last_command/stat" -> IrrigationCommandResult.parse(payload)?.let { _irrigationResult.value = it }
@@ -856,6 +861,13 @@ class MqttManager {
     fun setSmartFireplaceLevel(level: Int, manualInSameAnswer: Boolean = false): Boolean {
         if (level !in 1..6 || !manualInSameAnswer && _heatingSmartState.value.fireplaceMode() != "Manuale") return false
         publish("zara/interface/fireplace/main/level/cmd", level.toString())
+        return true
+    }
+
+    /** A rule created or deleted by AI Smart after the user's confirmation; RULES-ENGINE on .20 re-validates it. */
+    fun publishRuleAction(action: RuleAction): Boolean {
+        if (action.verb !in setOf("create", "delete") || action.payload.isBlank() || action.payload.length > 4000) return false
+        publish("zara/interface/rules/${action.verb}/cmd", action.payload)
         return true
     }
 
