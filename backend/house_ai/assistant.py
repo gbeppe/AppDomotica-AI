@@ -20,6 +20,10 @@ import rules_tools
 RULE_REQUEST = re.compile(r"\b(automazion\w*|(?:una|la|le|nuova|nuove) regol[ae]|quando|appena|ogni volta|"
                           r"ogni (?:sera|mattina|giorno|notte)|(?:stasera|domani) alle|se\b.+\ballora)\b|^\s*alle\s+\d",
                           re.IGNORECASE)
+# User's decision (16/10/2026): a rule lasts once unless the user says so ("ogni volta", "sempre",
+# "ogni sera", "tutti i giorni"); the planner's "always" is kept only with such words.
+ALWAYS_WORDS = re.compile(r"\b(ogni|sempre|tutti i giorni|tutte le (?:sere|mattine|notti|volte)|feriali|"
+                          r"fine settimana|sabato e domenica)\b", re.IGNORECASE)
 RULES_UNAVAILABLE = ("Questa è una regola («quando… allora…»): non la eseguo come comando immediato. "
                      "Ripetila e la creo come regola, con la tua conferma. Non ho fatto niente.")
 
@@ -57,6 +61,10 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
         raise  # keeps RateLimited and its wait time
     except (ValueError, RuntimeError):
         raise PlannerUnavailable('Planner unavailable or invalid response') from None
+    if isinstance(proposed, dict) and not ALWAYS_WORDS.search(question):
+        for op in proposed.get('operations') or []:
+            if isinstance(op, dict) and op.get('tool') == 'create_rule' and op.get('lifetime') == 'always':
+                op['lifetime'] = 'once'
     try:
         execution = execute(client, proposed, current_snapshot=current_snapshot,
                             climate_snapshot=climate_snapshot, lights_snapshot=lights_snapshot,

@@ -60,7 +60,8 @@ class RuleTests(unittest.TestCase):
 
     def test_time_rule_and_thermostat_rule(self):
         r = run(create(trigger='time', metric='none', op='none', value='none', at='22:00', days='weekdays',
-                       action='set_light_scene', setting='all_off', lifetime='always'))['results'][0]['result']
+                       action='set_light_scene', setting='all_off', lifetime='always'),
+                q='nei giorni feriali alle 22 spegni tutte le luci')['results'][0]['result']
         self.assertEqual(r['rule']['trigger'], {'kind': 'time', 'at': '22:00', 'days': [1, 2, 3, 4, 5]})
         self.assertEqual(r['text'], 'alle 22:00 nei giorni feriali spengo tutte le luci, ogni volta')
         t = run(create(metric='outdoor', op='below', value='5', action='set_thermostat_target',
@@ -68,6 +69,14 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(t['rule']['action'], {'tool': 'set_thermostat_target', 'thermostat': 'thermostat_bath', 'target_c': 21.0})
         self.assertEqual(t['text'], 'quando la temperatura esterna scende sotto 5 gradi imposto il termostato del bagno a '
                                     '21 gradi, una volta')
+
+    def test_lifetime_is_once_unless_the_user_says_always(self):
+        thermo = dict(metric='outdoor', op='below', value='5', action='set_thermostat_target',
+                      target='thermostat_bath', setting='21', lifetime='always')
+        once = run(create(**thermo), q='se fuori scende sotto 5 gradi metti il bagno a 21')
+        self.assertEqual(once['results'][0]['result']['rule']['lifetime'], {'kind': 'once'})
+        always = run(create(**thermo), q='ogni volta che fuori scende sotto 5 gradi metti il bagno a 21')
+        self.assertEqual(always['results'][0]['result']['rule']['lifetime'], {'kind': 'always'})
 
     def test_refused_rules(self):
         cases = [(create(action='set_thermostat_target', target='thermostat_bath', setting='25'), 'setpoint ammesso'),

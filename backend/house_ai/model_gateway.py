@@ -101,8 +101,8 @@ on/off), scene set_light_scene (target none, setting scena), termostati set_ther
 (target thermostat_living/thermostat_bath, setting gradi 16-22), caminetto set_fireplace_power
 (target none, setting on/off), set_fireplace_level (setting 1-6), set_fireplace_mode (setting
 etichetta della modalità), profilo di riscaldamento set_heating_profile (setting
-auto/spento/ridotto/pieno). Campi non usati = "none". lifetime once, salvo "ogni volta"/"sempre"
-= always. Una condizione composta (due soglie) o un'azione fuori elenco richiede chiarimento.
+auto/spento/ridotto/pieno). Campi non usati = "none". lifetime once anche con "se..."/"quando...";
+always SOLO se l'utente dice "ogni volta", "sempre", "ogni sera/giorno", "tutti i giorni". Una condizione composta (due soglie) o un'azione fuori elenco richiede chiarimento.
 "Che regole ci sono?" = list_rules; "cancella la regola del caminetto/delle luci/dei termostati/
 del profilo" = delete_rule about fireplace/lights/thermostats/heating_profile; "cancella tutte
 le regole" = about all; "cancella la regola" senza dire quale = about any.
