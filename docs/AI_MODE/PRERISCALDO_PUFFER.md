@@ -98,6 +98,30 @@ Secondo manuale fornito (Palazzetti **ECOFIRE IDRO** con pannello EASY TOUCH, co
 i 6 tasti che la scheda ESP simula). Anche lì la pompa non è regolabile dall'utente: il menu
 installatore sceglie solo la configurazione dell'impianto (1–4) e il menu di servizio è del CAT.
 
+Raccolta non ufficiale dei codici dei menu nascosti Palazzetti (da forum, in possesso
+dell'utente, **non nel repository**): nessuna informazione sul circolatore per nessun modello.
+Eventuale passo prima del CAT: **solo lettura** del menu Installazione a caminetto spento e freddo,
+foto di ogni schermata, nessuna conferma o modifica; **non** entrare nei menu Fabbrica, Banca dati
+(ripristina le impostazioni di fabbrica) e Test uscite (attiva direttamente coclea, resistenza,
+ventilatore, pompa).
+
+**Tabella dei parametri «WATER PUMP»** (estratto fornito dall'utente il 17/10/2026; fonte e
+modello di riferimento da confermare, due colonne di valori):
+
+| Parametro | Descrizione | Valori | Intervallo |
+|---|---|---|---|
+| PAR67 | T media mandata/ritorno per passaggio da anti-condensa a lavoro pompa | 50° / 50° | 30–70 |
+| **PAR68** | **T media mandata/ritorno per start pompa** | **35° / 40°** | 30–70 |
+| PAR69 | deltaT mandata/ritorno massimo per modulazione pompa | 9° / 7° | 0–15 |
+
+**Coerente con i dati:** la pompa a caminetto spento parte con il puffer intorno a 34–36 °C (§7) →
+probabile **PAR68 = 35**. Con la pompa in moto l'acqua del caminetto resta alla temperatura del
+puffer, quindi la media mandata/ritorno resta sopra 35 °C e la pompa non si ferma: è il ciclo
+osservato. **Ipotesi da proporre al CAT: PAR68 = 45** (dentro l'intervallo e sotto PAR67 = 50).
+Stima dai dati dell'inverno 2025-26: con la pompa attiva solo sopra 45 °C le ore a caminetto
+spento scenderebbero da ~1.110 a ~100 (≈ −90 %). Prima: leggere sul caminetto il valore reale di
+PAR68 (e PAR67) senza modificarlo.
+
 Domande per il CAT (D1): nome e valore attuale del parametro di attivazione/arresto del
 circolatore; valore massimo consentito con impianto a puffer (ipotesi 45–50 °C); effetti su
 anticondensa e protezione del corpo caldaia; se esiste un'isteresi separata per l'arresto.
@@ -119,6 +143,8 @@ condensazione; con la futura pompa di calore, preriscaldo del puffer con l'ecces
 | 17/10/2026 | Decisione dell'utente sulla dispersione: prima la soglia della pompa del caminetto (D1), poi, dopo attenta valutazione, lo Shelly sulla linea (D2) | §4, interventi sulla dispersione |
 | 17/10/2026 | Letto il manuale d'uso del Multifire 45 Idro | soglia della pompa solo tra i parametri tecnici del CAT; valvola di scarico termico a 94 °C per i black-out; porta RS 232 sulla scheda (§4) |
 | 17/10/2026 | Letto il manuale ECOFIRE IDRO (Easy Touch) | non è il modello di casa; conferma che il circolatore non è regolabile dall'utente |
+| 17/10/2026 | Letta la raccolta non ufficiale dei codici dei menu nascosti | nessun parametro del circolatore; possibile lettura del menu Installazione senza modifiche prima del CAT (§4) |
+| 17/10/2026 | Tabella dei parametri «WATER PUMP» (PAR67–69) | PAR68 «T media mand/rit per start pompa» 35 °C coerente con i dati; ipotesi PAR68 = 45 da verificare sul caminetto e con il CAT (§4) |
 
 ## 6. Modifiche fatte (codice, Node-RED, app, dispositivi)
 
