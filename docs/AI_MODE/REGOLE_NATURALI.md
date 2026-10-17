@@ -7,7 +7,6 @@ fase H di [`PIANO_DI_LAVORO.md`](PIANO_DI_LAVORO.md), il punto 8 di
 [`ANALISI_ARCHITETTURA.md`](ANALISI_ARCHITETTURA.md) e il vincolo 4 di [`README.md`](README.md):
 le regole si conservano ed eseguono nel backend, indipendenti da Android e dal modello generativo.
 
-Fino ad allora AI Smart rifiuta le richieste condizionali (release `20261016-rules-guard`).
 
 ## Obiettivo
 
@@ -116,7 +115,7 @@ condizionatore, caldaia, Predictive Reserve.
 | H1 | Tab «Regole» sul `.20` con trigger a soglia e a orario, una azione, durata, cooldown, registro; regole create a mano per provarlo, in **prova** (registrano cosa farebbero) |
 | H2 | Strumenti `house_ai` + conferma vocale + pubblicazione dall'app; lettura e cancellazione a voce |
 | H3 | Elenco nell'app; condizioni aggiuntive |
-| G (in parallelo a H2) | **Notifiche sul telefono** «la regola X è intervenuta / sarebbe intervenuta (in prova)»: trasporto da progettare (notifica dall'app collegata al broker oppure servizio di notifica push) |
+| G (in parallelo a H2) | **Notifiche sul telefono** «la regola X è intervenuta / sarebbe intervenuta (in prova)»: **fatto il 17/10** con ntfy sul `.20` (scelta dell'utente fra servizio dell'app e ntfy; `backend/ntfy`, patch `RULES-ENGINE.2`) |
 
 ## Decisioni dell'utente (16/10/2026)
 

@@ -49,6 +49,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 16/10 | Scheda Clima, caminetto: tasto acceso/spento con **fiamma arancione + «Acceso»** quando è acceso e **⏻ grigio + «Spento»** quando è spento (prima ⏻ rosso) | stessa lettura sbagliata del rosso come «spento» |
 | 16/10 | Richieste di **regole automatiche** in AI Smart: finché la fase H (regole naturali, `PIANO_DI_LAVORO.md`) non è fatta, il backend scarta ogni comando pianificato da una richiesta condizionale e risponde che le regole non sono disponibili; il prompt chiede di non ripeterne valori | prova del 16/10: «…quando il puffer raggiunge i 42 gradi» riformulato con 40 e poi trasformato in uno spegnimento immediato, fermato solo dalla conferma |
 | 17/10 | Fase H2: AI Smart crea, elenca e cancella le regole con `create_rule`/`list_rules`/`delete_rule` (parametri chiusi, stesse liste del motore); ogni creazione o cancellazione si conferma come i comandi del riscaldamento; l'app pubblica su `zara/interface/rules/{create,delete}/cmd` e invia ad AI Smart l'elenco ricevuto dal motore | progetto `REGOLE_NATURALI.md` |
+| 17/10 | Fase G: notifiche con **ntfy self-hosted sul `.20`** (scelta dell'utente; niente servizi esterni né Google), stesso indirizzo dentro e fuori casa come AI Smart (Pi-hole + certificato in casa, Tailscale fuori); versione fissata vecchia di settimane, non l'ultima appena uscita | `backend/ntfy/README.md` |
 
 ## Lezioni tecniche
 

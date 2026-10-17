@@ -1,0 +1,21 @@
+# ntfy server on .20 (NTFY.1, 2026-10-17). No secrets here: users and tokens live in auth-file.
+# One address in and out of the house: https://domopi.tailf30ba8.ts.net:8443
+#  - at home (no Tailscale): Pi-hole resolves the name to 192.168.1.20, ntfy answers in HTTPS;
+#  - away (Tailscale on): Tailscale Serve :8443 -> 127.0.0.1:2586 (tailnet only).
+base-url: "https://domopi.tailf30ba8.ts.net:8443"
+listen-http: "127.0.0.1:2586"
+listen-https: "192.168.1.20:8443"
+cert-file: "/etc/ntfy/tls/cert.pem"
+key-file: "/etc/ntfy/tls/key.pem"
+behind-proxy: true
+
+cache-file: "/var/cache/ntfy/cache.db"
+cache-duration: "12h"
+
+auth-file: "/var/lib/ntfy/user.db"
+auth-default-access: "deny-all"
+enable-signup: false
+enable-login: false
+web-root: "disable"
+
+log-level: "info"

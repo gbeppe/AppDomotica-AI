@@ -1,0 +1,27 @@
+{
+  "patch": "RULES-ENGINE.2",
+  "modified_ids": [
+    "941a8adf652f60bd"
+  ],
+  "removed_ids": [],
+  "added_ids": [
+    "b6c4717411877f49",
+    "610bad4444756641",
+    "bf876bbc228fc6fb",
+    "f3fd238fdcb59984",
+    "d6c513a7ab7c4d92",
+    "730f66b10c784ba7"
+  ],
+  "node_sha256_before": {
+    "941a8adf652f60bd": "7ef6faccd390fced4f90c17d63c888a9cb8f92c0247d5886e7047b7cd6892d4a"
+  },
+  "node_sha256_after": {
+    "941a8adf652f60bd": "38a44771049b1e7cd87a20606282ad7cadecbf674f846d5df4f59f0c99d088c0",
+    "b6c4717411877f49": "7200a9304af88b6fdf22314bba837eb084fb9761efce3e31cb269e6db31ed492",
+    "610bad4444756641": "f08962fdfc2c4bf997bd9dca857f35f41513fae4c8b854c5e8aa43a016bef82d",
+    "bf876bbc228fc6fb": "867ade587f98ecbdae1de623380ffb0d22ac7f5fc66191818fa59ce48dea45dc",
+    "f3fd238fdcb59984": "15dee4cf55a1fb3713eaf09daf4beca5ab5eb27a7623ee861695bab5b6a473e5",
+    "d6c513a7ab7c4d92": "4faebde139741061f5e99ece731bd8eac542581613b39de008aff9092faa1a00",
+    "730f66b10c784ba7": "4cab470e651f38ab0a453e38b4c72766c6356e66bd94347faad05e96c2b474b8"
+  }
+}

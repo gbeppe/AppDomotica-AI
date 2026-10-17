@@ -1,0 +1,7 @@
+[Unit]
+Description=Copy the domopi TLS certificate for ntfy (NTFY.1)
+After=house-ai-lan-cert.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ntfy-cert.sh

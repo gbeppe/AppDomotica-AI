@@ -250,6 +250,8 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
   (acceso/spento e livello solo in Manuale).
 - Il motore delle regole sul `.20` è **anch'esso in prova** finché non lo attiviamo: per ora le
   regole annunciano soltanto.
+- **Notifiche**: ogni evento di una regola (creata, in prova «avrebbe agito», intervenuta, bloccata,
+  cancellata) arriva come notifica nell'app **ntfy**, canale `domopi-regole`, in casa e fuori.
 
 ## 5. Cosa AI Smart non fa
 
@@ -297,3 +299,4 @@ in cima.
 | 16/10/2026 | Sicurezza: la domanda letta finisce con «Confermi?» senza «confermo»/«conferma» e il microfono si apre dopo 1 secondo (una prova aveva confermato da sola un termostato). |
 | 16/10/2026 | Le richieste di regole automatiche («quando…», «appena…», «se… allora…», «automazione») non diventano mai un comando immediato: risposta che non sono ancora disponibili (§5). |
 | 17/10/2026 | **Regole a voce** (§4.12): creare, elencare e cancellare regole «quando… allora…», con rilettura e conferma; un giorno in prova. Numerazione delle sezioni 4.8–4.11 corretta. |
+| 17/10/2026 | **Notifiche delle regole** nell'app ntfy (canale `domopi-regole`, server sul `.20`). |
