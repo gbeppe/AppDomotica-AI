@@ -63,6 +63,21 @@ Richieste dell'utente:
 alla **2**. Il caminetto non comunica il proprio stato: la scheda ESP `.22` simula solo i tasti del
 pannello, quindi la soglia di avvio della pompa non si legge né si cambia da remoto.
 
+### Interventi sulla dispersione attraverso il caminetto spento
+
+Dalla tappa 0 (§7): a fiamma spenta la pompa del caminetto gira quando il puffer è caldo (~1.110 ore
+nell'inverno 2025-26) e il puffer si raffredda circa il 50 % più in fretta (≈ 22 m³ di gas e ≈ 95
+kWh elettrici a stagione). Ordine deciso dall'utente (17/10/2026): **prima la soglia della pompa,
+solo dopo un'attenta valutazione lo Shelly sulla linea**.
+
+| # | Intervento | Come | Rischi e protezioni | Stato |
+|---|---|---|---|---|
+| D1 | **Soglia di avvio della pompa** del Palazzetti Idro 45 (2015) | dal menu installatore/tecnico del pannello: leggere e annotare il valore attuale (dai dati sembra ~34–36 °C); chiedere al centro assistenza Palazzetti (con il numero di serie) se e fino a quanto alzarlo (ipotesi 45–50 °C); velocità della pompa lasciata a **2** | la soglia protegge anche il caminetto (surriscaldamento, condensa; valvola anticondensa): solo valori approvati dall'assistenza. Nessun hardware, nessun taglio di corrente | **da studiare** (utente: menu e foto; poi assistenza) |
+| D2 | **Shelly sulla linea dedicata** del caminetto (es. Shelly Pro 1PM su guida DIN, con misura di potenza), comandato da Node-RED `.20` | taglio notturno solo se: caminetto spento da ≥ 2–3 h, Shelly < 115 W (solo standby o pompa), nessuna accensione prevista, fascia decisa dall'utente (es. 23–06); corrente ridata a fine fascia e ≥ 15 min prima di ogni avvio | **la scheda ESP `.22` è sotto la stessa alimentazione**: un comando durante il taglio verrebbe perso e la scheda ne presumerebbe l'effetto (retained `/command` riallinea lo stato senza premere tasti) → durante il taglio **prima ridare corrente, attendere la scheda online, poi inoltrare** (oppure rifiutare il comando con messaggio). Mai tagliare a caminetto caldo (smaltimento del calore residuo). Avvisi: taglio voluto / corrente ridata; scheda non online entro 5 min = avviso vero. Una notte in prova, poi una con l'utente. Ritorno indietro: Shelly sempre acceso | **solo dopo D1** e valutazione |
+
+Misura del risultato di D1 o D2: ore nello stato «90 W» e raffreddamento del puffer in finestre
+quiete, prima e dopo, con lo stesso metodo di §7.
+
 Idee successive (fuori da questa fase): abbassare la mandata della caldaia via OpenTherm per più
 condensazione; con la futura pompa di calore, preriscaldo del puffer con l'eccesso fotovoltaico.
 
@@ -74,6 +89,7 @@ condensazione; con la futura pompa di calore, preriscaldo del puffer con l'ecces
 | 17/10/2026 | Tappa 0: inventario dei feed EmonCMS (sotto) e lettura di un giorno d'inverno campione (14/01/2026) | storico disponibile da 9 inverni; prime osservazioni in §7 |
 | 17/10/2026 | Tappa 0: analisi dello stato «90 W» del caminetto su tutto l'inverno 2025-26 | pompa del caminetto probabilmente attiva a fiamma spenta con puffer ≥ 34 °C; puffer che si raffredda circa il 50 % più in fretta (§7) |
 | 17/10/2026 | Tappa 0: lavoro della caldaia dopo ogni partenza della pompa del pavimento (3 inverni, 991 partenze) | con puffer ≥ 38 °C la caldaia lavora circa la metà nelle 2 ore successive (§7) |
+| 17/10/2026 | Decisione dell'utente sulla dispersione: prima la soglia della pompa del caminetto (D1), poi, dopo attenta valutazione, lo Shelly sulla linea (D2) | §4, interventi sulla dispersione |
 
 ## 6. Modifiche fatte (codice, Node-RED, app, dispositivi)
 
