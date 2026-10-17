@@ -253,6 +253,19 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 - **Notifiche**: ogni evento di una regola (creata, in prova «avrebbe agito», intervenuta, bloccata,
   cancellata) arriva come notifica nell'app **ntfy**, canale `domopi-regole`, in casa e fuori.
 
+### 4.13 Profilo di riscaldamento e timer dei termostati (solo lettura)
+
+| Domande | Risposta |
+|---|---|
+| «che profilo è attivo?», «perché è ridotto?» | Profilo di riscaldamento: Ridotto, automatico: la media esterna delle ultime 72 ore è 13 gradi, fra 10 e 16 gradi. Soglie: Pieno sotto 10 gradi, Spento sopra 16 gradi di media esterna. |
+| «quando cambia il bagno?», «perché il soggiorno è a 17,5?» | Bagno: in fascia sera, 18 gradi; prossimo cambio oggi alle 22:00 a 17 gradi. |
+| «com'è il timer dei termostati?» | profilo e piano di soggiorno e bagno insieme |
+
+- Legge il profilo e il piano pubblicati dal timer sul `.20`. Se l'automatico ha meno di 48 ore di
+  dati esterni lo dice («resta Ridotto finché non ha 48 ore»).
+- Finché il timer è in prova aggiunge: «Il timer è in prova: per ora non cambia i termostati.»
+- **Non cambia il profilo** a voce: si sceglie dalla scheda Clima dell'app.
+
 ## 5. Cosa AI Smart non fa
 
 - Non comanda caldaia, pompa pavimento, condizionatore, VMC, piscina (pompa e skimmer),
@@ -300,3 +313,4 @@ in cima.
 | 16/10/2026 | Le richieste di regole automatiche («quando…», «appena…», «se… allora…», «automazione») non diventano mai un comando immediato: risposta che non sono ancora disponibili (§5). |
 | 17/10/2026 | **Regole a voce** (§4.12): creare, elencare e cancellare regole «quando… allora…», con rilettura e conferma; un giorno in prova. Numerazione delle sezioni 4.8–4.11 corretta. |
 | 17/10/2026 | **Notifiche delle regole** nell'app ntfy (canale `domopi-regole`, server sul `.20`). |
+| 17/10/2026 | **Profilo di riscaldamento** (§4.13): AI Smart dice profilo, motivo e piano dei termostati (solo lettura). |

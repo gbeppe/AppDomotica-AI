@@ -10,6 +10,7 @@ from log_tools import SOURCES as LOG_SOURCES, tool_catalog, read_day
 from evidence import day_bounds
 from light_semantics import validate_commands
 from energy_flows import allocate
+import heating_profile_tools
 import rules_tools
 
 
@@ -205,12 +206,14 @@ def catalog(path=CATALOG_PATH):
             "Use current_predictive_reserve for the current Predictive Reserve state; it cannot explain past nights.",
             "Use current_energy_overview for the energy of the house now; current_energy_metric only for one explicit quantity.",
             "Use current_heating to read the fireplace, puffer, floor pump, gas boiler and solar thermal; only the fireplace settings, manual on/off and, in Manuale, the power level can be commanded.",
+            "Use current_heating_profile for the heating profile (season), why it was chosen and the thermostat timer plan (slots, next change, 'perché il bagno è a 18').",
             "The thermostats heat; the air conditioner is driven only by the AI Climate controller and cannot be commanded.",
             "Rules ('quando... allora...', 'appena...', 'ogni volta che...'): create_rule with one trigger and one action; list_rules and delete_rule to read or remove them. Never turn a rule into an immediate command.",
             "No other control, cost, tariffs, unsupported metrics or causal speculation; clarify unsupported requests."
         ]
     }
     result["tools"].extend(rules_tools.CATALOG)
+    result["tools"].extend(heating_profile_tools.CATALOG)
     return result
 
 
@@ -249,11 +252,14 @@ def validate_plan(plan, sources=None):
                     if tool == "set_fireplace_power" else {"id", "tool", "level"}
                     if tool == "set_fireplace_level" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
-                    if tool == "energy_comparison" else rules_tools.FIELDS.get(tool) if isinstance(tool, str) else None)
+                    if tool == "energy_comparison" else (rules_tools.FIELDS.get(tool) or heating_profile_tools.FIELDS.get(tool))
+                    if isinstance(tool, str) else None)
         if expected is None or set(operation) != expected:
             raise ValueError("Invalid operation schema")
         if isinstance(tool, str) and tool in rules_tools.TOOL_NAMES:
             rules_tools.validate_operation(operation)
+        if isinstance(tool, str) and tool in heating_profile_tools.TOOL_NAMES:
+            heating_profile_tools.validate_operation(operation)
         identifier = operation["id"]
         if (not isinstance(identifier, str) or not identifier or len(identifier) > 40
                 or identifier in ids):
@@ -612,10 +618,11 @@ def energy_overview(current, detail, now_ms):
 
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
             lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
-            environment_snapshot=None, heating_snapshot=None, rules_snapshot=None):
+            environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     rules = rules_tools.validate_rules_snapshot(rules_snapshot)
+    profile = heating_profile_tools.validate_snapshot(profile_snapshot)
     current = validate_current_snapshot(current_snapshot)
     climate = validate_climate_snapshot(climate_snapshot)
     lights = validate_lights_snapshot(lights_snapshot)
@@ -687,6 +694,9 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
             continue
         if operation["tool"] == "create_rule":
             results.append({"id": operation["id"], "result": rules_tools.build_rule(operation, rules)})
+            continue
+        if operation["tool"] == "current_heating_profile":
+            results.append({"id": operation["id"], "result": heating_profile_tools.read(operation["about"], profile)})
             continue
         if operation["tool"] == "list_rules":
             results.append({"id": operation["id"], "result": rules_tools.list_rules(rules)})

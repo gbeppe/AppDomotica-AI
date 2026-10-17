@@ -8,6 +8,7 @@ from energy_tools import (catalog, execute, validate_climate_snapshot, validate_
                           validate_heating_snapshot)
 from energy_presenter import compose, confirmation, notes
 from planner import PlannerUnavailable
+import heating_profile_tools
 import rules_tools
 
 # Conditional or future requests ("quando…", "appena…", "se… allora…", automations) are rules,
@@ -30,7 +31,7 @@ RULES_UNAVAILABLE = ("Questa è una regola («quando… allora…»): non la ese
 
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
         conversation_context=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
-        environment_snapshot=None, heating_snapshot=None, rules_snapshot=None):
+        environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None):
     if not isinstance(question, str) or not question.strip() or len(question) > 1000:
         raise ValueError('Invalid question')
     validate_current_snapshot(current_snapshot)
@@ -41,6 +42,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
     validate_environment_snapshot(environment_snapshot)
     validate_heating_snapshot(heating_snapshot)
     rules_tools.validate_rules_snapshot(rules_snapshot)
+    heating_profile_tools.validate_snapshot(profile_snapshot)
     if conversation_context is not None and conversation_context != {
             'domain': 'climate', 'focus': 'air_conditioner'}:
         raise ValueError('Invalid conversation context')
@@ -71,7 +73,8 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
                             log_root=log_root, pr_snapshot=pr_snapshot,
                             thermostats_snapshot=thermostats_snapshot,
                             environment_snapshot=environment_snapshot,
-                            heating_snapshot=heating_snapshot, rules_snapshot=rules_snapshot)
+                            heating_snapshot=heating_snapshot, rules_snapshot=rules_snapshot,
+                            profile_snapshot=profile_snapshot)
     except (ValueError, TypeError, OverflowError):
         raise PlannerUnavailable('Planner returned an invalid plan') from None
     if execution['clarification']:

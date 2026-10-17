@@ -66,6 +66,7 @@ fun AiSmartScreen(
     onFireplacePower: (Boolean, Boolean) -> Boolean = { _, _ -> false },
     onFireplaceLevel: (Int, Boolean) -> Boolean = { _, _ -> false },
     rulesState: RulesState = RulesState(),
+    profileState: HeatingProfileState = HeatingProfileState(),
     onRuleAction: (RuleAction) -> Boolean = { false },
 ) {
     val context = LocalContext.current
@@ -198,7 +199,7 @@ fun AiSmartScreen(
                 val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
                     climateState, state, assistantContext, reserve = reserveState,
                     thermostats = thermostatState, environment = environmentState, heating = heatingState,
-                    rules = rulesState)
+                    rules = rulesState, profile = profileState)
                 result.lightCommands.forEach { command ->
                     check(connected && onLightCommand(command.lightId, command.state)) {
                         "Comando luce non inviato: connessione o target non valido."

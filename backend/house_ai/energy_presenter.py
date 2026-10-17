@@ -7,6 +7,7 @@ app shows under "Mostra provenienza e limiti".
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 import math
+import heating_profile_tools
 import rules_tools
 
 LABELS = {
@@ -513,6 +514,8 @@ def describe(item):
         return capitalize(command_action(r)) + '.'
     if schema == 'house_ai.rules_list.v1':
         return rules_tools.list_text(r)
+    if schema == 'house_ai.heating_profile.v1':
+        return heating_profile_tools.text(r)
     if schema == 'house_ai.rule_command.v1':
         return rules_tools.rejected_text(r)
     if schema in ('house_ai.fireplace_settings_command.v1', 'house_ai.fireplace_power_command.v1',

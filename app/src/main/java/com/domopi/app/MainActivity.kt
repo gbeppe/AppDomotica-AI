@@ -166,6 +166,7 @@ class MainActivity : ComponentActivity() {
                             val environmentState by mqttManager.environmentSmartState.collectAsState()
                             val heatingState by mqttManager.heatingSmartState.collectAsState()
                             val rulesState by mqttManager.rulesState.collectAsState()
+                            val profileState by mqttManager.heatingProfile.collectAsState()
                             val connected by mqttManager.isConnected.collectAsState()
                             AiSmartScreen(state, energyState, climateState, connected,
                                 reserveState = reserveState,
@@ -183,6 +184,7 @@ class MainActivity : ComponentActivity() {
                                 onFireplacePower = mqttManager::setSmartFireplacePower,
                                 onFireplaceLevel = mqttManager::setSmartFireplaceLevel,
                                 rulesState = rulesState,
+                                profileState = profileState,
                                 onRuleAction = mqttManager::publishRuleAction)
                         }
                         "house_ai" -> HouseAiScreen(onBack = { currentScreen = "ai_smart" })

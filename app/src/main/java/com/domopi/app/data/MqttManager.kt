@@ -207,7 +207,10 @@ class MqttManager {
             mqttClient = MqttAsyncClient(brokerUrl, clientId, MemoryPersistence())
             val options = MqttConnectOptions().apply {
                 isAutomaticReconnect = true
-                isCleanSession = false // Mantieni sessione per evitare riconnessioni costose
+                // Clean session: the client id is random per connection, so a persistent session
+                // would stay on the broker forever (354 orphans found on .20, 17/10/2026). Every
+                // (re)connect resubscribes in connectComplete and receives the retained states again.
+                isCleanSession = true
                 connectionTimeout = 15
                 keepAliveInterval = 60
                 // A username without password is rejected by Mosquitto's password file:

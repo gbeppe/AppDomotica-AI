@@ -152,6 +152,7 @@ class HouseAiRepository {
         environment: EnvironmentSmartState = EnvironmentSmartState(),
         heating: HeatingSmartState = HeatingSmartState(),
         rules: RulesState = RulesState(),
+        profile: HeatingProfileState = HeatingProfileState(),
     ): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
         val base = validatedBase(baseUrl)
         require(token.isNotBlank() && question.isNotBlank() && question.length <= 1000)
@@ -222,6 +223,7 @@ class HouseAiRepository {
             body.put("current_rules", JSONObject().put("schema", "house_ai.current_rules_input.v1")
                 .put("engine_mode", rules.engineMode).put("rules", list))
         }
+        heatingProfileJson(profile)?.let { body.put("current_heating_profile", it) }
         val lightObservations = JSONObject()
         lights.validLightObservations().forEach { (light, observation) ->
             val item = JSONObject().put("value", observation.payload.toBooleanStrict())
@@ -256,4 +258,24 @@ class HouseAiRepository {
             connection.disconnect()
         }
     }
+}
+
+/** HEATING-PROFILE.2 state as house_ai.current_heating_profile_input.v1, or null while incomplete. */
+internal fun heatingProfileJson(p: HeatingProfileState): JSONObject? {
+    val mode = p.mode ?: return null
+    val timer = p.timerMode?.takeIf { it == "shadow" || it == "active" } ?: return null
+    val profile = p.profile ?: return null
+    val thermostats = JSONObject()
+    p.plan.filterKeys { it == "thermostat_living" || it == "thermostat_bath" }.forEach { (id, t) ->
+        val next = t.next?.let {
+            JSONObject().put("day_offset", it.dayOffset).put("at", it.at).put("inside", it.inside)
+                .put("value", it.value ?: JSONObject.NULL)
+        }
+        thermostats.put(id, JSONObject().put("inside", t.inside).put("value", t.value ?: JSONObject.NULL)
+            .put("slot", t.slot ?: JSONObject.NULL).put("min", t.min ?: JSONObject.NULL)
+            .put("max", t.max ?: JSONObject.NULL).put("next", next ?: JSONObject.NULL))
+    }
+    return JSONObject().put("schema", "house_ai.current_heating_profile_input.v1").put("profile", profile)
+        .put("mode", mode).put("outdoor_mean_72h", p.outdoorMean72h ?: JSONObject.NULL)
+        .put("hours_of_data", p.hoursOfData).put("timer_mode", timer).put("thermostats", thermostats)
 }

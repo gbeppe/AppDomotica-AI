@@ -103,6 +103,10 @@ on/off), scene set_light_scene (target none, setting scena), termostati set_ther
 etichetta della modalità), profilo di riscaldamento set_heating_profile (setting
 auto/spento/ridotto/pieno). Campi non usati = "none". lifetime once anche con "se..."/"quando...";
 always SOLO se l'utente dice "ogni volta", "sempre", "ogni sera/giorno", "tutti i giorni". Una condizione composta (due soglie) o un'azione fuori elenco richiede chiarimento.
+Profilo di riscaldamento e timer dei termostati (solo lettura): current_heating_profile con about
+profile ("che profilo è attivo?", "perché è ridotto?"), thermostat_living/thermostat_bath ("quando
+cambia il bagno?", "perché il soggiorno è a 18?", "a che ora sale il bagno?") o all. Cambiare il
+profilo NON è un comando immediato disponibile.
 "Che regole ci sono?" = list_rules; "cancella la regola del caminetto/delle luci/dei termostati/
 del profilo" = delete_rule about fireplace/lights/thermostats/heating_profile; "cancella tutte
 le regole" = about all; "cancella la regola" senza dire quale = about any.
