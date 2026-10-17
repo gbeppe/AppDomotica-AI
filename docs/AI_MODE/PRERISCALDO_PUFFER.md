@@ -72,8 +72,35 @@ solo dopo un'attenta valutazione lo Shelly sulla linea**.
 
 | # | Intervento | Come | Rischi e protezioni | Stato |
 |---|---|---|---|---|
-| D1 | **Soglia di avvio della pompa** del Palazzetti Idro 45 (2015) | dal menu installatore/tecnico del pannello: leggere e annotare il valore attuale (dai dati sembra ~34–36 °C); chiedere al centro assistenza Palazzetti (con il numero di serie) se e fino a quanto alzarlo (ipotesi 45–50 °C); velocità della pompa lasciata a **2** | la soglia protegge anche il caminetto (surriscaldamento, condensa; valvola anticondensa): solo valori approvati dall'assistenza. Nessun hardware, nessun taglio di corrente | **da studiare** (utente: menu e foto; poi assistenza) |
+| D1 | **Soglia di avvio della pompa** del Palazzetti Multifire 45 Idro (2015) | dal menu installatore/tecnico del pannello: leggere e annotare il valore attuale (dai dati sembra ~34–36 °C); chiedere al centro assistenza Palazzetti (con il numero di serie) se e fino a quanto alzarlo (ipotesi 45–50 °C); velocità della pompa lasciata a **2** | la soglia protegge anche il caminetto (surriscaldamento, condensa; valvola anticondensa): solo valori approvati dall'assistenza. Nessun hardware, nessun taglio di corrente | **da studiare** (utente: menu e foto; poi assistenza) |
 | D2 | **Shelly sulla linea dedicata** del caminetto (es. Shelly Pro 1PM su guida DIN, con misura di potenza), comandato da Node-RED `.20` | taglio notturno solo se: caminetto spento da ≥ 2–3 h, Shelly < 115 W (solo standby o pompa), nessuna accensione prevista, fascia decisa dall'utente (es. 23–06); corrente ridata a fine fascia e ≥ 15 min prima di ogni avvio | **la scheda ESP `.22` è sotto la stessa alimentazione**: un comando durante il taglio verrebbe perso e la scheda ne presumerebbe l'effetto (retained `/command` riallinea lo stato senza premere tasti) → durante il taglio **prima ridare corrente, attendere la scheda online, poi inoltrare** (oppure rifiutare il comando con messaggio). Mai tagliare a caminetto caldo (smaltimento del calore residuo). Avvisi: taglio voluto / corrente ridata; scheda non online entro 5 min = avviso vero. Una notte in prova, poi una con l'utente. Ritorno indietro: Shelly sempre acceso | **solo dopo D1** e valutazione |
+
+**Dal manuale d'uso** (Palazzetti MULTIFIRE 45 IDRO, cod. 004775620, rev. 12/2016, fornito
+dall'utente il 17/10/2026):
+
+- caminetto a **pellet e legna**; la pompa (gruppo idraulico, componente 11) è comandata dalla
+  scheda elettronica (uscita POMPA) in base alla **SONDA CALDAIA** (acqua nel corpo del caminetto);
+- la **soglia di avvio della pompa non è nei menu utente** (MENU SET LAVORO, MENU TIMER, MENU SET
+  STUFA: orologio, lingua, tipo menu, start ext., funz. totale, ore residue, auto on/off): è un
+  parametro tecnico del **CAT** (Centro Assistenza Tecnica) → D1 si fa con l'assistenza;
+- in lavoro si imposta solo **SET T. ACQUA 60–85 °C** (temperatura dell'acqua che il caminetto
+  mantiene modulando la potenza);
+- sicurezze: termostati a riarmo **85 °C e 92 °C**; **valvola di scarico termico a 94 °C** con
+  serpentina alimentata dall'acqua di rete, che raffredda il caminetto in caso di black-out
+  (arresto della pompa). Utile per D2 (protezione in caso di taglio con caminetto caldo), ma da non
+  usare come funzionamento normale: scarica acqua di rete e interviene a temperatura di sicurezza;
+- la scheda ha una porta **RS 232** e gli ingressi **START EXT.** e **GSM FIRE CONTROL**: possibile
+  strada futura per leggere lo stato vero del caminetto (temperatura acqua, acceso/spento) invece
+  di presumerlo dai tasti premuti. Da verificare, fuori da questa fase.
+
+Secondo manuale fornito (Palazzetti **ECOFIRE IDRO** con pannello EASY TOUCH, cod. 004772531,
+07/2013): **non è il modello di casa** (pannello a icone touch; il Multifire 45 ha il display LCD con
+i 6 tasti che la scheda ESP simula). Anche lì la pompa non è regolabile dall'utente: il menu
+installatore sceglie solo la configurazione dell'impianto (1–4) e il menu di servizio è del CAT.
+
+Domande per il CAT (D1): nome e valore attuale del parametro di attivazione/arresto del
+circolatore; valore massimo consentito con impianto a puffer (ipotesi 45–50 °C); effetti su
+anticondensa e protezione del corpo caldaia; se esiste un'isteresi separata per l'arresto.
 
 Misura del risultato di D1 o D2: ore nello stato «90 W» e raffreddamento del puffer in finestre
 quiete, prima e dopo, con lo stesso metodo di §7.
@@ -90,6 +117,8 @@ condensazione; con la futura pompa di calore, preriscaldo del puffer con l'ecces
 | 17/10/2026 | Tappa 0: analisi dello stato «90 W» del caminetto su tutto l'inverno 2025-26 | pompa del caminetto probabilmente attiva a fiamma spenta con puffer ≥ 34 °C; puffer che si raffredda circa il 50 % più in fretta (§7) |
 | 17/10/2026 | Tappa 0: lavoro della caldaia dopo ogni partenza della pompa del pavimento (3 inverni, 991 partenze) | con puffer ≥ 38 °C la caldaia lavora circa la metà nelle 2 ore successive (§7) |
 | 17/10/2026 | Decisione dell'utente sulla dispersione: prima la soglia della pompa del caminetto (D1), poi, dopo attenta valutazione, lo Shelly sulla linea (D2) | §4, interventi sulla dispersione |
+| 17/10/2026 | Letto il manuale d'uso del Multifire 45 Idro | soglia della pompa solo tra i parametri tecnici del CAT; valvola di scarico termico a 94 °C per i black-out; porta RS 232 sulla scheda (§4) |
+| 17/10/2026 | Letto il manuale ECOFIRE IDRO (Easy Touch) | non è il modello di casa; conferma che il circolatore non è regolabile dall'utente |
 
 ## 6. Modifiche fatte (codice, Node-RED, app, dispositivi)
 
