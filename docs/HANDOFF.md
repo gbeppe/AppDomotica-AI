@@ -87,7 +87,7 @@ timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giorn
 Server **ntfy 2.28.0** (NTFY.1, 17/10): `https://domopi.tailf30ba8.ts.net:8443`, in casa diretto su
 `192.168.1.20:8443` (certificato copiato da `ntfy-cert.timer`), fuori via Tailscale Serve `:8443`.
 Accesso negato senza credenziali; `domopi-nodered` scrive su `domopi-*`, l'utente del telefono legge
-`domopi-*`. App **ntfy** sul telefono iscritta a `domopi-regole`. Dettagli: [`../backend/ntfy/README.md`](../backend/ntfy/README.md).
+`domopi-*`. App **ntfy** sul telefono iscritta a `domopi-regole` e `domopi-casa` (avvisi della casa, patch `house_alerts`). Dettagli: [`../backend/ntfy/README.md`](../backend/ntfy/README.md).
 
 Storia dei rilasci: [`AI_MODE/DEPLOYMENT_20_TLS_2026-09-13.md`](AI_MODE/DEPLOYMENT_20_TLS_2026-09-13.md).
 Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio).
@@ -108,6 +108,7 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `heating_profile2` (HEATING-PROFILE.2) | il piano dà anche minimo, massimo e prossimo cambio per termostato; nuovo `zara/interface/heating/profile/learning/stat` con le ultime correzioni dell'utente (per la scheda Clima dell'app); backup `/home/pi/AI_backups/nodered/20261016T154922Z-before-heating-profile2` | live dal 16/10 17:49 |
 | `rules_engine` (RULES-ENGINE.1) | nuovo tab «Regole»: motore delle regole naturali (fase H1), regole in prova 24 h, motore in **shadow**; backup `/home/pi/AI_backups/nodered/20261016T164006Z-before-rules-engine`; regola di prova `r-puffer-42` (puffer alto > 42 °C → spegni caminetto) creata il 16/10 18:40 | live dal 16/10 18:40 |
 | `rules_notify` (RULES-ENGINE.2) | ogni evento del motore delle regole (intervenuta, in prova, bloccata, creata, attiva, cancellata, rifiutata) diventa una notifica ntfy sul canale `domopi-regole`; token da `~/.config/domopi/ntfy_nodered.token`; backup `/home/pi/AI_backups/nodered/20261017T192951Z-before-rules-notify` | live 17/10 21:29, provata (notifica «Regola rifiutata» 21:30) |
+| `house_alerts` (HOUSE-ALERTS.1) | nuovo tab «Avvisi (DomoPi)»: avvisi ntfy su `domopi-casa` (puffer > 85 °C, schede caminetto/pompa offline 5 min, sensori soggiorno/bagno muti 30 min, esterno muto 2 h, cambio profilo, batteria < 20 %); nessun nodo esistente modificato; backup `/home/pi/AI_backups/nodered/20261017T201104Z-before-house-alerts` | live 17/10 22:11, ingressi verificati |
 | `router_floor_pump` (ROUTER-FLOOR-PUMP.1) | abilitazione pompa pavimento instradata sul broker di `.15`, retained (prima andava sul `.20` e non arrivava); chiave `router_initialized_v123`; backup `/home/pi/AI_backups/nodered/20261016T105204Z-before-router-floor-pump` | live dal 16/10 12:52; prova 12:53 superata (abilita/disabilita dall'app arrivano al `.15`, retained; «disabilita» manda 0 all'ESP) |
 | `floorpump_repeat` (FLOORPUMP-REPEAT.1, **sul `.15`**) | la logica della pompa ripete l'ultimo comando nella fascia 30–35 °C, necessario per lo spegnimento di sicurezza di `floorpump_v2`; backup sul `.15` `/home/pi/AI_backups/nodered/20261016T112048Z-before-floorpump-repeat` | live sul `.15` dal 16/10 13:21 |
 | `floorpump_repeat2` (FLOORPUMP-REPEAT.2, **sul `.15`**) | la function della pompa non va più in errore senza l'ora di spegnimento del caminetto (bloccava ogni comando con la pompa abilitata) | live sul `.15` dal 16/10 14:25 |
@@ -238,8 +239,10 @@ allineata). Rilasciati in giornata: ROUTER-FIREPLACE-RETAIN.1 (`v122`), house_ai
 
 - **Broker `.20`, sessioni orfane (17/10):** 362 sessioni conservate, 8 collegate; Mosquitto 146 MB,
   `mosquitto.db` 54 MB. Causa: l'app si collegava con nome casuale e sessione persistente (corretto in
-  `bld_bff71307`, sessione pulita). **Da fare con l'utente:** `persistent_client_expiration 2d` in
-  `/etc/mosquitto/conf.d/50-session-expiry.conf`, copia di `/etc/mosquitto` e `mosquitto.db`, riavvio.
+  `bld_bff71307`, sessione pulita). Fatto dall'utente il 17/10 22:07: `persistent_client_expiration 2d`
+  in `/etc/mosquitto/conf.d/50-session-expiry.conf`, copia in
+  `/home/pi/AI_backups/mosquitto/20261017T200738Z-before-session-expiry`, riavvio. Le sessioni orfane
+  scadono 2 giorni dopo il riavvio (~19/10 22:07): **verificare il 20/10** sessioni e memoria.
 - **`.15`, pulizia del 17/10:** `pompaPavimento.log` (40 MB, 897.759 righe dal 2021) compresso in
   `/home/pi/data/pompaPavimento.log-20261017.gz` (2,7 MB, verificato) e svuotato; rotazione in
   `/etc/logrotate.d/pompaPavimento` (mensile o 5 MB, 12 archivi, `copytruncate`). Nodo «SC1 | SOE Debug»
