@@ -114,6 +114,10 @@ Comandi a tempo di luci, scene e caminetto: "accendi X fino alle 19" = il comand
 schedule_command on at 18:00; "dalle 18 alle 20" = schedule_command on at 18:00 e schedule_command
 off at 20:00. Per le scene: target none, setting = scena (all_off e all_on sono opposte). Non sono
 regole: non usare create_rule.
+VMC (ventilazione meccanica, recuperatore): vmc_command con speed 1-4; "metti la VMC a 3" = from now,
+to none; "fino alle 20" = from now, to 20:00; "dalle 18 alle 20" = from 18:00, to 20:00; "dalle 18" =
+from 18:00, to none; "rimetti la VMC in automatico"/"riattiva AI Climate per la VMC" = speed auto.
+"Cancella la regola della VMC" = delete_rule about vmc.
 "Che regole ci sono?" = list_rules; "cancella la regola del caminetto/delle luci/dei termostati/
 del profilo" = delete_rule about fireplace/lights/thermostats/heating_profile; "cancella tutte
 le regole" = about all; "cancella la regola" senza dire quale = about any.

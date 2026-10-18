@@ -34,7 +34,8 @@ data class AcStatus(
 @Serializable
 data class VmcStatus(
     val speed: Int = 1,
-    val active: Boolean = true
+    val active: Boolean = true,
+    val override: VmcOverride? = null
 )
 
 @Serializable

@@ -772,6 +772,7 @@ class MqttManager {
                     current.copy(statoVmc = current.statoVmc.copy(velocitaAttuale = speed))
                 }
             }
+            "override" -> _hvacState.update { it.copy(vmc = it.vmc.copy(override = VmcOverride.parse(raw))) }
             "reason" -> {
                 _aiManagedData.update { current ->
                     current.copy(statoVmc = current.statoVmc.copy(motivoLogica = raw.trim()))

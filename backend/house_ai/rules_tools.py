@@ -34,9 +34,11 @@ FIREPLACE_MODES = ("Disattivato", "Riscaldamento", "Integrazione Caldaia", "Acqu
 PROFILE_MODES = {"auto": "Automatico", "spento": "Spento", "ridotto": "Ridotto", "pieno": "Pieno"}
 ACTIONS = ("set_light_state", "set_light_scene", "set_thermostat_target", "set_fireplace_power",
            "set_fireplace_level", "set_fireplace_mode", "set_heating_profile")
+# Actions the engine accepts only from timed commands (phase T2); valid in the rules snapshot.
+ENGINE_ACTIONS = ACTIONS + ("set_vmc_speed", "set_vmc_override", "set_vmc_auto")
 DAYS = {"all": [0, 1, 2, 3, 4, 5, 6], "weekdays": [1, 2, 3, 4, 5], "weekend": [0, 6]}
 DAYS_TEXT = {"all": "ogni giorno", "weekdays": "nei giorni feriali", "weekend": "sabato e domenica"}
-ABOUT = ("fireplace", "lights", "thermostats", "heating_profile", "all", "any")
+ABOUT = ("fireplace", "lights", "thermostats", "heating_profile", "vmc", "all", "any")
 TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 MAX_RULES = 10
 ROME = ZoneInfo("Europe/Rome")
@@ -73,11 +75,20 @@ CATALOG = [{
     "parameters": {"action": list(SCHEDULE_ACTIONS), "target": "light id or none",
                    "setting": "on/off or scene", "at": "HH:MM"}
 }]
+CATALOG.append({
+    "name": "vmc_command",
+    "description": "VMC (ventilazione meccanica) speed 1-4, alone or for a time: 'metti la VMC a 3' = from now, to none "
+                   "(plain speed, AI Climate may change it); 'fino alle 20' = from now, to 20:00; 'dalle 18 alle 20' = "
+                   "from 18:00, to 20:00; 'dalle 18' = from 18:00, to none (2 hours). 'Rimetti la VMC in automatico', "
+                   "'riattiva AI Climate per la VMC' = speed auto. Confirmed in the app",
+    "parameters": {"speed": ["1", "2", "3", "4", "auto"], "from": "now or HH:MM", "to": "HH:MM or none"}
+})
 TOOL_NAMES = tuple(t["name"] for t in CATALOG)
 FIELDS = {"create_rule": {"id", "tool", "trigger", "metric", "op", "value", "at", "days", "action", "target",
                           "setting", "lifetime"},
           "list_rules": {"id", "tool"}, "delete_rule": {"id", "tool", "about"},
-          "schedule_command": {"id", "tool", "action", "target", "setting", "at"}}
+          "schedule_command": {"id", "tool", "action", "target", "setting", "at"},
+          "vmc_command": {"id", "tool", "speed", "from", "to"}}
 
 
 def _number(text):
@@ -97,6 +108,9 @@ def validate_operation(op):
             op["action"] not in SCHEDULE_ACTIONS
             or not all(isinstance(op[k], str) and len(op[k]) <= 40 for k in ("target", "setting", "at"))):
         raise ValueError("Invalid timed command")
+    if tool == "vmc_command" and (op["speed"] not in ("1", "2", "3", "4", "auto")
+                                   or not all(isinstance(op[k], str) and len(op[k]) <= 8 for k in ("from", "to"))):
+        raise ValueError("Invalid VMC command")
     if tool == "create_rule":
         if (op["trigger"] not in ("threshold", "time") or op["action"] not in ACTIONS
                 or op["lifetime"] not in ("once", "always")
@@ -204,8 +218,50 @@ def build_schedule(op, rules_snapshot, seq=0, now=None):
             "action": action, "lifetime": {"kind": "once"}, "start_active": True}
     return {**result, "status": "confirmation_required", "rule": rule, "text": text}
 
+VMC_DEFAULT = timedelta(hours=2)   # "dalle 18" without an end (user's decision of 18/10/2026)
+
+
+def build_vmc(op, rules_snapshot, seq=0, now=None, humidity=None):
+    """house_ai.rule_command.v1 for the VMC (phase T2): one 'at' rule that starts active."""
+    now = now or clock()
+    result = {"schema": "house_ai.rule_command.v1", "verb": "create", "scheduled": True,
+              "limitations": ["Priorità manuale rispettata da AI Climate fino all'ora indicata, poi torna l'automatico.",
+                              "Velocità secca: AI Climate può cambiarla al suo prossimo cambio di calcolo."]}
+    pending = sum(1 for r in (rules_snapshot or {}).get("rules", []) if r["status"] != "expired")
+    if pending + seq >= MAX_RULES:
+        return {**result, "status": "rejected", "reason": "Ci sono già 10 regole attive: cancellane una."}
+    start = occurrence(op["from"], now) if op["from"] != NONE else now
+    end = occurrence(op["to"], now) if op["to"] != NONE else None
+    if start is None or (op["to"] != NONE and end is None):
+        return {**result, "status": "rejected", "reason": "orario non valido"}
+    if end is not None and end <= start:            # 'dalle 18 alle 20' said at 19: the start is now
+        start = now if start > now and end > now and start.date() != now.date() else start
+        while end <= start:
+            end += timedelta(days=1)
+    day = lambda d: "oggi" if d.date() == now.date() else "domani"
+    when = "" if start == now else f"alle {start:%H:%M} ({day(start)}) "
+    if op["speed"] == "auto":
+        action, text = {"tool": "set_vmc_auto"}, "rimetto la VMC in automatico con AI Climate"
+        start, when = now, ""
+    elif op["from"] == NOW and op["to"] == NONE:
+        action = {"tool": "set_vmc_speed", "speed": int(op["speed"])}
+        text = f"metto la VMC a velocità {op['speed']} (AI Climate potrà cambiarla)"
+    else:
+        end = end or start + VMC_DEFAULT
+        action = {"tool": "set_vmc_override", "speed": int(op["speed"]), "until": end.isoformat(timespec="seconds")}
+        text = (f"metto la VMC a velocità {op['speed']} fino alle {end:%H:%M}"
+                + (" (domani)" if day(end) == "domani" else "")
+                + ", poi torna l'automatico")
+    text = when + text
+    if op["speed"] in ("1", "2") and humidity is not None and humidity >= 65:
+        text += f" (attenzione: umidità al {round(humidity)} per cento, AI Climate la terrebbe a 3)"
+    rule = {"id": f"rt-{int(now.timestamp()):x}-{seq}", "text": text,
+            "trigger": {"kind": "at", "at": start.isoformat(timespec="seconds")}, "conditions": [],
+            "action": action, "lifetime": {"kind": "once"}, "start_active": True}
+    return {**result, "status": "confirmation_required", "rule": rule, "text": text}
+
 GROUPS = {"fireplace": ("set_fireplace_",), "lights": ("set_light_",), "thermostats": ("set_thermostat_",),
-          "heating_profile": ("set_heating_profile",)}
+          "heating_profile": ("set_heating_profile",), "vmc": ("set_vmc_",)}
 
 
 def delete_rules(about, rules_snapshot):
@@ -251,7 +307,7 @@ def validate_rules_snapshot(snapshot):
                 or not isinstance(r["id"], str) or not re.fullmatch(r"[a-z0-9-]{3,40}", r["id"])
                 or not isinstance(r["text"], str) or len(r["text"]) > 300
                 or r["status"] not in ("test", "active", "paused", "expired")
-                or not isinstance(r["action"], dict) or r["action"].get("tool") not in ACTIONS):
+                or not isinstance(r["action"], dict) or r["action"].get("tool") not in ENGINE_ACTIONS):
             raise ValueError("Invalid rule in snapshot")
         clean.append({"id": r["id"], "text": r["text"], "status": r["status"], "action": {"tool": r["action"]["tool"]}})
     return {"schema": snapshot["schema"], "engine_mode": snapshot["engine_mode"], "rules": clean}

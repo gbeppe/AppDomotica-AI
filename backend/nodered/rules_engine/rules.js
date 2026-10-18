@@ -9,6 +9,8 @@
 // trigger {kind: 'at', at: ISO} = one moment with its date (from 15 min ago to 48 h ahead), always once;
 // "start_active": true (only with 'at') skips the test day; a late 'at' (> 15 min) closes as missed;
 // closed 'at' rules leave the list after 24 h.
+// RULES-ENGINE.4 (2026-10-18): VMC actions (phase T2): set_vmc_speed (plain speed 1-4), set_vmc_override
+// (manual priority until a moment, AI-CLIMATE-VMC-OVERRIDE.1), set_vmc_auto (back to AI Climate).
 const S = 'file';
 const P = 'zara/interface/';
 const MAX_ACTIVE = 10, TEST_MS = 24 * 3600000, DEFAULT_COOLDOWN_MIN = 30;
@@ -97,6 +99,11 @@ function validAction(a) {
         case 'set_fireplace_level': return Number.isInteger(a.level) && a.level >= 1 && a.level <= 6;
         case 'set_fireplace_mode': return FIREPLACE_MODES.includes(a.mode);
         case 'set_heating_profile': return PROFILE_MODES.includes(a.mode);
+        case 'set_vmc_speed': return Number.isInteger(a.speed) && a.speed >= 1 && a.speed <= 4;
+        case 'set_vmc_override': return Number.isInteger(a.speed) && a.speed >= 1 && a.speed <= 4 &&
+            typeof a.until === 'string' && /[+-]\d\d:\d\d$|Z$/.test(a.until) && Date.parse(a.until) > now &&
+            Date.parse(a.until) <= now + AT_AHEAD_MS + 4 * 3600000;
+        case 'set_vmc_auto': return true;
         default: return false;
     }
 }
@@ -145,6 +152,7 @@ function conditionsTrue(r) {
 }
 // The same limits AI Smart applies today; null = allowed.
 function actionBlocked(a) {
+    if (a.tool === 'set_vmc_override' && !(Date.parse(a.until) > now)) return 'fine della priorità VMC già passata';
     if (a.tool === 'set_fireplace_power' && devices.fireplaceMode !== 'Manuale') return 'caminetto non in Manuale';
     if (a.tool === 'set_fireplace_level' && (devices.fireplaceMode !== 'Manuale' || devices.fireplacePower !== true))
         return 'livello solo in Manuale a caminetto acceso';
@@ -159,6 +167,9 @@ function commandOf(a) {
         case 'set_fireplace_level': return {topic: P + 'fireplace/main/level/cmd', payload: String(a.level)};
         case 'set_fireplace_mode': return {topic: P + 'fireplace/main/mode/cmd', payload: a.mode};
         case 'set_heating_profile': return {topic: P + 'heating/profile/mode/cmd', payload: a.mode};
+        case 'set_vmc_speed': return {topic: P + 'ventilation/vmc/speed/cmd', payload: String(a.speed)};
+        case 'set_vmc_override': return {topic: P + 'ventilation/vmc/override/cmd', payload: JSON.stringify({speed: a.speed, until: a.until})};
+        case 'set_vmc_auto': return {topic: P + 'ventilation/vmc/override/cmd', payload: 'auto'};
     }
     return null;
 }
@@ -231,7 +242,7 @@ if (BY_TOPIC[topic]) {
                             : {armed: true, lastFired: null, lastFiredDay: null, testUntil: now + TEST_MS, status: 'test'};
             changed = true;
             log('rule_created', {rule});
-            announce('created', rule, active ? {active: true, at: rule.trigger.at} : {test_until: new Date(now + TEST_MS).toISOString()});
+            announce('created', rule, active ? {active: true, fires_at: rule.trigger.at} : {test_until: new Date(now + TEST_MS).toISOString()});
         }
     } else if ((verb === 'delete' || verb === 'activate' || verb === 'pause' || verb === 'resume') && rules[body]) {
         const id = body;

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.domopi.app.data.MqttManager
 import com.domopi.app.data.PalazzettiStatus
 import com.domopi.app.data.ThermostatStatus
+import com.domopi.app.data.VmcOverride
 import com.domopi.app.ui.components.PufferTankComponent
 import com.domopi.app.ui.theme.SolarGreen
 import java.util.Locale
@@ -88,16 +89,28 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF00E5FF)
                         )
+                        // AI-CLIMATE-VMC-OVERRIDE.1: a button = manual priority for 2 hours, then AI Climate again
+                        // (the plain zara/interface/ventilation/vmc/speed/cmd is sent by the .20 override node).
+                        Text(
+                            text = hvacState.vmc.override?.let { "Priorità manuale: velocità ${it.speed} fino alle ${it.label}" }
+                                ?: "Automatico (AI Climate) · un tasto = velocità manuale per ${VmcOverride.BUTTON_HOURS} ore",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                         Spacer(Modifier.height(12.dp))
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            FilterChip(
+                                selected = hvacState.vmc.override == null,
+                                onClick = { mqttManager.publish(VmcOverride.TOPIC_CMD, VmcOverride.AUTO) },
+                                label = { Text("Auto") }
+                            )
                             (1..4).forEach { speed ->
                                 FilterChip(
                                     selected = hvacState.vmc.speed == speed,
-                                    onClick = { mqttManager.publish("zara/interface/ventilation/vmc/speed/cmd", speed.toString()) },
+                                    onClick = { mqttManager.publish(VmcOverride.TOPIC_CMD, VmcOverride.command(speed)) },
                                     label = { Text(speed.toString()) },
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = Color(0xFF00E5FF).copy(alpha = 0.2f),

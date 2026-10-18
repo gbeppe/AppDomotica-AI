@@ -188,3 +188,15 @@ test('timed command validation: start_active only with at, at within 48 h, once 
   a.deepEqual(reasons, ['orario non valido', 'orario non valido', 'orario non valido', 'durata non ammessa',
     'attivazione immediata solo per i comandi a tempo']);
 });
+
+// RULES-ENGINE.4: VMC actions.
+test('VMC: plain speed, priority until a moment, back to automatic', () => {
+  at('2026-10-18T17:45:00+02:00'); const s = fresh();
+  const mk = (id, action, iso = '2026-10-18T17:45:00+02:00') => cmd(s, 'create', {id, text: id, trigger: {kind: 'at', at: iso}, action, start_active: true});
+  a.deepEqual(mk('vmc-1', {tool: 'set_vmc_speed', speed: 3}).cmds, [{topic: P + 'ventilation/vmc/speed/cmd', payload: '3'}]);
+  a.deepEqual(mk('vmc-2', {tool: 'set_vmc_override', speed: 2, until: '2026-10-18T20:00:00+02:00'}).cmds,
+    [{topic: P + 'ventilation/vmc/override/cmd', payload: '{"speed":2,"until":"2026-10-18T20:00:00+02:00"}'}]);
+  a.deepEqual(mk('vmc-3', {tool: 'set_vmc_auto'}).cmds, [{topic: P + 'ventilation/vmc/override/cmd', payload: 'auto'}]);
+  a.equal(mk('vmc-4', {tool: 'set_vmc_speed', speed: 5}).events[0].reason, 'azione non ammessa');
+  a.equal(mk('vmc-5', {tool: 'set_vmc_override', speed: 2, until: '2026-10-18T17:00:00+02:00'}).events[0].reason, 'azione non ammessa');
+});

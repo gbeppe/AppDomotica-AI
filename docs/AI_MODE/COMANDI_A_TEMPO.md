@@ -29,11 +29,29 @@ caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'acc
 | Fase | Dispositivi | Note | Stato |
 |---|---|---|---|
 | **T1** | luci, scene, caminetto | motore: trigger `at` (orario con data), regole `start_active`; AI Smart: strumento `schedule_command`; caminetto solo in Manuale | **attiva 18/10** |
-| T2 | VMC | nuovo comando della velocità (`ventilation/vmc/speed`); «metti la velocità X fino/dalle/dalle… alle…»; ripristino della velocità precedente | da fare |
+| T2 | VMC | priorità manuale con scadenza rispettata da AI Climate (`AI-CLIMATE-VMC-OVERRIDE.1`), azioni VMC nel motore (`RULES-ENGINE.4`), AI Smart `vmc_command`, pulsanti dell'app = priorità di 2 ore | in sviluppo |
 | T3 | piscina (pompa, skimmer, luce acqua, luce bordo) | protezioni per la pompa di filtrazione da decidere | da fare |
 | T4 | condizionatore | comando a tempo = **sospendere o forzare AI Climate** fino all'ora indicata (decisione dell'utente del 18/10/2026); oggi il condizionatore è solo in lettura | da progettare |
 | (opzione) | termostati | «metti il bagno a 21 fino alle 22» = setpoint ora + ripristino del precedente | da valutare |
 | — | irrigazione / OpenSprinkler | **mai** (regola 5 di `CLAUDE.md`) | — |
+
+## T2 — VMC (decisioni dell'utente del 18/10/2026)
+
+La velocità la decide **AI Climate** (1–3 per umidità, limite notturno, antirimbalzo di 5 minuti) e la
+reinvia solo quando cambia il suo calcolo: una velocità messa a mano veniva sovrascritta al primo
+cambio. Quindi:
+
+- **Priorità manuale con scadenza** (`backend/nodered/ai_vmc_override`): comando
+  `zara/interface/ventilation/vmc/override/cmd` `{"speed", "until"}` o `"auto"`; finché dura, AI
+  Climate usa quella velocità (motivo `MANUALE_FINO_ALLE_HH:MM`), **anche sopra limite notturno e
+  anticondensa** (decisione 3: vince la scelta dell'utente; AI Smart avvisa se l'umidità è ≥ 65 %);
+  poi riprende da solo. Stato retained `…/override/stat`.
+- **Frasi:** «metti la VMC a 3» = **velocità secca** (decisione 2: AI Climate può cambiarla);
+  «fino alle 20» = priorità fino alle 20; «dalle 18 alle 20» = alle 18 priorità fino alle 20;
+  «dalle 18» senza fine = **2 ore** (decisione 1); «rimetti la VMC in automatico» / «riattiva AI
+  Climate per la VMC» = fine della priorità (richiesta dell'utente).
+- **Pulsanti 1–4 dell'app** = priorità manuale di 2 ore (decisione 4), più il tasto «Auto».
+- Motore (`RULES-ENGINE.4`): azioni `set_vmc_speed`, `set_vmc_override`, `set_vmc_auto`.
 
 ## T1 — dettagli
 

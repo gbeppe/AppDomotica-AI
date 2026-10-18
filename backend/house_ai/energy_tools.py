@@ -693,6 +693,13 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
         if operation["tool"] == "set_fireplace_level":
             results.append({"id": operation["id"], "result": fireplace_level(operation["level"], heating, planned_mode)})
             continue
+        if operation["tool"] == "vmc_command":
+            seq = sum(1 for item in results if item["result"].get("scheduled"))
+            hum = [o["value"] for k, o in (environment["observations"] if environment else {}).items()
+                   if k.endswith(".humidity") and not k.startswith(("outdoor", "technical_room"))]
+            results.append({"id": operation["id"], "result": rules_tools.build_vmc(
+                operation, rules, seq, humidity=max(hum) if hum else None)})
+            continue
         if operation["tool"] == "schedule_command":
             seq = sum(1 for item in results if item["result"].get("scheduled"))
             results.append({"id": operation["id"], "result": rules_tools.build_schedule(operation, rules, seq)})

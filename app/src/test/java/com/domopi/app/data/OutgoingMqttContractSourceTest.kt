@@ -91,7 +91,7 @@ class OutgoingMqttContractSourceTest {
     @Test
     fun testHvacScreenPublishContract() {
         val content = getScreenFile("HvacScreen.kt").readText()
-        assertTrue(content.contains("zara/interface/ventilation/vmc/speed/cmd"))
+        assertTrue(content.contains("VmcOverride.TOPIC_CMD"))
         assertTrue(content.contains("zara/interface/heating/floor_pump/enabled/cmd"))
         assertTrue(content.contains("zara/interface/climate/\$deviceId/target_temperature/cmd"))
         assertTrue(content.contains("zara/interface/climate/\$deviceId/min_temperature/cmd"))

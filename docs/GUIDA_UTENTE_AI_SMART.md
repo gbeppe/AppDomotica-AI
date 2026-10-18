@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **18/10/2026** · app `bld_bff71307` · backend House AI `20261018-timed-commands`.
+Aggiornata al **18/10/2026** · app `bld_bff71307` · backend House AI `20261018-vmc`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -279,9 +279,16 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 | «accendi la luce del soggiorno fino alle 22» | Adesso accendo la luce del soggiorno e alle 22:00 (oggi) spengo la luce del soggiorno. Confermi? |
 | «accendi la luce del portico dalle 18 alle 20» | Alle 18:00 (oggi) accendo la luce del portico e alle 20:00 (oggi) spengo la luce del portico. Confermi? |
 | «spegni tutte le luci fino alle 7» (detto la sera) | Adesso spengo tutte le luci e alle 07:00 (domani) accendo tutte le luci. Confermi? |
+| «metti la VMC a 3» | Metto la VMC a velocità 3 (AI Climate potrà cambiarla). Confermi? |
+| «metti la VMC a velocità 3 fino alle 20» | Metto la VMC a velocità 3 fino alle 20:00, poi torna l'automatico. Confermi? |
+| «VMC a 2 dalle 18 alle 20» / «VMC a 2 dalle 18» | Alle 18:00 (oggi) metto la VMC a velocità 2 fino alle 20:00, poi torna l'automatico. Confermi? (senza fine: 2 ore) |
+| «rimetti la VMC in automatico» | Rimetto la VMC in automatico con AI Climate. Confermi? |
 
-- Per ora **luci, scene e caminetto**; poi VMC (velocità), piscina e condizionatore (tramite AI
-  Climate). Mai l'irrigazione.
+- **Luci, scene, caminetto e VMC**; poi piscina e condizionatore (tramite AI Climate). Mai
+  l'irrigazione.
+- **VMC:** con un orario è una **priorità manuale** che AI Climate rispetta fino alla fine, anche se
+  l'umidità chiederebbe di più (in quel caso la risposta lo dice); senza orario è una velocità secca
+  che AI Climate può cambiare. I tasti 1–4 dell'app danno la priorità per 2 ore; «Auto» la toglie.
 - **Una sola conferma** per tutta la richiesta. L'orario è il prossimo (oggi o domani), al massimo
   48 ore avanti. Se in «dalle… alle…» il primo orario è già passato, la prima parte avviene subito.
 - Ogni orario futuro è una regola «una volta» **attiva subito** (senza giorno di prova): compare in
@@ -342,3 +349,4 @@ in cima.
 | 18/10/2026 | «Accendi il caminetto fino alle…»: in Manuale non cambia gli orari e avvisa che va spento a mano (§4.5). |
 | 18/10/2026 | Motore delle regole **attivo** (§4.12); cancellate le due regole di prova. |
 | 18/10/2026 | **Comandi a tempo** (§4.14) per luci, scene e caminetto: «fino alle», «dalle», «dalle… alle…», una sola conferma. |
+| 18/10/2026 | **VMC** a voce (§4.14): velocità, «fino alle», «dalle… alle…», «rimetti in automatico»; priorità manuale rispettata da AI Climate. |

@@ -1,0 +1,23 @@
+{
+  "patch": "AI-CLIMATE-VMC-OVERRIDE.1",
+  "modified_ids": [
+    "61992c8879c11f66"
+  ],
+  "removed_ids": [],
+  "added_ids": [
+    "278f85ee133f600e",
+    "16968851959a8b9c",
+    "7d88b701a93c15a2",
+    "3083c6b400bc84cf"
+  ],
+  "node_sha256_before": {
+    "61992c8879c11f66": "5bcf41103afc23444f88e808c457714ab0aebe8a41bc76c85db71faa6d8cc1ff"
+  },
+  "node_sha256_after": {
+    "61992c8879c11f66": "01f9440730d91f57be439ac70ba0fc5c8d2e8da46ede8f5434bc51359696af35",
+    "278f85ee133f600e": "19c994de6f684f84b2daacea11b240d310135b0115258ab2124913e5f52c5fdb",
+    "16968851959a8b9c": "1f1dbbedc21be6f9163849fe5c84172adce77ec14f03a3dbcc3cf0261705a463",
+    "7d88b701a93c15a2": "40cfd36271d39b41d0e004cc2dcdf79c26c300032e93ae42f3130c2235d6cc18",
+    "3083c6b400bc84cf": "69f40db1373c03ae293eff4e6556d04a14bf410622fad0d990de38b3e3729de8"
+  }
+}

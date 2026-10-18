@@ -1,0 +1,14 @@
+{
+  "patch": "RULES-ENGINE.4",
+  "modified_ids": [
+    "941a8adf652f60bd"
+  ],
+  "removed_ids": [],
+  "added_ids": [],
+  "node_sha256_before": {
+    "941a8adf652f60bd": "80892af1aaa4f754323857b0d0094731f0ea54017d998e2db8a0093f1aeb9ffc"
+  },
+  "node_sha256_after": {
+    "941a8adf652f60bd": "d8db1faa1d7306f48097c8e248f66bc969ca02686a8c62ce9cf32380d424eb9b"
+  }
+}
