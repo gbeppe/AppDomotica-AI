@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 18 ottobre 2026 — caminetto «fino alle» e comandi a tempo
+
+`20261018-fireplace-until` (commit `da566fd`): in Manuale «accendi il caminetto fino alle…» non cambia
+gli orari e avvisa. Poi `20261018-timed-commands` (commit `b3c2897`), con RULES-ENGINE.3 sul
+Node-RED: strumento `schedule_command`. Prove reali (nessun comando): «accendi il caminetto fino
+alle 23:00» → «Accendo il caminetto e alle 23:00 (oggi) spengo il caminetto. Confermi?»; «accendi la
+luce del portico dalle 22 alle 23» → due orari; «spegni tutte le luci fino alle 7 di domani» →
+adesso + 07:00 (domani). Prova dal telefono 22:53–22:56 riuscita.
+
 ## Release del 17 ottobre 2026 — profilo di riscaldamento in lettura
 
 Release attiva: `/opt/domopi-house-ai/releases/20261017-heating-profile2` (prima

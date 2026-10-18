@@ -1,6 +1,6 @@
 # Comandi a tempo («fino alle», «dalle», «dalle… alle…») — progetto
 
-Stato: **T1 in sviluppo** (18/10/2026). Richiesta dell'utente dopo la prova del 18/10 («accendi il
+Stato: **T1 attiva** dal 18/10/2026 (RULES-ENGINE.3 + house_ai `20261018-timed-commands`); T2–T4 da fare. Richiesta dell'utente dopo la prova del 18/10 («accendi il
 caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'accensione manuale non
 è mai spenta dalla fascia oraria del `.15`).
 
@@ -28,7 +28,7 @@ caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'acc
 
 | Fase | Dispositivi | Note | Stato |
 |---|---|---|---|
-| **T1** | luci, scene, caminetto | motore: trigger `at` (orario con data), regole `start_active`; AI Smart: strumento `schedule_command`; caminetto solo in Manuale | in sviluppo |
+| **T1** | luci, scene, caminetto | motore: trigger `at` (orario con data), regole `start_active`; AI Smart: strumento `schedule_command`; caminetto solo in Manuale | **attiva 18/10** |
 | T2 | VMC | nuovo comando della velocità (`ventilation/vmc/speed`); «metti la velocità X fino/dalle/dalle… alle…»; ripristino della velocità precedente | da fare |
 | T3 | piscina (pompa, skimmer, luce acqua, luce bordo) | protezioni per la pompa di filtrazione da decidere | da fare |
 | T4 | condizionatore | comando a tempo = **sospendere o forzare AI Climate** fino all'ora indicata (decisione dell'utente del 18/10/2026); oggi il condizionatore è solo in lettura | da progettare |
@@ -65,3 +65,5 @@ caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'acc
 | Data | Cosa |
 |---|---|
 | 18/10/2026 | Progetto scritto con le decisioni dell'utente (ordine T1–T4, VMC con velocità, condizionatore via AI Climate, regole a tempo attive subito) |
+| 18/10/2026 21:17 | RULES-ENGINE.3 live sul `.20` (backup `20261018T191739Z-before-rules-engine3`); house_ai `20261018-timed-commands` (commit `b3c2897`); prove reali delle frasi senza comandi |
+| 18/10/2026 22:53 | **Prova dal telefono riuscita**: «alle 22:56 accendo la luce della libreria» creata 22:53:38 (notifica «Comando programmato»), eseguita 22:56:13 (`lights/libreria/power/cmd` true, notifica «Regola intervenuta»), regola chiusa |
