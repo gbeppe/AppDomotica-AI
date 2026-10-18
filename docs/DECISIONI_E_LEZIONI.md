@@ -52,6 +52,8 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 17/10 | Fase G: notifiche con **ntfy self-hosted sul `.20`** (scelta dell'utente; niente servizi esterni né Google), stesso indirizzo dentro e fuori casa come AI Smart (Pi-hole + certificato in casa, Tailscale fuori); versione fissata vecchia di settimane, non l'ultima appena uscita | `backend/ntfy/README.md` |
 | 17/10 | Avvisi della casa (scelta dell'utente: tutti e sei) su `domopi-casa`: una volta al passaggio, stessa notifica non prima di 2 ore, rientro solo se l'avviso era partito; soglie dei sensori fissate dopo aver misurato la frequenza reale (bagno circa ogni 3 minuti) | `backend/nodered/house_alerts/README.md` |
 | 17/10 | Lezione: un client MQTT con **nome casuale e sessione persistente** lascia una sessione orfana a ogni avvio (362 sul `.20`, Mosquitto 146 MB). Nome casuale ⇒ sessione pulita; sul broker sempre `persistent_client_expiration` | `HANDOFF.md` §7 |
+| 18/10 | Motore delle regole **attivato** dall'utente (in generale), dopo aver cancellato le due regole di prova (puffer > 42 → spegni caminetto; luci alle 22 ogni giorno) | `REGOLE_NATURALI.md` |
+| 18/10 | Lezione: sul `.15` un caminetto acceso a mano non si spegne con la fascia oraria (in Manuale gli orari non contano): AI Smart non deve far credere il contrario | `HANDOFF.md` §7 |
 
 ## Lezioni tecniche
 

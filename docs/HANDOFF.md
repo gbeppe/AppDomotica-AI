@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscalda
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261017-heating-profile2`** (commit `34a1b8d`; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma, durata una volta salvo «ogni/sempre»; regole a voce con conferma, durata una volta salvo «ogni/sempre»; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261018-fireplace-until`** (commit `da566fd`; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma, durata una volta salvo «ogni/sempre»; regole a voce con conferma, durata una volta salvo «ogni/sempre»; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
@@ -106,7 +106,7 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `lights_echo_guard` (LIGHTS-ECHO-GUARD.1) | "function 17" consuma per 10 s l'eco dello stato pubblicato dalle catene IR: niente ping-pong accendi/spegni con due comandi opposti ravvicinati (incidente 15/10 21:27); backup `/home/pi/AI_backups/nodered/20261015T212857Z-before-lights-echo-guard` | live dal 15/10 23:29; prova del 16/10 08:46 superata (doppio tocco: 4 invii IR, poi silenzio) |
 | `heating_profile` (HEATING-PROFILE.1) | nuovo tab: profilo di riscaldamento Spento/Ridotto/Pieno (auto da media esterna 72 h, soglie 10/16 °C da EmonCMS) e timer dei termostati (fascia → massimo, fuori → minimo), parte in **shadow**; sostituirà i timer del `.15`, che oggi non inviano nulla | pronta, da applicare |
 | `heating_profile2` (HEATING-PROFILE.2) | il piano dà anche minimo, massimo e prossimo cambio per termostato; nuovo `zara/interface/heating/profile/learning/stat` con le ultime correzioni dell'utente (per la scheda Clima dell'app); backup `/home/pi/AI_backups/nodered/20261016T154922Z-before-heating-profile2` | live dal 16/10 17:49 |
-| `rules_engine` (RULES-ENGINE.1) | nuovo tab «Regole»: motore delle regole naturali (fase H1), regole in prova 24 h, motore in **shadow**; backup `/home/pi/AI_backups/nodered/20261016T164006Z-before-rules-engine`; regola di prova `r-puffer-42` (puffer alto > 42 °C → spegni caminetto) creata il 16/10 18:40 | live dal 16/10 18:40 |
+| `rules_engine` (RULES-ENGINE.1) | nuovo tab «Regole»: motore delle regole naturali (fase H1), regole in prova 24 h, motore in **shadow**; backup `/home/pi/AI_backups/nodered/20261016T164006Z-before-rules-engine`; regola di prova `r-puffer-42` (puffer alto > 42 °C → spegni caminetto) creata il 16/10 18:40 | live dal 16/10 18:40; **motore attivo dal 18/10/2026 21:01** (regole di prova cancellate) |
 | `rules_notify` (RULES-ENGINE.2) | ogni evento del motore delle regole (intervenuta, in prova, bloccata, creata, attiva, cancellata, rifiutata) diventa una notifica ntfy sul canale `domopi-regole`; token da `~/.config/domopi/ntfy_nodered.token`; backup `/home/pi/AI_backups/nodered/20261017T192951Z-before-rules-notify` | live 17/10 21:29, provata (notifica «Regola rifiutata» 21:30) |
 | `house_alerts` (HOUSE-ALERTS.1) | nuovo tab «Avvisi (DomoPi)»: avvisi ntfy su `domopi-casa` (puffer > 85 °C, schede caminetto/pompa offline 5 min, sensori soggiorno/bagno muti 30 min, esterno muto 2 h, cambio profilo, batteria < 20 %); nessun nodo esistente modificato; backup `/home/pi/AI_backups/nodered/20261017T201104Z-before-house-alerts` | live 17/10 22:11, ingressi verificati |
 | `router_floor_pump` (ROUTER-FLOOR-PUMP.1) | abilitazione pompa pavimento instradata sul broker di `.15`, retained (prima andava sul `.20` e non arrivava); chiave `router_initialized_v123`; backup `/home/pi/AI_backups/nodered/20261016T105204Z-before-router-floor-pump` | live dal 16/10 12:52; prova 12:53 superata (abilita/disabilita dall'app arrivano al `.15`, retained; «disabilita» manda 0 all'ESP) |
@@ -241,6 +241,13 @@ Diario: [`AI_MODE/PRERISCALDO_PUFFER.md`](AI_MODE/PRERISCALDO_PUFFER.md). Prossi
 EmonCMS, sola lettura). Prerequisito per le misure dal vivo: caldaia riaccesa.
 
 ### Da indagare (16/10/2026)
+
+- **Caminetto acceso a mano e orari (18/10):** sul `.15` (tab «caminetto», funzione MAIN) la parte
+  automatica gestisce solo Integrazione Caldaia, Riscaldamento e Acqua Sanitaria; un'accensione manuale
+  imposta `centralinaPalazzettiMode = "manual"` e la esclude. Quindi in Manuale gli orari non contano e
+  un caminetto acceso a mano non si spegne alla fine della fascia. AI Smart ora lo dice
+  (`20261018-fireplace-until`). **Prossimo:** «accendi fino alle X» = accensione + regola «alle X spegni
+  il caminetto» con una sola conferma (motore delle regole attivo).
 
 - **Broker `.20`, sessioni orfane (17/10):** 362 sessioni conservate, 8 collegate; Mosquitto 146 MB,
   `mosquitto.db` 54 MB. Causa: l'app si collegava con nome casuale e sessione persistente (corretto in

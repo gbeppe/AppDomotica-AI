@@ -253,8 +253,8 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
   farebbe senza farlo, quindi si attiva da sola. All'intervento non chiede conferma.
 - Al massimo **10 regole**. Le azioni sul caminetto seguono le stesse regole dei comandi
   (acceso/spento e livello solo in Manuale).
-- Il motore delle regole sul `.20` è **anch'esso in prova** finché non lo attiviamo: per ora le
-  regole annunciano soltanto.
+- Il motore delle regole sul `.20` è **attivo dal 18/10/2026**: finita la prova di un giorno, una
+  regola agisce davvero (senza chiedere conferma) e lo notifica.
 - **Notifiche**: ogni evento di una regola (creata, in prova «avrebbe agito», intervenuta, bloccata,
   cancellata) arriva come notifica nell'app **ntfy**, canale `domopi-regole`, in casa e fuori.
 
@@ -320,3 +320,4 @@ in cima.
 | 17/10/2026 | **Notifiche delle regole** nell'app ntfy (canale `domopi-regole`, server sul `.20`). |
 | 17/10/2026 | **Profilo di riscaldamento** (§4.13): AI Smart dice profilo, motivo e piano dei termostati (solo lettura). |
 | 18/10/2026 | «Accendi il caminetto fino alle…»: in Manuale non cambia gli orari e avvisa che va spento a mano (§4.5). |
+| 18/10/2026 | Motore delle regole **attivo** (§4.12); cancellate le due regole di prova. |

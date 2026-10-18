@@ -2,7 +2,7 @@
 
 Stato: **progetto approvato** (decisioni dell'utente del 16/10/2026, sotto). Fase H1: patch
 `RULES-ENGINE.1` in [`backend/nodered/rules_engine/`](../../backend/nodered/rules_engine/README.md) (live in shadow dal
-16/10). Fase H2 (17/10): `backend/house_ai/rules_tools.py` e app; per ora senza condizioni aggiuntive. Riprende la
+16/10). Fase H2 (17/10): `backend/house_ai/rules_tools.py` e app; per ora senza condizioni aggiuntive. **Motore attivo dal 18/10/2026** (decisione dell'utente). Riprende la
 fase H di [`PIANO_DI_LAVORO.md`](PIANO_DI_LAVORO.md), il punto 8 di
 [`ANALISI_ARCHITETTURA.md`](ANALISI_ARCHITETTURA.md) e il vincolo 4 di [`README.md`](README.md):
 le regole si conservano ed eseguono nel backend, indipendenti da Android e dal modello generativo.
