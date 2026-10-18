@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **17/10/2026** · app `bld_bff71307` · backend House AI `20261017-heating-profile2`.
+Aggiornata al **18/10/2026** · app `bld_bff71307` · backend House AI `20261018-fireplace-until`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -145,6 +145,11 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
   In Manuale e Disattivato gli orari non contano.
 - **Acceso/spento** solo in modalità **Manuale**; se il caminetto è già nello stato chiesto:
   «Il caminetto risulta già acceso.» (nessuna conferma, non c'è nulla da inviare).
+- **«Accendi il caminetto fino alle 19»:** acceso a mano, il caminetto **non si spegne da solo**
+  all'orario (in Manuale gli orari non contano e la casa non spegne un'accensione manuale). AI Smart
+  non cambia gli orari e lo dice prima della domanda di conferma: «Acceso a mano, il caminetto non si
+  spegne da solo all'orario: dovrai spegnerlo tu, dall'app o dicendo «spegni il caminetto».
+  Accendo il caminetto. Confermi?». Lo spegnimento programmato arriverà con le regole.
 - **Manuale e accensione insieme:** dopo la conferma l'app invia la modalità, aspetta 3 secondi
   che la casa la applichi, poi l'accensione.
 - **Livello di potenza (1–6):** solo in modalità **Manuale** e a caminetto **acceso**. Nelle
@@ -314,3 +319,4 @@ in cima.
 | 17/10/2026 | **Regole a voce** (§4.12): creare, elencare e cancellare regole «quando… allora…», con rilettura e conferma; un giorno in prova. Numerazione delle sezioni 4.8–4.11 corretta. |
 | 17/10/2026 | **Notifiche delle regole** nell'app ntfy (canale `domopi-regole`, server sul `.20`). |
 | 17/10/2026 | **Profilo di riscaldamento** (§4.13): AI Smart dice profilo, motivo e piano dei termostati (solo lettura). |
+| 18/10/2026 | «Accendi il caminetto fino alle…»: in Manuale non cambia gli orari e avvisa che va spento a mano (§4.5). |

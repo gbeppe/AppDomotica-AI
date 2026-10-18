@@ -25,8 +25,35 @@ RULE_REQUEST = re.compile(r"\b(automazion\w*|(?:una|la|le|nuova|nuove) regol[ae]
 # "ogni sera", "tutti i giorni"); the planner's "always" is kept only with such words.
 ALWAYS_WORDS = re.compile(r"\b(ogni|sempre|tutti i giorni|tutte le (?:sere|mattine|notti|volte)|feriali|"
                           r"fine settimana|sabato e domenica)\b", re.IGNORECASE)
+# A fireplace switched on by hand (app, AI Smart) is never switched off by the .15 timetable, and in
+# Manuale the start/stop times are not used at all (field test 18/10/2026: "accendi il caminetto
+# fino alle 19:00" was confirmed, the fireplace stayed on at 19:00). Until a scheduled switch-off
+# exists, "fino alle…" does not change the times in Manuale and the answer says so.
+UNTIL = re.compile(r"\b(?:fino a(?:lle|ll'|d)?|entro le)\s*(?:ore\s*)?\d|"
+                   r"\bper (?:un'ora|mezz'ora|un paio d'ore|\d+ or[ae])\b", re.IGNORECASE)
+MANUAL_UNTIL_NOTE = ("Acceso a mano, il caminetto non si spegne da solo all'orario: "
+                     "dovrai spegnerlo tu, dall'app o dicendo «spegni il caminetto». ")
 RULES_UNAVAILABLE = ("Questa è una regola («quando… allora…»): non la eseguo come comando immediato. "
                      "Ripetila e la creo come regola, con la tua conferma. Non ho fatto niente.")
+
+
+def manual_until(proposed, question, heating_snapshot):
+    """'Accendi il caminetto fino alle 19': True when the note is due; in Manuale the times are dropped."""
+    if not isinstance(proposed, dict) or not UNTIL.search(question):
+        return False
+    ops = [op for op in proposed.get('operations') or [] if isinstance(op, dict)]
+    if not any(op.get('tool') == 'set_fireplace_power' and op.get('state') == 'on' for op in ops):
+        return False
+    planned = [op.get('mode') for op in ops if op.get('tool') == 'set_fireplace_settings' and op.get('mode') != 'unchanged']
+    observed = ((heating_snapshot or {}).get('observations') or {}).get('fireplace.mode') or {}
+    if (planned[-1] if planned else observed.get('value')) == 'Manuale':
+        for op in ops:
+            if op.get('tool') == 'set_fireplace_settings':
+                op['start_time'] = op['stop_time'] = 'unchanged'
+        proposed['operations'] = [op for op in proposed['operations'] if not (
+            isinstance(op, dict) and op.get('tool') == 'set_fireplace_settings'
+            and all(op.get(k) == 'unchanged' for k in ('mode', 'start_time', 'stop_time', 'auto_power')))]
+    return True
 
 
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
@@ -67,6 +94,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
         for op in proposed.get('operations') or []:
             if isinstance(op, dict) and op.get('tool') == 'create_rule' and op.get('lifetime') == 'always':
                 op['lifetime'] = 'once'
+    until_note = manual_until(proposed, question, heating_snapshot)
     try:
         execution = execute(client, proposed, current_snapshot=current_snapshot,
                             climate_snapshot=climate_snapshot, lights_snapshot=lights_snapshot,
@@ -92,8 +120,11 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
                                      for s in statuses) else 'complete')
     context = ({'domain': 'climate', 'focus': 'air_conditioner'}
                if any(op['tool'] == 'current_air_conditioner' for op in execution['operations']) else None)
+    until_note = until_note and any(
+        item['result']['schema'] == 'house_ai.fireplace_power_command.v1' and item['result']['state'] == 'on'
+        and item['result']['status'] == 'confirmation_required' for item in execution['results'])
     return {**base, 'status': overall,
-            'answer': compose(execution['results']),
+            'answer': (MANUAL_UNTIL_NOTE if until_note else '') + compose(execution['results']),
             **({'confirmation': confirmation(execution['results'])} if confirmation(execution['results']) else {}),
             'plan': execution['operations'], 'results': execution['results'],
             **({'conversation_context': context} if context else {}),

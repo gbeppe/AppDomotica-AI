@@ -155,5 +155,35 @@ class FireplaceCommandTests(unittest.TestCase):
         self.assertNotEqual(read['status'], 'clarification_required')
 
 
+class UntilTests(unittest.TestCase):
+    def ask(self, q, *ops, **snap):
+        return ask(None, Planner({'operations': list(ops)}), q, heating_snapshot=heating(**snap))
+
+    def test_manual_until_keeps_times_and_warns(self):
+        r = self.ask('accendi il caminetto fino alle 19:00', settings(stop='19:00'), power('on'), mode='Manuale',
+                     start='17:00', stop='19:00')
+        self.assertEqual([op['tool'] for op in r['plan']], ['set_fireplace_power'])
+        self.assertEqual(r['answer'], "Acceso a mano, il caminetto non si spegne da solo all'orario: dovrai spegnerlo "
+                                      "tu, dall'app o dicendo «spegni il caminetto». Accendo il caminetto. Confermi?")
+        self.assertNotIn('Acceso a mano', r['confirmation']['prompt'])
+
+    def test_switch_to_manual_in_the_same_request(self):
+        r = self.ask('metti in manuale e accendi il caminetto per 2 ore', settings(mode='Manuale', start='17:45', stop='19:45'),
+                     power('on'))
+        s = [op for op in r['plan'] if op['tool'] == 'set_fireplace_settings'][0]
+        self.assertEqual((s['mode'], s['start_time'], s['stop_time']), ('Manuale', 'unchanged', 'unchanged'))
+        self.assertTrue(r['answer'].startswith('Acceso a mano'))
+
+    def test_without_until_or_without_switching_on_nothing_changes(self):
+        r = self.ask('accendi il caminetto', power('on'), mode='Manuale')
+        self.assertFalse(r['answer'].startswith('Acceso a mano'))
+        r = self.ask('accendi il caminetto fino alle 19', power('on'), mode='Riscaldamento')
+        self.assertEqual(r['answer'], 'Il caminetto è in modalità Riscaldamento: per accenderlo a mano passa prima a Manuale.')
+        r = self.ask('metti il caminetto in integrazione caldaia dalle 12 alle 15', settings(mode='Integrazione Caldaia',
+                     start='12:00', stop='15:00'))
+        s = r['plan'][0]
+        self.assertEqual((s['start_time'], s['stop_time']), ('12:00', '15:00'))
+
+
 if __name__ == '__main__':
     unittest.main()
