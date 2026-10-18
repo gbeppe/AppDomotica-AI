@@ -37,23 +37,67 @@ RULES_UNAVAILABLE = ("Questa è una regola («quando… allora…»): non la ese
                      "Ripetila e la creo come regola, con la tua conferma. Non ho fatto niente.")
 
 
+FIREPLACE_NOT_MANUAL = ("Il caminetto non è in Manuale: i comandi a tempo valgono solo in Manuale. "
+                        "Dimmi per esempio «metti il caminetto in manuale e accendilo fino alle 19». Non ho fatto niente.")
+
+
+def fireplace_mode(ops, heating_snapshot):
+    planned = [op.get('mode') for op in ops if op.get('tool') == 'set_fireplace_settings' and op.get('mode') != 'unchanged']
+    observed = ((heating_snapshot or {}).get('observations') or {}).get('fireplace.mode') or {}
+    return planned[-1] if planned else observed.get('value')
+
+
+def timed_plan(proposed, heating_snapshot):
+    """Timed commands (docs/AI_MODE/COMANDI_A_TEMPO.md): one confirmation for the whole request.
+
+    Immediate lights and scenes become 'now' timed commands; in 'dalle T1 alle T2' with T1 already past
+    and T2 still ahead the first part becomes 'now'. Returns a refusal text, or None."""
+    if not isinstance(proposed, dict):
+        return None
+    ops = [op for op in proposed.get('operations') or [] if isinstance(op, dict)]
+    if not any(op.get('tool') == 'schedule_command' for op in ops):
+        return None
+    for op in ops:
+        if op.get('tool') in ('set_light_state', 'set_light_scene'):
+            light = op.get('tool') == 'set_light_state'
+            action = {'action': op['tool'], 'target': op.get('light') if light else 'none',
+                      'setting': op.get('state') if light else op.get('scene'), 'at': rules_tools.NOW}
+            identifier = op.get('id')
+            op.clear(); op.update({'id': identifier, 'tool': 'schedule_command', **action})
+    seen = {}
+    for i, op in enumerate(ops):
+        if op.get('tool') != 'schedule_command':
+            continue
+        seen.setdefault((op.get('action'), op.get('target')), []).append(op)
+    now = rules_tools.clock()
+    for same in seen.values():
+        for first, second in zip(same, same[1:]):
+            a, b = rules_tools.occurrence(first.get('at'), now), rules_tools.occurrence(second.get('at'), now)
+            if a and b and a > b:
+                first['at'] = rules_tools.NOW
+    if (any(op.get('tool') == 'schedule_command' and op.get('action') == 'set_fireplace_power' for op in ops)
+            and fireplace_mode(ops, heating_snapshot) != 'Manuale'):
+        return FIREPLACE_NOT_MANUAL
+    return None
+
+
 def manual_until(proposed, question, heating_snapshot):
-    """'Accendi il caminetto fino alle 19': True when the note is due; in Manuale the times are dropped."""
+    """'Accendi il caminetto fino alle 19': True when the note is due; in Manuale the times are dropped.
+
+    With a timed command in the plan the switch-off is scheduled, so no note is due."""
     if not isinstance(proposed, dict) or not UNTIL.search(question):
         return False
     ops = [op for op in proposed.get('operations') or [] if isinstance(op, dict)]
     if not any(op.get('tool') == 'set_fireplace_power' and op.get('state') == 'on' for op in ops):
         return False
-    planned = [op.get('mode') for op in ops if op.get('tool') == 'set_fireplace_settings' and op.get('mode') != 'unchanged']
-    observed = ((heating_snapshot or {}).get('observations') or {}).get('fireplace.mode') or {}
-    if (planned[-1] if planned else observed.get('value')) == 'Manuale':
+    if fireplace_mode(ops, heating_snapshot) == 'Manuale':
         for op in ops:
             if op.get('tool') == 'set_fireplace_settings':
                 op['start_time'] = op['stop_time'] = 'unchanged'
         proposed['operations'] = [op for op in proposed['operations'] if not (
             isinstance(op, dict) and op.get('tool') == 'set_fireplace_settings'
             and all(op.get(k) == 'unchanged' for k in ('mode', 'start_time', 'stop_time', 'auto_power')))]
-    return True
+    return not any(op.get('tool') == 'schedule_command' for op in ops)
 
 
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
@@ -94,6 +138,9 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
         for op in proposed.get('operations') or []:
             if isinstance(op, dict) and op.get('tool') == 'create_rule' and op.get('lifetime') == 'always':
                 op['lifetime'] = 'once'
+    refusal = timed_plan(proposed, heating_snapshot)
+    if refusal:
+        return {**base, 'status': 'clarification_required', 'answer': refusal}
     until_note = manual_until(proposed, question, heating_snapshot)
     try:
         execution = execute(client, proposed, current_snapshot=current_snapshot,

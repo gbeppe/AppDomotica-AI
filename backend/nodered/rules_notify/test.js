@@ -18,6 +18,11 @@ test('fired, would_fire and blocked become notifications with the right priority
   const blocked = JSON.parse(run({kind: 'blocked', text: 'x', reason: 'caminetto non in Manuale', testing: true}).out.payload);
   a.equal(blocked.message, 'x: caminetto non in Manuale (in prova).');
 });
+test('a timed command created active is announced as programmed', () => {
+  const m = JSON.parse(run({kind: 'created', text: 'alle 19:00 (oggi) spengo il caminetto', active: true}).out.payload);
+  a.equal(m.title, 'Comando programmato');
+  a.equal(m.message, 'alle 19:00 (oggi) spengo il caminetto. Attivo subito.');
+});
 test('without token or with an unknown event nothing is sent', () => {
   const r = run({kind: 'fired', text: 'x'}, null);
   a.equal(r.out, null);

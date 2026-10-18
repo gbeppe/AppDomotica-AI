@@ -54,6 +54,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 17/10 | Lezione: un client MQTT con **nome casuale e sessione persistente** lascia una sessione orfana a ogni avvio (362 sul `.20`, Mosquitto 146 MB). Nome casuale ⇒ sessione pulita; sul broker sempre `persistent_client_expiration` | `HANDOFF.md` §7 |
 | 18/10 | Motore delle regole **attivato** dall'utente (in generale), dopo aver cancellato le due regole di prova (puffer > 42 → spegni caminetto; luci alle 22 ogni giorno) | `REGOLE_NATURALI.md` |
 | 18/10 | Lezione: sul `.15` un caminetto acceso a mano non si spegne con la fascia oraria (in Manuale gli orari non contano): AI Smart non deve far credere il contrario | `HANDOFF.md` §7 |
+| 18/10 | **Comandi a tempo** per tutti i dispositivi comandabili (ordine T1 luci/scene/caminetto, T2 VMC con velocità, T3 piscina, T4 condizionatore tramite sospensione o forzatura di AI Climate); ogni orario futuro è una regola «una volta» con data, **attiva subito** senza giorno di prova | `AI_MODE/COMANDI_A_TEMPO.md` |
 
 ## Lezioni tecniche
 

@@ -141,6 +141,50 @@ test('the tab only adds nodes; four outputs wired', () => {
   const nodes = JSON.parse(fs.readFileSync(__dirname + '/update.json'));
   const fn = nodes.find(n => n.type === 'function');
   a.equal(fn.outputs, 4);
-  a.equal(fn.func, src);
+  a.ok(fn.func.startsWith('// RULES-ENGINE.1'));   // the RULES-ENGINE.1 build; later versions: rules_engine3/
   a.equal(JSON.parse(fs.readFileSync(__dirname + '/rollback.json')).length, 0);
+});
+
+// RULES-ENGINE.3: timed commands.
+const AT_RULE = (iso, state = 'off', extra = {}) => Object.assign({id: 'rt-fire', text: 'alle 19:00 (oggi) spengo il caminetto',
+  trigger: {kind: 'at', at: iso}, action: {tool: 'set_fireplace_power', state}, lifetime: {kind: 'once'}, start_active: true}, extra);
+
+test('timed command: active at once, fires at its moment, then closes and leaves the list after 24 h', () => {
+  at('2026-10-18T17:45:00+02:00'); const s = fresh(); fireplace(s, 'Manuale', true);
+  const c = cmd(s, 'create', AT_RULE('2026-10-18T19:00:00+02:00'));
+  a.deepEqual(c.events.map(e => [e.kind, e.active]), [['created', true]]);
+  a.equal(s.ruleState['rt-fire'].status, 'active');
+  at('2026-10-18T18:59:30+02:00'); a.deepEqual(tick(s).cmds, []);
+  at('2026-10-18T19:00:10+02:00'); const r = tick(s);
+  a.deepEqual(r.cmds, [{topic: P + 'fireplace/main/power/cmd', payload: 'false'}]);
+  a.equal(s.ruleState['rt-fire'].status, 'expired');
+  at('2026-10-18T19:05:00+02:00'); a.deepEqual(tick(s).cmds, []);
+  at('2026-10-19T19:01:00+02:00'); tick(s); a.equal(s.rules['rt-fire'], undefined);
+});
+
+test('timed command "now" fires on creation; a late one closes as missed; blocked outside Manuale', () => {
+  at('2026-10-18T17:45:00+02:00'); const s = fresh();
+  const now = cmd(s, 'create', {id: 'rt-now', text: 'adesso accendo la luce del soggiorno', trigger: {kind: 'at', at: '2026-10-18T17:44:30+02:00'},
+    action: {tool: 'set_light_state', light: 'lights_living', state: 'on'}, start_active: true});
+  a.deepEqual(now.cmds, [{topic: P + 'lights/living/power/cmd', payload: 'true'}]);
+  cmd(s, 'create', AT_RULE('2026-10-18T18:00:00+02:00', 'off', {id: 'rt-late'}));
+  at('2026-10-18T18:20:00+02:00'); const late = tick(s);
+  a.deepEqual(late.cmds, []); a.equal(late.events[0].kind, 'blocked'); a.equal(s.ruleState['rt-late'].status, 'expired');
+  fireplace(s, 'Riscaldamento', true);
+  cmd(s, 'create', AT_RULE('2026-10-18T18:30:00+02:00', 'off', {id: 'rt-block'}));
+  at('2026-10-18T18:30:05+02:00'); const b = tick(s);
+  a.deepEqual(b.cmds, []); a.equal(b.events[0].reason, 'caminetto non in Manuale');
+});
+
+test('timed command validation: start_active only with at, at within 48 h, once only', () => {
+  at('2026-10-18T17:45:00+02:00'); const s = fresh();
+  const reasons = [
+    AT_RULE('2026-10-21T19:00:00+02:00', 'off', {id: 'x1'}),                      // more than 48 h ahead
+    AT_RULE('2026-10-18T17:00:00+02:00', 'off', {id: 'x2'}),                      // more than 15 min ago
+    AT_RULE('2026-10-18T19:00:00', 'off', {id: 'x3'}),                            // no time zone
+    AT_RULE('2026-10-18T19:00:00+02:00', 'off', {id: 'x4', lifetime: {kind: 'always'}}),
+    Object.assign({}, PUFFER_RULE, {id: 'x5', start_active: true}),
+  ].map(rule => cmd(s, 'create', rule).events[0].reason);
+  a.deepEqual(reasons, ['orario non valido', 'orario non valido', 'orario non valido', 'durata non ammessa',
+    'attivazione immediata solo per i comandi a tempo']);
 });

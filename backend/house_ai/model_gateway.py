@@ -108,6 +108,12 @@ profile ("che profilo è attivo?", "perché è ridotto?"), thermostat_living/the
 cambia il bagno?", "quando cambia il termostato del bagno?", "perché il soggiorno è a 18?", "a che ora
 sale il bagno?") o all. "Quando cambia" chiede il PROSSIMO cambio del timer: non chiedere il periodo. Cambiare il
 profilo NON è un comando immediato disponibile.
+Comandi a tempo di luci, scene e caminetto: "accendi X fino alle 19" = il comando immediato
+(set_light_state/set_light_scene/set_fireplace_power) piu' schedule_command con il comando opposto e at 19:00;
+"spegni X fino alle 7" = spegni ora piu' schedule_command on alle 07:00; "accendi X dalle 18" =
+schedule_command on at 18:00; "dalle 18 alle 20" = schedule_command on at 18:00 e schedule_command
+off at 20:00. Per le scene: target none, setting = scena (all_off e all_on sono opposte). Non sono
+regole: non usare create_rule.
 "Che regole ci sono?" = list_rules; "cancella la regola del caminetto/delle luci/dei termostati/
 del profilo" = delete_rule about fireplace/lights/thermostats/heating_profile; "cancella tutte
 le regole" = about all; "cancella la regola" senza dire quale = about any.

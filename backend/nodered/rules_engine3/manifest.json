@@ -1,0 +1,17 @@
+{
+  "patch": "RULES-ENGINE.3",
+  "modified_ids": [
+    "941a8adf652f60bd",
+    "f3fd238fdcb59984"
+  ],
+  "removed_ids": [],
+  "added_ids": [],
+  "node_sha256_before": {
+    "941a8adf652f60bd": "38a44771049b1e7cd87a20606282ad7cadecbf674f846d5df4f59f0c99d088c0",
+    "f3fd238fdcb59984": "15dee4cf55a1fb3713eaf09daf4beca5ab5eb27a7623ee861695bab5b6a473e5"
+  },
+  "node_sha256_after": {
+    "941a8adf652f60bd": "80892af1aaa4f754323857b0d0094731f0ea54017d998e2db8a0093f1aeb9ffc",
+    "f3fd238fdcb59984": "c65c88663ec0c8c291cce7a5e9c0707c6a262234ef2ad73898706b2db1004df8"
+  }
+}

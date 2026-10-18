@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **18/10/2026** · app `bld_bff71307` · backend House AI `20261018-fireplace-until`.
+Aggiornata al **18/10/2026** · app `bld_bff71307` · backend House AI `20261018-timed-commands`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -149,7 +149,7 @@ solare termico **non si comandano** da AI Smart; il caminetto si imposta come al
   all'orario (in Manuale gli orari non contano e la casa non spegne un'accensione manuale). AI Smart
   non cambia gli orari e lo dice prima della domanda di conferma: «Acceso a mano, il caminetto non si
   spegne da solo all'orario: dovrai spegnerlo tu, dall'app o dicendo «spegni il caminetto».
-  Accendo il caminetto. Confermi?». Lo spegnimento programmato arriverà con le regole.
+  Accendo il caminetto. Confermi?». Con i comandi a tempo (§4.14) lo spegnimento si programma.
 - **Manuale e accensione insieme:** dopo la conferma l'app invia la modalità, aspetta 3 secondi
   che la casa la applichi, poi l'accensione.
 - **Livello di potenza (1–6):** solo in modalità **Manuale** e a caminetto **acceso**. Nelle
@@ -271,6 +271,26 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 - Finché il timer è in prova aggiunge: «Il timer è in prova: per ora non cambia i termostati.»
 - **Non cambia il profilo** a voce: si sceglie dalla scheda Clima dell'app.
 
+### 4.14 Comandi a tempo («fino alle», «dalle», «dalle… alle…»)
+
+| Domande | Risposta |
+|---|---|
+| «accendi il caminetto fino alle 19» (in Manuale) | Accendo il caminetto e alle 19:00 (oggi) spengo il caminetto. Confermi? |
+| «accendi la luce del soggiorno fino alle 22» | Adesso accendo la luce del soggiorno e alle 22:00 (oggi) spengo la luce del soggiorno. Confermi? |
+| «accendi la luce del portico dalle 18 alle 20» | Alle 18:00 (oggi) accendo la luce del portico e alle 20:00 (oggi) spengo la luce del portico. Confermi? |
+| «spegni tutte le luci fino alle 7» (detto la sera) | Adesso spengo tutte le luci e alle 07:00 (domani) accendo tutte le luci. Confermi? |
+
+- Per ora **luci, scene e caminetto**; poi VMC (velocità), piscina e condizionatore (tramite AI
+  Climate). Mai l'irrigazione.
+- **Una sola conferma** per tutta la richiesta. L'orario è il prossimo (oggi o domani), al massimo
+  48 ore avanti. Se in «dalle… alle…» il primo orario è già passato, la prima parte avviene subito.
+- Ogni orario futuro è una regola «una volta» **attiva subito** (senza giorno di prova): compare in
+  «che regole ci sono?», si annulla con «cancella la regola del caminetto/delle luci», e arriva una
+  notifica quando agisce.
+- Caminetto: solo in **Manuale** (altrimenti: «Il caminetto non è in Manuale: i comandi a tempo
+  valgono solo in Manuale…»). Se all'orario non è più in Manuale, il comando non parte e arriva la
+  notifica «Regola bloccata».
+
 ## 5. Cosa AI Smart non fa
 
 - Non comanda caldaia, pompa pavimento, condizionatore, VMC, piscina (pompa e skimmer),
@@ -321,3 +341,4 @@ in cima.
 | 17/10/2026 | **Profilo di riscaldamento** (§4.13): AI Smart dice profilo, motivo e piano dei termostati (solo lettura). |
 | 18/10/2026 | «Accendi il caminetto fino alle…»: in Manuale non cambia gli orari e avvisa che va spento a mano (§4.5). |
 | 18/10/2026 | Motore delle regole **attivo** (§4.12); cancellate le due regole di prova. |
+| 18/10/2026 | **Comandi a tempo** (§4.14) per luci, scene e caminetto: «fino alle», «dalle», «dalle… alle…», una sola conferma. |

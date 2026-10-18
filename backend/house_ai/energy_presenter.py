@@ -593,7 +593,7 @@ def confirmation_actions(results):
         if not needs_confirmation(r):
             continue
         if r['schema'] == 'house_ai.rule_command.v1':
-            actions.append(f"creo questa regola: {r['text']}" if r['verb'] == 'create'
+            actions.append(r['text'] if r.get('scheduled') else f"creo questa regola: {r['text']}" if r['verb'] == 'create'
                            else "cancello " + ("la regola «" + r['texts'][0] + "»" if len(r['texts']) == 1
                                                else f"{len(r['texts'])} regole"))
             continue

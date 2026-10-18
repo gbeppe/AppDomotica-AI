@@ -6,6 +6,8 @@ returns the rule to publish after the user's confirmation. list_rules and delete
 rules the app received on zara/interface/rules/list/stat. Nothing is published from here.
 """
 import re
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 NONE = "none"
 # measure -> (spoken subject, unit, min, max)
@@ -37,6 +39,14 @@ DAYS_TEXT = {"all": "ogni giorno", "weekdays": "nei giorni feriali", "weekend": 
 ABOUT = ("fireplace", "lights", "thermostats", "heating_profile", "all", "any")
 TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 MAX_RULES = 10
+ROME = ZoneInfo("Europe/Rome")
+# Timed commands, phase T1 (docs/AI_MODE/COMANDI_A_TEMPO.md): one command at the next HH:MM.
+SCHEDULE_ACTIONS = ("set_light_state", "set_light_scene", "set_fireplace_power")
+NOW = "now"
+
+
+def clock():
+    return datetime.now(ROME)
 
 CATALOG = [{
     "name": "create_rule",
@@ -54,11 +64,20 @@ CATALOG = [{
     "name": "delete_rule",
     "description": "Delete the rule about a device ('cancella la regola del caminetto'), all rules, or the only one; confirmed in the app",
     "parameters": {"about": list(ABOUT)}
+}, {
+    "name": "schedule_command",
+    "description": "One command at a time of day, the next occurrence (today or tomorrow). 'Accendi X fino alle 19' = "
+                   "the immediate command plus schedule_command with the opposite at 19:00; 'accendi X dalle 18' = "
+                   "schedule_command at 18:00; 'dalle 18 alle 20' = schedule_command on at 18:00 and off at 20:00. "
+                   "Confirmed in the app",
+    "parameters": {"action": list(SCHEDULE_ACTIONS), "target": "light id or none",
+                   "setting": "on/off or scene", "at": "HH:MM"}
 }]
 TOOL_NAMES = tuple(t["name"] for t in CATALOG)
 FIELDS = {"create_rule": {"id", "tool", "trigger", "metric", "op", "value", "at", "days", "action", "target",
                           "setting", "lifetime"},
-          "list_rules": {"id", "tool"}, "delete_rule": {"id", "tool", "about"}}
+          "list_rules": {"id", "tool"}, "delete_rule": {"id", "tool", "about"},
+          "schedule_command": {"id", "tool", "action", "target", "setting", "at"}}
 
 
 def _number(text):
@@ -74,6 +93,10 @@ def validate_operation(op):
     tool = op["tool"]
     if tool == "delete_rule" and op["about"] not in ABOUT:
         raise ValueError("Unknown rule target")
+    if tool == "schedule_command" and (
+            op["action"] not in SCHEDULE_ACTIONS
+            or not all(isinstance(op[k], str) and len(op[k]) <= 40 for k in ("target", "setting", "at"))):
+        raise ValueError("Invalid timed command")
     if tool == "create_rule":
         if (op["trigger"] not in ("threshold", "time") or op["action"] not in ACTIONS
                 or op["lifetime"] not in ("once", "always")
@@ -147,6 +170,39 @@ def build_rule(op, rules_snapshot):
     rule = {"text": text, "trigger": trigger, "conditions": [], "action": action, "lifetime": lifetime}
     return {**result, "status": "confirmation_required", "rule": rule, "text": text}
 
+
+def occurrence(at, now):
+    """The moment of a timed command: now, or the next HH:MM in Europe/Rome; None if invalid."""
+    if at == NOW:
+        return now
+    if not isinstance(at, str) or not TIME.match(at):
+        return None
+    hour, minute = map(int, at.split(":"))
+    when = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return when if when > now else when + timedelta(days=1)
+
+
+def build_schedule(op, rules_snapshot, seq=0, now=None):
+    """house_ai.rule_command.v1 for one timed command: an 'at' rule that starts active."""
+    now = now or clock()
+    result = {"schema": "house_ai.rule_command.v1", "verb": "create", "scheduled": True,
+              "limitations": ["Comando a tempo: regola «una volta» attiva subito nel motore delle regole del .20.",
+                              "Se all'orario il comando non è ammesso (caminetto non in Manuale) non viene inviato."]}
+    pending = sum(1 for r in (rules_snapshot or {}).get("rules", []) if r["status"] != "expired")
+    if pending + seq >= MAX_RULES:
+        return {**result, "status": "rejected", "reason": "Ci sono già 10 regole attive: cancellane una."}
+    action, action_text = _action({"action": op["action"], "target": op["target"], "setting": op["setting"]})
+    if action is None:
+        return {**result, "status": "rejected", "reason": action_text}
+    when = occurrence(op["at"], now)
+    if when is None:
+        return {**result, "status": "rejected", "reason": "orario non valido"}
+    day = "oggi" if when.date() == now.date() else "domani"
+    text = f"adesso {action_text}" if op["at"] == NOW else f"alle {when:%H:%M} ({day}) {action_text}"
+    rule = {"id": f"rt-{int(now.timestamp()):x}-{seq}", "text": text,
+            "trigger": {"kind": "at", "at": when.isoformat(timespec="seconds")}, "conditions": [],
+            "action": action, "lifetime": {"kind": "once"}, "start_active": True}
+    return {**result, "status": "confirmation_required", "rule": rule, "text": text}
 
 GROUPS = {"fireplace": ("set_fireplace_",), "lights": ("set_light_",), "thermostats": ("set_thermostat_",),
           "heating_profile": ("set_heating_profile",)}

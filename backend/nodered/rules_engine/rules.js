@@ -5,9 +5,14 @@
 // "shadow": no rule sends commands until the engine is switched to "active".
 // Inputs: measures (retained /stat topics), zara/interface/rules/<verb>/cmd, a tick every 30 s.
 // Outputs: [commands, retained states, JSONL log lines, events for notifications].
+// RULES-ENGINE.3 (2026-10-18): timed commands ("accendi X fino alle 19", docs/AI_MODE/COMANDI_A_TEMPO.md):
+// trigger {kind: 'at', at: ISO} = one moment with its date (from 15 min ago to 48 h ahead), always once;
+// "start_active": true (only with 'at') skips the test day; a late 'at' (> 15 min) closes as missed;
+// closed 'at' rules leave the list after 24 h.
 const S = 'file';
 const P = 'zara/interface/';
 const MAX_ACTIVE = 10, TEST_MS = 24 * 3600000, DEFAULT_COOLDOWN_MIN = 30;
+const AT_PAST_MS = 15 * 60000, AT_AHEAD_MS = 48 * 3600000, AT_KEEP_MS = 24 * 3600000;
 // measure -> [topic, min, max, stale after ms, re-arm margin]
 const MEASURES = {
     puffer_top: ['heating/puffer/top_temperature/stat', 10, 95, 600000, 0.5],
@@ -67,6 +72,11 @@ function validThreshold(t) {
         t.days.every(d => Number.isInteger(d) && d >= 0 && d <= 6);
     return false;
 }
+function validAt(t) {
+    if (!t || t.kind !== 'at' || typeof t.at !== 'string' || !/[+-]\d\d:\d\d$|Z$/.test(t.at)) return false;
+    const when = Date.parse(t.at);
+    return Number.isFinite(when) && when >= now - AT_PAST_MS && when <= now + AT_AHEAD_MS;
+}
 function validCondition(c) {
     if (!c || typeof c !== 'object') return false;
     if (c.kind === 'threshold') return validThreshold(c);
@@ -93,12 +103,14 @@ function validAction(a) {
 function validate(r) {
     if (!r || typeof r !== 'object') return 'regola non valida';
     if (typeof r.text !== 'string' || !r.text.trim() || r.text.length > 300) return 'manca il testo della regola';
-    if (!validThreshold(r.trigger)) return 'trigger non ammesso';
+    const timed = r.trigger && r.trigger.kind === 'at';
+    if (timed ? !validAt(r.trigger) : !validThreshold(r.trigger)) return timed ? 'orario non valido' : 'trigger non ammesso';
+    if (r.start_active !== undefined && (r.start_active !== true || !timed)) return 'attivazione immediata solo per i comandi a tempo';
     const conds = r.conditions || [];
     if (!Array.isArray(conds) || conds.length > 2 || !conds.every(validCondition)) return 'condizioni non ammesse';
     if (!validAction(r.action)) return 'azione non ammessa';
     const life = r.lifetime || {kind: 'once'};
-    if (!['once', 'until', 'always'].includes(life.kind)) return 'durata non ammessa';
+    if (!['once', 'until', 'always'].includes(life.kind) || (timed && life.kind !== 'once')) return 'durata non ammessa';
     if (life.kind === 'until' && !(Date.parse(life.until) > now)) return 'data di scadenza non valida';
     const cd = r.cooldown_min === undefined ? DEFAULT_COOLDOWN_MIN : r.cooldown_min;
     if (!Number.isInteger(cd) || cd < 1 || cd > 1440) return 'attesa minima non valida';
@@ -207,16 +219,19 @@ if (BY_TOPIC[topic]) {
             log('rule_rejected', {reason: why || 'id esistente'});
             events.push({topic: P + 'rules/events', payload: JSON.stringify({schema: 'domopi.rule_event.v1', kind: 'rejected', reason: why || 'regola già esistente'})});
         } else {
+            const active = body.start_active === true;
             const rule = {id, text: body.text.trim(), trigger: body.trigger, conditions: body.conditions || [],
-                action: body.action, lifetime: body.lifetime || {kind: 'once'},
+                action: body.action, lifetime: body.lifetime || {kind: 'once'}, start_active: active,
                 cooldown_min: body.cooldown_min === undefined ? DEFAULT_COOLDOWN_MIN : body.cooldown_min,
                 created_at: new Date(now).toISOString()};
             rules[id] = rule;
             // Decision of 16/10/2026: a condition already true at creation acts at once (armed).
-            st[id] = {armed: true, lastFired: null, lastFiredDay: null, testUntil: now + TEST_MS, status: 'test'};
+            // Timed commands confirmed by the user start active (decision of 18/10/2026).
+            st[id] = active ? {armed: true, lastFired: null, lastFiredDay: null, testUntil: now, status: 'active'}
+                            : {armed: true, lastFired: null, lastFiredDay: null, testUntil: now + TEST_MS, status: 'test'};
             changed = true;
             log('rule_created', {rule});
-            announce('created', rule, {test_until: new Date(now + TEST_MS).toISOString()});
+            announce('created', rule, active ? {active: true, at: rule.trigger.at} : {test_until: new Date(now + TEST_MS).toISOString()});
         }
     } else if ((verb === 'delete' || verb === 'activate' || verb === 'pause' || verb === 'resume') && rules[body]) {
         const id = body;
@@ -234,6 +249,9 @@ if (BY_TOPIC[topic]) {
 // ---------------------------------------------------------------- evaluate every rule
 for (const [id, r] of Object.entries(rules)) {
     const s = st[id];
+    if (s && s.status === 'expired' && r.trigger.kind === 'at' && now - Date.parse(r.trigger.at) > AT_KEEP_MS) {
+        delete rules[id]; delete st[id]; changed = true; log('rule_removed', {rule_id: id}); continue;
+    }
     if (!s || s.status === 'expired' || s.status === 'paused') continue;
     const life = r.lifetime || {kind: 'once'};
     if (life.kind === 'until' && now > Date.parse(life.until)) { expire(id, 'until'); continue; }
@@ -247,6 +265,14 @@ for (const [id, r] of Object.entries(rules)) {
     if (r.trigger.kind === 'threshold') {
         if (!s.armed && rearmed(r.trigger)) { s.armed = true; changed = true; }
         if (s.armed && cooled && thresholdTrue(r.trigger) === true && conditionsTrue(r)) fire(id, r, s);
+    } else if (r.trigger.kind === 'at') {
+        const when = Date.parse(r.trigger.at);
+        if (now >= when && !s.lastFired) {
+            if (now - when > AT_PAST_MS) {
+                s.lastFired = now; expire(id, 'missed');
+                announce('blocked', r, {reason: 'orario superato di oltre 15 minuti, comando non inviato'});
+            } else if (conditionsTrue(r)) fire(id, r, s);
+        }
     } else if (r.trigger.kind === 'time') {
         const due = hhmm === r.trigger.at && r.trigger.days.includes(local.getDay()) && s.lastFiredDay !== today;
         if (due && conditionsTrue(r)) fire(id, r, s);
@@ -260,7 +286,8 @@ const list = {schema: 'domopi.rules.v1', engine_mode: engineMode, max_active: MA
         return {id: r.id, text: r.text, status: s.status, armed: s.armed,
             test_until: s.testUntil ? new Date(s.testUntil).toISOString() : null,
             last_fired: s.lastFired ? new Date(s.lastFired).toISOString() : null,
-            trigger: r.trigger, conditions: r.conditions, action: r.action, lifetime: r.lifetime};
+            trigger: r.trigger, conditions: r.conditions, action: r.action, lifetime: r.lifetime,
+            start_active: r.start_active === true};
     })};
 const text = JSON.stringify(list);
 if (text !== context.get('lastList') || (msg.tick && local.getMinutes() === 0 && local.getSeconds() < 30)) {
