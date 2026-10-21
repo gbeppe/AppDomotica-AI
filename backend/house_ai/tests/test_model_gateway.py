@@ -87,7 +87,7 @@ class GatewayTests(unittest.TestCase):
             payload = json.loads(request.data)
             self.assertTrue(payload['response_format']['json_schema']['strict'])
             self.assertEqual(payload['model'], 'openai/gpt-oss-120b')
-            self.assertEqual(payload['max_completion_tokens'], 1536)
+            self.assertEqual(payload['max_completion_tokens'], 2048)
             self.assertNotIn('ignored caller instruction', payload['messages'][0]['content'])
             context = json.loads(payload['messages'][1]['content'])
             self.assertEqual(set(context), {'question', 'today', 'timezone', 'calendar', 'tool_catalog'})
@@ -148,9 +148,10 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(self.backend_error(limited),
                          (429, {'error': 'rate_limited', 'retry_after_s': 12}, '12'))
 
-    def test_request_too_large_reaches_the_app_as_its_own_code(self):
-        too_large = HTTPError('https://provider', 413, 'secret body', {}, None)
-        self.assertEqual(self.backend_error(too_large)[:2], (502, {'error': 'request_too_large'}))
+    def test_used_up_token_minute_reaches_the_app_as_429_with_a_minute_wait(self):
+        used_up = HTTPError('https://provider', 413, 'secret body', {}, None)
+        self.assertEqual(self.backend_error(used_up),
+                         (429, {'error': 'rate_limited', 'retry_after_s': 60}, '60'))
 
     def test_usage_log_has_only_token_counts(self):
         plan = {'operations': [], 'clarification': 'Quale periodo?'}
@@ -160,7 +161,7 @@ class GatewayTests(unittest.TestCase):
             opener.return_value.open.return_value = io.BytesIO(json.dumps(raw).encode())
             GroqPlanner('secret').plan(envelope())
         self.assertEqual(err.getvalue().strip(),
-                         'plan tokens prompt=5993 completion=210 reasoning=150 max=1536 finish=stop')
+                         'plan tokens prompt=5993 completion=210 reasoning=150 max=2048 finish=stop')
 
     def test_provider_down_and_source_down_are_distinguished(self):
         down = HTTPError('https://provider', 503, 'secret body', {}, None)

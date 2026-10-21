@@ -21,12 +21,6 @@ class RateLimited(PlannerUnavailable):
         self.retry_after_s = retry_after_s
 
 
-class TooLarge(PlannerUnavailable):
-    """The request exceeds the provider's per-request token limit (Groq free tier: 8000 per minute)."""
-    def __init__(self):
-        super().__init__("Planner request too large")
-
-
 def close_quietly(error):
     """HTTPError.close() fails on Python 3.9 when the error has no body."""
     if getattr(error, "fp", None) is not None:
@@ -92,13 +86,6 @@ class HttpJsonPlanner:
                     except (ValueError, AttributeError, OSError):
                         retry = None
                     raise RateLimited(retry_seconds(retry)) from None
-                if error.code == 502:
-                    try:
-                        code = json.loads(error.read(4096)).get("error")
-                    except (ValueError, AttributeError, OSError):
-                        code = None
-                    if code == "request_too_large":
-                        raise TooLarge() from None
             finally:
                 close_quietly(error)
             raise PlannerUnavailable("Planner unavailable") from None

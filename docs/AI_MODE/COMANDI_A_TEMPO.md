@@ -1,6 +1,6 @@
 # Comandi a tempo («fino alle», «dalle», «dalle… alle…») — progetto
 
-Stato: **T1 attiva** dal 18/10/2026 (RULES-ENGINE.3 + house_ai `20261018-timed-commands`); **T2 (VMC)** in Node-RED dal 21/10/2026 (AI-CLIMATE-VMC-OVERRIDE.1, RULES-ENGINE.4), backend `20261021-tokens` e app da rilasciare; T3–T4 da fare. Richiesta dell'utente dopo la prova del 18/10 («accendi il
+Stato: **T1 attiva** dal 18/10/2026 (RULES-ENGINE.3 + house_ai `20261018-timed-commands`); **T2 (VMC)** in Node-RED dal 21/10/2026 (AI-CLIMATE-VMC-OVERRIDE.1, RULES-ENGINE.4), backend `20261021-budget` e app da rilasciare; T3–T4 da fare. Richiesta dell'utente dopo la prova del 18/10 («accendi il
 caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'accensione manuale non
 è mai spenta dalla fascia oraria del `.15`).
 
@@ -85,4 +85,4 @@ cambio. Quindi:
 | 18/10/2026 | Progetto scritto con le decisioni dell'utente (ordine T1–T4, VMC con velocità, condizionatore via AI Climate, regole a tempo attive subito) |
 | 18/10/2026 21:17 | RULES-ENGINE.3 live sul `.20` (backup `20261018T191739Z-before-rules-engine3`); house_ai `20261018-timed-commands` (commit `b3c2897`); prove reali delle frasi senza comandi |
 | 18/10/2026 22:53 | **Prova dal telefono riuscita**: «alle 22:56 accendo la luce della libreria» creata 22:53:38 (notifica «Comando programmato»), eseguita 22:56:13 (`lights/libreria/power/cmd` true, notifica «Regola intervenuta»), regola chiusa |
-| 21/10/2026 23:00 | AI-CLIMATE-VMC-OVERRIDE.1 e RULES-ENGINE.4 live sul `.20` (backup `20261021T205755Z-before-ai-vmc-override`, `20261021T210015Z-before-rules-engine4`); house_ai `20261018-vmc`: «metti la VMC a 3» e «rimetti la VMC in automatico» corretti, le frasi con orario superavano il limite di Groq (413) → `20261021-tokens` |
+| 21/10/2026 23:00 | AI-CLIMATE-VMC-OVERRIDE.1 e RULES-ENGINE.4 live sul `.20` (backup `20261021T205755Z-before-ai-vmc-override`, `20261021T210015Z-before-rules-engine4`); house_ai `20261018-vmc`: «metti la VMC a 3» e «rimetti la VMC in automatico» corretti, le frasi con orario fallivano per il limite al minuto di Groq (413; ~7700 token a domanda) → `20261021-budget` |

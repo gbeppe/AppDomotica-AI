@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscalda
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261018-vmc`** (commit `2843aed`, dal 21/10; in arrivo `20261021-tokens`: spazio della risposta 1536 token, errore `request_too_large`, log dei token). Funzioni: VMC a voce (velocità, «fino alle», «dalle… alle…», automatico); comandi a tempo per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma (durata una volta salvo «ogni/sempre»); conferma per tutti i comandi del riscaldamento; energia adesso con flussi stimati; lettura del riscaldamento. In `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261018-vmc`** (commit `2843aed`, dal 21/10; in arrivo `20261021-budget`: minuto di Groq esaurito (413) = «riprova tra 60 s», log dei token). Funzioni: VMC a voce (velocità, «fino alle», «dalle… alle…», automatico); comandi a tempo per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma (durata una volta salvo «ogni/sempre»); conferma per tutti i comandi del riscaldamento; energia adesso con flussi stimati; lettura del riscaldamento. In `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
@@ -248,11 +248,10 @@ fermo all'avvio, Tailscale offline, `.15` nascosto dal Wi‑Fi) controllo recipr
 avvisi e consiglio pronto, riparazioni sicure, pagina nell'app. Progetto:
 [`AI_MODE/SALUTE_IMPIANTO.md`](AI_MODE/SALUTE_IMPIANTO.md). Da realizzare **dopo il deploy di T2 (VMC)**.
 
-**AI Smart, margine dei token (21/10/2026):** ogni domanda manda al modello ~6000 token (istruzioni 9.600
-caratteri, catalogo 10.400, schema 8.700) e il piano gratuito di Groq ne ammette 8000 per richiesta,
-risposta compresa. Rimedio immediato `20261021-tokens`; **in piano** (decisione dell'utente):
-snellire istruzioni, catalogo e schema (che si ripetono in parte) per recuperare ~1500–2000 token
-prima di T3 e T4. Alternativa da valutare: Groq Dev Tier a pagamento.
+**AI Smart, margine dei token (21/10/2026):** ogni domanda manda al modello **~7700 token** (misurati) e il piano
+gratuito di Groq ne ammette 8000 **al minuto**: oggi regge circa una domanda al minuto (a minuto esaurito: 413 →
+«riprova tra 60 s», `20261021-budget`). **In piano** (decisione dell'utente): snellire istruzioni, catalogo e
+schema sotto ~4000 token prima di T3 e T4; da decidere con l'utente: Groq Dev Tier a pagamento.
 
 ### Da indagare (16/10/2026)
 

@@ -12,7 +12,7 @@ from energy_query import answer as energy_answer
 from service import report
 from assistant import ask as assistant_ask
 from day_summary import summary as day_summary
-from planner import HttpJsonPlanner, PlannerUnavailable, RateLimited, TooLarge
+from planner import HttpJsonPlanner, PlannerUnavailable, RateLimited
 from log_tools import SOURCES, source_status
 
 
@@ -158,8 +158,6 @@ def handler(client, token, log_path, planner=None, log_root=None):
             except RateLimited as limited:
                 self.send_json(429, {"error": "rate_limited", "retry_after_s": limited.retry_after_s},
                                headers=[("Retry-After", str(limited.retry_after_s))])
-            except TooLarge:
-                self.send_json(502, {"error": "request_too_large"})
             except PlannerUnavailable:
                 self.send_json(502, {"error": "planner_unavailable"})
             except (OSError, RuntimeError):
