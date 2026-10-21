@@ -9,7 +9,7 @@ import javax.net.ssl.SSLException
 
 /**
  * Short Italian messages for House AI failures; AI Smart also reads them aloud.
- * The backend sends error codes (rate_limited, planner_unavailable, source_unavailable);
+ * The backend sends error codes (rate_limited, planner_unavailable, request_too_large, source_unavailable);
  * older backends send free text and get the generic messages.
  */
 object HouseAiErrors {
@@ -35,6 +35,8 @@ object HouseAiErrors {
             }
             code == 502 && error == "planner_unavailable" ->
                 "Il servizio di intelligenza artificiale non risponde. Riprova tra poco."
+            code == 502 && error == "request_too_large" ->
+                "Domanda troppo lunga per il servizio di intelligenza artificiale: prova a dividerla in due."
             code == 502 && error == "source_unavailable" ->
                 "I dati di casa non sono raggiungibili in questo momento."
             code == 502 && error == "Backend unavailable" -> "Il backend di casa non risponde."

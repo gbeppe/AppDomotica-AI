@@ -34,6 +34,8 @@ class HouseAiErrorsTest {
     fun plannerAndSourceFailuresAreDistinguished() {
         assertEquals("Il servizio di intelligenza artificiale non risponde. Riprova tra poco.",
             HouseAiErrors.http(502, """{"error": "planner_unavailable"}"""))
+        assertEquals("Domanda troppo lunga per il servizio di intelligenza artificiale: prova a dividerla in due.",
+            HouseAiErrors.http(502, """{"error": "request_too_large"}"""))
         assertEquals("I dati di casa non sono raggiungibili in questo momento.",
             HouseAiErrors.http(502, """{"error": "source_unavailable"}"""))
         assertEquals("Il backend di casa non risponde.",

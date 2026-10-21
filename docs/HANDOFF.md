@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscalda
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261018-timed-commands`** (commit `b3c2897`; comandi a tempo «fino alle/dalle/dalle… alle…» per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma, durata una volta salvo «ogni/sempre»; regole a voce con conferma, durata una volta salvo «ogni/sempre»; richieste di regole automatiche mai eseguite come comandi, domanda letta senza parola di conferma, conferma per tutti i comandi del riscaldamento, conferma a voce, comandi del caminetto con livello solo in Manuale, energia adesso con flussi stimati, lettura del riscaldamento), in `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261018-vmc`** (commit `2843aed`, dal 21/10; in arrivo `20261021-tokens`: spazio della risposta 1536 token, errore `request_too_large`, log dei token). Funzioni: VMC a voce (velocità, «fino alle», «dalle… alle…», automatico); comandi a tempo per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma (durata una volta salvo «ogni/sempre»); conferma per tutti i comandi del riscaldamento; energia adesso con flussi stimati; lettura del riscaldamento. In `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
@@ -110,6 +110,8 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `rules_notify` (RULES-ENGINE.2) | ogni evento del motore delle regole (intervenuta, in prova, bloccata, creata, attiva, cancellata, rifiutata) diventa una notifica ntfy sul canale `domopi-regole`; token da `~/.config/domopi/ntfy_nodered.token`; backup `/home/pi/AI_backups/nodered/20261017T192951Z-before-rules-notify` | live 17/10 21:29, provata (notifica «Regola rifiutata» 21:30) |
 | `house_alerts` (HOUSE-ALERTS.1) | nuovo tab «Avvisi (DomoPi)»: avvisi ntfy su `domopi-casa` (puffer > 85 °C, schede caminetto/pompa offline 5 min, sensori soggiorno/bagno muti 30 min, esterno muto 2 h, cambio profilo, batteria < 20 %); nessun nodo esistente modificato; backup `/home/pi/AI_backups/nodered/20261017T201104Z-before-house-alerts` | live 17/10 22:11, ingressi verificati |
 | `rules_engine3` (RULES-ENGINE.3) | comandi a tempo: trigger `at` (orario con data, ≤ 48 h, una volta), `start_active` solo per questi, ritardo > 15 min = saltato, regole chiuse tolte dopo 24 h; notifica «Comando programmato»; sorgenti in `rules_engine/rules.js` e `rules_notify/ntfy.js`; backup `/home/pi/AI_backups/nodered/20261018T191739Z-before-rules-engine3` | live 18/10 21:17, provata dal telefono 22:56 |
+| `ai_vmc_override` (AI-CLIMATE-VMC-OVERRIDE.1) | nodo «VMC priorità manuale»: `zara/interface/ventilation/vmc/override/cmd` `{speed, until}` o `"auto"`, stato retained `…/override/stat`; blocco nella funzione AI Climate prima dell'antirimbalzo (la velocità manuale vince fino alla scadenza); backup `/home/pi/AI_backups/nodered/20261021T205755Z-before-ai-vmc-override` | live 21/10 22:58 |
+| `rules_engine4` (RULES-ENGINE.4) | azioni `set_vmc_speed`, `set_vmc_override`, `set_vmc_auto`; solo la funzione del motore; backup `/home/pi/AI_backups/nodered/20261021T210015Z-before-rules-engine4` | live 21/10 23:00 |
 | `router_floor_pump` (ROUTER-FLOOR-PUMP.1) | abilitazione pompa pavimento instradata sul broker di `.15`, retained (prima andava sul `.20` e non arrivava); chiave `router_initialized_v123`; backup `/home/pi/AI_backups/nodered/20261016T105204Z-before-router-floor-pump` | live dal 16/10 12:52; prova 12:53 superata (abilita/disabilita dall'app arrivano al `.15`, retained; «disabilita» manda 0 all'ESP) |
 | `floorpump_repeat` (FLOORPUMP-REPEAT.1, **sul `.15`**) | la logica della pompa ripete l'ultimo comando nella fascia 30–35 °C, necessario per lo spegnimento di sicurezza di `floorpump_v2`; backup sul `.15` `/home/pi/AI_backups/nodered/20261016T112048Z-before-floorpump-repeat` | live sul `.15` dal 16/10 13:21 |
 | `floorpump_repeat2` (FLOORPUMP-REPEAT.2, **sul `.15`**) | la function della pompa non va più in errore senza l'ora di spegnimento del caminetto (bloccava ogni comando con la pompa abilitata) | live sul `.15` dal 16/10 14:25 |
@@ -245,6 +247,12 @@ EmonCMS, sola lettura). Prerequisito per le misure dal vivo: caldaia riaccesa.
 fermo all'avvio, Tailscale offline, `.15` nascosto dal Wi‑Fi) controllo reciproco `.20`/`.15` con
 avvisi e consiglio pronto, riparazioni sicure, pagina nell'app. Progetto:
 [`AI_MODE/SALUTE_IMPIANTO.md`](AI_MODE/SALUTE_IMPIANTO.md). Da realizzare **dopo il deploy di T2 (VMC)**.
+
+**AI Smart, margine dei token (21/10/2026):** ogni domanda manda al modello ~6000 token (istruzioni 9.600
+caratteri, catalogo 10.400, schema 8.700) e il piano gratuito di Groq ne ammette 8000 per richiesta,
+risposta compresa. Rimedio immediato `20261021-tokens`; **in piano** (decisione dell'utente):
+snellire istruzioni, catalogo e schema (che si ripetono in parte) per recuperare ~1500–2000 token
+prima di T3 e T4. Alternativa da valutare: Groq Dev Tier a pagamento.
 
 ### Da indagare (16/10/2026)
 
