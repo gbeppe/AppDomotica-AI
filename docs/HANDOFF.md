@@ -118,6 +118,14 @@ Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio
 | `floorpump_repeat3` (FLOORPUMP-REPEAT.3, **sul `.15`**) | funzione della pompa ripulita: solo abilitazione e puffer, niente orari del caminetto (decisioni identiche alla versione precedente) | live sul `.15` dal 16/10 17:31 |
 | `broker_credentials` | script per le credenziali dei nodi broker | usato il 14/10 |
 
+### Fotovoltaico teorico (`backend/solar/`, su `.20`)
+`/home/pi/solarEnergy.php`, avviato ogni 5 minuti dal Node-RED del `.20` (scheda «start local scripts»,
+falde Eclipse e Viessmann): luce teorica con cielo sereno pubblicata retained sul broker del `.15`
+(`emon/planetary/…`) per EmonCMS. **F1 live dal 21/10/2026 23:50** (password in
+`~/.config/domopi/mqtt_emonpi.pass`, identificativo MQTT unico, calcolo identico verificato su 576 casi);
+backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. Prossime: F2 (ramo `Irradiance=` rotto e
+spento), F3 (previsione Open-Meteo). Dettagli: [`../backend/solar/README.md`](../backend/solar/README.md).
+
 ### Firmware delle schede ESP
 Sketch versionati in [`../firmware/`](../firmware/README.md) (credenziali solo in `secrets.h`
 locale, controllo `python3 firmware/check_firmware.py`). Caminetto: `palazzetti_v2` caricato e
