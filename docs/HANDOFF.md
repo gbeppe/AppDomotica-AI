@@ -47,7 +47,7 @@ Contenuto: app Android (Kotlin/Compose, `app/`), backend House AI (Python 3.9 st
 | IP | Cosa | Note |
 |---|---|---|
 | `192.168.1.1` | Router ASUS | port forwarding OFF, DMZ off, UPnP off dal 14/10; IP pubblico dinamico |
-| `192.168.1.20` | **Raspberry "domopi"** | Node-RED (projects mode, flow live in `~/.node-red/projects/domopi/flows_domopi.json`), Mosquitto (1883 autenticato, 1884 sola lettura c1321), Pi-hole (DNS di casa), Apache, backend House AI, Tailscale (subnet router `192.168.1.0/24`, Serve). Grafana **disinstallata** il 15/10 (leggeva ~7 MB/s dalla SD: attesa I/O al 95%, luci IR in ritardo di 4-5 s); restano configurazione e `/var/lib/grafana` (543 MB). Memoria scarsa (1,9 GB, swap 100 MB pieno): evitare `journalctl -f` lunghi |
+| `192.168.1.20` | **Raspberry "domopi"** | Node-RED (projects mode, flow live in `~/.node-red/projects/domopi/flows_domopi.json`), Mosquitto (1883 con utente `domotica`, anonimi ammessi dal 19/10 da richiudere; 1884 sola lettura c1321; drop-in di avvio dopo la rete dal 21/10), Pi-hole (DNS di casa), Apache, backend House AI, Tailscale (subnet router `192.168.1.0/24`, Serve). Grafana **disinstallata** il 15/10 (leggeva ~7 MB/s dalla SD: attesa I/O al 95%, luci IR in ritardo di 4-5 s); restano configurazione e `/var/lib/grafana` (543 MB). Memoria scarsa (1,9 GB, swap 100 MB pieno): evitare `journalctl -f` lunghi |
 | `192.168.1.15` | emonPi / EmonCMS | broker MQTT "emon" con autenticazione, Node-RED proprio in **modalità progetti** (flussi attivi `~/.node-red/projects/emonpi/flows_emonpi.json`; `~/.node-red/flows_emonpi.json` è vecchio), EmonCMS `/emoncms` (dati su `/var/opt/emoncms`). SSH dal PC `.40` con la chiave `~/.ssh/id_ed25519_codex_domopi`, utente `pi`, dal 16/10. I timer dei termostati (tab TASMOTAs) **non inviano nulla**: leggono min/max e «pompa pavimento abilitata» dal broker del `.15` mentre app e router li scrivono sul `.20`, e la modalità del caminetto vi si aggiorna solo con la pompa abilitata. 16/10: `apt-get clean`, `/` da 110 MB a 974 MB liberi |
 | `192.168.1.40` | PC di sviluppo (Ubuntu) | build e rilascio app, SSH senza password verso `pi@192.168.1.20` |
 | `192.168.1.121` | Telefono Realme GT (RMX2202) | app installata via adb wireless |
@@ -241,7 +241,19 @@ tappe (dati → avviso caldaia oltre il 20 % → consiglio del giorno → automa
 Diario: [`AI_MODE/PRERISCALDO_PUFFER.md`](AI_MODE/PRERISCALDO_PUFFER.md). Prossimo: tappa 0 (storico
 EmonCMS, sola lettura). Prerequisito per le misure dal vivo: caldaia riaccesa.
 
+**Fase S — salute impianto (21/10/2026):** dopo gli incidenti del 17–21/10 (sottotensione, Mosquitto
+fermo all'avvio, Tailscale offline, `.15` nascosto dal Wi‑Fi) controllo reciproco `.20`/`.15` con
+avvisi e consiglio pronto, riparazioni sicure, pagina nell'app. Progetto:
+[`AI_MODE/SALUTE_IMPIANTO.md`](AI_MODE/SALUTE_IMPIANTO.md). Da realizzare **dopo il deploy di T2 (VMC)**.
+
 ### Da indagare (16/10/2026)
+
+- **Incidenti 17–21/10 (risolti):** cadute di tensione sul `.20` (alimentatore cambiato il 19/10);
+  Mosquitto `.20` fermo all'avvio del 21/10 (drop-in `wait-network.conf`); `persistence false` dal
+  19/10 (ripristinata il 21/10, vecchio `mosquitto.db` in
+  `/home/pi/AI_backups/mosquitto/20261021T062821Z-before-persistence-network-online`); `.15`
+  irraggiungibile dal Wi‑Fi (riavvio del router); Tailscale offline dopo il riavvio del router
+  (riavvio di `tailscaled`). Lezioni in [`DECISIONI_E_LEZIONI.md`](DECISIONI_E_LEZIONI.md#lezioni-tecniche).
 
 - **Caminetto acceso a mano e orari (18/10):** sul `.15` (tab «caminetto», funzione MAIN) la parte
   automatica gestisce solo Integrazione Caldaia, Riscaldamento e Acqua Sanitaria; un'accensione manuale

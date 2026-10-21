@@ -31,6 +31,11 @@ Sistema), AiCloud, server VPN dell'ASUS, firewall IPv6.
 
 - Porta 1883: **`allow_anonymous false`**, un solo utente: **`domotica`**. L'utente `domopi`
   (password pubblicata in passato nel codice dell'app su GitHub) è stato eliminato.
+- **Dal 19/10/2026 21:11 `allow_anonymous true`** (scelta dell'utente, anche sul `.15` alle 21:14):
+  da richiudere dopo aver dato credenziali a zigbee2mqtt (.119) e MQTT Explorer (.40), guardando
+  prima nel log se ci sono altri client anonimi (punto C del piano).
+- `persistence true` (ripristinata il 21/10: dal 19/10 era `false` e i retained si perdevano a ogni
+  riavvio); `persistent_client_expiration 2d` (`conf.d/50-session-expiry.conf`).
 - Porta 1884 (`192.168.1.20`): listener separato di sola lettura per l'adattatore c1321,
   invariato (`/etc/mosquitto/conf.d/40-c1321-read-only-listener.conf`).
 - File utenti `/etc/mosquitto/credentials`: `root:mosquitto` 0640.
