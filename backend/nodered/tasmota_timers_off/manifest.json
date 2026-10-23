@@ -1,0 +1,15 @@
+{
+  "patch": "TASMOTA-TIMERS-OFF.1",
+  "host": "192.168.1.15",
+  "modified_ids": [
+    "7e69383.2658ac8"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "7e69383.2658ac8": "595eb48178fae6ce06d863ab61c17f9caefd0166626a5f0e0e421a606741c424"
+  },
+  "node_sha256_after": {
+    "7e69383.2658ac8": "c26c751cd55dcc29b89eac5017e9a733732aea481068ce332ce3be4dd78fd4ec"
+  }
+}

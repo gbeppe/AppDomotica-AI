@@ -323,6 +323,9 @@ un tempo** (al massimo 6 ore), poi torna l'automatico: vedi §4.14.
 - Caminetto: solo in **Manuale** (altrimenti: «Il caminetto non è in Manuale: i comandi a tempo
   valgono solo in Manuale…»). Se all'orario non è più in Manuale, il comando non parte e arriva la
   notifica «Regola bloccata».
+- Condizionatore anche dall'app: schermata **AI Climate**, riquadro «Condizionatore a tempo» con la
+  priorità in corso, **Auto** (torna subito AI Climate) e pulsanti Spegni, Caldo 20°, Fresco 24°,
+  Deumidifica per 2 ore, ciascuno con conferma.
 
 ### 4.15 Salute dell'impianto (solo lettura)
 
@@ -400,4 +403,5 @@ in cima.
 | 23/10/2026 | Consumo casa dal contatore del Powerwall (feed 312), come ora l'app MySolarBattery: emontx3 HomeReading dal 21/10 fa salti (−34 % il 21, +81 % il 22). |
 | 23/10/2026 | Prelievo e immissione (e «Importato oggi/ieri» nella home) dal misuratore di rete del Powerwall: la pinza emontx3 misura al contrario dal 19/10 (adattatore di tensione dell'emonTx staccato o cambiato), quindi prelievo e immissione erano scambiati. |
 | 23/10/2026 | **Condizionatore a tempo** (§4.14): spento, caldo, raffrescamento o deumidifica fino a un'ora (al massimo 6 ore), poi torna AI Climate; conferma sempre; tempi del compressore rispettati; la protezione della batteria può chiudere il comando. |
+| 23/10/2026 | **Condizionatore a tempo nell'app** (§4.14): riquadro nella schermata AI Climate con stato, Auto e pulsanti di 2 ore con conferma. |
 | 23/10/2026 | **Salute dell'impianto** (§4.15): «come sta l'impianto?», «ci sono guasti sul .15?» con guasti e consigli dei controlli di .20 e .15. |

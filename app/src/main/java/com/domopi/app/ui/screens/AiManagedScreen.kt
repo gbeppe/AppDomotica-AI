@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.domopi.app.data.AcOverride
 import com.domopi.app.data.AiManagedData
 import com.domopi.app.data.AcReasonCategory
 import com.domopi.app.data.AcReasonMapper
@@ -241,6 +242,8 @@ fun AiManagedScreen(
             item {
                 StatusCard(aiData, envState, hvacState)
             }
+
+            item { AcOverrideCard(hvacState.ac.override, hvacState.ac.overrideClosed) { mqttManager.publish(AcOverride.TOPIC_CMD, it) } }
 
             // 2 & 3. Tempi Compressore
             item {

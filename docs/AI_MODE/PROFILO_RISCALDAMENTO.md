@@ -1,7 +1,8 @@
 # Profilo di riscaldamento e timer dei termostati sul `.20` (progetto)
 
-Stato: patch `HEATING-PROFILE.1` pronta in `backend/nodered/heating_profile/` (16/10/2026), da
-applicare in shadow. Profilo Ridotto: solo fasce serali (scelta dell'utente).
+Stato: `HEATING-PROFILE.1/.2` live sul `.20` dal 16/10/2026; **timer active dal 23/10/2026 18:00**,
+dopo `TASMOTA-TIMERS-OFF.1` sul `.15` (vecchi timer spenti). Profilo Ridotto: solo fasce serali
+(scelta dell'utente).
 
 ## Perché
 
@@ -66,9 +67,12 @@ Il comando passa dal topic dell'interfaccia
 farebbe, pubblica il piano su `zara/interface/heating/timer/plan/stat`, ma non invia setpoint.
 Dopo il confronto (almeno un giorno) si passa ad active con una conferma.
 
-I timer del `.15` oggi non inviano nulla; prima di passare ad active vanno comunque disattivati
-(con l'utente), per evitare un doppio controllo se in futuro la pompa del pavimento venisse
-abilitata.
+Fatto il 23/10/2026: il timer del soggiorno sul `.15` era già spento, quello del bagno (`timerswitch`,
+mandava **11 °C** direttamente alla Tasmota alle 04:00 e 06:00, saltando il router) è stato disattivato
+con `TASMOTA-TIMERS-OFF.1` (`backend/nodered/tasmota_timers_off/`, backup
+`/home/pi/AI_backups/nodered/20261023T160004Z-before-tasmota-timers-off`); poi `active` su
+`zara/interface/heating/timer/mode/cmd` alle 18:00. Al passaggio nessun setpoint inviato (profilo
+Spento, media 72 h 16,2 °C). Per tornare in prova: `shadow` sullo stesso topic.
 
 ## Topic (nuovo tab Node-RED «Profilo riscaldamento», nessuna modifica al router)
 

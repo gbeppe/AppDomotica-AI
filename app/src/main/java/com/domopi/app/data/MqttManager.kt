@@ -750,6 +750,12 @@ class MqttManager {
             return
         }
 
+        if (device == "ac" && prop == "override") {
+            val (override, closed) = AcOverride.parse(payload)
+            _hvacState.update { it.copy(ac = it.ac.copy(override = override, overrideClosed = closed)) }
+            return
+        }
+
         if (device != "thermostat_living" && device != "thermostat_bath") {
             return
         }

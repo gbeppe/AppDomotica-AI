@@ -1,0 +1,31 @@
+[
+  {
+    "id": "7e69383.2658ac8",
+    "type": "timerswitch",
+    "z": "9cce0251.bd5c6",
+    "name": "",
+    "ontopic": "bathroom_schedule",
+    "offtopic": "bathroom_schedule",
+    "onpayload": "11",
+    "offpayload": "11",
+    "disabled": false,
+    "schedules": [
+      {
+        "on_h": "04",
+        "on_m": "00",
+        "on_s": "00",
+        "off_h": "06",
+        "off_m": "00",
+        "off_s": "00",
+        "valid": true
+      }
+    ],
+    "x": 130,
+    "y": 1440,
+    "wires": [
+      [
+        "653c43f1.ed44bc"
+      ]
+    ]
+  }
+]

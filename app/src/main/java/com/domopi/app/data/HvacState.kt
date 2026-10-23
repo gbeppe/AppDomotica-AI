@@ -28,7 +28,10 @@ data class ThermostatStatus(
 data class AcStatus(
     val mode: String = "OFF",
     val tempSet: Float = 24f,
-    val active: Boolean = false
+    val active: Boolean = false,
+    val override: AcOverride? = null,
+    /** Why the last manual priority was closed (battery protection), until the next state. */
+    val overrideClosed: String? = null
 )
 
 @Serializable
