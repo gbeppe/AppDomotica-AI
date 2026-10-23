@@ -1,6 +1,7 @@
 # Salute impianto, fase S1 (`.20` e `.15`)
 
-Progetto e decisioni: [`docs/AI_MODE/SALUTE_IMPIANTO.md`](../../docs/AI_MODE/SALUTE_IMPIANTO.md).
+Progetto e decisioni: [`docs/AI_MODE/SALUTE_IMPIANTO.md`](../../docs/AI_MODE/SALUTE_IMPIANTO.md) · manuale utente:
+[`docs/MANUALE_SALUTE_IMPIANTO.md`](../../docs/MANUALE_SALUTE_IMPIANTO.md) (da aggiornare a ogni modifica dei controlli).
 
 `health_check.py` gira ogni 2 minuti (timer systemd `domopi-health.timer`, utente root, solo letture)
 su entrambi i Raspberry, fuori da Node-RED e House AI. Ogni giro:

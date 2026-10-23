@@ -276,8 +276,11 @@ EmonCMS, sola lettura). Prerequisito per le misure dal vivo: caldaia riaccesa.
 **Fase S — salute impianto (21/10/2026):** dopo gli incidenti del 17–21/10 (sottotensione, Mosquitto
 fermo all'avvio, Tailscale offline, `.15` nascosto dal Wi‑Fi) controllo reciproco `.20`/`.15` con
 avvisi e consiglio pronto, riparazioni sicure, pagina nell'app. Progetto:
-[`AI_MODE/SALUTE_IMPIANTO.md`](AI_MODE/SALUTE_IMPIANTO.md). **S1 scritta il 23/10** (`backend/health/`,
-decisioni D1–D4 prese), deploy da confermare; poi S2 (riparazioni, riserva sul `.15`) e S3 (app).
+[`AI_MODE/SALUTE_IMPIANTO.md`](AI_MODE/SALUTE_IMPIANTO.md). **S1 attiva dal 23/10 10:13** su `.20` e `.15`
+(`backend/health/`, timer `domopi-health.timer`, avvisi su ntfy `domopi-casa`, stato su
+`zara/system/health/<host>/stat`; manuale [`MANUALE_SALUTE_IMPIANTO.md`](MANUALE_SALUTE_IMPIANTO.md)).
+Una settimana di osservazione, poi S2 (riparazioni, riserva sul `.15`) e S3 (app). Il 23/10 messo
+`persistence true` anche sul Mosquitto del `.15` (era false da almeno il 2020).
 
 **AI Smart, margine dei token (22/10/2026):** con `20261022-topics` una domanda manda ~1300 (luci) – ~4000
 (regole e comandi a tempo) token invece di ~7700; ~6300 se non si riconosce l'argomento. Limiti del piano gratuito:

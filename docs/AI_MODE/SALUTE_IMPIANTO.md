@@ -1,7 +1,7 @@
 # Salute impianto (fase S) — progetto
 
-Stato: **S1 scritta** (`backend/health/`, 14 test, prova a secco su `.20` e `.15` il 23/10/2026),
-deploy da confermare. Decisioni D1–D4 prese il 23/10 (sotto).
+Stato: **S1 attiva dal 23/10/2026 10:13** su `.20` e `.15` (`backend/health/`, 14 test). Decisioni
+D1–D4 prese il 23/10 (sotto). Manuale utente: [`../MANUALE_SALUTE_IMPIANTO.md`](../MANUALE_SALUTE_IMPIANTO.md).
 
 ## Perché
 
@@ -129,3 +129,5 @@ rollback come per le patch Node-RED). Ogni deploy sugli host con conferma dell'u
 |---|---|
 | 21/10/2026 | Progetto scritto dopo gli incidenti del 17–21/10; da realizzare dopo il deploy di T2 (VMC) |
 | 23/10/2026 | D1–D4 decise; S1 scritta (`backend/health/`), 14 test; prova a secco: `.20` 25/25 verdi, `.15` 24/25 (rosso: `persistence false` sul Mosquitto del `.15`, perde i retained a ogni riavvio; da decidere se correggerlo) |
+| 23/10/2026 10:13 | S1 installata (`deploy.sh`, backup in `/home/pi/AI_backups/health/`): `.20` 25/25, `.15` un avviso inviato (`persistence false`) |
+| 23/10/2026 10:16 | `.15`: `persistence true` (era false da almeno il 2020: `mosquitto.db` fermo al 19/08/2020); backup `/home/pi/AI_backups/mosquitto/20261023T081633Z-before-persistence-true`; retained di prova riuscito |
