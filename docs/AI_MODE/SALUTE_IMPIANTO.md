@@ -110,7 +110,7 @@ Consiglio: **a + b**; c solo se l'utente lo preferisce.
 |---|---|---|
 | **S1** | script di controllo con timer systemd sul `.20` e sul `.15`, controllo reciproco, avvisi ntfy su `domopi-casa` con consiglio, stato retained `zara/system/health/<host>/stat`; prima settimana **solo osservazione** (avvisi a una soglia larga, per tarare) | da fare dopo T2 |
 | **S2** | riparazioni automatiche della lista sopra; Tailscale e ntfy di riserva sul `.15` se scelto in D2 | da fare |
-| **S3** | pagina «Salute impianto» nell'app con il controllo dal Wi‑Fi; strumento AI Smart `system_health` | da fare |
+| **S3** | pagina «Salute impianto» nell'app con il controllo dal Wi‑Fi; strumento AI Smart `system_health` | pagina scritta il 23/10 (cuore nella barra in alto, controllo dal Wi‑Fi all'apertura e con «Ricontrolla», decisioni dell'utente); `system_health` da fare |
 | S4 | (opzione) immagine di backup automatica, storico dei guasti | da valutare |
 
 File previsti: `backend/health/` (script, unità systemd, `README.md`, `deploy.sh` con backup e
@@ -130,4 +130,5 @@ rollback come per le patch Node-RED). Ogni deploy sugli host con conferma dell'u
 | 21/10/2026 | Progetto scritto dopo gli incidenti del 17–21/10; da realizzare dopo il deploy di T2 (VMC) |
 | 23/10/2026 | D1–D4 decise; S1 scritta (`backend/health/`), 14 test; prova a secco: `.20` 25/25 verdi, `.15` 24/25 (rosso: `persistence false` sul Mosquitto del `.15`, perde i retained a ogni riavvio; da decidere se correggerlo) |
 | 23/10/2026 10:13 | S1 installata (`deploy.sh`, backup in `/home/pi/AI_backups/health/`): `.20` 25/25, `.15` un avviso inviato (`persistence false`) |
+| 23/10/2026 | S3: pagina dell'app (`SystemHealth.kt`, `SystemHealthScreen.kt`, iscrizione a `zara/system/health/+/stat`, 3 test); semaforo grigio dopo 6 minuti senza aggiornamenti; consiglio «riavvia il router ASUS» dal controllo del telefono |
 | 23/10/2026 10:16 | `.15`: `persistence true` (era false da almeno il 2020: `mosquitto.db` fermo al 19/08/2020); backup `/home/pi/AI_backups/mosquitto/20261023T081633Z-before-persistence-true`; retained di prova riuscito |

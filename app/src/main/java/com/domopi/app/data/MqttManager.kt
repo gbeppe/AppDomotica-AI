@@ -135,6 +135,9 @@ class MqttManager {
     // Release identity published by tools/release_android.py (outside the Digital Twin namespace).
     private val _publishedBuild = MutableStateFlow<PublishedBuild>(PublishedBuild.Waiting)
     val publishedBuild: StateFlow<PublishedBuild> = _publishedBuild
+    // Phase S3: health summaries of .20 and .15 (backend/health), kept across reconnections.
+    private val _systemHealth = MutableStateFlow<Map<String, HostHealth>>(emptyMap())
+    val systemHealth: StateFlow<Map<String, HostHealth>> = _systemHealth
 
     private val _startupGraceOver = MutableStateFlow(false)
     val startupGraceOver: StateFlow<Boolean> = _startupGraceOver
@@ -236,6 +239,7 @@ class MqttManager {
                     _isConnected.value = true
                     subscribeToUnifiedTopics()
                     subscribeToBuildIdentity()
+                    try { mqttClient?.subscribe(SystemHealth.TOPIC, 1) } catch (_: Exception) {}
                     processMessageQueue()
                 }
                 override fun connectionLost(cause: Throwable?) { 
@@ -336,6 +340,10 @@ class MqttManager {
     private fun handleIncomingMessage(topic: String, payload: String) {
         if (topic == BuildAlignment.TOPIC) {
             _publishedBuild.value = BuildAlignment.parse(payload)
+            return
+        }
+        if (SystemHealth.isTopic(topic)) {
+            SystemHealth.parse(payload)?.let { health -> _systemHealth.update { it + (health.host to health) } }
             return
         }
         val p = digitalTwinPrefix.removeSuffix("/")

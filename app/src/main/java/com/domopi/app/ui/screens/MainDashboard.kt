@@ -55,6 +55,7 @@ import com.domopi.app.ui.components.EnergyFlowComponent
 import com.domopi.app.ui.components.PoolInteractiveComponent
 import com.domopi.app.ui.components.formatLocalizedDate
 import com.domopi.app.ui.theme.SolarGreen
+import com.domopi.app.data.SystemHealth
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 
@@ -71,6 +72,9 @@ fun MainDashboard(
     buildAlignment: AppAlignmentStatus = AppAlignmentStatus.CHECKING,
 ) {
     val isConnected by mqttManager.isConnected.collectAsState()
+    val systemHealth by mqttManager.systemHealth.collectAsState()
+    var healthNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(30_000); healthNow = System.currentTimeMillis() } }
     val isAdminMode by settingsManager.isAdminMode.collectAsState(initial = false)
     val adminPin by settingsManager.adminPin.collectAsState(initial = "")
     val epIp by settingsManager.emoncmsIp.collectAsState("")
@@ -357,6 +361,16 @@ fun MainDashboard(
                             status = buildAlignment,
                             onClick = { onNavigate("build_alignment") }
                         )
+
+                        // Salute impianto (fase S3): cuore colorato come lo stato di .20 e .15
+                        IconButton(onClick = { onNavigate("system_health") }, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = "Salute impianto",
+                                tint = healthColor(SystemHealth.overall(systemHealth, healthNow)),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
 
                         Spacer(Modifier.width(4.dp))
                         

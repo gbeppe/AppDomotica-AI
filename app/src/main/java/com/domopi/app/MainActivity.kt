@@ -188,6 +188,17 @@ class MainActivity : ComponentActivity() {
                                 onRuleAction = mqttManager::publishRuleAction)
                         }
                         "house_ai" -> HouseAiScreen(onBack = { currentScreen = "ai_smart" })
+                        "system_health" -> {
+                            val hosts by mqttManager.systemHealth.collectAsState()
+                            val connected by mqttManager.isConnected.collectAsState()
+                            SystemHealthScreen(
+                                hosts = hosts,
+                                connected = connected,
+                                atHome = accessPath.status == com.domopi.app.network.AccessPathStatus.LOCALE,
+                                connectivityManager = connectivityManager,
+                                onBack = { currentScreen = "home" }
+                            )
+                        }
                         "lights" -> LightsScreen(
                             mqttManager = mqttManager,
                             onBack = { currentScreen = "home" }
