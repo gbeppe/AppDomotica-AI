@@ -155,7 +155,8 @@ verificato il 14/10. VMC e pompa pavimento si aggiungeranno quando verranno veri
 
 ### Rete e sicurezza
 Vedi [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md): router chiuso,
-broker MQTT solo con utente `domotica`, dove stanno le password, come ripristinare.
+broker MQTT senza accesso anonimo dal 23/10 (`.20` utente `domotica`, `.15` `emonpi` e `wallbox-core`),
+dove stanno le password, come ripristinare.
 Accesso AI Smart in casa: [`AI_MODE/ACCESSO_LAN_SENZA_TAILSCALE.md`](AI_MODE/ACCESSO_LAN_SENZA_TAILSCALE.md),
 [`AI_MODE/RUNBOOK_ACCESSO_LAN.md`](AI_MODE/RUNBOOK_ACCESSO_LAN.md).
 
@@ -267,6 +268,14 @@ allineata). Rilasciati in giornata: ROUTER-FIREPLACE-RETAIN.1 (`v122`), house_ai
 5. **Robot** (priorità bassissima): Ecovacs Deebot T9 Max Pro Omni e N8 Pro tramite libreria non
    ufficiale (`node-red-contrib-ecovacs-deebot`), MOVA LiDAX Ultra 800 da verificare; Alexa come
    ripiego (il suo login va rifatto).
+
+**Punto di ripresa (23/10/2026):** fatti oggi luce TV (Broadlink), LIGHTS-ECHO-GUARD.2, salute
+impianto S1, punto C (broker senza anonimi). Prossimi, nell'ordine dell'utente: **T4** (condizionatore
+via AI Climate), **S3** (pagina «Salute impianto» nell'app); **T3 (piscina) rimandata** su richiesta
+dell'utente. Da fare a margine: il 24/10 rimettere `log_type error` sul Mosquitto del `.15` (prima
+controllare i rifiuti nel log); rotazione della password `emonpi` dopo la verifica dei port forward
+del router; S2 dopo la settimana di osservazione (fino al 30/10, osserva l'utente); feed di flusso
+vuoti di MyElectricFlow; AI Smart sui contatori 447/448 quando avranno storico.
 
 **Fase P — preriscaldo del puffer con il caminetto (17/10/2026):** idea dell'utente approvata a
 tappe (dati → avviso caldaia oltre il 20 % → consiglio del giorno → automatico con ritorno a Manuale).

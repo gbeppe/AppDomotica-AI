@@ -9,7 +9,7 @@
   "broker": {"host": "127.0.0.1", "port": 1883, "retained_topic": "zara/domotics/lights/tvlamp",
              "xdg_config_home": "/etc/domopi-health/mqtt"},
   "mosquitto": {"files": ["/etc/mosquitto/mosquitto.conf", "/etc/mosquitto/conf.d/*.conf"],
-                "expect": {"persistence": "true", "anonymous:1883": "true", "anonymous:1884": "false"}},
+                "expect": {"persistence": "true", "anonymous:1883": "false", "anonymous:1884": "false"}},
   "http": [{"name": "house_ai", "title": "House AI", "url": "http://127.0.0.1:8765/v1/health"},
            {"name": "nodered", "title": "Node-RED", "url": "https://127.0.0.1:1880/", "insecure": true}],
   "peer": {"name": ".15", "ip": "192.168.1.15", "port": 1883},

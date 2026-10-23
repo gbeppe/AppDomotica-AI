@@ -47,7 +47,7 @@ Priorità: **U** = urgente, arriva anche di notte con priorità alta; **N** = no
 | **Alimentazione** | entrambi | U se la sottotensione è in corso, altrimenti N | l'alimentatore non dà abbastanza corrente (più di 3 cali in un'ora, o un calo adesso) | controlla alimentatore e cavo; scollega gli USB non essenziali. Fu la causa dei riavvii del `.20` del 17–19/10 |
 | **Servizio …** (mosquitto, nodered, house-ai-…, ntfy, pihole-FTL, tailscaled, apache2; sul `.15` emonhub, emoncms_mqtt, feedwriter, redis, mariadb) | ciascuno i suoi | U per mosquitto e nodered (e emonhub sul `.15`), altrimenti N | il servizio è fermo | `sudo systemctl restart <servizio>`, poi guarda il log (`journalctl -u <servizio> -n 50`). Se non sai, chiedi all'agente |
 | **Broker MQTT** | entrambi | U | il broker non risponde o, sul `.20`, ha perso i messaggi salvati (retained) | controlla Mosquitto (`systemctl status mosquitto`); se mancano i retained, controlla `persistence` |
-| **Configurazione Mosquitto** | entrambi | N | `persistence` o `allow_anonymous` diversi dall'atteso | verifica se il cambio è voluto. Non viene ripristinato da solo. Oggi l'atteso è `persistence true` e `allow_anonymous true` (diventerà false dopo il punto C delle credenziali) |
+| **Configurazione Mosquitto** | entrambi | N | `persistence` o `allow_anonymous` diversi dall'atteso | verifica se il cambio è voluto. Non viene ripristinato da solo. Oggi l'atteso è `persistence true` e `allow_anonymous false` su entrambi (dal 23/10) |
 | **House AI**, **Node-RED**, **EmonCMS** | dove girano | N | la pagina o il servizio non risponde | controlla il servizio e il suo log |
 | **Tailscale** | `.20` | N | il `.20` non è collegato alla rete Tailscale: fuori casa l'app non raggiunge la casa | `sudo systemctl restart tailscaled`; se non basta, riavvia il router e poi ricontrolla (successo il 14/10 e il 21/10) |
 | **Raspberry .15 / .20** | l'altro | U | l'altro Raspberry non risponde | controlla alimentazione e cavo di rete; se serve, togli e ridai corrente |
@@ -104,7 +104,7 @@ La configurazione di ogni Raspberry è in `/etc/domopi-health/config.json` (nel 
 | `services`, `urgent_services` | servizi da controllare e quali sono urgenti | vedi tabella sopra |
 | `quiet_hours` | ore di silenzio per gli avvisi non urgenti | `[23, 7]` |
 | `confirm` | prove fallite di fila prima di avvisare, per controllo | altro Pi, router, Internet, Tailscale 3; broker, web, energia 2 |
-| `mosquitto.expect` | configurazione attesa del broker | `persistence true`, `allow_anonymous true` (sul `.20` 1884 `false`) |
+| `mosquitto.expect` | configurazione attesa del broker | `persistence true`, `allow_anonymous false` |
 | `emoncms_feeds` | feed energia da sorvegliare e età massima | Powerwall 305 ed emonTx 24, 600 s |
 | `emontx_sign` | soglia di potenza e letture per «emonTx al contrario» | 150 W, 10 letture |
 
@@ -130,3 +130,4 @@ l'agente e le conferma l'utente.
 | Data | Cosa |
 |---|---|
 | 23/10/2026 10:13 | S1 attiva su `.20` e `.15`. Primo avviso: `persistence false` sul Mosquitto del `.15` (così da almeno il 2020); corretto alle 10:16 con `persistence true` |
+| 23/10/2026 10:23 e 10:34 | Broker `.20` e `.15` senza accesso anonimo: atteso `allow_anonymous false`; sul `.15` il controllo usa l'utente `emonpi`. Nel log del `.15` compare un «Socket error» a ogni giro del `.20`: è il suo test di raggiungibilità della porta 1883, non un dispositivo rifiutato |

@@ -4,7 +4,7 @@
 #   sudo sh deploy.sh 20 install | sudo sh deploy.sh 15 install | sudo sh deploy.sh <host> rollback
 # Credentials are copied from files, never printed:
 #   .20: /home/pi/.config/domopi/ntfy_nodered.token and mqtt_domotica.pass
-#   .15: /tmp/domopi-health-secrets/{ntfy.token,mqtt.pass}, written beforehand through ssh and
+#   .15: /tmp/domopi-health-secrets/{ntfy.token,mqtt.pass,mqtt_local.pass}, written beforehand through ssh and
 #        deleted here after the copy.
 set -eu
 HOST=$1
@@ -33,6 +33,7 @@ install)
     else
         install -m 0600 /tmp/domopi-health-secrets/ntfy.token "$ETC/ntfy.token"
         install -m 0600 /tmp/domopi-health-secrets/mqtt.pass "$ETC/mqtt.pass"
+        install -m 0600 /tmp/domopi-health-secrets/mqtt_local.pass "$ETC/mqtt_local.pass"
         rm -rf /tmp/domopi-health-secrets
     fi
     install -d -m 0700 /var/lib/domopi-health

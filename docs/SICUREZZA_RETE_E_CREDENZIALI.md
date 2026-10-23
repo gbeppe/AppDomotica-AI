@@ -27,13 +27,28 @@ QNAP, telecamere, EmonCMS e OpenSprinkler.
 Da controllare a mano se si cambia router o firmware: accesso web da WAN (Amministrazione →
 Sistema), AiCloud, server VPN dell'ASUS, firewall IPv6.
 
+## Broker MQTT di `.15`
+
+- **Dal 23/10/2026 10:34 `allow_anonymous false`** (era `true` dal 19/10 21:14). Utenti in
+  `/etc/mosquitto/passwd`: `emonpi` (emonhub, EmonCMS, Node-RED `.15` e `.20`, OpenTherm `domopi-otmon`,
+  fotovoltaico, schede ESP .22 caminetto e .23, Shelly .51/.52/.53/.59, Tasmota .54, salute impianto) e
+  `wallbox-core` (WallBox .119). Mosquitto 1.5.7: **solo MQTT 3.1.1** (MQTT Explorer: versione 3.1.1).
+  Backup `/home/pi/AI_backups/mosquitto/20261023T083412Z-before-anonymous-false`.
+- `persistence true` dal 23/10 10:16 (era `false` da almeno il 2020); `log_type notice` temporaneo dal
+  23/10 10:25 (backup `…20261023T082520Z-before-log-notice`), da rimettere a `error` il 24/10.
+- La password di `emonpi` è comparsa in chiaro in una sessione dell'agente il 21/10 (registri locali di
+  Claude Code sul `.40`): rotazione da decidere dopo aver verificato che la 1883 non sia inoltrata dal
+  router; richiede di riconfigurare tutti i client sopra (schede ESP da riprogrammare).
+
 ## Broker MQTT di `.20`
 
 - Porta 1883: **`allow_anonymous false`**, un solo utente: **`domotica`**. L'utente `domopi`
   (password pubblicata in passato nel codice dell'app su GitHub) è stato eliminato.
-- **Dal 19/10/2026 21:11 `allow_anonymous true`** (scelta dell'utente, anche sul `.15` alle 21:14):
-  da richiudere dopo aver dato credenziali a zigbee2mqtt (.119) e MQTT Explorer (.40), guardando
-  prima nel log se ci sono altri client anonimi (punto C del piano).
+- Dal 19/10/2026 21:11 al 23/10 10:23 `allow_anonymous true` (anche sul `.15`). **Dal 23/10 10:23 di
+  nuovo `allow_anonymous false`** (punto C): nel log dal 14/10 nessun client anonimo dall'esterno; dopo il
+  riavvio tutti ricollegati con `domotica` (Tasmota .67/.68/.69/.252, zigbee2mqtt .119, OpenSprinkler .3,
+  Node-RED `.20` e `.15`, House AI, salute impianto). Backup
+  `/home/pi/AI_backups/mosquitto/20261023T082306Z-before-anonymous-false`.
 - `persistence true` (ripristinata il 21/10: dal 19/10 era `false` e i retained si perdevano a ogni
   riavvio); `persistent_client_expiration 2d` (`conf.d/50-session-expiry.conf`).
 - Porta 1884 (`192.168.1.20`): listener separato di sola lettura per l'adattatore c1321,

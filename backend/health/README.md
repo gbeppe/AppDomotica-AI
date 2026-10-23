@@ -30,7 +30,8 @@ su entrambi i Raspberry, fuori da Node-RED e House AI. Ogni giro:
 
 Credenziali (copiate dal deploy, mai stampate): `/etc/domopi-health/ntfy.token` (token di
 `domopi-nodered`), sul `.20` `/etc/domopi-health/mqtt/mosquitto_{sub,pub}` (opzioni `-u/-P`, letti con
-`XDG_CONFIG_HOME`), sul `.15` `/etc/domopi-health/mqtt.pass` (utente `domotica` del broker `.20`). Il
+`XDG_CONFIG_HOME`), sul `.15` `/etc/domopi-health/mqtt.pass` (utente `domotica` del broker `.20`) e
+`mqtt_local.pass` (utente `emonpi` del broker locale, dal 23/10 senza accesso anonimo). Il
 `.15` raggiunge ntfy su `192.168.1.20:8443` con il nome TLS `domopi.tailf30ba8.ts.net`.
 
 Nessuna riparazione automatica in S1 (prima settimana di osservazione); S2 aggiunge il riavvio di
@@ -49,6 +50,7 @@ sudo python3 -B health_check.py prova.json         # config senza "ntfy"/"publis
 # .15: le credenziali passano dal .20 via ssh, senza essere stampate
 ssh pi@192.168.1.20 'cat ~/.config/domopi/ntfy_nodered.token' | ssh pi@192.168.1.15 'install -d -m 700 /tmp/domopi-health-secrets && cat > /tmp/domopi-health-secrets/ntfy.token'
 ssh pi@192.168.1.20 'cat ~/.config/domopi/mqtt_domotica.pass' | ssh pi@192.168.1.15 'cat > /tmp/domopi-health-secrets/mqtt.pass'
+ssh pi@192.168.1.20 'cat ~/.config/domopi/mqtt_emonpi.pass' | ssh pi@192.168.1.15 'cat > /tmp/domopi-health-secrets/mqtt_local.pass'
 sudo sh deploy.sh 20 install        # sul .20, dalla cartella con i file
 sudo sh deploy.sh 15 install        # sul .15
 sudo sh deploy.sh <host> rollback   # rimuove timer, script, configurazione e stato
