@@ -64,7 +64,7 @@ Priorità: **U** = urgente, arriva anche di notte con priorità alta; **N** = no
 
 ## 4. Vedere lo stato quando vuoi
 
-**Nell'app** (dalla build successiva a `bld_a9748986`): il **cuore** nella barra in alto, accanto
+**Nell'app** (dalla build `bld_ef64491d`): il **cuore** nella barra in alto, accanto
 all'icona della build, è verde se `.20` e `.15` sono a posto, rosso se c'è un guasto, grigio se uno dei
 due non manda aggiornamenti da più di 6 minuti. Toccandolo si apre la pagina **«Salute impianto»**:
 
@@ -140,5 +140,5 @@ l'agente e le conferma l'utente.
 | Data | Cosa |
 |---|---|
 | 23/10/2026 10:13 | S1 attiva su `.20` e `.15`. Primo avviso: `persistence false` sul Mosquitto del `.15` (così da almeno il 2020); corretto alle 10:16 con `persistence true` |
-| 23/10/2026 | Pagina «Salute impianto» e cuore nella barra in alto dell'app (fase S3), dalla build successiva a `bld_a9748986` |
+| 23/10/2026 | Pagina «Salute impianto» e cuore nella barra in alto dell'app (fase S3), build `bld_ef64491d` |
 | 23/10/2026 10:23 e 10:34 | Broker `.20` e `.15` senza accesso anonimo: atteso `allow_anonymous false`; sul `.15` il controllo usa l'utente `emonpi`. Nel log del `.15` compare un «Socket error» a ogni giro del `.20`: è il suo test di raggiungibilità della porta 1883, non un dispositivo rifiutato |
