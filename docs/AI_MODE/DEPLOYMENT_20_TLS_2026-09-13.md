@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — chiarimenti in una domanda
+
+`20261023-clarify`: nel prompt energia «ricarica» senza altro = batteria di casa (Powerwall), e più dubbi
+vanno chiesti tutti nella stessa domanda. Prova dal telefono delle 08:20: «Percentuale media di
+ricarica ultima settimana?» chiedeva solo «quale dispositivo», non il periodo. Nella stessa giornata,
+app: il risultato `house_ai.heating_profile.v1` non era letto dall'app («Schema evidenza non
+riconosciuto» dal 17/10); `AssistantSchemaContractTest` ora controlla anche `heating_profile_tools.py`
+e `rules_tools.py`.
+
 ## Release del 23 ottobre 2026 — risposta ai chiarimenti, log del clima senza eventi
 
 `20261023-followup`: campo facoltativo `follow_up` `{question, clarification}` (massimo 500 caratteri

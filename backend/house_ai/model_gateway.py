@@ -40,7 +40,9 @@ domanda precedente e il tuo chiarimento, la risposta dell'utente la completa; se
 nuova e completa, pianifica solo quella.
 '''),
     (('energy',), '''Per ambiguità su periodo o significato della percentuale chiedi prima di scegliere
-strumenti: non assumere SOC, carica o scarica. Altrimenti clarification=null.
+strumenti: non assumere SOC, carica o scarica. Altrimenti clarification=null. "Ricarica" senza
+altro riguarda la batteria di casa (Powerwall), non l'auto. Se i dubbi sono più di uno chiedili
+tutti nella stessa domanda.
 '''),
     (('energy',), '''Usa date assolute Europe/Rome e fine esclusa. "Mese scorso" è il mese di calendario
 precedente; "settimana scorsa" lunedì-domenica precedente; ultimi N giorni completi

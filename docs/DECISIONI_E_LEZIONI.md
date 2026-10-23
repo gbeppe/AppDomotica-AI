@@ -69,6 +69,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | App MQTT | Cambiando credenziali, `connect()` deve forzare la riconnessione (prima restava la sessione vecchia). |
 | App telecamere | La WebView di sistema non mostra un flusso MJPEG aperto come pagina: usare il lettore nativo (`TinyCamClient`). |
 | App campi password | Molte tastiere nascondono gli appunti nei campi password: serve un pulsante "Incolla" esplicito. |
+| AI Smart | Una funzione nuova del backend va provata **dal telefono**, non solo sul backend: il profilo di riscaldamento (17/10) dava «Schema evidenza non riconosciuto» perché l'app non leggeva `heating_profile.v1` e il test di contratto non guardava quel file (23/10). Ogni modulo che produce risultati va nell'elenco di `AssistantSchemaContractTest`. |
 | App test | I test unitari Android non hanno `org.json` reale né `com.sun.net.httpserver`: usare `kotlinx.serialization`/regex e un mini server su socket. |
 | OpenSprinkler | L'API `/co?mqtt=` vuole il JSON **senza** graffe esterne, altrimenti salva un valore malformato che rompe `/jc` e `/ja`. OpenSprinkler pubblica su MQTT ma non accetta comandi MQTT. |
 | Tasmota | Le credenziali MQTT si cambiano dalla pagina web locale (`/cm?cmnd=Backlog MqttUser …; MqttPassword …`), così la password non passa sul broker. |
