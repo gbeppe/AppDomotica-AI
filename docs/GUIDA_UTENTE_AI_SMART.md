@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **23/10/2026** · app `bld_ef64491d` · backend House AI `20261023-health`.
+Aggiornata al **23/10/2026** · app `bld_d1ef3f89` · backend House AI `20261023-health`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -334,7 +334,7 @@ un tempo** (al massimo 6 ore), poi torna l'automatico: vedi §4.14.
 
 Legge i controlli che i due Raspberry fanno ogni 2 minuti (gli stessi del cuore in alto e della
 pagina «Salute impianto», [manuale](MANUALE_SALUTE_IMPIANTO.md)); dice al massimo 3 guasti per
-Raspberry, gli altri sono nei dettagli. Non ripara e non riavvia nulla. Serve l'app `bld_ef64491d` o
+Raspberry, gli altri sono nei dettagli. Non ripara e non riavvia nulla. Serve l'app `bld_d1ef3f89` o
 successiva collegata alla casa (è l'app che passa i controlli ad AI Smart).
 
 ## 5. Cosa AI Smart non fa
