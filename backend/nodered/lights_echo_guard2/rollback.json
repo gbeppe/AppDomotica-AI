@@ -1,0 +1,421 @@
+[
+  {
+    "id": "18386049.c296a8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 700,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "1d425ade7f5a82ae",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.reading.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1580,
+    "y": 880,
+    "wires": [
+      [
+        "2c53a89cb0d491bc"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "1ec04f1a.79db19",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.water.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 780,
+    "wires": [
+      [
+        "57163eb6.11361"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "2079f131.415606",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"on\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 790,
+    "y": 1680,
+    "wires": [
+      [
+        "7fb19688.1f8b3"
+      ]
+    ]
+  },
+  {
+    "id": "55470375.8b265c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.water.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 240,
+    "wires": [
+      [
+        "57163eb6.11361"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "6197926c.612a8c",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.living.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 620,
+    "wires": [
+      [
+        "4c3db21d.73e22c"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "6586d147.437dc",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.deck.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1590,
+    "y": 740,
+    "wires": [
+      [
+        "f4b93906.78c038"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "733e4c9a.57dce4",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"on\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 1030,
+    "y": 2360,
+    "wires": [
+      [
+        "7eeb65ca.76930c"
+      ]
+    ]
+  },
+  {
+    "id": "8f921a5e.1766f",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "/*\nmsg.payload = \"on\";\nreturn msg;\n*/\n\nconst c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.tv.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];",
+    "outputs": 2,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1570,
+    "y": 120,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "a04d1c7d.cdbeb",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"off\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 790,
+    "y": 1640,
+    "wires": [
+      [
+        "460cbdd5.11dc5c"
+      ]
+    ]
+  },
+  {
+    "id": "a082b270d39049dc",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.reading.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1580,
+    "y": 340,
+    "wires": [
+      [
+        "2c53a89cb0d491bc",
+        "4f1a0aacf7040f60"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "a75ce39d.1cf2a",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"off\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 790,
+    "y": 1720,
+    "wires": [
+      [
+        "7fb19688.1f8b3"
+      ]
+    ]
+  },
+  {
+    "id": "bccbd37f.6e4cd8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.living.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1550,
+    "y": 60,
+    "wires": [
+      [
+        "4c3db21d.73e22c"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "bdacc26c.4cd56",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"off\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 1030,
+    "y": 2440,
+    "wires": [
+      [
+        "7eeb65ca.76930c"
+      ]
+    ]
+  },
+  {
+    "id": "bfa134b2.bcd84",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'pool.deck.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 200,
+    "wires": [
+      [
+        "f4b93906.78c038"
+      ],
+      [
+        "9b33d00568c535e2"
+      ]
+    ]
+  },
+  {
+    "id": "ea8307d48995ca93",
+    "type": "function",
+    "z": "294638a5b3d82009",
+    "name": "function 17",
+    "func": "let topic = msg.topic;\nlet payload = String(msg.payload).toLowerCase();\nlet parts = topic.split('/');\nlet device = parts[parts.length - 1];\n\n// 1. Gestione Anti-Loop (RBE in memoria per singolo topic)\nlet lastStates = context.get(\"lastStates\") || {};\nif (lastStates[topic] === payload) {\n    return null; // Scarta il messaggio se lo stato non è cambiato, evitando loop infiniti\n}\nlastStates[topic] = payload;\ncontext.set(\"lastStates\", lastStates);\n\n// Validazione payload\nif (payload !== \"on\" && payload !== \"off\") {\n    return null;\n}\n\n// LIGHTS-ECHO-GUARD.1: the IR chains publish their final state on this same topic. A message\n// without _semantic_command (MQTT, not the router) matching a command routed in the last 10 s\n// is that echo: consume it instead of routing it again (on/off ping-pong of 15/10/2026).\nconst ECHO_MS = 10000;\nconst now = Date.now();\nlet pendingEchoes = context.get(\"pendingEchoes\") || {};\nlet expected = (pendingEchoes[topic] || []).filter(e => now - e.at <= ECHO_MS);\nif (!msg._semantic_command) {\n    const echo = expected.findIndex(e => e.payload === payload);\n    if (echo >= 0) {\n        expected.splice(echo, 1);\n        pendingEchoes[topic] = expected;\n        context.set(\"pendingEchoes\", pendingEchoes);\n        return null;\n    }\n}\n\n// 23 output slots (0-22).\n// Output 0 is intentionally left without downstream MQTT wiring.\n// Remaining outputs route the supported lights, pool devices and gates.\nlet outputs = new Array(24).fill(null);\n\n// Slot 0: Messaggio di Eco MQTT (da collegare al nodo mqtt out per l'app/router)\noutputs[0] = {\n    topic: topic,\n    payload: payload,\n    retain: true\n};\n\n// Tabella di associazione tra dispositivo/stato e numero di uscita del nodo function\nlet routingTable = {\n    \"shelflamp\":    { on: 1,  off: 2  },\n    \"livinglamp\":   { on: 3,  off: 4  },\n    \"tvlamp\":       { on: 5,  off: 6  },\n    \"readinglight\": { on: 7,  off: 8  },\n    \"prolunga\":     { on: 9,  off: 10 },\n    \"poolpump\":     { on: 11, off: 12 },\n    \"poolskimmer\":  { on: 13, off: 14 },\n    \"poolfloor\":    { on: 15, off: 16 },\n    \"poollight\":    { on: 17, off: 18 },\n    \"gate_1\":       { on: 19, off: 20 },\n    \"gate_2\":       { on: 21, off: 22 }\n};\n\n// 3. Instradamento dinamico verso l'uscita corretta\nif (routingTable[device] && routingTable[device][payload] !== undefined) {\n    let targetIndex = routingTable[device][payload];\n    // This event attests dispatch selection after the existing RBE, not IR success.\n    const c = msg._semantic_command;\n    if (c && c.schema === 'domopi.semantic_command.v1' &&\n        c.actor === 'utente' && c.stage === 'routed' &&\n        c.routed_topic === topic && c.requested_state === (payload === 'on') &&\n        typeof c.command_id === 'string') {\n        const event = {...c, schema:'domopi.semantic_event.v1',\n            event_id:c.command_id + ':dispatch', kind:'user_command_dispatched',\n            stage:'dispatched', dispatched_at_ms:Date.now(),\n            execution_confirmed:false, physical_confirmation:false};\n        outputs[23] = [\n            {topic:'zara/interface/semantic/v1/dispatched_commands/' + c.entity_id + '/stat',\n             payload:JSON.stringify({...event,schema:'domopi.semantic_command.v1'}),qos:1,retain:true},\n            {topic:'zara/interface/semantic/v1/events',payload:JSON.stringify(event),qos:1,retain:false}\n        ];\n    }\n    outputs[targetIndex] = {\n        topic: topic,\n        payload: payload\n    };\n    expected.push({payload: payload, at: now});\n    pendingEchoes[topic] = expected;\n    context.set(\"pendingEchoes\", pendingEchoes);\n}\n\n// Carry provenance only along the verified TV path.\nif (['tvlamp','shelflamp','readinglight','livinglamp'].includes(device) && outputs[23]) {\n    outputs[routingTable[device][payload]]._semantic_command = JSON.parse(outputs[23][0].payload);\n}\nreturn outputs;",
+    "outputs": 24,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 930,
+    "y": 1020,
+    "wires": [
+      [],
+      [
+        "19ec2476b342256a"
+      ],
+      [
+        "d60d7cbb59f36b6b"
+      ],
+      [
+        "5ec6633c7d28e0fb"
+      ],
+      [
+        "92b240c25bb61122"
+      ],
+      [
+        "c540d6665826bbef"
+      ],
+      [
+        "262baa42a0be0f5c"
+      ],
+      [
+        "d71738bb66a3df16"
+      ],
+      [
+        "d130c9ddbbe74f0b"
+      ],
+      [
+        "7e27ad1c8eed1677"
+      ],
+      [
+        "ed732edbd05e1f0b"
+      ],
+      [
+        "2fcd9d9472d6f972"
+      ],
+      [
+        "f1e5e77402b445a2"
+      ],
+      [
+        "7b9bda3a3008397d"
+      ],
+      [
+        "37f01e8b6bf3edd8"
+      ],
+      [
+        "f6e684651f4abcbc"
+      ],
+      [
+        "71f22e6a84dd13a2"
+      ],
+      [
+        "2f62b901ec997989"
+      ],
+      [
+        "f3c68444ac6a9a3c"
+      ],
+      [
+        "3ea9b4457cb5bf47"
+      ],
+      [],
+      [
+        "caa5a3dbe4598ede"
+      ],
+      [],
+      [
+        "7842d40acbe95392"
+      ]
+    ]
+  },
+  {
+    "id": "ed7c6df2.7e3cf8",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "msg.payload = \"on\";\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 790,
+    "y": 1600,
+    "wires": [
+      [
+        "460cbdd5.11dc5c"
+      ]
+    ]
+  },
+  {
+    "id": "ed8c7e3e.e2c32",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "/*\nmsg.payload = \"off\";\nreturn msg;\n*/\n\nconst c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.tv.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === false && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'off';\nreturn [msg, telemetry];",
+    "outputs": 2,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1590,
+    "y": 660,
+    "wires": [
+      [
+        "7ef048a0.7bf07"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  },
+  {
+    "id": "f7bc8ba8.270b6",
+    "type": "function",
+    "z": "a29bd73d.0c987",
+    "name": "",
+    "func": "const c = msg._semantic_command;\nconst rm = msg.payload;\nlet telemetry = null;\n// RM reports OK after invoking sendData, without waiting for a lamp acknowledgment.\nif (c && c.schema === 'domopi.semantic_command.v1' &&\n    c.entity_id === 'lights.libreria.power' && ['utente','automazione'].includes(c.actor) &&\n    ['dispatched','source_selected'].includes(c.stage) && typeof c.command_id === 'string' &&\n    c.requested_state === true && rm && rm.status === 'OK') {\n    const e = {schema:'domopi.semantic_command.v1',entity_id:c.entity_id,\n        command_id:c.command_id,actor_policy:'dashboard_only_v2',actor:c.actor,origin:c.origin,scene:c.scene||null,\n        attribution:c.attribution,requested_state:c.requested_state,\n        source_retained:c.source_retained===true,\n        stage:'send_invoked',observed_at_ms:Date.now(),\n        evidence:'rm_output_after_sendData',execution_confirmed:false,\n        physical_confirmation:false,publisher_authenticated:false};\n    telemetry = [\n        {topic:'zara/interface/semantic/v1/rm_receipts/'+c.entity_id+'/stat',\n         payload:JSON.stringify(e),qos:1,retain:true},\n        {topic:'zara/interface/semantic/v1/events',\n         payload:JSON.stringify({...e,schema:'domopi.semantic_event.v1',\n             event_id:c.command_id+':rm',kind:'rm_send_invoked'}),qos:1,retain:false}\n    ];\n}\ndelete msg._semantic_command;\nmsg.payload = 'on';\nreturn [msg, telemetry];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1570,
+    "y": 160,
+    "wires": [
+      [
+        "a9d973a9.ca666"
+      ],
+      [
+        "aa764cb4ce617210"
+      ]
+    ]
+  }
+]

@@ -104,6 +104,7 @@ Limiti Groq gratuiti per `gpt-oss-120b`: **8000 token al minuto** e **200.000 to
 | `router_fireplace_power` (ROUTER-FIREPLACE-MODE.2) | "Manuale" → `manuale`; pulsante acceso/spento → `alexa/caminetto` on/off su `.15`; chiave `router_initialized_v121` | live dal 14/10 |
 | `router_fireplace_retain` (ROUTER-FIREPLACE-RETAIN.1) | modalità, orari e potenza automatica del caminetto **retained** sul broker di `.15`; chiave `router_initialized_v122` | live dal 14/10 |
 | `lights_echo_guard` (LIGHTS-ECHO-GUARD.1) | "function 17" consuma per 10 s l'eco dello stato pubblicato dalle catene IR: niente ping-pong accendi/spegni con due comandi opposti ravvicinati (incidente 15/10 21:27); backup `/home/pi/AI_backups/nodered/20261015T212857Z-before-lights-echo-guard` | live dal 15/10 23:29; prova del 16/10 08:46 superata (doppio tocco: 4 invii IR, poi silenzio) |
+| `lights_echo_guard2` (LIGHTS-ECHO-GUARD.2) | le 18 funzioni che pubblicano lo stato dopo le catene Broadlink annunciano l'eco nel registro globale `lightsPendingEchoes`; "function 17" lo consuma prima dell'anti-loop, qualunque sia l'origine del comando (dashboard, Alexa, programmazioni): un solo invio radio per tocco (prima la dashboard mandava «3on» due volte) | **da applicare** (commit, test 8/8) |
 | `heating_profile` (HEATING-PROFILE.1) | nuovo tab: profilo di riscaldamento Spento/Ridotto/Pieno (auto da media esterna 72 h, soglie 10/16 °C da EmonCMS) e timer dei termostati (fascia → massimo, fuori → minimo), parte in **shadow**; sostituirà i timer del `.15`, che oggi non inviano nulla | pronta, da applicare |
 | `heating_profile2` (HEATING-PROFILE.2) | il piano dà anche minimo, massimo e prossimo cambio per termostato; nuovo `zara/interface/heating/profile/learning/stat` con le ultime correzioni dell'utente (per la scheda Clima dell'app); backup `/home/pi/AI_backups/nodered/20261016T154922Z-before-heating-profile2` | live dal 16/10 17:49 |
 | `rules_engine` (RULES-ENGINE.1) | nuovo tab «Regole»: motore delle regole naturali (fase H1), regole in prova 24 h, motore in **shadow**; backup `/home/pi/AI_backups/nodered/20261016T164006Z-before-rules-engine`; regola di prova `r-puffer-42` (puffer alto > 42 °C → spegni caminetto) creata il 16/10 18:40 | live dal 16/10 18:40; **motore attivo dal 18/10/2026 21:01** (regole di prova cancellate) |
@@ -141,8 +142,8 @@ spento), F3 (previsione Open-Meteo). Dettagli: [`../backend/solar/README.md`](..
   incorporate (secondo valore del codice), lette dalla presa come due pressioni; dalla dashboard partivano due
   «3on» e finiva accesa per caso. Ripetizioni portate a 5 in `/home/pi/broadlink/SharedData/jsonIrCode` (tasto 11),
   prova dell'utente superata. Backup `/home/pi/AI_backups/broadlink/20261023T075153Z-before-3on-repeat5-jsonIrCode`.
-  Codici con molte ripetizioni rimasti: 2on 34, 3off 33. Dalla dashboard partono ancora due invii, perché
-  «function 17» rismista l'eco di un comando che non ha inviato lei (innocuo, da correggere con una patch).
+  Codici con molte ripetizioni rimasti: 2on 34, 3off 33. Dalla dashboard partivano due invii, perché
+  «function 17» rismistava l'eco di un comando che non aveva inviato lei: patch `lights_echo_guard2`.
 - **Flow Node-RED:** quello attivo è `~/.node-red/projects/domopi/flows_domopi.json` (progetto `domopi`);
   `~/.node-red/flows_domopi.json` era una copia del 20/06. 14 flow obsoleti (copie in `~/.node-red` e candidati
   PR di settembre) archiviati in `/home/pi/AI_backups/nodered/20261023-obsolete-flows.tar.gz` e cancellati.
