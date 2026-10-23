@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-load312`.
+Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-grid305`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -108,8 +108,8 @@ Grandezze disponibili: produzione fotovoltaica, consumo della casa, prelievo e i
 rete, energia caricata e scaricata dalla batteria, livello medio della batteria. Oggi e i
 periodi in corso valgono fino ad adesso; i valori sono stime da campioni, non misure fiscali.
 I kWh vengono dagli **stessi contatori dell'app EmonCMS MySolarBattery** (consumo casa,
-solare e batteria dal Powerwall; prelievo e immissione dai contatori emontx3), quindi i numeri
-coincidono con quelli che vedi lì. Il «rete → casa» dell'app è una stima per differenza, non un
+solare e batteria dal Powerwall), quindi i numeri coincidono con quelli che vedi lì. Prelievo e
+immissione vengono dal misuratore di rete del Powerwall. Il «rete → casa» dell'app è una stima per differenza, non un
 contatore: per il prelievo vale quello di AI Smart.
 La **copertura** (quanta parte del periodo ha dati in EmonCMS) è scritta nei dettagli sotto la
 risposta, non letta; la voce dice solo «Mancano dati per una parte del periodo.» se ne manca più
@@ -374,3 +374,4 @@ in cima.
 | 23/10/2026 | La copertura dei dati non viene più letta (resta nei dettagli); per i periodi in corso è calcolata fino ad adesso, non fino a fine giornata. A voce solo «Mancano dati per una parte del periodo.» se manca più del 5 %. |
 | 23/10/2026 | Confronto con un periodo in corso («questa settimana rispetto alla scorsa»): a parità di tempo trascorso (la settimana scorsa fino allo stesso giorno e ora). kWh dai contatori dell'app EmonCMS MySolarBattery. |
 | 23/10/2026 | Consumo casa dal contatore del Powerwall (feed 312), come ora l'app MySolarBattery: emontx3 HomeReading dal 21/10 fa salti (−34 % il 21, +81 % il 22). |
+| 23/10/2026 | Prelievo e immissione (e «Importato oggi/ieri» nella home) dal misuratore di rete del Powerwall: la pinza emontx3 misura al contrario dal 19/10 (adattatore di tensione dell'emonTx staccato o cambiato), quindi prelievo e immissione erano scambiati. |

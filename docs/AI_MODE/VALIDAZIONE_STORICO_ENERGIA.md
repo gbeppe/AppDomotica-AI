@@ -3,7 +3,8 @@
 > **Aggiornamento 23/10/2026 — contatori cumulativi.** Dal backend `20261023-counters` i kWh dei
 > periodi vengono dai contatori cumulativi dell'app EmonCMS MySolarBattery (ultima − prima lettura):
 > casa 312 `load_instant_power_KWh` (fino al rilascio `20261023-load312`: 37 `emontx3/HomeReading`), solare 314 `solar_instant_power_KWh`, carica 310 e scarica 311
-> `battery_*_power_KWh`, prelievo 26 `emontx3/ImportReading` e immissione 29 `emontx3/ExportReading`;
+> `battery_*_power_KWh`; prelievo e immissione dalla potenza Tesla 305 (da `20261023-grid305`: i contatori
+> emontx3 26/29 vengono dalla pinza CT1, invertita dal 19/10);
 > SOC resta 304. Il feed 313 `site_instant_power_KWh` (`import_kwh` dell'app) è il **saldo netto** con
 > la rete, non il prelievo. Verifica sui 7 giorni al 23/10: casa 79,0 kWh (app 79,7; Tesla 303 solo
 > 67,6; la differenza giornaliera è variabile e dal 21/10 HomeReading fa salti), solare 107,8 (108,0), scarica 45,1 (45,1), prelievo 3,8, immissione 33,3. Il mapping

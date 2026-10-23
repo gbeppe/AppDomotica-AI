@@ -12,9 +12,9 @@ def history(identifier, start='2026-09-01', end='2026-09-02', metric='grid_impor
 
 
 class Client:
-    """1 kW everywhere: cumulative kWh counters grow by 1 per hour (feed 304 is the battery level)."""
+    """1 kW everywhere: kWh counters grow by 1 per hour; 305 is the grid power in W, 304 the battery level."""
     def history(self, feed, start, end, interval):
-        return [[t*1000, 50 if feed == 304 else t / 3600] for t in range(start, end+1, interval)]
+        return [[t*1000, 50 if feed == 304 else 1000 if feed == 305 else t / 3600] for t in range(start, end+1, interval)]
 
 
 def diagnostics(result):
@@ -133,9 +133,9 @@ class InProgressComparisonTests(unittest.TestCase):
     def test_gaps_over_five_per_cent_block_the_comparison(self):
         class Gappy:
             def history(self, feed, start, end, interval):
-                # Counter readings start 6 hours late on Monday 19/10: those hours are not measured.
+                # Grid power (305) missing for 6 hours on Monday 19/10: those hours are not measured.
                 gap = (1792360800, 1792360800 + 6 * 3600)
-                return [[t*1000, t / 3600] for t in range(start, end+1, interval) if not gap[0] <= t < gap[1]]
+                return [[t*1000, 1000] for t in range(start, end+1, interval) if not gap[0] <= t < gap[1]]
         result, text, _ = self.run_plan(Gappy())
         self.assertIsNone(result['value'])
         self.assertEqual(text, 'Confronto non calcolabile: mancano dati in uno dei due periodi.')

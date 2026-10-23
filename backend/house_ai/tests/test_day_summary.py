@@ -15,8 +15,9 @@ from server import handler
 
 NOW = datetime(2026, 10, 11, 14, 0, tzinfo=ZoneInfo('Europe/Rome'))
 # Cumulative kWh counters (energy_sources.json since 23/10/2026) growing at these powers in W:
-# PV 314, house 312, grid import 26 (none), grid export 29.
-POWER = {314: 2000, 312: 1000, 26: 0, 29: 500}
+# PV 314, house 312; the grid is the Tesla site power 305 in W (negative: export).
+POWER = {314: 2000, 312: 1000}
+GRID_W = -500
 
 
 class Client:
@@ -25,7 +26,8 @@ class Client:
 
     def history(self, feed, start, end, interval):
         stop = end if self.gap_after_s is None else min(end, start + self.gap_after_s)
-        return [[t * 1000, POWER[feed] * t / 3_600_000] for t in range(start, stop + 1, interval)]
+        return [[t * 1000, GRID_W if feed == 305 else POWER[feed] * t / 3_600_000]
+                for t in range(start, stop + 1, interval)]
 
 
 class Down:

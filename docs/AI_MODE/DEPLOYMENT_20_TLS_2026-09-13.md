@@ -77,6 +77,17 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — prelievo e immissione dal Powerwall
+
+`20261023-grid305`: `grid_import_kwh`/`grid_export_kwh` di nuovo dalla potenza Tesla 305 integrata
+(segno verificato il 12/09). Verifica emontx3 (sola lettura, processi degli input sul `.15`): ImportPower,
+ExportPower e i loro contatori 24/26/27/29 vengono dalla pinza CT1, HomePower/HomeReading = solare Tesla +
+CT1; GridPower 22 e SolarPower 32 sono copie di 305 e 307. CT1 e la rete Tesla concordano fino al 18/10,
+poi segno opposto (prima volta 19/10 14:56; 18/18 il 22/10, 42/42 il 23/10): adattatore di tensione
+dell'emonTx staccato o cambiato in quei giorni (confermato dall'utente). Prova: settimana in corso prelievo
+0,8 kWh, immissione 3,1 kWh (copertura 94,5 %); «Importato oggi» 0,03 kWh invece di 0,59. MyElectricFlow:
+configurazione coerente (tutto Tesla); i feed di flusso 419–425 sono vuoti (elaborazione mai avviata).
+
 ## Release del 23 ottobre 2026 — consumo casa dal Powerwall
 
 `20261023-load312`: consumo casa da Tesla `load_instant_power_KWh` (312). Su richiesta dell'utente

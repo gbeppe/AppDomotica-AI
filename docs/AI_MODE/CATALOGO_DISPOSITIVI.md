@@ -58,7 +58,7 @@ La presenza di un comando non costituisce autorizzazione a eseguirlo con la voce
 - API `house_ai`: `/v1/report?day={day}`, feed 353 AC, 304 SOC e 306 batteria,
   più il log climatico. Non confondere archivio storico e stato MQTT corrente.
 - Storico energia (dal 23/10/2026): contatori cumulativi kWh dell'app MySolarBattery, casa 312 (Tesla),
-  solare 314, batteria 310/311, prelievo 26 e immissione 29 (emontx3); feed 304 SOC in percentuale. Mapping, confronto e copertura in
+  solare 314, batteria 310/311; prelievo e immissione dalla potenza Tesla 305; feed 304 SOC in percentuale. Mapping, confronto e copertura in
   [validazione storico energia](VALIDAZIONE_STORICO_ENERGIA.md). Il backend
   espone `/v1/energy/query`; la schermata Android non è ancora collegata.
 - Assistente energia dinamico: catalogo di strumenti su feed 303–307, endpoint

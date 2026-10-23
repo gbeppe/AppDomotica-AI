@@ -2,7 +2,7 @@
 
 Run by house-ai-grid-import.timer every 15 minutes (oneshot, user house-ai). Values come
 from EmonCMS with the same calculation as the assistant (energy_report on the grid import
-counter of energy_sources.json, emontx3 ImportReading since 23/10/2026) and
+source of energy_sources.json, Tesla site power 305) and
 are published retained on the local broker with mosquitto_pub. Insufficient data is
 never published as zero: the retained value is cleared instead.
 """

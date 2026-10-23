@@ -4,20 +4,22 @@
   "timezone": "Europe/Rome",
   "sources": {
     "grid_import_kwh": {
-      "feed_id": 26,
-      "name": "ImportReading",
-      "tag": "Node emontx3",
-      "unit": "kWh",
-      "interval_seconds": 300,
-      "semantics": "cumulative kWh imported from the grid (meter clamp)"
+      "feed_id": 305,
+      "name": "site_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "import_sign": 1,
+      "semantics": "positive import, negative export"
     },
     "grid_export_kwh": {
-      "feed_id": 29,
-      "name": "ExportReading",
-      "tag": "Node emontx3",
-      "unit": "kWh",
-      "interval_seconds": 300,
-      "semantics": "cumulative kWh exported to the grid (meter clamp)"
+      "feed_id": 305,
+      "name": "site_instant_power",
+      "tag": "TeslaPowerwall",
+      "unit": "W",
+      "interval_seconds": 30,
+      "direction_sign": -1,
+      "semantics": "negative values represent export"
     },
     "home_consumption_kwh": {
       "feed_id": 312,
@@ -61,7 +63,7 @@
     }
   },
   "limitations": [
-    "kWh from cumulative counters, as the EmonCMS MySolarBattery app (23/10/2026): house, solar and battery from Tesla (house load_instant_power_KWh 312, same instrument as the battery, so the derived flows add up), grid import and export from emontx3 ImportReading/ExportReading because the Tesla site_instant_power_KWh (313) is the net balance.",
+    "kWh of house, solar and battery from the Tesla cumulative counters used by the EmonCMS MySolarBattery app (312, 314, 310, 311); grid import and export from the Tesla site power (305), integrated: there is no Tesla import-only counter (313 is the net balance) and the emonTx CT1 behind emontx3 ImportReading/ExportReading reads inverted since 19/10/2026 (voltage adapter unplugged or changed).",
     "emontx3 HomeReading (37) reads about 12 per cent more than the Tesla load on the same days; which one is right needs the utility meter.",
     "EmonCMS metadata leaves most units blank; units were validated against names, ranges and the power balance.",
     "These are operational measurements, not billing-grade meter readings."
