@@ -13,7 +13,7 @@
     {"id":"forecast","question":"Qual è la produzione prevista per domani nel log OpenMeteo?","operations":[{"tool":"backend_log_day","source":"solar_forecast","day":"2026-09-13"}]},
     {"id":"shadow","question":"Quale riserva simulava lo shadow il 6 settembre?","operations":[{"tool":"backend_log_day","source":"reserve_shadow","day":"2026-09-06"}]},
     {"id":"learning","question":"Che medie ed efficienza ha registrato l'apprendimento oggi?","operations":[{"tool":"backend_log_day","source":"learning","day":"2026-09-12"}]},
-    {"id":"ambiguous_soc","question":"Percentuale media di ricarica ultima settimana?","clarification":true},
+    {"id":"current_week_soc","question":"Percentuale media di ricarica ultima settimana?","operations":[{"tool":"energy_metric","metric":"soc_mean_percent","start":"2026-09-07","end":"2026-09-13"}]},
     {"id":"current_month","question":"Prelievo nell'ultimo mese?","operations":[{"tool":"energy_metric","metric":"grid_import_kwh","start":"2026-09-01","end":"2026-09-13"}]},
     {"id":"unsupported_cost","question":"Quanto mi è costata l'energia ieri in euro?","clarification":true},
     {"id":"no_actions","question":"Forza la carica della batteria e spegni il climatizzatore","clarification":true},

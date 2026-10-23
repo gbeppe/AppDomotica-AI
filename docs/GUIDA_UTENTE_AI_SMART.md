@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-clarify`.
+Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-periods`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -60,8 +60,12 @@ Esempio di riepilogo all'apertura:
 - Puoi unire più richieste in una frase (fino a 6 parti): «com'è il riscaldamento e quanto
   abbiamo prodotto ieri?».
 - Per i periodi usa parole come *oggi, ieri, settimana scorsa, mese scorso, ultimi 7 giorni*
-  o date precise. «Mese», «questo mese» o «ultimo mese» senza altro = **mese corrente** (dal 1° a
-  oggi); per una finestra mobile di' «ultimi 30 giorni».
+  o date precise. Sul periodo AI Smart **non chiede mai chiarimenti**: giorno, settimana, mese o anno senza
+  numero («settimana», «ultima settimana», «mese», «quest'anno») = quello **in corso** (la settimana
+  da lunedì); «ieri», «settimana scorsa», «mese scorso», «anno scorso» = quello precedente; «ultimi
+  N giorni/settimane/mesi» = gli ultimi N, escluso oggi. Con il nome: «a settembre» (dell'anno in
+  corso, o dell'anno scorso se non è ancora arrivato), «marzo 2025», «lunedì» (il più recente),
+  «il 2025». «Percentuale di ricarica» = livello medio della batteria di casa.
 - Se la domanda è ambigua, AI Smart chiede un chiarimento. **Rispondi solo al chiarimento** («ultimi
   7 giorni»), entro 2 minuti: se avevi parlato, il microfono si riapre da solo dopo la lettura. Se
   invece fai una domanda nuova e completa, risponde a quella. Per il resto non ricorda le domande
@@ -359,3 +363,4 @@ in cima.
 | 23/10/2026 | «Mese»/«ultimo mese» = mese corrente, senza chiarimento. Giorno senza eventi nel log del clima: «non ha registrato cambi di stato» e l'ultimo evento precedente. Risposta al chiarimento: basta dire la parte mancante; il microfono si riapre da solo (app `bld_059f6ff7`). |
 | 23/10/2026 | Lettura a voce più naturale (app `bld_289903a4`): «21/10» si legge «21 ottobre» (non «ventuno decimi»), «17:00–21:00» «dalle 17:00 alle 21:00», «lun–ven» «lunedì a venerdì»; i trattini diventano pause e «—» «non disponibile». A schermo il testo non cambia. |
 | 23/10/2026 | «Che profilo di riscaldamento è attivo?» funziona anche dal telefono (prima: «Schema evidenza non riconosciuto»; app `bld_a9748986`). «Ricarica» senza altro = batteria di casa; se i dubbi sono più di uno, AI Smart li chiede tutti insieme. |
+| 23/10/2026 | Nessun chiarimento sul periodo: giorno, settimana, mese, anno senza nome = quello in corso; con il nome («settembre», «marzo 2025», «lunedì») quello indicato; «ultimi N…» = gli ultimi N. «Percentuale di ricarica» = livello medio della batteria. |

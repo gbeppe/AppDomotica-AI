@@ -67,6 +67,16 @@ class GatewayTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     configured_api_key()
 
+    def test_calendar_has_periods_in_progress_and_weekdays(self):
+        calendar = checked_request({**envelope(), 'today': '2026-10-23'})['calendar']
+        self.assertEqual(calendar['today_weekday'], 'venerdì')
+        self.assertEqual(calendar['current_week'], {'start': '2026-10-19', 'end_exclusive': '2026-10-24'})
+        self.assertEqual(calendar['current_month'], {'start': '2026-10-01', 'end_exclusive': '2026-10-24'})
+        self.assertEqual(calendar['current_year'], {'start': '2026-01-01', 'end_exclusive': '2026-10-24'})
+        self.assertEqual(calendar['last_days_by_name']['lunedì'], '2026-10-19')
+        self.assertEqual(calendar['last_days_by_name']['venerdì'], '2026-10-23')
+        self.assertEqual(calendar['last_days_by_name']['sabato'], '2026-10-17')
+
     def test_calendar_crosses_year_and_leap_month_without_model_arithmetic(self):
         january = checked_request({**envelope(), 'today': '2027-01-02'})['calendar']
         self.assertEqual(january['previous_month'], {'start': '2026-12-01', 'end_exclusive': '2027-01-01'})

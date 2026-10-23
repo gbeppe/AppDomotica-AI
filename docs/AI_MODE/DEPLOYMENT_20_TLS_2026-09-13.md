@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — periodi senza chiarimenti
+
+`20261023-periods` (richiesta dell'utente: «la domanda è già chiara»): giorno, settimana, mese, anno
+senza nome = periodo in corso; con il nome = quello indicato (mese futuro → anno scorso); «ultimi N…»
+= finestra mobile; «percentuale di ricarica» = `soc_mean_percent`. Il calendario del gateway aggiunge
+`today_weekday`, `current_week`, `current_month`, `current_year` e `last_days_by_name`: in prova il
+modello aveva preso «lunedì» per mercoledì 21/10 e «ultima settimana» per la precedente. Prova dalla
+copia in `/tmp`: 5 domande su 5 corrette (~2300 token l'una).
+
 ## Release del 23 ottobre 2026 — chiarimenti in una domanda
 
 `20261023-clarify`: nel prompt energia «ricarica» senza altro = batteria di casa (Powerwall), e più dubbi

@@ -197,10 +197,10 @@ def catalog(path=CATALOG_PATH):
         }],
         "rules": [
             "Resolve relative periods into absolute dates.",
-            "Ask for clarification when period or metric meaning is ambiguous.",
+            "Ask for clarification only when the metric is ambiguous; a day, week, month or year without a number is the current one.",
             "Use multiple operations for comparisons or compound questions. Every operation requires a unique id and tool name; max 6 operations.",
             "For comparisons select both periods and then energy_comparison using their IDs; same metric only.",
-            "SOC is battery level, not energy charged. Ask which meaning is intended for ambiguous percentages.",
+            "SOC is battery level, not energy charged: a battery or charge percentage is the SOC.",
             "Today and the current month/week may be incomplete. End date is exclusive.",
             "Use backend_log_day for forecasts, recorded reasons, learning or SHADOW evidence. Never infer actions from SHADOW.",
             "Use current_predictive_reserve for the current Predictive Reserve state; it cannot explain past nights.",

@@ -39,17 +39,23 @@ clarification deve dichiarare che l'azione non è disponibile. Se la domanda rip
 domanda precedente e il tuo chiarimento, la risposta dell'utente la completa; se è una domanda
 nuova e completa, pianifica solo quella.
 '''),
-    (('energy',), '''Per ambiguità su periodo o significato della percentuale chiedi prima di scegliere
-strumenti: non assumere SOC, carica o scarica. Altrimenti clarification=null. "Ricarica" senza
-altro riguarda la batteria di casa (Powerwall), non l'auto. Se i dubbi sono più di uno chiedili
-tutti nella stessa domanda.
+    (('energy',), '''Per una grandezza davvero ambigua chiedi prima di scegliere strumenti; il periodo non è
+mai ambiguo (regole sotto). Altrimenti clarification=null. "Ricarica" senza altro riguarda la
+batteria di casa (Powerwall), non l'auto; "percentuale (media) di ricarica" o "della batteria" è
+soc_mean_percent (livello), "energia caricata" è battery_charge_kwh. Se i dubbi sono più di uno
+chiedili tutti nella stessa domanda.
 '''),
-    (('energy',), '''Usa date assolute Europe/Rome e fine esclusa. "Mese scorso" è il mese di calendario
-precedente; "settimana scorsa" lunedì-domenica precedente; ultimi N giorni completi
-escludono oggi. "Mese", "questo mese" o "ultimo mese" senza precisazioni = mese corrente,
-dal primo del mese a domani escluso. "Ultima settimana" senza precisazioni richiede
-chiarimento fra calendario e finestra mobile, anche se la metrica è chiara. SOC medio e
-percentuale di ricarica non sono equivalenti. "Prelievo" è grid_import_kwh (dalla rete), "immissione"
+    (('energy',), '''Usa date assolute Europe/Rome e fine esclusa; non chiedere mai chiarimenti sul periodo e
+prendi le date da calendar (current_week, current_month, current_year, last_days_by_name…).
+Giorno, settimana, mese o anno senza nome né numero ("oggi", "giorno", "settimana",
+"questa/ultima settimana", "mese", "questo/ultimo mese", "anno", "quest'anno", "ultimo anno") =
+periodo di calendario in corso fino a domani escluso (settimana da lunedì): "ultimo/ultima" non
+vuol dire precedente ("ultima settimana" = current_week). "Ieri", "settimana scorsa" (lunedì-domenica), "mese scorso", "anno scorso"
+= periodo di calendario precedente. Un mese col nome ("settembre") è quel mese dell'anno in corso,
+o dell'anno scorso se non è ancora iniziato; un giorno col nome o la data ("lunedì", "il 5") è il
+più recente fino a oggi; un anno col numero è quell'anno. "Ultimi N giorni" = N giorni
+completi escluso oggi; "ultime N settimane" = 7×N giorni; "ultimi N mesi/anni" = dallo stesso
+giorno di N mesi/anni fa a oggi escluso. "Prelievo" è grid_import_kwh (dalla rete), "immissione"
 grid_export_kwh; carica e scarica riguardano solo la batteria.
 Oggi e il mese o la settimana in corso possono essere incompleti.
 '''),
@@ -166,6 +172,8 @@ SYSTEM = ''.join(text for _, text in SECTIONS)
 
 # Tools of each topic. One question used ~7700 tokens with every tool (21/10/2026) against Groq's free
 # 8000 per minute; sending only the topics of the question keeps it to about half.
+WEEKDAYS = ('lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica')
+
 DOMAIN_TOOLS = {
     'energy': ('energy_metric', 'energy_daily_extreme', 'energy_comparison', 'current_energy_overview',
                'current_energy_metric', 'backend_log_day'),
@@ -254,9 +262,17 @@ def checked_request(body):
     # Never forward the caller's instruction; the gateway owns its system prompt.
     calendar = {name: dict(zip(('start', 'end_exclusive'), relative_period(name, today)))
                 for name in ('previous_month', 'previous_week', 'last_7_days', 'last_30_days')}
-    calendar.update({'today': today.isoformat(),
-                     'yesterday': (today - timedelta(days=1)).isoformat(),
-                     'tomorrow': (today + timedelta(days=1)).isoformat()})
+    tomorrow = (today + timedelta(days=1)).isoformat()
+    # Periods in progress and the last seven days by name: the model gets weekdays wrong (23/10/2026).
+    calendar.update({'today': today.isoformat(), 'today_weekday': WEEKDAYS[today.weekday()],
+                     'yesterday': (today - timedelta(days=1)).isoformat(), 'tomorrow': tomorrow,
+                     'current_week': {'start': (today - timedelta(days=today.weekday())).isoformat(),
+                                      'end_exclusive': tomorrow},
+                     'current_month': {'start': today.replace(day=1).isoformat(), 'end_exclusive': tomorrow},
+                     'current_year': {'start': today.replace(month=1, day=1).isoformat(),
+                                      'end_exclusive': tomorrow},
+                     'last_days_by_name': {WEEKDAYS[(today - timedelta(days=n)).weekday()]:
+                                           (today - timedelta(days=n)).isoformat() for n in range(7)}})
     return {'question': body['question'], 'today': today.isoformat(),
             'timezone': 'Europe/Rome', 'calendar': calendar, 'tool_catalog': catalog()}
 
