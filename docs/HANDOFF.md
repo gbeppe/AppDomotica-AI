@@ -130,7 +130,7 @@ falde Eclipse e Viessmann): luce teorica con cielo sereno pubblicata retained su
 `~/.config/domopi/mqtt_emonpi.pass`, identificativo MQTT unico, calcolo identico verificato su 576 casi);
 backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall'utente il 23/10 (ramo
 `Irradiance=` tolto, previsione Open-Meteo sul piano inclinato): SOLAR-TILTED.1 (`backend/nodered/solar_tilted/`)
-**live dal 23/10 18:09**; da fare con l'utente: registrare su feed EmonCMS gli input `forecast_smodule`/`forecast_smodule2`. Dettagli: [`../backend/solar/README.md`](../backend/solar/README.md).
+**live dal 23/10 18:09**; feed EmonCMS 449–452 (previsto luce/elettrico per falda) dal 23/10 18:20. Dettagli: [`../backend/solar/README.md`](../backend/solar/README.md).
 
 ### EmonCMS (`.15`) e luci radio Broadlink — interventi del 23/10/2026
 - **App MySolarBattery** (id 4): `use_kwh` 37 → 312 (Tesla) e `import_kwh` 313 → **447**. Il 313

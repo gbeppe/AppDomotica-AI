@@ -26,5 +26,13 @@ python3 deploy.py prepare | apply BACKUP | rollback BACKUP                     #
 Applicata il 23/10/2026 alle 18:09 (backup `/home/pi/AI_backups/nodered/20261023T160950Z-before-solar-tilted`);
 primi valori verificati alle 18:11 (oggi 97,2 kWh di luce sulle due falde, domani 70,1).
 
-Dopo il deploy: in EmonCMS i nuovi input `forecast_smodule`/`forecast_smodule2` (nodo `planetary`)
-vanno registrati su feed, con l'utente.
+Feed EmonCMS (23/10/2026, con l'utente; PHPFina 300 s, tag `Node planetary`), come per `smodule`:
+
+| Input | Processi | Feed |
+|---|---|---|
+| `forecast_smodule` (1527) | registra → ×0,15 → registra | 449 «solar energy reaching panels Eclipse PREVISTO» (luce), 450 «solar Eclipse PREVISTO elettrico» |
+| `forecast_smodule2` (1528) | registra → ×0,205 → registra | 451 «solar energy reaching panels Viessmann PREVISTO» (luce), 452 «solar Viessmann PREVISTO elettrico» |
+
+Confronto diretto con i teorici 404/146 (Eclipse) e 405/302 (Viessmann). Questa versione di EmonCMS
+accetta i processi solo in JSON (`[{"fn": "process__log_to_feed", "args": [449]}, ...]`) con la chiave
+di scrittura.
