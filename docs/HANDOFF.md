@@ -239,23 +239,12 @@ pavimento.
 allineata). Rilasciati in giornata: ROUTER-FIREPLACE-RETAIN.1 (`v122`), house_ai
 `20261014-heating` (strumento `current_heating`), app `bld_1804d204`. `main` resta a `a18f08b`.
 
-**Punto di ripresa (15/10/2026), nell'ordine:**
-1. Ciclo di test sul caminetto, insieme all'utente.
-2. AI Smart dal telefono: «Com'è il riscaldamento in casa?», «Il caminetto è acceso?», «Quanto
-   è caldo il puffer?» (attesi caminetto, puffer, pompa pavimento, caldaia, solare termico e
-   termostati con "chiede / non chiede calore").
-3. Retain: l'utente reimposta dall'app gli orari del caminetto (sul `.20` sono ancora
-   16:30/16:55, sul broker di `.15` 17:00/19:00); poi verificare i retained su `.15`.
-4. Prova Manuale → acceso → spento, ascoltando entrambi i broker.
-5. Da decidere con l'utente: il comando "pompa pavimento abilitata" dell'app va al broker di `.20`
-   (`broker: "home"`), mentre `.15` lo legge dal proprio broker; probabile stesso difetto della
-   modalità caminetto. Non provarlo senza consenso: con il puffer sopra 35 °C la pompa partirebbe.
-6. Caldaia (Fondital Itaca KRB 24, senza alimentazione da marzo): l'utente invierà foto della
-   morsettiera della centralina e dell'OTGW e il manuale d'installazione. Poi: capire come parte
-   otmonitor su `.20` (non è un servizio systemd), progettare acceso/spento e modalità solo
-   ACS / solo riscaldamento / entrambi via `actions/otmonitor` (CH=, HW=, CS=, SW=) con isteresi e
-   tempi minimi, e preparare la prova di riaccensione (oggi il gateway chiede CH=0 e DHW=0).
-7. Poi unione in `main` con conferma dell'utente.
+**Punto di ripresa (15/10/2026):** voci chiuse o superate al 23/10 — prove del caminetto fatte; «pompa
+pavimento abilitata» sul broker del `.15` risolta il 16/10 (ROUTER-FLOOR-PUMP.1, `v123`; il 23/10 il retained,
+perso nei riavvii del `.15`, ripubblicato «disabilitata» su richiesta dell'utente). Resta aperta la **caldaia**
+(Fondital Itaca KRB 24, spenta da marzo): l'utente invierà foto della morsettiera e dell'OTGW e il manuale; poi
+capire come parte otmonitor su `.20`, progettare acceso/spento e modalità via `actions/otmonitor` (CH=, HW=, CS=,
+SW=) con isteresi e tempi minimi, e preparare la prova di riaccensione. Unione in `main` con conferma dell'utente.
 
 1. ~~Prove sul campo e unione in `main`~~ fatte il 14/10 (barra in alto LOCALE/REMOTO nei tre
    casi, slider del caminetto anche con `palazzetti_v2`). Da osservare al primo uso reale:
@@ -330,8 +319,12 @@ Groq Dev Tier: aggiornamento non disponibile il 21/10 («high demand»), da ripr
 - **`.15`, pulizia del 17/10:** `pompaPavimento.log` (40 MB, 897.759 righe dal 2021) compresso in
   `/home/pi/data/pompaPavimento.log-20261017.gz` (2,7 MB, verificato) e svuotato; rotazione in
   `/etc/logrotate.d/pompaPavimento` (mensile o 5 MB, 12 archivi, `copytruncate`). Nodo «SC1 | SOE Debug»
-  disattivato dall'Admin API (era acceso a runtime; nel flow è già spento). Restano errori ogni 20 s
-  di «parse sensorN» e «parse speed pump N» (`TypeError`), da guardare.
+  disattivato dall'Admin API (era acceso a runtime; nel flow è già spento). Gli errori ogni 20 s di «parse
+  sensorN» e «parse speed pump N» (`TypeError`, nodi che leggono la centralina Resol del solare termico) **non
+  compaiono più dal 21/10** (verificato il 23/10: dati Resol aggiornati, feed 40–47).
+- **Feed 44/46 della Resol (23/10):** «Vel Pompa Caldaia» e «Ore Funz Pompa Caldaia» hanno nomi corretti (canale
+  «pompa caldaia» della CS4), ma **nell'impianto non c'è nessuna pompa collegata**: il 100 % e le ore sono lo
+  stato logico del canale, non un funzionamento reale. Non usarli come indicatori di consumo o di dispersione.
 
 - ~~Indicatore del termostato del soggiorno rimasto spento~~ (risolto 16/10): la prova registrata
   delle 15:24 è corretta (`POWER ON` → app «acceso» in 10 ms, il ripetitore del `.15` ogni 20 s
