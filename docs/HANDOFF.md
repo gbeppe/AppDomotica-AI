@@ -126,6 +126,27 @@ falde Eclipse e Viessmann): luce teorica con cielo sereno pubblicata retained su
 backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. Prossime: F2 (ramo `Irradiance=` rotto e
 spento), F3 (previsione Open-Meteo). Dettagli: [`../backend/solar/README.md`](../backend/solar/README.md).
 
+### EmonCMS (`.15`) e luci radio Broadlink — interventi del 23/10/2026
+- **App MySolarBattery** (id 4): `use_kwh` 37 → 312 (Tesla) e `import_kwh` 313 → **447**. Il 313
+  `site_instant_power_KWh` è il saldo netto, non il prelievo. Backup in `/home/pi/AI_backups/emoncms/`
+  sul `.15` (`20261023T071122Z-…use_kwh-312.json`, `20261023T075435Z-…import_kwh.json`).
+- **Contatori di rete Tesla:** nuovi feed **447 `site_import_kWh`** e **448 `site_export_kWh`** (PHPFina 30 s,
+  kWh). Vengono dagli input `site_energy_imported` (753) e `site_energy_exported` (749), con i processi «x
+  0,001», «If ZERO, skip next», «Log to feed». Lo storico parte dal 23/10 ~09:55; AI Smart usa ancora la potenza
+  305 (passaggio a 447/448 quando ci sarà storico). Backup dei processi (vuoti):
+  `20261023T075435Z-before-site-energy-feeds-inputs.tsv`.
+- **MyElectricFlow** (id 5): configurazione coerente (tutto Tesla); feed di flusso 419–425 vuoti (elaborazione
+  mai avviata dal pulsante dell'app).
+- **Luce TV** (Broadlink «3on»): si accendeva e rispegneva subito dall'app. Il codice aveva 21 ripetizioni
+  incorporate (secondo valore del codice), lette dalla presa come due pressioni; dalla dashboard partivano due
+  «3on» e finiva accesa per caso. Ripetizioni portate a 5 in `/home/pi/broadlink/SharedData/jsonIrCode` (tasto 11),
+  prova dell'utente superata. Backup `/home/pi/AI_backups/broadlink/20261023T075153Z-before-3on-repeat5-jsonIrCode`.
+  Codici con molte ripetizioni rimasti: 2on 34, 3off 33. Dalla dashboard partono ancora due invii, perché
+  «function 17» rismista l'eco di un comando che non ha inviato lei (innocuo, da correggere con una patch).
+- **Flow Node-RED:** quello attivo è `~/.node-red/projects/domopi/flows_domopi.json` (progetto `domopi`);
+  `~/.node-red/flows_domopi.json` era una copia del 20/06. 14 flow obsoleti (copie in `~/.node-red` e candidati
+  PR di settembre) archiviati in `/home/pi/AI_backups/nodered/20261023-obsolete-flows.tar.gz` e cancellati.
+
 ### Firmware delle schede ESP
 Sketch versionati in [`../firmware/`](../firmware/README.md) (credenziali solo in `secrets.h`
 locale, controllo `python3 firmware/check_firmware.py`). Caminetto: `palazzetti_v2` caricato e
