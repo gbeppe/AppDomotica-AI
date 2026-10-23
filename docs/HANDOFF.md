@@ -68,7 +68,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_d1ef3f89`** (23/10, commit `b50d8c5`: passa ad AI Smart i riepiloghi della salute, `current_system_health`); prima **`bld_ef64491d`** (23/10, commit `57de8f8`: pagina «Salute impianto» con il cuore nella barra in alto, fase S3); prima **`bld_a9748986`** (23/10, commit `63061e7`: legge il risultato del profilo di riscaldamento); prima `bld_289903a4` (23/10, commit `5302810`: lettura a voce di date e trattini, `spokenText` in `SpeechText.kt`: «21/10» → «21 ottobre», intervalli, «—» → «non disponibile»); prima `bld_059f6ff7` (23/10: VMC (T2) e risposta ai chiarimenti, `AssistantFollowUp`: la domanda successiva entro 2 minuti porta domanda e chiarimento, microfono riaperto dopo la lettura del chiarimento); prima `bld_bff71307` (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
+Installata sul telefono: **`bld_e3752488`** (23/10 18:05, commit `16f51e6`: riquadro «Condizionatore a tempo» nella schermata AI Climate, T4 passo 4); prima **`bld_d1ef3f89`** (23/10, commit `b50d8c5`: passa ad AI Smart i riepiloghi della salute, `current_system_health`); prima **`bld_ef64491d`** (23/10, commit `57de8f8`: pagina «Salute impianto» con il cuore nella barra in alto, fase S3); prima **`bld_a9748986`** (23/10, commit `63061e7`: legge il risultato del profilo di riscaldamento); prima `bld_289903a4` (23/10, commit `5302810`: lettura a voce di date e trattini, `spokenText` in `SpeechText.kt`: «21/10» → «21 ottobre», intervalli, «—» → «non disponibile»); prima `bld_059f6ff7` (23/10: VMC (T2) e risposta ai chiarimenti, `AssistantFollowUp`: la domanda successiva entro 2 minuti porta domanda e chiarimento, microfono riaperto dopo la lettura del chiarimento); prima `bld_bff71307` (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -107,6 +107,7 @@ Limiti Groq gratuiti per `gpt-oss-120b`: **8000 token al minuto** e **200.000 to
 | `lights_echo_guard2` (LIGHTS-ECHO-GUARD.2) | le 18 funzioni che pubblicano lo stato dopo le catene Broadlink annunciano l'eco nel registro globale `lightsPendingEchoes`; "function 17" lo consuma prima dell'anti-loop, qualunque sia l'origine del comando (dashboard, Alexa, programmazioni): un solo invio radio per tocco (prima la dashboard mandava «3on» due volte); backup `/home/pi/AI_backups/nodered/20261023T080307Z-before-lights-echo-guard2` | live dal 23/10 10:03; prova superata (dashboard e app: 4 tocchi, 4 invii) |
 | `ai_ac_override` (AI-CLIMATE-AC-OVERRIDE.1) | T4: priorità manuale del condizionatore (`zara/interface/climate/ac/override/cmd`, spento o caldo/raffrescamento/deumidifica, al più 6 ore) rispettata da AI Climate con i tempi del compressore; una protezione della batteria la chiude e avvisa su ntfy; backup `/home/pi/AI_backups/nodered/20261023T135015Z-before-ai-ac-override` | live dal 23/10 15:50 (prova dal vivo rimandata) |
 | `rules_engine5` (RULES-ENGINE.5) | azioni `set_ac_override` (spento o caldo/raffrescamento/deumidifica, fine al più 6 ore dopo) e `set_ac_auto`; solo la funzione del motore; backup `/home/pi/AI_backups/nodered/20261023T135429Z-before-rules-engine5` | live dal 23/10 15:54 |
+| `solar_tilted` (SOLAR-TILTED.1) | F2: tolto il ramo rotto `Irradiance=` del tab «start local scripts»; F3: previsione Open-Meteo della luce sul piano di ciascuna falda (ogni ora), `emon/planetary/forecast_smodule`/`forecast_smodule2` sul `.15` ogni 300 s e riepilogo retained `zara/interface/energy/solar_forecast/stat` (kWh di luce oggi/domani); backup `/home/pi/AI_backups/nodered/20261023T160950Z-before-solar-tilted` | live dal 23/10 18:09 |
 | `heating_profile` (HEATING-PROFILE.1) | nuovo tab: profilo di riscaldamento Spento/Ridotto/Pieno (auto da media esterna 72 h, soglie 10/16 °C da EmonCMS) e timer dei termostati (fascia → massimo, fuori → minimo), parte in **shadow**; sostituisce i timer del `.15` | live dal 16/10 12:44; **timer active dal 23/10 18:00** (dopo TASMOTA-TIMERS-OFF.1) |
 | `heating_profile2` (HEATING-PROFILE.2) | il piano dà anche minimo, massimo e prossimo cambio per termostato; nuovo `zara/interface/heating/profile/learning/stat` con le ultime correzioni dell'utente (per la scheda Clima dell'app); backup `/home/pi/AI_backups/nodered/20261016T154922Z-before-heating-profile2` | live dal 16/10 17:49 |
 | `rules_engine` (RULES-ENGINE.1) | nuovo tab «Regole»: motore delle regole naturali (fase H1), regole in prova 24 h, motore in **shadow**; backup `/home/pi/AI_backups/nodered/20261016T164006Z-before-rules-engine`; regola di prova `r-puffer-42` (puffer alto > 42 °C → spegni caminetto) creata il 16/10 18:40 | live dal 16/10 18:40; **motore attivo dal 18/10/2026 21:01** (regole di prova cancellate) |
@@ -127,8 +128,9 @@ Limiti Groq gratuiti per `gpt-oss-120b`: **8000 token al minuto** e **200.000 to
 falde Eclipse e Viessmann): luce teorica con cielo sereno pubblicata retained sul broker del `.15`
 (`emon/planetary/…`) per EmonCMS. **F1 live dal 21/10/2026 23:50** (password in
 `~/.config/domopi/mqtt_emonpi.pass`, identificativo MQTT unico, calcolo identico verificato su 576 casi);
-backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. Prossime: F2 (ramo `Irradiance=` rotto e
-spento), F3 (previsione Open-Meteo). Dettagli: [`../backend/solar/README.md`](../backend/solar/README.md).
+backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall'utente il 23/10 (ramo
+`Irradiance=` tolto, previsione Open-Meteo sul piano inclinato): SOLAR-TILTED.1 (`backend/nodered/solar_tilted/`)
+**live dal 23/10 18:09**; da fare con l'utente: registrare su feed EmonCMS gli input `forecast_smodule`/`forecast_smodule2`. Dettagli: [`../backend/solar/README.md`](../backend/solar/README.md).
 
 ### EmonCMS (`.15`) e luci radio Broadlink — interventi del 23/10/2026
 - **App MySolarBattery** (id 4): `use_kwh` 37 → 312 (Tesla) e `import_kwh` 313 → **447**. Il 313
@@ -270,8 +272,10 @@ vuoti di MyElectricFlow; AI Smart sui contatori 447/448 quando avranno storico.
 
 **Fase P — preriscaldo del puffer con il caminetto (17/10/2026):** idea dell'utente approvata a
 tappe (dati → avviso caldaia oltre il 20 % → consiglio del giorno → automatico con ritorno a Manuale).
-Diario: [`AI_MODE/PRERISCALDO_PUFFER.md`](AI_MODE/PRERISCALDO_PUFFER.md). Prossimo: tappa 0 (storico
-EmonCMS, sola lettura). Prerequisito per le misure dal vivo: caldaia riaccesa.
+Diario: [`AI_MODE/PRERISCALDO_PUFFER.md`](AI_MODE/PRERISCALDO_PUFFER.md). Tappa 0 conclusa sullo storico il
+23/10 (caminetto +3,5 °C/h, puffer alto da 35 a 40 °C in ~80 min; sopra 38 °C la caldaia lavora circa la
+metà anche nei giorni freddi). Prossimo: tappa 1 (avviso «caldaia oltre il 20 %»), utile solo a caldaia
+riaccesa. Prerequisito per le misure dal vivo: caldaia riaccesa.
 
 **Fase S — salute impianto (21/10/2026):** dopo gli incidenti del 17–21/10 (sottotensione, Mosquitto
 fermo all'avvio, Tailscale offline, `.15` nascosto dal Wi‑Fi) controllo reciproco `.20`/`.15` con

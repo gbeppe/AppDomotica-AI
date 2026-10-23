@@ -1,0 +1,135 @@
+[
+  {
+    "id": "08d69022888b30e4",
+    "type": "mqtt in",
+    "z": "bb7b2455ed68c7d8",
+    "d": true,
+    "name": "",
+    "topic": "emon/weather/tomorrowSolarIrradiance",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "cfd9898e.1367b8",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 170,
+    "y": 40,
+    "wires": [
+      [
+        "7fcb34dde7c4bb44"
+      ]
+    ]
+  },
+  {
+    "id": "7fcb34dde7c4bb44",
+    "type": "function",
+    "z": "bb7b2455ed68c7d8",
+    "name": "function 12",
+    "func": "flow.set(\"SolarIrradiance\", msg.payload);\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 450,
+    "y": 40,
+    "wires": [
+      [
+        "f7d9ed4550d3c448"
+      ]
+    ]
+  },
+  {
+    "id": "cfe8a968f3e3d484",
+    "type": "delay",
+    "z": "bb7b2455ed68c7d8",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "5",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 380,
+    "y": 180,
+    "wires": [
+      [
+        "e0139363b5a64510"
+      ]
+    ]
+  },
+  {
+    "id": "71316610605ed7d2",
+    "type": "exec",
+    "z": "bb7b2455ed68c7d8",
+    "command": "php /home/pi/solarEnergy.php panelModel=Eclipse Irradiance=",
+    "addpay": "SolarIrradiance",
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "winHide": false,
+    "oldrc": false,
+    "name": "",
+    "x": 690,
+    "y": 120,
+    "wires": [
+      [],
+      [],
+      [
+        "cfe8a968f3e3d484"
+      ]
+    ]
+  },
+  {
+    "id": "f7d9ed4550d3c448",
+    "type": "delay",
+    "z": "bb7b2455ed68c7d8",
+    "name": "",
+    "pauseType": "delay",
+    "timeout": "5",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "outputs": 1,
+    "x": 380,
+    "y": 120,
+    "wires": [
+      [
+        "71316610605ed7d2"
+      ]
+    ]
+  },
+  {
+    "id": "e0139363b5a64510",
+    "type": "exec",
+    "z": "bb7b2455ed68c7d8",
+    "command": "php /home/pi/solarEnergy.php panelModel=Viessmann Irradiance=",
+    "addpay": "SolarIrradiance",
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "winHide": false,
+    "oldrc": false,
+    "name": "",
+    "x": 700,
+    "y": 180,
+    "wires": [
+      [],
+      [],
+      []
+    ]
+  }
+]

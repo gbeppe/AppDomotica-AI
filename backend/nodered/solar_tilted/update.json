@@ -1,0 +1,136 @@
+[
+  {
+    "id": "a3ed946592276e8d",
+    "type": "inject",
+    "z": "bb7b2455ed68c7d8",
+    "name": "previsione: ogni ora",
+    "props": [
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "3600",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "30",
+    "topic": "fetch",
+    "x": 170,
+    "y": 420,
+    "wires": [
+      [
+        "160ebf913c2ca183"
+      ]
+    ]
+  },
+  {
+    "id": "cc2ac1186b9aa641",
+    "type": "inject",
+    "z": "bb7b2455ed68c7d8",
+    "name": "previsione: ogni 300 s",
+    "props": [
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "300",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "90",
+    "topic": "tick",
+    "x": 170,
+    "y": 470,
+    "wires": [
+      [
+        "160ebf913c2ca183"
+      ]
+    ]
+  },
+  {
+    "id": "160ebf913c2ca183",
+    "type": "function",
+    "z": "bb7b2455ed68c7d8",
+    "name": "Fotovoltaico: previsione sul piano inclinato",
+    "func": "// SOLAR-TILTED.1 (2026-10-23): forecast of the sunlight on the two PV roof faces (phase F3 of\n// backend/solar/README.md), next to the clear-sky values of solarEnergy.php.\n// msg.topic 'fetch' (hourly): one Open-Meteo request per face (global_tilted_irradiance, W/m²,\n// mean of the hour that ENDS at the label, UTC). A response (msg.face) is checked and kept in the\n// file context. msg.topic 'tick' (every 300 s): W of light on each face for the current hour to\n// EmonCMS (emon/planetary/forecast_smodule, forecast_smodule2, retained like smodule) and a retained\n// summary with today's and tomorrow's kWh of light (Europe/Rome days) on the home broker.\n// Light on the surface, not electricity: EmonCMS applies the panel efficiency, as for smodule.\n// Outputs: [requests for the http node, EmonCMS values, summary].\nconst FACES = {\n    eclipse:   {tilt: 40, area: 19.66, topic: 'emon/planetary/forecast_smodule'},\n    viessmann: {tilt: 15, area: 19.52, topic: 'emon/planetary/forecast_smodule2'},\n};\nconst AZIMUTH = -37.5;              // Open-Meteo: 0 = south, negative = east (compass 142.5°)\nconst URL = 'https://api.open-meteo.com/v1/forecast?latitude=45.95&longitude=12.66'\n    + '&hourly=global_tilted_irradiance&timezone=UTC&forecast_days=2';\nconst MAX_AGE_MS = 6 * 3600000;     // older data are not published\nconst SUMMARY = 'zara/interface/energy/solar_forecast/stat';\nconst now = Date.now();\nconst romeDay = ms => new Date(ms).toLocaleDateString('sv-SE', {timeZone: 'Europe/Rome'});\nconst round = (v, d) => Math.round(v * 10 ** d) / 10 ** d;\n\nif (msg.topic === 'fetch') {\n    return [Object.entries(FACES).map(([face, f]) => ({face, requestTimeout: 20000,\n        url: URL + '&tilt=' + f.tilt + '&azimuth=' + AZIMUTH})), null, null];\n}\n\nif (msg.face) {\n    const h = msg.payload && msg.payload.hourly;\n    const ok = msg.statusCode === 200 && FACES[msg.face] && h && Array.isArray(h.time)\n        && Array.isArray(h.global_tilted_irradiance) && h.time.length === h.global_tilted_irradiance.length\n        && h.time.length >= 24;\n    if (!ok) {\n        node.warn('Open-Meteo ' + msg.face + ': risposta non valida (HTTP ' + msg.statusCode + '), tengo i dati precedenti');\n        return null;\n    }\n    const hours = {};\n    h.time.forEach((t, i) => {\n        const v = h.global_tilted_irradiance[i];\n        if (typeof v === 'number' && v >= 0 && v < 1500) hours[Date.parse(t + ':00Z')] = v;\n    });\n    const data = flow.get('solar_tilted', 'file') || {};\n    data[msg.face] = {fetched_ms: now, hours};\n    flow.set('solar_tilted', data, 'file');\n    return null;\n}\n\nif (msg.topic !== 'tick') return null;\nconst data = flow.get('solar_tilted', 'file') || {};\nconst end = Math.ceil(now / 3600000) * 3600000;       // label of the current hour\nconst today = romeDay(now), tomorrow = romeDay(now + 86400000);\nconst values = [], summary = {schema: 'domopi.solar_forecast_tilted.v1', source: 'open-meteo',\n    unit: 'luce sul piano dei pannelli (prima dell\\'efficienza)', faces: {}};\nfor (const [face, f] of Object.entries(FACES)) {\n    const d = data[face];\n    if (!d || now - d.fetched_ms > MAX_AGE_MS || d.hours[end] === undefined) continue;\n    const w = round(d.hours[end] * f.area, 1);\n    values.push({topic: f.topic, payload: String(w)});\n    const kwh = {[today]: 0, [tomorrow]: 0};\n    for (const [label, v] of Object.entries(d.hours)) {\n        const day = romeDay(Number(label) - 1800000);   // the middle of the hour decides the day\n        if (day in kwh) kwh[day] += v * f.area / 1000;\n    }\n    summary.faces[face] = {tilt: f.tilt, area_m2: f.area, w_now: w, today_kwh: round(kwh[today], 1),\n        tomorrow_kwh: round(kwh[tomorrow], 1), fetched_at: new Date(d.fetched_ms).toISOString()};\n}\nconst faces = Object.values(summary.faces);\nnode.status(faces.length === 2 ? {fill: 'green', shape: 'dot', text: faces.map(x => x.w_now + ' W').join(' / ')}\n    : {fill: 'yellow', shape: 'ring', text: 'dati mancanti o vecchi: ' + (2 - faces.length) + ' falde'});\nif (!faces.length) return null;\nsummary.today_kwh = round(faces.reduce((s, x) => s + x.today_kwh, 0), 1);\nsummary.tomorrow_kwh = round(faces.reduce((s, x) => s + x.tomorrow_kwh, 0), 1);\nsummary.at = new Date(now).toISOString();\nreturn [null, values, {topic: SUMMARY, payload: JSON.stringify(summary)}];\n",
+    "outputs": 3,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 440,
+    "wires": [
+      [
+        "b2b68bb3968f6f44"
+      ],
+      [
+        "d177398deeda59f6"
+      ],
+      [
+        "387ec103e0288940"
+      ]
+    ]
+  },
+  {
+    "id": "b2b68bb3968f6f44",
+    "type": "http request",
+    "z": "bb7b2455ed68c7d8",
+    "name": "Open-Meteo piano inclinato",
+    "method": "GET",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "x": 470,
+    "y": 510,
+    "wires": [
+      [
+        "160ebf913c2ca183"
+      ]
+    ]
+  },
+  {
+    "id": "d177398deeda59f6",
+    "type": "mqtt out",
+    "z": "bb7b2455ed68c7d8",
+    "name": "EmonCMS forecast_smodule",
+    "topic": "",
+    "qos": "0",
+    "retain": "true",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "cfd9898e.1367b8",
+    "x": 770,
+    "y": 420,
+    "wires": []
+  },
+  {
+    "id": "387ec103e0288940",
+    "type": "mqtt out",
+    "z": "bb7b2455ed68c7d8",
+    "name": "riepilogo previsione",
+    "topic": "",
+    "qos": "1",
+    "retain": "true",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "3ed6302a.5af928",
+    "x": 770,
+    "y": 470,
+    "wires": []
+  }
+]

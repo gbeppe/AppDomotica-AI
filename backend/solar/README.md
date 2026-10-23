@@ -15,9 +15,9 @@ applica l'efficienza dei pannelli.
 
 Node-RED `.20`, scheda «start local scripts»: inject ogni 300 s → `php /home/pi/solarEnergy.php
 panelModel=Eclipse` → (uscita «codice di ritorno», arriva anche in caso di errore) → ritardo 5 s →
-`panelModel=Viessmann`. Il ramo con `Irradiance=` (MQTT `emon/weather/tomorrowSolarIrradiance`) è
-**disattivato** e non ha mai funzionato: lo script legge solo il primo argomento e il valore era in
-`flow`, non in `msg`. Decisione sul ramo: fase F2.
+`panelModel=Viessmann`. Il ramo con `Irradiance=` (MQTT `emon/weather/tomorrowSolarIrradiance`) era
+**disattivato** e non ha mai funzionato (lo script legge solo il primo argomento e il valore era in
+`flow`, non in `msg`): tolto con SOLAR-TILTED.1 (F2).
 
 ## Uso
 
@@ -42,5 +42,9 @@ mancante, broker non raggiungibile). Password dell'utente `emonpi` in
   due falde) con lo script precedente: 0 differenze oltre l'arrotondamento;
 - `solarEnergyViessmann.php` (copia vecchia, non usata da Node-RED) archiviato nel backup.
 
-Prossime fasi possibili: F2 togliere o rifare il ramo con irraggiamento; F3 previsione reale
-(Open-Meteo, irraggiamento sul piano inclinato) affiancata al valore teorico.
+## F2 e F3 (23/10/2026, decisione dell'utente)
+
+F2: il ramo `Irradiance=` si **toglie**; F3: previsione reale Open-Meteo sul piano inclinato di
+ciascuna falda, accanto al valore teorico (`emon/planetary/forecast_smodule`, `forecast_smodule2` e il
+riepilogo `zara/interface/energy/solar_forecast/stat`). Patch Node-RED:
+[`../nodered/solar_tilted/`](../nodered/solar_tilted/README.md) (SOLAR-TILTED.1).
