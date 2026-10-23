@@ -1,7 +1,8 @@
 """Publish today's and yesterday's grid import (kWh) for the app's "Importato ieri / oggi".
 
 Run by house-ai-grid-import.timer every 15 minutes (oneshot, user house-ai). Values come
-from EmonCMS with the same calculation as the assistant (energy_report, feed 305) and
+from EmonCMS with the same calculation as the assistant (energy_report on the grid import
+counter of energy_sources.json, emontx3 ImportReading since 23/10/2026) and
 are published retained on the local broker with mosquitto_pub. Insufficient data is
 never published as zero: the retained value is cleared instead.
 """
@@ -12,19 +13,13 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from emoncms import Emoncms
-from energy_history import energy_report
+from energy_history import elapsed_coverage, energy_report
 from energy_tools import CATALOG_PATH
 
 ROME = ZoneInfo('Europe/Rome')
 PREFIX = 'zara/interface/energy/grid'
 TOPICS = {'today': f'{PREFIX}/import_kwh_oggi/stat', 'yesterday': f'{PREFIX}/import_kwh_ieri/stat'}
 MIN_COVERAGE = {'today': 0.8, 'yesterday': 0.95}  # share of the (elapsed) day with samples
-
-
-def coverage(result):
-    lo = result['period_ms'][0]
-    elapsed = result['observed_until_ms'] - lo
-    return min(result['covered_ms'] / elapsed, 1.0) if elapsed > 0 else 0.0
 
 
 def values(client, now):
@@ -36,12 +31,12 @@ def values(client, now):
     for name, (start, end) in periods.items():
         try:
             result = energy_report(client, start.isoformat(), end.isoformat(), 'grid_import_kwh',
-                                   source['feed_id'], source['unit'], source['import_sign'],
+                                   source['feed_id'], source['unit'], source.get('import_sign'),
                                    source['interval_seconds'], now_ms=int(now.timestamp() * 1000))
         except (OSError, RuntimeError, ValueError):
             out[name] = None
             continue
-        ok = result.get('value') is not None and coverage(result) >= MIN_COVERAGE[name]
+        ok = result.get('value') is not None and elapsed_coverage(result) >= MIN_COVERAGE[name]
         out[name] = round(result['value'], 2) if ok else None
     return out
 

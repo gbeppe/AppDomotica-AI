@@ -31,6 +31,13 @@ def relative_period(name, today):
     return start.isoformat(), end.isoformat()
 
 
+def elapsed_coverage(result):
+    """Coverage of the elapsed part of the period: a period in progress has no samples after now."""
+    lo = result['period_ms'][0]
+    elapsed = result['observed_until_ms'] - lo
+    return min(result['covered_ms'] / elapsed, 1.0) if elapsed > 0 else 0.0
+
+
 def positive_area(a, b, duration):
     """Integral of positive part of a linear segment, including zero crossing."""
     if a >= 0 and b >= 0:
@@ -40,16 +47,15 @@ def positive_area(a, b, duration):
     return max(a, b)**2 * duration / (2*abs(b-a))
 
 
-def calculate(rows, start_ms, end_ms, metric, max_gap_ms=30000, import_sign=None):
-    power_metrics = {'grid_import_kwh', 'grid_export_kwh',
-                     'home_consumption_kwh', 'solar_production_kwh',
-                     'battery_charge_kwh', 'battery_discharge_kwh'}
-    if metric not in power_metrics | {'soc_mean_percent'}:
-        raise ValueError('Unknown metric')
-    if end_ms <= start_ms or max_gap_ms <= 0:
-        raise ValueError('Invalid bounds')
-    if metric in power_metrics and import_sign not in (-1, 1):
-        raise ValueError('Verified direction sign required')
+POWER_METRICS = {'grid_import_kwh', 'grid_export_kwh', 'home_consumption_kwh', 'solar_production_kwh',
+                 'battery_charge_kwh', 'battery_discharge_kwh'}
+# A cumulative kWh counter that drops more than this has been reset: the period is not measurable.
+# Smaller drops are rounding of derived counters (HomeReading: -0.43 kWh in a week, 23/10/2026).
+COUNTER_RESET_KWH = 1.0
+
+
+def parse_points(rows, start_ms, end_ms, metric):
+    """Samples in [start_ms, end_ms] by timestamp; invalid or conflicting values become None."""
     points, excluded = {}, []
     for row in rows:
         if not isinstance(row, (list, tuple)) or len(row) != 2:
@@ -70,6 +76,18 @@ def calculate(rows, start_ms, end_ms, metric, max_gap_ms=30000, import_sign=None
             value = None
             excluded.append({'timestamp_ms': t, 'reason': 'conflicting_duplicate'})
         points[t] = value
+    return points, excluded
+
+
+def calculate(rows, start_ms, end_ms, metric, max_gap_ms=30000, import_sign=None):
+    power_metrics = POWER_METRICS
+    if metric not in power_metrics | {'soc_mean_percent'}:
+        raise ValueError('Unknown metric')
+    if end_ms <= start_ms or max_gap_ms <= 0:
+        raise ValueError('Invalid bounds')
+    if metric in power_metrics and import_sign not in (-1, 1):
+        raise ValueError('Verified direction sign required')
+    points, excluded = parse_points(rows, start_ms, end_ms, metric)
     total, covered = 0.0, 0
     ordered = sorted(points.items())
     for (ta, a), (tb, b) in zip(ordered, ordered[1:]):
@@ -87,6 +105,28 @@ def calculate(rows, start_ms, end_ms, metric, max_gap_ms=30000, import_sign=None
             'excluded': excluded}
 
 
+def counter_delta(rows, start_ms, end_ms, metric, interval_ms):
+    """Energy from a cumulative kWh counter: last reading minus first. A gap loses no energy, so the
+    coverage is the span between the first and the last reading (complete within one interval)."""
+    if metric not in POWER_METRICS:
+        raise ValueError('Unknown counter metric')
+    if end_ms <= start_ms or interval_ms <= 0:
+        raise ValueError('Invalid bounds')
+    points, excluded = parse_points(rows, start_ms, end_ms, metric)
+    ordered = [(t, v) for t, v in sorted(points.items()) if v is not None]
+    resets = [tb for (_, a), (tb, b) in zip(ordered, ordered[1:]) if b < a - COUNTER_RESET_KWH]
+    excluded += [{'timestamp_ms': t, 'reason': 'counter_reset'} for t in resets]
+    if len(ordered) < 2 or resets or ordered[-1][1] < ordered[0][1]:
+        return {'metric': metric, 'value': None, 'unit': 'kWh', 'coverage_ratio': 0.0, 'covered_ms': 0,
+                'status': 'insufficient_data', 'excluded': excluded}
+    (first_t, first), (last_t, last) = ordered[0], ordered[-1]
+    complete = first_t - start_ms <= interval_ms and end_ms - last_t <= interval_ms
+    covered = end_ms - start_ms if complete else last_t - first_t
+    return {'metric': metric, 'value': last - first, 'unit': 'kWh',
+            'coverage_ratio': covered / (end_ms - start_ms), 'covered_ms': covered,
+            'status': 'complete' if complete else 'partial', 'excluded': excluded}
+
+
 def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, interval=30, now_ms=None):
     """Caller supplies a verified feed/unit/sign; query without coarse monthly averaging."""
     if (type(feed_id) is not int or feed_id <= 0 or type(interval) is not int
@@ -96,7 +136,8 @@ def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, i
                 'home_consumption_kwh': 'W', 'solar_production_kwh': 'W',
                 'battery_charge_kwh': 'W', 'battery_discharge_kwh': 'W',
                 'soc_mean_percent': '%'}
-    if metric not in expected or unit != expected[metric]:
+    counter = unit == 'kWh' and metric in POWER_METRICS
+    if metric not in expected or (unit != expected[metric] and not counter):
         raise ValueError('Verified source unit required')
     if unit == 'W' and import_sign not in (-1, 1):
         raise ValueError('Verified direction sign required')
@@ -117,15 +158,19 @@ def energy_report(client, start, end, metric, feed_id, unit, import_sign=None, i
                 rows.append(row)
         requests += 1
         cursor = stop
-    result = calculate(rows, lo, hi, metric, interval*1000, import_sign)
+    result = (counter_delta(rows, lo, hi, metric, interval*1000) if counter
+              else calculate(rows, lo, hi, metric, interval*1000, import_sign))
     result.update({'schema': 'house_ai.energy_history.v1', 'timezone': 'Europe/Rome',
                    'period': {'start': start, 'end_exclusive': end}, 'period_ms': [lo, hi], 'observed_until_ms': observed_until,
                    'source': {'feed_id': feed_id, 'unit': unit, 'import_sign': import_sign,
                               'interval_seconds': interval, 'requests': requests},
-                   'limitations': ['Stima sugli intervalli coperti, senza colmare dati mancanti.',
+                   'limitations': (['Differenza fra la prima e l\'ultima lettura del contatore cumulativo nel periodo.',
+                       'Semantica della sorgente fornita dal chiamante; non verificata automaticamente.']
+                       if counter else
+                       ['Stima sugli intervalli coperti, senza colmare dati mancanti.',
                        'Interpolazione lineare fra campioni; variazioni non campionate non ricostruibili.',
                        'Semantica della sorgente fornita dal chiamante; non verificata automaticamente.',
-                       'Copertura completa non certifica accuratezza fisica o assenza di aliasing.']})
+                       'Copertura completa non certifica accuratezza fisica o assenza di aliasing.'])})
     return result
 
 
@@ -138,7 +183,9 @@ def daily_extreme_report(client, start, end, metric, feed_id, unit,
     power_metrics = {'grid_import_kwh', 'grid_export_kwh',
                      'home_consumption_kwh', 'solar_production_kwh',
                      'battery_charge_kwh', 'battery_discharge_kwh'}
-    if (metric not in power_metrics or unit != 'W' or import_sign not in (-1, 1)
+    counter = unit == 'kWh'
+    if (metric not in power_metrics or (unit != 'W' and not counter)
+            or (not counter and import_sign not in (-1, 1))
             or type(feed_id) is not int or feed_id <= 0 or type(interval) is not int
             or not 1 <= interval <= 300
             or (hi-lo)//(interval*1000) > 1_100_000):
@@ -171,8 +218,8 @@ def daily_extreme_report(client, start, end, metric, feed_id, unit,
     while day < last:
         next_day = day + timedelta(days=1)
         day_lo, day_hi = period_bounds(day.isoformat(), next_day.isoformat())
-        result = calculate(by_day.get(day, []), day_lo, day_hi,
-                           metric, interval * 1000, import_sign)
+        result = (counter_delta(by_day.get(day, []), day_lo, day_hi, metric, interval * 1000) if counter
+                  else calculate(by_day.get(day, []), day_lo, day_hi, metric, interval * 1000, import_sign))
         summary = {'day': day.isoformat(), 'value': result['value'],
                    'coverage_ratio': result['coverage_ratio'], 'status': result['status']}
         if result['value'] is not None:

@@ -37,5 +37,5 @@ class EnergyQueryTests(unittest.TestCase):
 
     def test_catalog_has_validated_sources(self):
         sources = load_sources()
-        self.assertEqual(sources["grid_import_kwh"]["import_sign"], 1)
+        self.assertEqual((sources["grid_import_kwh"]["feed_id"], sources["grid_import_kwh"]["unit"]), (26, "kWh"))
         self.assertEqual(sources["soc_mean_percent"]["unit"], "%")

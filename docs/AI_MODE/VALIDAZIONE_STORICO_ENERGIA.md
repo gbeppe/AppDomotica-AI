@@ -1,5 +1,14 @@
 # Validazione dello storico energia — 12 settembre 2026
 
+> **Aggiornamento 23/10/2026 — contatori cumulativi.** Dal backend `20261023-counters` i kWh dei
+> periodi vengono dai contatori cumulativi dell'app EmonCMS MySolarBattery (ultima − prima lettura):
+> casa 37 `emontx3/HomeReading`, solare 314 `solar_instant_power_KWh`, carica 310 e scarica 311
+> `battery_*_power_KWh`, prelievo 26 `emontx3/ImportReading` e immissione 29 `emontx3/ExportReading`;
+> SOC resta 304. Il feed 313 `site_instant_power_KWh` (`import_kwh` dell'app) è il **saldo netto** con
+> la rete, non il prelievo. Verifica sui 7 giorni al 23/10: casa 79,0 kWh (app 79,7; Tesla 303 solo
+> 67,6, −12 %), solare 107,8 (108,0), scarica 45,1 (45,1), prelievo 3,8, immissione 33,3. Il mapping
+> qui sotto è quello del 12/09, superato per i kWh.
+
 Verifica in sola lettura su EmonCMS locale, senza modificare feed, flow, MQTT o
 dispositivi. Il catalogo ha restituito 256 feed. Le credenziali non sono state
 copiate nei documenti o nei nuovi file del backend.

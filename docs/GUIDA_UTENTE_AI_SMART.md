@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-coverage`.
+Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-counters`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -107,6 +107,10 @@ Esempio di riepilogo all'apertura:
 Grandezze disponibili: produzione fotovoltaica, consumo della casa, prelievo e immissione in
 rete, energia caricata e scaricata dalla batteria, livello medio della batteria. Oggi e i
 periodi in corso valgono fino ad adesso; i valori sono stime da campioni, non misure fiscali.
+I kWh vengono dagli **stessi contatori dell'app EmonCMS MySolarBattery** (consumo casa dal
+contatore emontx3, solare e batteria dal Powerwall, prelievo e immissione dai contatori emontx3),
+quindi i numeri coincidono con quelli che vedi lì. Il «rete → casa» dell'app è invece una stima per
+differenza, non un contatore: per il prelievo vale quello di AI Smart.
 La **copertura** (quanta parte del periodo ha dati in EmonCMS) è scritta nei dettagli sotto la
 risposta, non letta; la voce dice solo «Mancano dati per una parte del periodo.» se ne manca più
 del 5 % del tempo trascorso.
@@ -368,3 +372,4 @@ in cima.
 | 23/10/2026 | «Che profilo di riscaldamento è attivo?» funziona anche dal telefono (prima: «Schema evidenza non riconosciuto»; app `bld_a9748986`). «Ricarica» senza altro = batteria di casa; se i dubbi sono più di uno, AI Smart li chiede tutti insieme. |
 | 23/10/2026 | Nessun chiarimento sul periodo: giorno, settimana, mese, anno senza nome = quello in corso; con il nome («settembre», «marzo 2025», «lunedì») quello indicato; «ultimi N…» = gli ultimi N. «Percentuale di ricarica» = livello medio della batteria. |
 | 23/10/2026 | La copertura dei dati non viene più letta (resta nei dettagli); per i periodi in corso è calcolata fino ad adesso, non fino a fine giornata. A voce solo «Mancano dati per una parte del periodo.» se manca più del 5 %. |
+| 23/10/2026 | Confronto con un periodo in corso («questa settimana rispetto alla scorsa»): a parità di tempo trascorso (la settimana scorsa fino allo stesso giorno e ora). kWh dai contatori dell'app EmonCMS MySolarBattery: il consumo casa coincide con l'app (prima ~12 % in meno, dal Powerwall). |

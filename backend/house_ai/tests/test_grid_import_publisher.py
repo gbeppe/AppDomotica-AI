@@ -9,17 +9,18 @@ TODAY_START = int(datetime(2026, 10, 11, tzinfo=ZoneInfo('Europe/Rome')).timesta
 
 
 class Client:
-    """Feed 305 (grid, positive = import): 500 W today, 250 W yesterday."""
+    """Feed 26 (grid import counter, kWh): growing at 500 W today and 250 W yesterday."""
     def __init__(self, today_until_s=None, down=False):
         self.today_until_s, self.down = today_until_s, down
 
     def history(self, feed, start, end, interval):
         if self.down:
             raise RuntimeError('EmonCMS request failed; verify access and endpoint')
-        assert feed == 305
+        assert feed == 26
         stop = end if self.today_until_s is None or start < TODAY_START else min(end, TODAY_START + self.today_until_s)
-        power = 500 if start >= TODAY_START else 250
-        return [[t * 1000, power] for t in range(start, stop + 1, interval)]
+        def kwh(t):  # 250 W until today's midnight, then 500 W
+            return (min(t, TODAY_START) * 250 + max(t - TODAY_START, 0) * 500) / 3_600_000
+        return [[t * 1000, kwh(t)] for t in range(start, stop + 1, interval)]
 
 
 class GridImportPublisherTests(unittest.TestCase):

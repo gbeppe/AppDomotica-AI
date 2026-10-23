@@ -176,3 +176,54 @@ class CoverageSpeechTests(unittest.TestCase):
         text, written = self.spoken_and_notes(self.report('2026-09-01', '2026-09-02', hi + 3600_000))
         self.assertNotIn('Mancano dati', text)
         self.assertEqual(written[0], 'Copertura 100,0 per cento.')
+
+
+class CounterTests(unittest.TestCase):
+    """23/10/2026: kWh from cumulative counters, as the EmonCMS MySolarBattery app."""
+    lo, hi = period_bounds('2026-09-01', '2026-09-02')
+
+    def counter(self, values):
+        from energy_history import counter_delta
+        return counter_delta([[self.lo + s * 1000, v] for s, v in values], self.lo, self.hi, 'home_consumption_kwh', 300_000)
+
+    def test_a_gap_loses_no_energy(self):
+        day = 86400
+        result = self.counter([(0, 100.0), (3600, 101.0), (20 * 3600, 118.0), (day, 124.0)])
+        self.assertAlmostEqual(result['value'], 24.0)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['coverage_ratio'], 1.0)
+
+    def test_small_drops_are_rounding_and_resets_are_refused(self):
+        self.assertAlmostEqual(self.counter([(0, 10.0), (300, 10.3), (600, 10.26), (86400, 30.0)])['value'], 20.0)
+        reset = self.counter([(0, 500.0), (300, 501.0), (600, 0.5), (86400, 20.0)])
+        self.assertIsNone(reset['value'])
+        self.assertEqual(reset['status'], 'insufficient_data')
+        self.assertEqual(reset['excluded'][-1]['reason'], 'counter_reset')
+
+    def test_missing_start_is_partial(self):
+        result = self.counter([(6 * 3600, 106.0), (86400, 124.0)])
+        self.assertAlmostEqual(result['value'], 18.0)
+        self.assertEqual(result['status'], 'partial')
+        self.assertAlmostEqual(result['coverage_ratio'], 0.75)
+
+    def test_report_and_daily_extreme_use_counters(self):
+        class Counter:
+            def history(self, feed, start, end, interval):
+                # 1 kW, 2 kW on 2 September: the counter in kWh.
+                two = period_bounds('2026-09-02', '2026-09-03')
+                def kwh(t):
+                    ms = t * 1000
+                    extra = max(0, min(ms, two[1]) - two[0]) / 3_600_000
+                    return t / 3600 + extra
+                return [[t * 1000, kwh(t)] for t in range(start, end + 1, interval)]
+        report = energy_report(Counter(), '2026-09-01', '2026-09-03', 'grid_import_kwh', 26, 'kWh', None, 300,
+                               now_ms=period_bounds('2026-09-04', '2026-09-05')[0])
+        self.assertAlmostEqual(report['value'], 72.0)
+        self.assertEqual(report['status'], 'complete')
+        self.assertIn('contatore cumulativo', report['limitations'][0])
+        extreme = daily_extreme_report(Counter(), '2026-09-01', '2026-09-04', 'grid_import_kwh', 26, 'kWh', None,
+                                       300, 'maximum', now_ms=period_bounds('2026-09-05', '2026-09-06')[0])
+        self.assertEqual(extreme['winner']['day'], '2026-09-02')
+        self.assertAlmostEqual(extreme['winner']['value'], 48.0)
+        with self.assertRaises(ValueError):
+            energy_report(Counter(), '2026-09-01', '2026-09-03', 'soc_mean_percent', 304, 'kWh', None, 300)

@@ -302,7 +302,8 @@ class GatewayTests(unittest.TestCase):
             calls = 0
             def history(self, feed, start, end, interval):
                 self.calls += 1
-                return [[t * 1000, 1000] for t in range(start, end, interval)]
+                # Grid import counter (kWh) growing at 1 kW.
+                return [[t * 1000, t / 3600] for t in range(start, end + 1, interval)]
         client = Client()
         with TemporaryDirectory() as root, patch('model_gateway.build_opener') as opener:
             Path(root, 'zara_previsione_kwh_openmeteo.log').write_text(

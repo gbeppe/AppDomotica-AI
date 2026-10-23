@@ -9,7 +9,8 @@ flow Node-RED né lo stato completo del clima li pubblicava; la Home mostrava se
 `backend/house_ai/grid_import_publisher.py`, eseguito ogni 15 minuti (`:01`, `:16`, …)
 da `house-ai-grid-import.timer` come utente `house-ai`:
 
-- calcola da EmonCMS (feed 305, stesso `energy_report` dell'assistente) il prelievo di
+- calcola da EmonCMS (contatore emontx3 `ImportReading`, feed 26, dal 23/10/2026; prima feed 305;
+  stesso `energy_report` dell'assistente) il prelievo di
   oggi dalla mezzanotte all'ora attuale e quello di ieri;
 - pubblica i kWh (due decimali) **retained**, QoS 1, sul broker locale con
   `mosquitto_pub`;

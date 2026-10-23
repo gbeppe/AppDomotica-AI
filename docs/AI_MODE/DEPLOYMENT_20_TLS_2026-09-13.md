@@ -77,15 +77,28 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — contatori cumulativi e confronto col periodo in corso
+
+`20261023-counters`. **Contatori:** l'utente ha notato «consumo della settimana» 37 kWh contro i suoi
+dati EmonCMS; l'app MySolarBattery (sua scelta di feed) usa `use_kwh` = emontx3 HomeReading, mentre
+AI Smart integrava la potenza Tesla 303, ~12 % più bassa. Ora `energy_sources.json` punta ai contatori
+cumulativi (unità `kWh`, letture ogni 300 s) e `energy_history.counter_delta` fa ultima − prima lettura:
+un buco non perde energia, la copertura è il tratto fra prima e ultima lettura, un calo oltre 1 kWh è un
+azzeramento (dato non valido). Prelievo/immissione da emontx3 26/29 perché il 313 dell'app è il saldo
+netto. Vale anche per il giorno record e per «Importato oggi/ieri» (`grid_import_publisher`). Prova sui
+dati veri (settimana in corso): casa 44,7, solare 41,7, prelievo 3,7, immissione 1,5, carica 29,6,
+scarica 28,7 kWh, copertura 100 %. **Confronto:** con un periodo in corso l'altro è tagliato allo stesso
+tempo trascorso (`same_span`); valido sopra il 95 % del tempo trascorso; «consumo 19/10–adesso: 1,4
+kWh in meno dello stesso tratto della settimana scorsa (fino al 16/10 alle 09:01), −3 %».
+
 ## Release del 23 ottobre 2026 — copertura dei dati
 
 `20261023-coverage` (richiesta dell'utente: la percentuale letta non serve): la frase «Dati parziali:
 copertura N per cento» esce dalla risposta e resta nelle note (`notes`). Per un periodo in corso la
 copertura è quella del tempo trascorso (`elapsed_coverage`, ora in `energy_presenter.py` e usata
 anche dal riepilogo del giorno): prima un periodo fino a domani era sempre «parziale». A voce solo
-«Mancano dati per una parte del periodo.» sotto il 95 % (`SPOKEN_GAP_BELOW`). Aperto: il confronto
-fra periodi (`energy_comparison`) vuole copertura completa, quindi con un periodo in corso risponde
-«non calcolabile».
+«Mancano dati per una parte del periodo.» sotto il 95 % (`SPOKEN_GAP_BELOW`). Il confronto con un
+periodo in corso è stato risolto nella release successiva.
 
 ## Release del 23 ottobre 2026 — periodi senza chiarimenti
 

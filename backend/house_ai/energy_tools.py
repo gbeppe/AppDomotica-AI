@@ -5,7 +5,7 @@ import re
 import time
 from pathlib import Path
 
-from energy_history import daily_extreme_report, energy_report, period_bounds
+from energy_history import daily_extreme_report, elapsed_coverage, energy_report, period_bounds
 from log_tools import SOURCES as LOG_SOURCES, tool_catalog, read_day
 from evidence import day_bounds
 from light_semantics import validate_commands
@@ -192,7 +192,7 @@ def catalog(path=CATALOG_PATH):
             }
         }, tool_catalog(), {
             "name": "energy_comparison",
-            "description": "Calculate left minus right and percent change for the same historical metric; requires complete coverage",
+            "description": "Calculate left minus right and percent change for the same historical metric; with a period in progress the other is compared up to the same elapsed time",
             "parameters": {"left_id": "ID of preceding energy_metric", "right_id": "ID of preceding energy_metric"}
         }],
         "rules": [
@@ -617,6 +617,21 @@ def energy_overview(current, detail, now_ms):
     return result
 
 
+# A period in progress (or the base cut to the same elapsed time) is compared when its samples cover
+# at least this share of the elapsed time; closed periods still need complete coverage.
+COMPARABLE_COVERAGE = 0.95
+
+
+def in_progress(result):
+    return result.get("schema") == "house_ai.energy_history.v1" and result["observed_until_ms"] < result["period_ms"][1]
+
+
+def comparable(result):
+    return (result.get("schema") == "house_ai.energy_history.v1" and result["value"] is not None
+            and (result["status"] == "complete"
+                 or in_progress(result) and elapsed_coverage(result) >= COMPARABLE_COVERAGE))
+
+
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
             lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
             environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None):
@@ -654,7 +669,27 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
             a, b = by_id[operation["left_id"]], by_id[operation["right_id"]]
             source_ops = {op["id"]: op for op in checked["operations"]}
             left_op, right_op = source_ops[operation["left_id"]], source_ops[operation["right_id"]]
-            valid = a["status"] == b["status"] == "complete"
+            # One period in progress: the other is cut to the same elapsed time ("questa settimana
+            # rispetto alla scorsa" on Friday at 10:15 = up to the previous Friday at 10:15).
+            same_span = None
+            if (a.get("schema") == b.get("schema") == "house_ai.energy_history.v1"
+                    and in_progress(a) != in_progress(b)):
+                running, base_op = (a, right_op) if in_progress(a) else (b, left_op)
+                base_lo = period_bounds(base_op["start"], base_op["end"])[0]
+                cut_ms = base_lo + running["observed_until_ms"] - running["period_ms"][0]
+                source = sources[base_op["metric"]]
+                try:
+                    cut = energy_report(cached, base_op["start"], base_op["end"], base_op["metric"],
+                                        source["feed_id"], source["unit"],
+                                        source.get("import_sign", source.get("direction_sign")),
+                                        source["interval_seconds"], now_ms=cut_ms)
+                except (OSError, RuntimeError):
+                    cut = {"schema": "house_ai.source_error.v1", "status": "unavailable"}
+                a, b = (a, cut) if base_op is right_op else (cut, b)
+                same_span = {"running": "left" if base_op is right_op else "right",
+                             "running_until_ms": running["observed_until_ms"],
+                             "base_until_ms": cut.get("observed_until_ms")}
+            valid = comparable(a) and comparable(b)
             value = a["value"] - b["value"] if valid else None
             results.append({"id": operation["id"], "result": {
                 "schema": "house_ai.energy_comparison.v1", "status": "complete" if valid else "insufficient_data",
@@ -664,7 +699,9 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
                 "right_period": {"start": right_op["start"], "end_exclusive": right_op["end"]},
                 "value": value, "unit": "punti percentuali" if a.get("unit") == "%" else a.get("unit", "kWh"),
                 "change_percent": value / b["value"] * 100 if valid and b["value"] != 0 else None,
-                "limitations": ["Differenza fra i periodi richiesti; non normalizzata per durata.",
+                "same_span": same_span,
+                "limitations": ["Differenza fra i periodi richiesti; con un periodo in corso, a parità di tempo trascorso."
+                                if same_span else "Differenza fra i periodi richiesti; non normalizzata per durata.",
                                 "La variazione relativa non è definita con base zero."]}})
             continue
         if operation["tool"] == "backend_log_day":

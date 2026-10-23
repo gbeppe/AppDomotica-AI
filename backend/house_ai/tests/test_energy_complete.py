@@ -12,8 +12,9 @@ def history(identifier, start='2026-09-01', end='2026-09-02', metric='grid_impor
 
 
 class Client:
+    """1 kW everywhere: cumulative kWh counters grow by 1 per hour (feed 304 is the battery level)."""
     def history(self, feed, start, end, interval):
-        return [[t*1000, 1000] for t in range(start, end+1, interval)]
+        return [[t*1000, 50 if feed == 304 else t / 3600] for t in range(start, end+1, interval)]
 
 
 def diagnostics(result):
@@ -102,3 +103,47 @@ class EnergyCompleteTests(unittest.TestCase):
             result = read_day(root, 'climate', '2026-09-12')
             self.assertEqual(result['invalid_lines'], 1)
             self.assertEqual(result['records'], [])
+
+
+class InProgressComparisonTests(unittest.TestCase):
+    """23/10/2026: a period in progress was never comparable ("servono dati completi")."""
+    # Friday 23/10/2026 10:15 Europe/Rome: this week so far against the previous one.
+    NOW_S = 1792743300
+    OPERATIONS = [history('this', '2026-10-19', '2026-10-24'), history('last', '2026-10-12', '2026-10-19'),
+                  dict(id='c', tool='energy_comparison', left_id='this', right_id='last')]
+
+    def run_plan(self, client, operations=None):
+        from unittest.mock import patch
+        import energy_history
+        from energy_presenter import describe, notes
+        with patch.object(energy_history.clock, 'time', return_value=self.NOW_S):
+            results = execute(client, {'operations': operations or self.OPERATIONS})['results']
+        item = results[-1]
+        return item['result'], describe(item), notes(item)
+
+    def test_base_is_cut_to_the_same_elapsed_time(self):
+        result, text, written = self.run_plan(Client())
+        # 1 kW everywhere: 4 days 10:15 in both periods, so no difference (the full week would be 168 kWh).
+        self.assertAlmostEqual(result['value'], 0, places=1)
+        self.assertEqual(result['same_span']['running'], 'left')
+        self.assertIn('fino ad adesso', text)
+        self.assertIn('rispetto allo stesso tratto del periodo dal 12/10 al 18/10 (fino al 16/10 alle 10:15)', text)
+        self.assertIn('parità di tempo trascorso', written[0])
+
+    def test_gaps_over_five_per_cent_block_the_comparison(self):
+        class Gappy:
+            def history(self, feed, start, end, interval):
+                # Counter readings start 6 hours late on Monday 19/10: those hours are not measured.
+                gap = (1792360800, 1792360800 + 6 * 3600)
+                return [[t*1000, t / 3600] for t in range(start, end+1, interval) if not gap[0] <= t < gap[1]]
+        result, text, _ = self.run_plan(Gappy())
+        self.assertIsNone(result['value'])
+        self.assertEqual(text, 'Confronto non calcolabile: mancano dati in uno dei due periodi.')
+
+    def test_closed_periods_are_unchanged(self):
+        result, text, written = self.run_plan(Client(), [history('a'), history('b', '2026-09-02', '2026-09-03'),
+                                                       dict(id='c', tool='energy_comparison', left_id='a', right_id='b')])
+        self.assertIsNone(result['same_span'])
+        self.assertEqual(result['value'], 0)
+        self.assertIn('rispetto al periodo il 02/09', text)
+        self.assertEqual(written, ['I periodi non sono normalizzati per durata.'])

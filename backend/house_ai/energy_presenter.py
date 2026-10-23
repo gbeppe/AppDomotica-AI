@@ -7,6 +7,7 @@ app shows under "Mostra provenienza e limiti".
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 import math
+from energy_history import elapsed_coverage
 import heating_profile_tools
 import rules_tools
 
@@ -113,13 +114,6 @@ def humanize(code):
 # Below this share of the elapsed period covered by samples the spoken answer says data are missing;
 # the percentage itself stays in the written details (23/10/2026, user's choice).
 SPOKEN_GAP_BELOW = 0.95
-
-
-def elapsed_coverage(result):
-    """Coverage of the elapsed part of the period: a period in progress has no samples after now."""
-    lo = result['period_ms'][0]
-    elapsed = result['observed_until_ms'] - lo
-    return min(result['covered_ms'] / elapsed, 1.0) if elapsed > 0 else 0.0
 
 
 def numeric(record, *path):
@@ -563,12 +557,21 @@ def describe(item):
         return log_text(r)
     if schema == 'house_ai.energy_comparison.v1':
         if r['value'] is None:
-            return 'Confronto non calcolabile: servono dati completi per entrambi i periodi.'
+            return 'Confronto non calcolabile: mancano dati in uno dei due periodi.'
         left = period_text(r['left_period']['start'], r['left_period']['end_exclusive'])
         right = period_text(r['right_period']['start'], r['right_period']['end_exclusive'])
         trend = 'in più' if r['value'] > 0 else 'in meno' if r['value'] < 0 else 'di differenza'
-        text = (f"{LABELS[r['metric']]} {left}: {energy_value(abs(r['value']), r['unit'])} {trend} "
-                f"rispetto al periodo {right}")
+        amount = f"{energy_value(abs(r['value']), r['unit'])} {trend}"
+        span = r.get('same_span')
+        if span:
+            # The period in progress is read up to now; the other only up to the same elapsed time.
+            until = moment_text(span['base_until_ms'])
+            text = (f"{LABELS[r['metric']]} {left} fino ad adesso: {amount} rispetto allo stesso tratto "
+                    f"del periodo {right} (fino al {until})" if span['running'] == 'left' else
+                    f"{LABELS[r['metric']]} {left} (fino al {until}): {amount} rispetto al periodo {right} "
+                    f"fino ad adesso")
+        else:
+            text = f"{LABELS[r['metric']]} {left}: {amount} rispetto al periodo {right}"
         if r['change_percent'] is not None:
             text += f", {'+' if r['change_percent'] > 0 else ''}{number(r['change_percent'], 1)} per cento"
         return text + '.'
@@ -755,7 +758,8 @@ def notes(item):
             extra.append("È un evento registrato, non una conferma fisica né una spiegazione causale aggiuntiva.")
         return extra + ["I log non garantiscono copertura continua e non sostituiscono lo stato corrente."]
     if schema == 'house_ai.energy_comparison.v1':
-        return ["I periodi non sono normalizzati per durata."]
+        return (["Con un periodo in corso il confronto è a parità di tempo trascorso."] if r.get('same_span')
+                else ["I periodi non sono normalizzati per durata."])
     if schema == 'house_ai.energy_daily_extreme.v1':
         extra = [f"Giorni completi confrontati: {r['eligible_days']}; con copertura incompleta: {len(r['excluded_days'])}."]
         observed = r['observed_winner']

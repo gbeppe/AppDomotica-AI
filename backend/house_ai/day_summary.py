@@ -7,7 +7,8 @@ it with the same card and diagnostics.
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from energy_presenter import elapsed_coverage, notes, spoken
+from energy_history import elapsed_coverage
+from energy_presenter import notes, spoken
 from energy_tools import execute
 
 ROME = ZoneInfo('Europe/Rome')
