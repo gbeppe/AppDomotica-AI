@@ -1,0 +1,10 @@
+[Unit]
+Description=DomoPi health check (phase S1, read-only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/domopi-health/health_check.py /etc/domopi-health/config.json
+Nice=10
+TimeoutStartSec=120

@@ -1,7 +1,7 @@
 # Salute impianto (fase S) — progetto
 
-Stato: **progetto**, da realizzare **dopo il deploy della VMC (T2)** (decisione dell'utente del
-21/10/2026). Nessun file sugli host è ancora stato modificato per questa fase.
+Stato: **S1 scritta** (`backend/health/`, 14 test, prova a secco su `.20` e `.15` il 23/10/2026),
+deploy da confermare. Decisioni D1–D4 prese il 23/10 (sotto).
 
 ## Perché
 
@@ -46,6 +46,8 @@ Ogni 2 minuti (le cose costose ogni 15).
 | House AI: `GET` di stato su `127.0.0.1:8765` | `.20` | non risponde | — |
 | raggiungibilità: l'altro Raspberry (ping + porta 1883), router `192.168.1.1`, Internet (DNS e HTTPS) | `.20`, `.15` | 3 prove fallite di fila | `.15` nascosto dal Wi‑Fi (vedi il controllo dal telefono) |
 | schede ESP (caminetto `.22`, pompa `.21`), termostati, sensori | — | già coperti da HOUSE-ALERTS.1 | — |
+| dati energia: ultimo valore dei feed Powerwall (305) ed emonTx (24) in EmonCMS (redis) | `.15` | più vecchio di 10 min | 23/10: dati che sembravano fermi |
+| emonTx al contrario: pinza CT1 e rete Powerwall di segno opposto (sopra 150 W) per 10 letture | `.15` | segno opposto | 19–23/10: adattatore di tensione girato |
 | disco (`/` < 500 MB), memoria e swap, temperatura CPU > 75 °C, errori di I/O della SD nel kernel | `.20`, `.15` | soglia superata | `.15` con 110 MB liberi il 16/10 |
 | orologio sincronizzato (le regole `at` dipendono dall'ora) | `.20`, `.15` | non sincronizzato | — |
 
@@ -114,15 +116,16 @@ Consiglio: **a + b**; c solo se l'utente lo preferisce.
 File previsti: `backend/health/` (script, unità systemd, `README.md`, `deploy.sh` con backup e
 rollback come per le patch Node-RED). Ogni deploy sugli host con conferma dell'utente.
 
-## Decisioni da prendere con l'utente
+## Decisioni (prese con l'utente il 23/10/2026)
 
-- **D1:** frequenza dei controlli (proposta 2 minuti) e orario di silenzio per gli avvisi non urgenti.
-- **D2:** canale di riserva se cade il `.20` (a, b, c sopra; consiglio a + b).
-- **D3:** quali riparazioni automatiche ammettere (proposta: solo `tailscaled` e servizi fermi).
-- **D4:** stato atteso di `allow_anonymous` dopo il punto C (credenziali di zigbee2mqtt e MQTT Explorer).
+- **D1:** controlli ogni 2 minuti (pesanti ogni 15); dalle 23 alle 7 solo gli avvisi urgenti.
+- **D2:** a + b: l'app lo segnala quando la si apre, e Tailscale + ntfy di riserva sul `.15` (S2).
+- **D3:** riparazioni automatiche per `tailscaled` e servizi fermi (S2, dopo la settimana di osservazione).
+- **D4:** `allow_anonymous true` atteso finché non si fa il punto C; poi `false`.
 
 ## Avanzamento
 
 | Data | Cosa |
 |---|---|
 | 21/10/2026 | Progetto scritto dopo gli incidenti del 17–21/10; da realizzare dopo il deploy di T2 (VMC) |
+| 23/10/2026 | D1–D4 decise; S1 scritta (`backend/health/`), 14 test; prova a secco: `.20` 25/25 verdi, `.15` 24/25 (rosso: `persistence false` sul Mosquitto del `.15`, perde i retained a ogni riavvio; da decidere se correggerlo) |

@@ -1,0 +1,23 @@
+{
+  "host_label": ".20",
+  "state_file": "/var/lib/domopi-health/state.json",
+  "checks": ["power", "services", "broker", "http", "tailscale", "reachability", "mosquitto_config",
+             "internet", "resources", "kernel_errors", "clock"],
+  "services": ["mosquitto", "nodered", "house-ai-backend", "house-ai-gateway", "house-ai-lan", "ntfy",
+               "pihole-FTL", "tailscaled", "apache2"],
+  "urgent_services": ["mosquitto", "nodered"],
+  "broker": {"host": "127.0.0.1", "port": 1883, "retained_topic": "zara/domotics/lights/tvlamp",
+             "xdg_config_home": "/etc/domopi-health/mqtt"},
+  "mosquitto": {"files": ["/etc/mosquitto/mosquitto.conf", "/etc/mosquitto/conf.d/*.conf"],
+                "expect": {"persistence": "true", "anonymous:1883": "true", "anonymous:1884": "false"}},
+  "http": [{"name": "house_ai", "title": "House AI", "url": "http://127.0.0.1:8765/v1/health"},
+           {"name": "nodered", "title": "Node-RED", "url": "https://127.0.0.1:1880/", "insecure": true}],
+  "peer": {"name": ".15", "ip": "192.168.1.15", "port": 1883},
+  "router": "192.168.1.1",
+  "internet": ["1.1.1.1", "8.8.8.8"],
+  "confirm": {"peer": 3, "router": 3, "internet": 3, "tailscale": 3, "http": 2, "broker": 2},
+  "quiet_hours": [23, 7],
+  "publish": {"host": "127.0.0.1", "port": 1883, "topic": "zara/system/health/20/stat",
+              "xdg_config_home": "/etc/domopi-health/mqtt"},
+  "ntfy": {"url": "http://127.0.0.1:2586/domopi-casa", "token_file": "/etc/domopi-health/ntfy.token"}
+}
