@@ -148,7 +148,7 @@ fun AiSmartScreen(
     var askedQuestion by rememberSaveable { mutableStateOf<String?>(null) }
     fun speak(text: String) {
         val limit = TextToSpeech.getMaxSpeechInputLength()
-        val chunks = speechChunks(text, limit)
+        val chunks = speechChunks(spokenText(text), limit)
         for ((index, chunk) in chunks.withIndex()) {
             val id = "energy-$index" + if (index == chunks.lastIndex) "-last" else ""
             if (speech?.speak(chunk, if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, id) == TextToSpeech.ERROR) {

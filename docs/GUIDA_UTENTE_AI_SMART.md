@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **23/10/2026** · app `bld_bff71307` · backend House AI `20261023-followup`.
+Aggiornata al **23/10/2026** · app `bld_059f6ff7` · backend House AI `20261023-followup`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -356,4 +356,5 @@ in cima.
 | 18/10/2026 | **VMC** a voce (§4.14): velocità, «fino alle», «dalle… alle…», «rimetti in automatico»; priorità manuale rispettata da AI Climate. |
 | 21/10/2026 | Servizio del modello al limite del minuto: «Troppe domande ravvicinate: riprova tra 60 secondi» invece dell'errore generico. Per ora circa una domanda al minuto. |
 | 22/10/2026 | Domande più leggere: al modello vanno solo istruzioni e strumenti dell'argomento (energia, luci, clima, riscaldamento, regole, comandi a tempo), ~1300–4000 token invece di ~7700. Più domande al minuto e al giorno. «Prelievo» = dalla rete; «ultimo mese/settimana» chiede se calendario o ultimi giorni; «perché ieri notte il condizionatore…» legge il log di quel giorno. |
-| 23/10/2026 | «Mese»/«ultimo mese» = mese corrente, senza chiarimento. Giorno senza eventi nel log del clima: «non ha registrato cambi di stato» e l'ultimo evento precedente. Risposta al chiarimento: basta dire la parte mancante; il microfono si riapre da solo (**con l'app successiva** a `bld_bff71307`). |
+| 23/10/2026 | «Mese»/«ultimo mese» = mese corrente, senza chiarimento. Giorno senza eventi nel log del clima: «non ha registrato cambi di stato» e l'ultimo evento precedente. Risposta al chiarimento: basta dire la parte mancante; il microfono si riapre da solo (app `bld_059f6ff7`). |
+| 23/10/2026 | Lettura a voce più naturale (**con l'app successiva** a `bld_059f6ff7`): «21/10» si legge «21 ottobre» (non «ventuno decimi»), «17:00–21:00» «dalle 17:00 alle 21:00», «lun–ven» «lunedì a venerdì»; i trattini diventano pause e «—» «non disponibile». A schermo il testo non cambia. |
