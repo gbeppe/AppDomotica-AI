@@ -2,6 +2,7 @@ package com.domopi.app.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -154,6 +155,7 @@ class HouseAiRepository {
         rules: RulesState = RulesState(),
         profile: HeatingProfileState = HeatingProfileState(),
         followUp: AssistantFollowUp? = null,
+        systemHealth: Map<String, HostHealth> = emptyMap(),
     ): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
         val base = validatedBase(baseUrl)
         require(token.isNotBlank() && question.isNotBlank() && question.length <= 1000)
@@ -225,6 +227,7 @@ class HouseAiRepository {
                 .put("engine_mode", rules.engineMode).put("rules", list))
         }
         heatingProfileJson(profile)?.let { body.put("current_heating_profile", it) }
+        systemHealthJson(systemHealth)?.let { body.put("current_system_health", it) }
         val lightObservations = JSONObject()
         lights.validLightObservations().forEach { (light, observation) ->
             val item = JSONObject().put("value", observation.payload.toBooleanStrict())
@@ -261,6 +264,21 @@ class HouseAiRepository {
             connection.disconnect()
         }
     }
+}
+
+/** Health summaries of .20 and .15 (phase S3) as house_ai.current_system_health_input.v1, or null if none yet. */
+internal fun systemHealthJson(hosts: Map<String, HostHealth>): JSONObject? {
+    if (hosts.isEmpty()) return null
+    val out = JSONObject()
+    hosts.filterKeys { it in SystemHealth.HOSTS }.forEach { (name, h) ->
+        val checks = JSONArray()
+        h.checks.take(100).forEach { c ->
+            checks.put(JSONObject().put("id", c.id.take(120)).put("title", c.title.take(120)).put("ok", c.ok)
+                .put("detail", c.detail.take(300)).put("advice", c.advice.take(300)))
+        }
+        out.put(name, JSONObject().put("checked_at_ms", h.checkedAtMs).put("ok", h.ok).put("checks", checks))
+    }
+    return JSONObject().put("schema", "house_ai.current_system_health_input.v1").put("hosts", out)
 }
 
 /** HEATING-PROFILE.2 state as house_ai.current_heating_profile_input.v1, or null while incomplete. */

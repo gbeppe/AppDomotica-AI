@@ -77,6 +77,15 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — salute dell'impianto in AI Smart (S3)
+
+`20261023-health`: modulo `system_health_tools.py`, strumento `system_health` (`host` all/20/15) sui riepiloghi
+`domopi.system_health.v1` di backend/health passati dall'app come `current_system_health`
+(`house_ai.current_system_health_input.v1`); argomento «system» nello smistamento (~1070 token a domanda).
+Risposte: tutto a posto con l'età dell'ultimo controllo, fino a 3 guasti per Raspberry con il consiglio,
+Raspberry muto da oltre 6 minuti. Prova con Groq: «come sta l'impianto?» → `system_health all`; «ci sono
+guasti sul Raspberry 15?» → `host 15`. Serve l'app che passa i riepiloghi.
+
 ## Release del 23 ottobre 2026 — condizionatore a tempo (T4)
 
 `20261023-ac`: strumento `ac_command` (`mode` off/heat/cool/dry/auto, `setpoint`, `from`, `to`) che crea una

@@ -137,7 +137,7 @@ def handler(client, token, log_path, planner=None, log_root=None):
                         or set(body) - {"question", "current_energy", "current_climate", "current_lights",
                                         "current_predictive_reserve", "current_thermostats",
                                         "current_environment", "current_heating", "current_rules",
-                                        "current_heating_profile",
+                                        "current_heating_profile", "current_system_health",
                                         "conversation_context", "follow_up"}
                         or "question" not in body):
                     raise ValueError("Invalid body")
@@ -153,6 +153,7 @@ def handler(client, token, log_path, planner=None, log_root=None):
                                                   heating_snapshot=body.get("current_heating"),
                                                   rules_snapshot=body.get("current_rules"),
                                                   profile_snapshot=body.get("current_heating_profile"),
+                                                  health_snapshot=body.get("current_system_health"),
                                                   log_root=log_root))
             except (ValueError, json.JSONDecodeError):
                 self.send_json(400, {"error": "Invalid request"})

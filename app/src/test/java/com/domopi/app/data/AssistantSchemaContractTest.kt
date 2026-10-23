@@ -16,7 +16,7 @@ class AssistantSchemaContractTest {
         // Modules whose results reach the answer (energy_tools.execute); 23/10/2026: the heating profile
         // was missing here and in the app, so "che profilo è attivo?" failed on the phone.
         val toolFiles = listOf("energy_tools.py", "energy_history.py", "log_tools.py",
-            "heating_profile_tools.py", "rules_tools.py")
+            "heating_profile_tools.py", "rules_tools.py", "system_health_tools.py")
         val produced = toolFiles.flatMap { name ->
             Regex("""['"]schema['"]\s*:\s*['"](house_ai\.[a-z_]+\.v1)['"]""")
                 .findAll(File(backend, name).readText()).map { it.groupValues[1] }.toList()

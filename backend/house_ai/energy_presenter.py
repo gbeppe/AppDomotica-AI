@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 import math
 from energy_history import elapsed_coverage
 import heating_profile_tools
+import system_health_tools
 import rules_tools
 
 LABELS = {
@@ -548,6 +549,8 @@ def describe(item):
         return rules_tools.list_text(r)
     if schema == 'house_ai.heating_profile.v1':
         return heating_profile_tools.text(r)
+    if schema == 'house_ai.system_health.v1':
+        return system_health_tools.text(r)
     if schema == 'house_ai.rule_command.v1':
         return rules_tools.rejected_text(r)
     if schema in ('house_ai.fireplace_settings_command.v1', 'house_ai.fireplace_power_command.v1',
@@ -757,6 +760,13 @@ def notes(item):
         if r['source'] == 'climate':
             extra.append("È un evento registrato, non una conferma fisica né una spiegazione causale aggiuntiva.")
         return extra + ["I log non garantiscono copertura continua e non sostituiscono lo stato corrente."]
+    if schema == 'house_ai.system_health.v1':
+        out = []
+        for name, h in r.get('hosts', {}).items():
+            age = 'nessun dato' if h['age_min'] is None else f"ultimo controllo {h['age_min']} minuti fa"
+            out.append(f"{name}: {h['checks']} controlli, {age}.")
+            out += [f"{name} · {f['title']}: {f['detail']}" for f in h['faults'][system_health_tools.MAX_FAULTS:]]
+        return out
     if schema == 'house_ai.energy_comparison.v1':
         return (["Con un periodo in corso il confronto è a parità di tempo trascorso."] if r.get('same_span')
                 else ["I periodi non sono normalizzati per durata."])

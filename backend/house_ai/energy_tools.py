@@ -11,6 +11,7 @@ from evidence import day_bounds
 from light_semantics import validate_commands
 from energy_flows import allocate
 import heating_profile_tools
+import system_health_tools
 import rules_tools
 
 
@@ -215,6 +216,7 @@ def catalog(path=CATALOG_PATH):
     }
     result["tools"].extend(rules_tools.CATALOG)
     result["tools"].extend(heating_profile_tools.CATALOG)
+    result["tools"].extend(system_health_tools.CATALOG)
     return result
 
 
@@ -253,7 +255,8 @@ def validate_plan(plan, sources=None):
                     if tool == "set_fireplace_power" else {"id", "tool", "level"}
                     if tool == "set_fireplace_level" else {"id", "tool", "source", "day"}
                     if tool == "backend_log_day" else {"id", "tool", "left_id", "right_id"}
-                    if tool == "energy_comparison" else (rules_tools.FIELDS.get(tool) or heating_profile_tools.FIELDS.get(tool))
+                    if tool == "energy_comparison" else (rules_tools.FIELDS.get(tool) or heating_profile_tools.FIELDS.get(tool)
+                                                  or system_health_tools.FIELDS.get(tool))
                     if isinstance(tool, str) else None)
         if expected is None or set(operation) != expected:
             raise ValueError("Invalid operation schema")
@@ -261,6 +264,8 @@ def validate_plan(plan, sources=None):
             rules_tools.validate_operation(operation)
         if isinstance(tool, str) and tool in heating_profile_tools.TOOL_NAMES:
             heating_profile_tools.validate_operation(operation)
+        if isinstance(tool, str) and tool in system_health_tools.TOOL_NAMES:
+            system_health_tools.validate_operation(operation)
         identifier = operation["id"]
         if (not isinstance(identifier, str) or not identifier or len(identifier) > 40
                 or identifier in ids):
@@ -634,11 +639,13 @@ def comparable(result):
 
 def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=None,
             lights_snapshot=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
-            environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None):
+            environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None,
+            health_snapshot=None):
     sources = sources or json.loads(CATALOG_PATH.read_text(encoding="utf-8"))["sources"]
     checked = validate_plan(plan, sources)
     rules = rules_tools.validate_rules_snapshot(rules_snapshot)
     profile = heating_profile_tools.validate_snapshot(profile_snapshot)
+    health = system_health_tools.validate_snapshot(health_snapshot)
     current = validate_current_snapshot(current_snapshot)
     climate = validate_climate_snapshot(climate_snapshot)
     lights = validate_lights_snapshot(lights_snapshot)
@@ -747,6 +754,9 @@ def execute(client, plan, sources=None, current_snapshot=None, climate_snapshot=
             continue
         if operation["tool"] == "create_rule":
             results.append({"id": operation["id"], "result": rules_tools.build_rule(operation, rules)})
+            continue
+        if operation["tool"] == "system_health":
+            results.append({"id": operation["id"], "result": system_health_tools.read(operation["host"], health)})
             continue
         if operation["tool"] == "current_heating_profile":
             results.append({"id": operation["id"], "result": heating_profile_tools.read(operation["about"], profile)})

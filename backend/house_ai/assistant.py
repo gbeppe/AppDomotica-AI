@@ -9,6 +9,7 @@ from energy_tools import (catalog, execute, validate_climate_snapshot, validate_
 from energy_presenter import compose, confirmation, notes
 from planner import PlannerUnavailable
 import heating_profile_tools
+import system_health_tools
 import rules_tools
 
 # Conditional or future requests ("quando…", "appena…", "se… allora…", automations) are rules,
@@ -121,7 +122,7 @@ def follow_up_question(question, follow_up):
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
         conversation_context=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
         environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None,
-        follow_up=None):
+        follow_up=None, health_snapshot=None):
     if not isinstance(question, str) or not question.strip() or len(question) > 1000:
         raise ValueError('Invalid question')
     validate_follow_up(follow_up)
@@ -134,6 +135,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
     validate_heating_snapshot(heating_snapshot)
     rules_tools.validate_rules_snapshot(rules_snapshot)
     heating_profile_tools.validate_snapshot(profile_snapshot)
+    system_health_tools.validate_snapshot(health_snapshot)
     if conversation_context is not None and conversation_context != {
             'domain': 'climate', 'focus': 'air_conditioner'}:
         raise ValueError('Invalid conversation context')
@@ -171,7 +173,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
                             thermostats_snapshot=thermostats_snapshot,
                             environment_snapshot=environment_snapshot,
                             heating_snapshot=heating_snapshot, rules_snapshot=rules_snapshot,
-                            profile_snapshot=profile_snapshot)
+                            profile_snapshot=profile_snapshot, health_snapshot=health_snapshot)
     except (ValueError, TypeError, OverflowError):
         raise PlannerUnavailable('Planner returned an invalid plan') from None
     if execution['clarification']:

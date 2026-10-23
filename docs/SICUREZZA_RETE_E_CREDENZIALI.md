@@ -35,7 +35,7 @@ Sistema), AiCloud, server VPN dell'ASUS, firewall IPv6.
   `wallbox-core` (WallBox .119). Mosquitto 1.5.7: **solo MQTT 3.1.1** (MQTT Explorer: versione 3.1.1).
   Backup `/home/pi/AI_backups/mosquitto/20261023T083412Z-before-anonymous-false`.
 - `persistence true` dal 23/10 10:16 (era `false` da almeno il 2020); `log_type notice` temporaneo dal
-  23/10 10:25 (backup `…20261023T082520Z-before-log-notice`), da rimettere a `error` il 24/10.
+  23/10 10:25 al 23/10 16:28 (nessun dispositivo rifiutato; backup `…20261023T142815Z-before-log-error`).
 - La password di `emonpi` è comparsa in chiaro in una sessione dell'agente il 21/10 (registri locali di
   Claude Code sul `.40`): rotazione da decidere dopo aver verificato che la 1883 non sia inoltrata dal
   router; richiede di riconfigurare tutti i client sopra (schede ESP da riprogrammare).

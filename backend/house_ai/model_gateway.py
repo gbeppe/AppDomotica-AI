@@ -165,6 +165,10 @@ from now, to 18:00; "accendi il condizionatore in caldo a 20 fino alle 22" = hea
 senza modalità: chiedi se caldo, raffrescamento o deumidifica. "Rimetti il condizionatore in
 automatico" = mode auto. "Cancella la regola del condizionatore" = delete_rule about air_conditioner.
 '''),
+    (('system',), '''Salute dell'impianto (Raspberry .20 e .15, server, broker, Node-RED, rete, «come sta l'impianto»,
+«funziona tutto?», «perché l'app non si collega?», «ci sono guasti?»): system_health con host all,
+oppure 20 o 15 se la domanda nomina un solo Raspberry. Solo lettura: non riparare né riavviare nulla.
+'''),
     (('rules',), '''"Che regole ci sono?" = list_rules; "cancella la regola del caminetto/delle luci/dei termostati/
 del profilo" = delete_rule about fireplace/lights/thermostats/heating_profile; "cancella tutte
 le regole" = about all; "cancella la regola" senza dire quale = about any.
@@ -192,6 +196,7 @@ DOMAIN_TOOLS = {
                 'set_fireplace_settings', 'set_fireplace_power', 'set_fireplace_level', 'current_heating_profile'),
     'rules': ('create_rule', 'list_rules', 'delete_rule'),
     'timed': ('schedule_command', 'vmc_command', 'ac_command'),
+    'system': ('system_health',),
 }
 # Words of each topic, on the question in lower case without accents. Generous on purpose: a missed topic
 # leaves its tools out, an extra one only costs tokens.
@@ -211,6 +216,7 @@ DOMAIN_WORDS = {name: re.compile(words) for name, words in {
              r'|tutti i giorni|cancella|elimina|se\b)',
     'timed': r'(fino alle|\bdalle\b|\balle\s*\d|\balle\s+(una|due|tre|quattro|cinque|sei|sette|otto|nove|dieci'
              r'|undici|dodici|mezzanotte|mezzogiorno)\b|\bore\s*\d)',
+    'system': r'\b(impianto|raspberry|salute|server|broker|mosquitto|node.?red|tailscale|funziona tutto|guast|sistema|non si collega)',
 }.items()}
 
 

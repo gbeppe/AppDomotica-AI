@@ -75,6 +75,9 @@ due non manda aggiornamenti da più di 6 minuti. Toccandolo si apre la pagina **
   telefono ma l'altro lo vede, consiglia **«riavvia il router ASUS»** (il caso del 21/10);
 - fuori casa senza collegamento la pagina lo dice e mostra gli ultimi stati ricevuti.
 
+**Ad AI Smart** puoi chiedere «come sta l'impianto?», «funziona tutto?», «ci sono guasti sul .15?»: risponde
+con gli stessi controlli (guida di AI Smart, §4.15).
+
 Il riepilogo che l'app legge è pubblicato a ogni giro sul broker del `.20`:
 
 - `zara/system/health/20/stat` e `zara/system/health/15/stat`, JSON con `ok` generale e l'elenco dei

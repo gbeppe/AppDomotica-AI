@@ -194,6 +194,10 @@ data class EnergyAssistantAnswer(
                             detail += "Profilo ${field("profile")} · modalità ${field("mode")} · " +
                                 "media esterna 72 h ${field("outdoor_mean_72h")} · ore di dati ${field("hours_of_data")}"
                     }
+                    "house_ai.system_health.v1" -> {
+                        detail += "Salute impianto (controlli di .20 e .15, sola lettura) · " +
+                            if (result.getString("status") == "available") "ricevuta dall'app" else "non ricevuta"
+                    }
                     "house_ai.rules_list.v1" -> detail += "Regole · motore ${result.optString("engine_mode", "—")} · " +
                         "${result.optJSONArray("rules")?.length() ?: 0} regole"
                     "house_ai.current_heating.v1" -> {
