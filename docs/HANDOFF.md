@@ -293,6 +293,12 @@ Una settimana di osservazione, poi S2 (riparazioni, riserva sul `.15`) e S3 (app
 tutte corrette; le differenze restanti dalla suite sono attese superate (riepilogo energia, «ultimi N giorni»).
 Groq Dev Tier: aggiornamento non disponibile il 21/10 («high demand»), da riprovare.
 
+**Unificazione Node-RED e MQTT (23/10/2026, studio):** l'utente vuole un solo Node-RED e un solo broker.
+Studio di fattibilità in [`AI_MODE/UNIFICAZIONE_NODERED_MQTT.md`](AI_MODE/UNIFICAZIONE_NODERED_MQTT.md): la
+destinazione `.15` richiede una emonSD nuova e il ricollegamento dei dispositivi; in valutazione la
+destinazione **`.20`** (tab del `.15` identici, nodi broker rimappati, nessun dispositivo da toccare,
+caminetto per ultimo). Nessuna modifica fatta; prima le decisioni del §6 e il backup delle SD (F0).
+
 ### Da indagare (16/10/2026)
 
 - **Scheda della pompa del pavimento (`.21`, `floorpump_v2`) scollegata (23/10):** non risponde al ping e non si
