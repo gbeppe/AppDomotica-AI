@@ -103,6 +103,8 @@ fun AiSmartScreen(
     var speechFinished by remember { mutableIntStateOf(0) }
     var heatingNotice by remember { mutableStateOf<String?>(null) }
     var assistantContext by remember { mutableStateOf<AssistantContext?>(null) }
+    // A clarification just asked: the next question (spoken or typed) is sent as its reply.
+    var followUp by remember { mutableStateOf<AssistantFollowUp?>(null) }
     var dynamicError by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -194,12 +196,14 @@ fun AiSmartScreen(
             response = null
             pendingHeating = null
             heatingNotice = null
+            // Kept after an error (e.g. "riprova tra 60 secondi"), so the same reply can be repeated.
+            val replyTo = followUp?.takeIf { it.validAt(System.currentTimeMillis()) }
             try {
                 val started = System.currentTimeMillis()
                 val result = repository.assistant(serviceUrl, serviceToken, text, energyState, connected,
                     climateState, state, assistantContext, reserve = reserveState,
                     thermostats = thermostatState, environment = environmentState, heating = heatingState,
-                    rules = rulesState, profile = profileState)
+                    rules = rulesState, profile = profileState, followUp = replyTo)
                 result.lightCommands.forEach { command ->
                     check(connected && onLightCommand(command.lightId, command.state)) {
                         "Comando luce non inviato: connessione o target non valido."
@@ -212,7 +216,8 @@ fun AiSmartScreen(
                 }
                 pendingHeating = result.heatingConfirmation
                 pendingSinceMs = System.currentTimeMillis()
-                listenAfterSpeech = spoken && result.heatingConfirmation != null
+                followUp = AssistantFollowUp.after(text, result, replyTo, System.currentTimeMillis())
+                listenAfterSpeech = spoken && (result.heatingConfirmation != null || followUp != null)
                 response = result
                 assistantContext = result.context ?: assistantContext
                 stackHealthManager.logTraffic(TrafficLogEntry(tag = "HOUSE-AI", endpoint = "/v1/assistant/query",
@@ -341,13 +346,13 @@ fun AiSmartScreen(
             engine?.shutdown()
         }
     }
-    fun listen(confirmation: Boolean) {
+    fun listen(confirmation: Boolean, prompt: String = "Chiedi o comanda la casa") {
         speech?.stop()
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "it-IT")
             putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-            putExtra(RecognizerIntent.EXTRA_PROMPT, if (confirmation) "Di' confermo o annulla" else "Chiedi o comanda la casa")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, if (confirmation) "Di' confermo o annulla" else prompt)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
         }
         voiceConfirming = confirmation
@@ -356,10 +361,10 @@ fun AiSmartScreen(
         catch (_: SecurityException) { voiceConfirming = false; voiceNotice = "Accesso al riconoscimento vocale negato. Puoi scrivere la domanda." }
     }
     LaunchedEffect(speechFinished) {
-        if (speechFinished > 0 && listenAfterSpeech && pendingHeating != null) {
+        if (speechFinished > 0 && listenAfterSpeech && (pendingHeating != null || followUp != null)) {
             listenAfterSpeech = false
             delay(1_000) // the reading must have faded (Bluetooth or speaker lag) before the microphone opens
-            listen(true)
+            if (pendingHeating != null) listen(true) else listen(false, "Rispondi al chiarimento")
         }
     }
     // Do not keep speaking a response after the connection status changes.

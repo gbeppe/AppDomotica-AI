@@ -31,6 +31,31 @@ class LogTests(unittest.TestCase):
             self.assertEqual(result['matched_records'], 60)
             self.assertEqual(len(result['records']), 50)
 
+    def test_climate_day_without_events_reports_the_previous_one(self):
+        """2026-10-23: the climate log is written only on changes; 22/10 had none."""
+        import os
+        from energy_presenter import log_text
+        event = lambda day, offset, reason: json.dumps({
+            'timestamp': day_bounds(day)[0] + offset, 'dettaglio_comandi': {'stato_ac_attuale': 'OFF'},
+            'logica_controllo': {'motivo_ac': reason}})
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder, 'clima_controllo.log')
+            path.write_text('\n'.join([event('2026-10-19', 0, 'BLOCCO_PR_GATE_INVALID'),
+                                       event('2026-10-21', 28_348_000, 'LOGICA_INVERNALE_ATTIVA'),
+                                       event('2026-10-23', 28_642_000, 'LOGICA_INVERNALE_ATTIVA')]) + '\n')
+            result = read_day(folder, 'climate', '2026-10-22')
+            self.assertEqual(result['status'], 'insufficient_data')
+            self.assertEqual(result['previous_record']['source']['line'], 2)
+            text = log_text(result)
+            self.assertIn('Il 22/10 il controller del clima non ha registrato cambi di stato', text)
+            self.assertIn("L'ultimo evento precedente è del 21/10 alle 07:52: condizionatore spento, "
+                          "motivo LOGICA_INVERNALE_ATTIVA.", text)
+            self.assertNotIn('non prova assenza di eventi', text)
+            self.assertIsNone(read_day(folder, 'climate', '2026-10-19')['previous_record'])
+            first = log_text(read_day(folder, 'climate', '2026-10-18'))
+            self.assertIn('Nel log non ci sono eventi precedenti', first)
+            self.assertIsNone(read_day(folder, 'learning', '2026-10-22')['previous_record'])
+
     def test_plan_and_assistant(self):
         plan = {'operations': [{'id': 'a', 'tool': 'backend_log_day', 'source': 'reserve_shadow', 'day': '2026-09-06'}]}
         class Planner:

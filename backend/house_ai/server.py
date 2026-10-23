@@ -138,7 +138,7 @@ def handler(client, token, log_path, planner=None, log_root=None):
                                         "current_predictive_reserve", "current_thermostats",
                                         "current_environment", "current_heating", "current_rules",
                                         "current_heating_profile",
-                                        "conversation_context"}
+                                        "conversation_context", "follow_up"}
                         or "question" not in body):
                     raise ValueError("Invalid body")
                 self.send_json(200, assistant_ask(client, planner, body["question"],
@@ -146,6 +146,7 @@ def handler(client, token, log_path, planner=None, log_root=None):
                                                   climate_snapshot=body.get("current_climate"),
                                                   lights_snapshot=body.get("current_lights"),
                                                   conversation_context=body.get("conversation_context"),
+                                                  follow_up=body.get("follow_up"),
                                                   pr_snapshot=body.get("current_predictive_reserve"),
                                                   thermostats_snapshot=body.get("current_thermostats"),
                                                   environment_snapshot=body.get("current_environment"),

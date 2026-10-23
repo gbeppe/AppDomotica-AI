@@ -77,6 +77,17 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — risposta ai chiarimenti, log del clima senza eventi
+
+`20261023-followup`: campo facoltativo `follow_up` `{question, clarification}` (massimo 500 caratteri
+ciascuno) nella richiesta; il pianificatore riceve «Domanda precedente… Chiarimento chiesto… Risposta
+dell'utente…» (oltre 1000 caratteri: solo la risposta) e i controlli sulle parole dell'utente («ogni»,
+«fino alle», regole) guardano domanda e risposta. «Mese», «ultimo mese» = mese corrente (prima:
+chiarimento; richiesta dell'utente). Log del clima: scrive solo ai cambi di stato, quindi un giorno senza
+righe dice «non ha registrato cambi di stato» e l'ultimo evento precedente (`previous_record`). Prova
+del 23/10 07:55 che l'ha motivato: «perché il condizionatore non è partito ieri notte?» → «nessun record
+utilizzabile» (il 22/10 non c'erano eventi; l'ultimo il 21/10 07:52, logica invernale).
+
 ## Release del 22 ottobre 2026 — istruzioni per argomento
 
 `20261022-topics`: `route()` sceglie gli argomenti dalla domanda (parole chiave su testo minuscolo senza

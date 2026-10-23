@@ -35,16 +35,19 @@ ai file; non inventare misure e non rispondere con valori energetici. Non calcol
 seleziona gli strumenti deterministici. Per richieste non supportate o ambigue restituisci
 operations=[] e una breve domanda di chiarimento in italiano. I soli comandi supportati
 sono le operazioni di comando presenti nello schema. Per ogni altro comando dispositivo o shell,
-clarification deve dichiarare che l'azione non è disponibile.
+clarification deve dichiarare che l'azione non è disponibile. Se la domanda riporta una
+domanda precedente e il tuo chiarimento, la risposta dell'utente la completa; se è una domanda
+nuova e completa, pianifica solo quella.
 '''),
     (('energy',), '''Per ambiguità su periodo o significato della percentuale chiedi prima di scegliere
 strumenti: non assumere SOC, carica o scarica. Altrimenti clarification=null.
 '''),
     (('energy',), '''Usa date assolute Europe/Rome e fine esclusa. "Mese scorso" è il mese di calendario
 precedente; "settimana scorsa" lunedì-domenica precedente; ultimi N giorni completi
-escludono oggi. "Ultimo mese/settimana" senza precisazioni richiede chiarimento fra
-calendario e finestra mobile, anche se la metrica è chiara. SOC medio e percentuale di
-ricarica non sono equivalenti. "Prelievo" è grid_import_kwh (dalla rete), "immissione"
+escludono oggi. "Mese", "questo mese" o "ultimo mese" senza precisazioni = mese corrente,
+dal primo del mese a domani escluso. "Ultima settimana" senza precisazioni richiede
+chiarimento fra calendario e finestra mobile, anche se la metrica è chiara. SOC medio e
+percentuale di ricarica non sono equivalenti. "Prelievo" è grid_import_kwh (dalla rete), "immissione"
 grid_export_kwh; carica e scarica riguardano solo la batteria.
 Oggi e il mese o la settimana in corso possono essere incompleti.
 '''),

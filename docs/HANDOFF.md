@@ -68,7 +68,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
+**Da rilasciare** (codice pronto, test unitari OK): app con VMC (T2) e risposta ai chiarimenti (`AssistantFollowUp`: la domanda successiva entro 2 minuti porta domanda e chiarimento; microfono riaperto dopo la lettura del chiarimento). Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscalda
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261022-topics`** (dal 22/10): al modello vanno solo istruzioni e strumenti degli argomenti della domanda (`route()` in `model_gateway.py`; nessun argomento riconosciuto = tutto), ~1300–4000 token invece di ~7700. Prima: `20261021-budget` (minuto di Groq esaurito (413) = «riprova tra 60 s», log dei token con `topics=`). Funzioni: VMC a voce (velocità, «fino alle», «dalle… alle…», automatico); comandi a tempo per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma (durata una volta salvo «ogni/sempre»); conferma per tutti i comandi del riscaldamento; energia adesso con flussi stimati; lettura del riscaldamento. In `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261023-followup`** (dal 23/10): campo `follow_up` (domanda precedente + chiarimento, risposta pianificata insieme); «mese/ultimo mese» = mese corrente; giorno senza eventi nel log del clima = «nessun cambio di stato» + ultimo evento precedente. Prima `20261022-topics` (22/10): al modello vanno solo istruzioni e strumenti degli argomenti della domanda (`route()` in `model_gateway.py`; nessun argomento riconosciuto = tutto), ~1300–4000 token invece di ~7700. Prima: `20261021-budget` (minuto di Groq esaurito (413) = «riprova tra 60 s», log dei token con `topics=`). Funzioni: VMC a voce (velocità, «fino alle», «dalle… alle…», automatico); comandi a tempo per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma (durata una volta salvo «ogni/sempre»); conferma per tutti i comandi del riscaldamento; energia adesso con flussi stimati; lettura del riscaldamento. In `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).

@@ -171,6 +171,29 @@ def predictive_reserve_notes(r):
     ] + received_note(observations.values())
 
 
+AC_STATES = {'ON': 'acceso', 'OFF': 'spento'}
+
+
+def no_climate_events_text(result):
+    """The climate log is written only on state changes: an empty day means no recorded change."""
+    text = f"Il {day_text(result['day'])} il controller del clima non ha registrato cambi di stato."
+    previous = (result.get('previous_record') or {}).get('record')
+    stamp = numeric(previous, 'timestamp') if isinstance(previous, dict) else None
+    if stamp is None:
+        return text + " Nel log non ci sono eventi precedenti."
+    commands = previous.get('dettaglio_comandi') if isinstance(previous.get('dettaglio_comandi'), dict) else {}
+    logic = previous.get('logica_controllo') if isinstance(previous.get('logica_controllo'), dict) else {}
+    facts = []
+    state = commands.get('stato_ac_attuale')
+    if state in AC_STATES:
+        facts.append(f"condizionatore {AC_STATES[state]}")
+    reason = logic.get('motivo_ac')
+    if isinstance(reason, str) and reason.strip():
+        facts.append(f"motivo {PR_REASONS.get(reason.strip(), reason.strip()[:180])}")
+    return (text + f" L'ultimo evento precedente è del {moment_text(stamp)}"
+            + (": " + ", ".join(facts) if facts else "") + ".")
+
+
 def log_text(result):
     prefix = f"Log {result['file']} del {day_text(result['day'])}"
     if not result['records']:
@@ -180,8 +203,11 @@ def log_text(result):
             if result.get('cadence') == 'archive':
                 text += " È un archivio storico della simulazione SHADOW, non lo stato attuale del Predictive Reserve."
             return text
-        return prefix + ": " + ("sorgente non disponibile." if result['status'] in ('unavailable', 'source_rejected')
-                                 else "nessun record utilizzabile; non prova assenza di eventi.")
+        if result['status'] in ('unavailable', 'source_rejected'):
+            return prefix + ": sorgente non disponibile."
+        if result['source'] == 'climate':
+            return no_climate_events_text(result)
+        return prefix + ": nessun record utilizzabile; non prova assenza di eventi."
     # Latest by evidence timestamp, not file order; forecast has only target date.
     key = 'timestamp_ms' if result['source'] == 'reserve_shadow' else 'timestamp'
     last = (result['records'][-1] if result['source'] == 'solar_forecast' else

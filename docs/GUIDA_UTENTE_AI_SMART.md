@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **22/10/2026** · app `bld_bff71307` · backend House AI `20261022-topics`.
+Aggiornata al **23/10/2026** · app `bld_bff71307` · backend House AI `20261023-followup`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -60,8 +60,12 @@ Esempio di riepilogo all'apertura:
 - Puoi unire più richieste in una frase (fino a 6 parti): «com'è il riscaldamento e quanto
   abbiamo prodotto ieri?».
 - Per i periodi usa parole come *oggi, ieri, settimana scorsa, mese scorso, ultimi 7 giorni*
-  o date precise. Se la domanda è ambigua, AI Smart chiede un chiarimento: riformula la domanda
-  (non ricorda le domande precedenti, tranne «perché?» subito dopo una risposta sul condizionatore).
+  o date precise. «Mese», «questo mese» o «ultimo mese» senza altro = **mese corrente** (dal 1° a
+  oggi); per una finestra mobile di' «ultimi 30 giorni».
+- Se la domanda è ambigua, AI Smart chiede un chiarimento. **Rispondi solo al chiarimento** («ultimi
+  7 giorni»), entro 2 minuti: se avevi parlato, il microfono si riapre da solo dopo la lettura. Se
+  invece fai una domanda nuova e completa, risponde a quella. Per il resto non ricorda le domande
+  precedenti, tranne «perché?» subito dopo una risposta sul condizionatore.
 - Al massimo **circa 2 domande al minuto** (limite del servizio gratuito): oltre, compare
   «Troppe domande ravvicinate: riprova tra … secondi.».
 
@@ -219,7 +223,7 @@ ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 |---|---|
 | «il condizionatore è acceso?», «perché il condizionatore è spento?» | Il condizionatore è spento. — con il motivo registrato dal controller AI Climate |
 | «il Predictive Reserve è attivo?», «come funziona adesso il PR?» | Il Predictive Reserve è disattivato. / … attivo in modalità SHADOW: blocca gli avvii notturni in deumidificazione. |
-| «perché stanotte il condizionatore non è partito?» | il motivo registrato quella notte nei log del clima |
+| «perché stanotte il condizionatore non è partito?» | il motivo registrato quella notte nei log del clima; se quel giorno non ci sono stati cambi di stato, lo dice e riporta l'ultimo evento precedente (data, stato, motivo) |
 
 Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller AI Climate.
 
@@ -300,10 +304,10 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 
 ## 5. Cosa AI Smart non fa
 
-- Non comanda caldaia, pompa pavimento, condizionatore, VMC, piscina (pompa e skimmer),
+- Non comanda caldaia, pompa pavimento, condizionatore, piscina (pompa e skimmer),
   irrigazione, garage, Predictive Reserve; il livello del caminetto solo in Manuale.
 - Non inventa numeri, costi o tariffe e non fa ipotesi sulle cause.
-- Non ha memoria delle domande precedenti.
+- Non ha memoria delle domande precedenti, salvo la risposta a un chiarimento (entro 2 minuti).
 - **Non esegue subito una richiesta detta come regola**: «quando…», «appena…», «alle 22…»
   diventano sempre una regola da confermare (§4.12), mai un comando immediato.
 - Non crea regole con due condizioni insieme o con azioni fuori elenco (irrigazione, piscina,
@@ -352,3 +356,4 @@ in cima.
 | 18/10/2026 | **VMC** a voce (§4.14): velocità, «fino alle», «dalle… alle…», «rimetti in automatico»; priorità manuale rispettata da AI Climate. |
 | 21/10/2026 | Servizio del modello al limite del minuto: «Troppe domande ravvicinate: riprova tra 60 secondi» invece dell'errore generico. Per ora circa una domanda al minuto. |
 | 22/10/2026 | Domande più leggere: al modello vanno solo istruzioni e strumenti dell'argomento (energia, luci, clima, riscaldamento, regole, comandi a tempo), ~1300–4000 token invece di ~7700. Più domande al minuto e al giorno. «Prelievo» = dalla rete; «ultimo mese/settimana» chiede se calendario o ultimi giorni; «perché ieri notte il condizionatore…» legge il log di quel giorno. |
+| 23/10/2026 | «Mese»/«ultimo mese» = mese corrente, senza chiarimento. Giorno senza eventi nel log del clima: «non ha registrato cambi di stato» e l'ultimo evento precedente. Risposta al chiarimento: basta dire la parte mancante; il microfono si riapre da solo (**con l'app successiva** a `bld_bff71307`). |

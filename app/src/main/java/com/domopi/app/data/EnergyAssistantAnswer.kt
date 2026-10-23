@@ -264,6 +264,25 @@ data class EnergyAssistantAnswer(
 }
 
 data class AssistantContext(val domain: String, val focus: String)
+
+/**
+ * A clarification asked by the backend ("mese di calendario o ultimi 30 giorni?"): the next question
+ * within [WINDOW_MS] is sent as its reply, together with the question and the clarification.
+ */
+data class AssistantFollowUp(val question: String, val clarification: String, val askedAtMs: Long) {
+    fun validAt(nowMs: Long) = nowMs - askedAtMs in 0..WINDOW_MS
+
+    companion object {
+        const val WINDOW_MS = 120_000L
+        const val MAX_LENGTH = 500
+
+        /** Null unless [answer] is a clarification; a reply that gets another one keeps the first question. */
+        fun after(question: String, answer: EnergyAssistantAnswer, previous: AssistantFollowUp?, nowMs: Long) =
+            if (answer.status != "clarification_required" || answer.heatingConfirmation != null || answer.text.isBlank()) null
+            else AssistantFollowUp((previous?.let { "${it.question} $question" } ?: question).take(MAX_LENGTH),
+                answer.text.take(MAX_LENGTH), nowMs)
+    }
+}
 data class LightCommand(val lightId: String, val state: Boolean)
 data class ThermostatCommand(val thermostat: String, val targetC: String)
 

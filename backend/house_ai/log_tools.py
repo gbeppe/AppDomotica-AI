@@ -68,7 +68,7 @@ def read_day(root, source, day):
     result = {"schema": "house_ai.backend_log_evidence.v1", "source": source,
               "file": filename, "day": day, "timezone": "Europe/Rome",
               "evidence_type": kind, "status": "unavailable", "records": [],
-              "matched_records": 0, "invalid_lines": 0, "truncated": False,
+              "matched_records": 0, "invalid_lines": 0, "truncated": False, "previous_record": None,
               "cadence": CADENCE[source][0], "last_modified_ms": None,
               "limitations": ["I log non garantiscono copertura continua né conferma fisica dei comandi.",
                               "SHADOW è simulazione; le previsioni non sono produzione misurata.",
@@ -104,6 +104,12 @@ def read_day(root, source, day):
                         if type(stamp) not in (int, float) or not math.isfinite(stamp):
                             raise ValueError()
                         matches = start <= stamp < end
+                        # Event-driven logs write only on changes: keep the last event before the day.
+                        if (stamp < start and CADENCE[source][0] == "event_driven"
+                                and (result["previous_record"] is None
+                                     or stamp >= result["previous_record"]["record"][time_key])):
+                            result["previous_record"] = {"source": {"file": filename, "line": number},
+                                                         "record": record}
                     if matches:
                         result["matched_records"] += 1
                         result["records"].append({"source": {"file": filename, "line": number}, "record": record})

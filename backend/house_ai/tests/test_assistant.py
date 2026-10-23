@@ -155,6 +155,23 @@ class AssistantTests(unittest.TestCase):
             ask(None, planner, "Perché?", date(2026, 9, 12),
                 conversation_context={"domain": "energy", "focus": "air_conditioner"})
 
+    def test_reply_to_a_clarification_is_planned_with_the_question(self):
+        """2026-10-23: «ultimi 30 giorni» alone did not say what it answered."""
+        planner = Planner({"operations": [], "clarification": "Quale metrica?"})
+        follow_up = {"question": "Prelievo nell'ultimo mese?",
+                     "clarification": "Intendi il mese di calendario o gli ultimi 30 giorni?"}
+        result = ask(None, planner, "Ultimi 30 giorni", date(2026, 10, 23), follow_up=follow_up)
+        self.assertEqual(planner.seen[0], "Domanda precedente: «Prelievo nell'ultimo mese?». Chiarimento chiesto: "
+                         "«Intendi il mese di calendario o gli ultimi 30 giorni?». Risposta dell'utente: «Ultimi 30 giorni».")
+        self.assertEqual(result["question"], "Ultimi 30 giorni")
+        ask(None, planner, "x" * 990, date(2026, 10, 23), follow_up=follow_up)
+        self.assertEqual(planner.seen[0], "x" * 990)
+        for bad in ({"question": "Prelievo?"}, {"question": "", "clarification": "Quale?"},
+                    {"question": "a" * 501, "clarification": "Quale?"}, "Prelievo?",
+                    {**follow_up, "extra": "x"}):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                ask(None, planner, "Ultimi 30 giorni", date(2026, 10, 23), follow_up=bad)
+
     def test_invalid_climate_snapshot_is_rejected(self):
         operation = {"operations": [{"id": "clima", "tool": "current_air_conditioner"}]}
         base = {"schema": "house_ai.current_climate_input.v1", "connected": True,

@@ -153,6 +153,7 @@ class HouseAiRepository {
         heating: HeatingSmartState = HeatingSmartState(),
         rules: RulesState = RulesState(),
         profile: HeatingProfileState = HeatingProfileState(),
+        followUp: AssistantFollowUp? = null,
     ): EnergyAssistantAnswer = withContext(Dispatchers.IO) {
         val base = validatedBase(baseUrl)
         require(token.isNotBlank() && question.isNotBlank() && question.length <= 1000)
@@ -240,6 +241,8 @@ class HouseAiRepository {
             .put("commands", lightCommands))
         context?.let { body.put("conversation_context", JSONObject()
             .put("domain", it.domain).put("focus", it.focus)) }
+        followUp?.let { body.put("follow_up", JSONObject()
+            .put("question", it.question).put("clarification", it.clarification)) }
         val requestBody = body.toString()
         val connection = URL("${base.toExternalForm()}/v1/assistant/query")
             .openConnection() as HttpURLConnection

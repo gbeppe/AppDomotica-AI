@@ -100,11 +100,31 @@ def manual_until(proposed, question, heating_snapshot):
     return not any(op.get('tool') == 'schedule_command' for op in ops)
 
 
+def validate_follow_up(follow_up):
+    """The question that got a clarification and the clarification itself, sent back by the app."""
+    if follow_up is None:
+        return
+    if (not isinstance(follow_up, dict) or set(follow_up) != {'question', 'clarification'}
+            or not all(isinstance(v, str) and v.strip() and len(v) <= 500 for v in follow_up.values())):
+        raise ValueError('Invalid follow-up')
+
+
+def follow_up_question(question, follow_up):
+    """A reply to a clarification ("ultimi 30 giorni") is planned together with the question it completes."""
+    if not follow_up:
+        return question.strip()
+    text = (f"Domanda precedente: «{follow_up['question'].strip()}». Chiarimento chiesto: "
+            f"«{follow_up['clarification'].strip()}». Risposta dell'utente: «{question.strip()}».")
+    return text if len(text) <= 1000 else question.strip()  # the planner accepts up to 1000 characters
+
+
 def ask(client, planner, question, today=None, current_snapshot=None, climate_snapshot=None, lights_snapshot=None,
         conversation_context=None, log_root=None, pr_snapshot=None, thermostats_snapshot=None,
-        environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None):
+        environment_snapshot=None, heating_snapshot=None, rules_snapshot=None, profile_snapshot=None,
+        follow_up=None):
     if not isinstance(question, str) or not question.strip() or len(question) > 1000:
         raise ValueError('Invalid question')
+    validate_follow_up(follow_up)
     validate_current_snapshot(current_snapshot)
     validate_climate_snapshot(climate_snapshot)
     validate_lights_snapshot(lights_snapshot)
@@ -125,7 +145,7 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
                 'answer': 'Il pianificatore dinamico non è configurato sul backend.'}
     current = today or now.date()
     try:
-        planned_question = question.strip()
+        planned_question = follow_up_question(question, follow_up)
         if planned_question.lower().rstrip(' ?!') in ('perché', 'perche'):
             if conversation_context == {"domain": "climate", "focus": "air_conditioner"}:
                 planned_question = "Perché il condizionatore è nello stato attuale?"
@@ -134,6 +154,8 @@ def ask(client, planner, question, today=None, current_snapshot=None, climate_sn
         raise  # keeps RateLimited and its wait time
     except (ValueError, RuntimeError):
         raise PlannerUnavailable('Planner unavailable or invalid response') from None
+    # The user's own words across the exchange; the clarification was written by the model.
+    question = f"{follow_up['question']} {question}" if follow_up else question
     if isinstance(proposed, dict) and not ALWAYS_WORDS.search(question):
         for op in proposed.get('operations') or []:
             if isinstance(op, dict) and op.get('tool') == 'create_rule' and op.get('lifetime') == 'always':
