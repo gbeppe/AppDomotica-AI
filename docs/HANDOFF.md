@@ -68,7 +68,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-**Da rilasciare:** lettura a voce di date e trattini (`spokenText` in `SpeechText.kt`: «21/10» → «21 ottobre», intervalli, «—» → «non disponibile»). Installata sul telefono: **`bld_059f6ff7`** (23/10 08:15: VMC (T2) e risposta ai chiarimenti, `AssistantFollowUp`: la domanda successiva entro 2 minuti porta domanda e chiarimento, microfono riaperto dopo la lettura del chiarimento); prima `bld_bff71307` (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
+Installata sul telefono: **`bld_289903a4`** (23/10, commit `5302810`: lettura a voce di date e trattini, `spokenText` in `SpeechText.kt`: «21/10» → «21 ottobre», intervalli, «—» → «non disponibile»); prima `bld_059f6ff7` (23/10: VMC (T2) e risposta ai chiarimenti, `AssistantFollowUp`: la domanda successiva entro 2 minuti porta domanda e chiarimento, microfono riaperto dopo la lettura del chiarimento); prima `bld_bff71307` (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
