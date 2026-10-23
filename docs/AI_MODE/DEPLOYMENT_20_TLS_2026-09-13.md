@@ -77,6 +77,16 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — copertura dei dati
+
+`20261023-coverage` (richiesta dell'utente: la percentuale letta non serve): la frase «Dati parziali:
+copertura N per cento» esce dalla risposta e resta nelle note (`notes`). Per un periodo in corso la
+copertura è quella del tempo trascorso (`elapsed_coverage`, ora in `energy_presenter.py` e usata
+anche dal riepilogo del giorno): prima un periodo fino a domani era sempre «parziale». A voce solo
+«Mancano dati per una parte del periodo.» sotto il 95 % (`SPOKEN_GAP_BELOW`). Aperto: il confronto
+fra periodi (`energy_comparison`) vuole copertura completa, quindi con un periodo in corso risponde
+«non calcolabile».
+
 ## Release del 23 ottobre 2026 — periodi senza chiarimenti
 
 `20261023-periods` (richiesta dell'utente: «la domanda è già chiara»): giorno, settimana, mese, anno

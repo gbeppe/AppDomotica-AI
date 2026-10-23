@@ -7,7 +7,7 @@ it with the same card and diagnostics.
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from energy_presenter import notes, spoken
+from energy_presenter import elapsed_coverage, notes, spoken
 from energy_tools import execute
 
 ROME = ZoneInfo('Europe/Rome')
@@ -16,13 +16,6 @@ QUESTION = "Com'è andata oggi?"
 DAY_METRICS = (("solar_production_kwh", "prodotti"), ("home_consumption_kwh", "consumati"),
                ("grid_import_kwh", "prelevati"), ("grid_export_kwh", "immessi"))
 PARTIAL_BELOW = 0.9  # share of the elapsed day covered by samples
-
-
-def elapsed_coverage(result):
-    """Coverage of the elapsed part of the day; whole-day coverage is meaningless before midnight."""
-    lo = result['period_ms'][0]
-    elapsed = result['observed_until_ms'] - lo
-    return min(result['covered_ms'] / elapsed, 1.0) if elapsed > 0 else 0.0
 
 
 def forecast_kwh(result):

@@ -110,6 +110,18 @@ def humanize(code):
     return str(code).strip().replace('_', ' ').lower()
 
 
+# Below this share of the elapsed period covered by samples the spoken answer says data are missing;
+# the percentage itself stays in the written details (23/10/2026, user's choice).
+SPOKEN_GAP_BELOW = 0.95
+
+
+def elapsed_coverage(result):
+    """Coverage of the elapsed part of the period: a period in progress has no samples after now."""
+    lo = result['period_ms'][0]
+    elapsed = result['observed_until_ms'] - lo
+    return min(result['covered_ms'] / elapsed, 1.0) if elapsed > 0 else 0.0
+
+
 def numeric(record, *path):
     for key in path:
         record = record.get(key) if isinstance(record, dict) else None
@@ -594,8 +606,8 @@ def describe(item):
     if r['value'] is None:
         return f"{label}: dati insufficienti {period}."
     text = f"{label} {period}: {energy_value(r['value'], r['unit'])}."
-    if r['status'] != 'complete':
-        text += f" Dati parziali: copertura {number(r['coverage_ratio'] * 100, 1)} per cento."
+    if r['status'] != 'complete' and elapsed_coverage(r) < SPOKEN_GAP_BELOW:
+        text += " Mancano dati per una parte del periodo."
     return text
 
 
@@ -753,7 +765,11 @@ def notes(item):
                          f"copertura {number(observed['coverage_ratio'] * 100, 1)} per cento.")
         return extra + ["Stima da campioni EmonCMS, non misura fiscale."]
     if schema == 'house_ai.energy_history.v1':
-        return [f"Copertura {number(r['coverage_ratio'] * 100, 1)} per cento.", "Stima da campioni EmonCMS, non misura fiscale."]
+        in_progress = r['observed_until_ms'] < r['period_ms'][1]
+        coverage = (f"Copertura {number(elapsed_coverage(r) * 100, 1)} per cento del periodo trascorso, "
+                    f"fino al {moment_text(r['observed_until_ms'])}." if in_progress
+                    else f"Copertura {number(r['coverage_ratio'] * 100, 1)} per cento.")
+        return [coverage, "Stima da campioni EmonCMS, non misura fiscale."]
     return []
 
 

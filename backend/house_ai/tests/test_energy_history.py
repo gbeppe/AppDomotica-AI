@@ -139,3 +139,40 @@ class EnergyTests(unittest.TestCase):
         self.assertEqual(result['observed_winner']['day'], '2026-09-02')
         self.assertAlmostEqual(result['observed_winner']['coverage_ratio'], .5, places=2)
         self.assertEqual(result['absolute_winner']['day'], '2026-09-02')
+
+
+class CoverageSpeechTests(unittest.TestCase):
+    """23/10/2026: periods in progress always said "Dati parziali: copertura N per cento"."""
+
+    def report(self, start, end, now_ms, gap_ms=(0, 0)):
+        class Client:
+            def history(self, feed, lo, hi, interval):
+                return [[t * 1000, 500] for t in range(lo, hi + 1, interval)
+                        if not gap_ms[0] <= t * 1000 < gap_ms[1]]
+        return energy_report(Client(), start, end, 'grid_import_kwh', 305, 'W', 1, 30, now_ms=now_ms)
+
+    def spoken_and_notes(self, result):
+        from energy_presenter import describe, notes
+        item = {'id': 'op1', 'tool': 'energy_metric', 'metric': 'grid_import_kwh', 'result': result}
+        return describe(item), notes(item)
+
+    def test_period_in_progress_with_all_data_so_far_says_nothing(self):
+        lo = period_bounds('2026-10-19', '2026-10-24')[0]
+        text, written = self.spoken_and_notes(self.report('2026-10-19', '2026-10-24', lo + 4 * 86400_000))
+        self.assertNotIn('copertura', text.lower())
+        self.assertNotIn('Mancano dati', text)
+        self.assertTrue(written[0].startswith('Copertura 100,0 per cento del periodo trascorso, fino al 23/10'), written[0])
+
+    def test_real_gaps_are_spoken_without_numbers(self):
+        lo = period_bounds('2026-10-19', '2026-10-24')[0]
+        result = self.report('2026-10-19', '2026-10-24', lo + 86400_000, gap_ms=(lo, lo + 2 * 3600_000))
+        text, written = self.spoken_and_notes(result)
+        self.assertIn('Mancano dati per una parte del periodo.', text)
+        self.assertNotIn('per cento', text)
+        self.assertIn('Copertura 91,7 per cento del periodo trascorso', written[0])
+
+    def test_past_period_keeps_the_whole_period_coverage(self):
+        lo, hi = period_bounds('2026-09-01', '2026-09-02')
+        text, written = self.spoken_and_notes(self.report('2026-09-01', '2026-09-02', hi + 3600_000))
+        self.assertNotIn('Mancano dati', text)
+        self.assertEqual(written[0], 'Copertura 100,0 per cento.')

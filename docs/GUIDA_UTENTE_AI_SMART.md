@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-periods`.
+Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-coverage`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -106,7 +106,10 @@ Esempio di riepilogo all'apertura:
 
 Grandezze disponibili: produzione fotovoltaica, consumo della casa, prelievo e immissione in
 rete, energia caricata e scaricata dalla batteria, livello medio della batteria. Oggi e i
-periodi in corso sono parziali; i valori sono stime da campioni, non misure fiscali.
+periodi in corso valgono fino ad adesso; i valori sono stime da campioni, non misure fiscali.
+La **copertura** (quanta parte del periodo ha dati in EmonCMS) è scritta nei dettagli sotto la
+risposta, non letta; la voce dice solo «Mancano dati per una parte del periodo.» se ne manca più
+del 5 % del tempo trascorso.
 
 ### 4.3 Temperature e stanze
 
@@ -364,3 +367,4 @@ in cima.
 | 23/10/2026 | Lettura a voce più naturale (app `bld_289903a4`): «21/10» si legge «21 ottobre» (non «ventuno decimi»), «17:00–21:00» «dalle 17:00 alle 21:00», «lun–ven» «lunedì a venerdì»; i trattini diventano pause e «—» «non disponibile». A schermo il testo non cambia. |
 | 23/10/2026 | «Che profilo di riscaldamento è attivo?» funziona anche dal telefono (prima: «Schema evidenza non riconosciuto»; app `bld_a9748986`). «Ricarica» senza altro = batteria di casa; se i dubbi sono più di uno, AI Smart li chiede tutti insieme. |
 | 23/10/2026 | Nessun chiarimento sul periodo: giorno, settimana, mese, anno senza nome = quello in corso; con il nome («settembre», «marzo 2025», «lunedì») quello indicato; «ultimi N…» = gli ultimi N. «Percentuale di ricarica» = livello medio della batteria. |
+| 23/10/2026 | La copertura dei dati non viene più letta (resta nei dettagli); per i periodi in corso è calcolata fino ad adesso, non fino a fine giornata. A voce solo «Mancano dati per una parte del periodo.» se manca più del 5 %. |
