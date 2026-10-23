@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **21/10/2026** · app `bld_bff71307` · backend House AI `20261021-budget`.
+Aggiornata al **22/10/2026** · app `bld_bff71307` · backend House AI `20261022-topics`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -351,3 +351,4 @@ in cima.
 | 18/10/2026 | **Comandi a tempo** (§4.14) per luci, scene e caminetto: «fino alle», «dalle», «dalle… alle…», una sola conferma. |
 | 18/10/2026 | **VMC** a voce (§4.14): velocità, «fino alle», «dalle… alle…», «rimetti in automatico»; priorità manuale rispettata da AI Climate. |
 | 21/10/2026 | Servizio del modello al limite del minuto: «Troppe domande ravvicinate: riprova tra 60 secondi» invece dell'errore generico. Per ora circa una domanda al minuto. |
+| 22/10/2026 | Domande più leggere: al modello vanno solo istruzioni e strumenti dell'argomento (energia, luci, clima, riscaldamento, regole, comandi a tempo), ~1300–4000 token invece di ~7700. Più domande al minuto e al giorno. «Prelievo» = dalla rete; «ultimo mese/settimana» chiede se calendario o ultimi giorni; «perché ieri notte il condizionatore…» legge il log di quel giorno. |

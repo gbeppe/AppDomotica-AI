@@ -77,6 +77,24 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 22 ottobre 2026 — istruzioni per argomento
+
+`20261022-topics`: `route()` sceglie gli argomenti dalla domanda (parole chiave su testo minuscolo senza
+accenti; i comandi a tempo portano anche le regole; nessun argomento = tutti) e al modello vanno solo le
+sezioni di istruzioni e gli strumenti di quegli argomenti, con catalogo e schema ridotti e JSON compatto.
+Token misurati: luci ~1250, clima ~1700, energia ~1850, riscaldamento ~2500, regole/comandi a tempo
+2900–4150, tutto ~6300 (prima ~7700). Ritocchi: «prelievo» = `grid_import_kwh`; «ultimo mese/settimana»
+chiede chiarimento anche con metrica chiara; «ieri notte» del condizionatore = `backend_log_day`.
+Prove dalla copia in `/tmp` sul `.20`: 15 frasi di comando corrette; suite 33/41 con la prima versione del prompt, poi
+interrotta dal limite giornaliero di Groq (200.000 token).
+
+## Release del 21 ottobre 2026 — minuto di Groq esaurito
+
+`20261018-vmc` (commit `2843aed`): VMC a voce. Le frasi con orario davano 502: ~7700 token di richiesta
+contro 8000 al minuto, e a minuto esaurito Groq risponde 413. `20261021-tokens` (commit `25e1701`):
+diagnosi sbagliata, ritirata. `20261021-budget` (commit `bff62fa`): 413 → 429 «riprova tra 60 secondi»,
+`max_completion_tokens` 2048, riga `plan tokens …` nel journal del gateway.
+
 ## Release del 18 ottobre 2026 — caminetto «fino alle» e comandi a tempo
 
 `20261018-fireplace-until` (commit `da566fd`): in Manuale «accendi il caminetto fino alle…» non cambia

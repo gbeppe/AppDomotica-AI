@@ -79,7 +79,7 @@ Installata sul telefono: **`bld_bff71307`** (17/10: invia il profilo di riscalda
 | Credenziali solo nel deposito cifrato | [`SICUREZZA_RETE_E_CREDENZIALI.md`](SICUREZZA_RETE_E_CREDENZIALI.md) |
 
 ### Backend House AI (`backend/house_ai/`, su `.20`)
-Release attiva: **`20261018-vmc`** (commit `2843aed`, dal 21/10; in arrivo `20261021-budget`: minuto di Groq esaurito (413) = «riprova tra 60 s», log dei token). Funzioni: VMC a voce (velocità, «fino alle», «dalle… alle…», automatico); comandi a tempo per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma (durata una volta salvo «ogni/sempre»); conferma per tutti i comandi del riscaldamento; energia adesso con flussi stimati; lettura del riscaldamento. In `/opt/domopi-house-ai/releases/`,
+Release attiva: **`20261022-topics`** (dal 22/10): al modello vanno solo istruzioni e strumenti degli argomenti della domanda (`route()` in `model_gateway.py`; nessun argomento riconosciuto = tutto), ~1300–4000 token invece di ~7700. Prima: `20261021-budget` (minuto di Groq esaurito (413) = «riprova tra 60 s», log dei token con `topics=`). Funzioni: VMC a voce (velocità, «fino alle», «dalle… alle…», automatico); comandi a tempo per luci, scene, caminetto; «accendi il caminetto fino alle…» in Manuale non cambia gli orari e avvisa; lettura del profilo di riscaldamento e del piano dei termostati; regole a voce con conferma (durata una volta salvo «ogni/sempre»); conferma per tutti i comandi del riscaldamento; energia adesso con flussi stimati; lettura del riscaldamento. In `/opt/domopi-house-ai/releases/`,
 symlink `current`. Servizi: `house-ai-gateway` (Groq `openai/gpt-oss-120b`, `127.0.0.1:8766`),
 `house-ai-backend` (`127.0.0.1:8765`), `house-ai-lan` (HTTPS `192.168.1.20:443` per l'accesso in casa),
 timer `house-ai-lan-cert` (certificato) e `house-ai-grid-import` (prelievo giornaliero).
@@ -90,7 +90,7 @@ Accesso negato senza credenziali; `domopi-nodered` scrive su `domopi-*`, l'utent
 `domopi-*`. App **ntfy** sul telefono iscritta a `domopi-regole` e `domopi-casa` (avvisi della casa, patch `house_alerts`). Dettagli: [`../backend/ntfy/README.md`](../backend/ntfy/README.md).
 
 Storia dei rilasci: [`AI_MODE/DEPLOYMENT_20_TLS_2026-09-13.md`](AI_MODE/DEPLOYMENT_20_TLS_2026-09-13.md).
-Limite Groq gratuito: ~2 domande al minuto (oltre → 429, gestito con messaggio).
+Limiti Groq gratuiti per `gpt-oss-120b`: **8000 token al minuto** e **200.000 token al giorno** (finestra mobile di 24 h), 1000 richieste al giorno. Oltre → 413/429, gestito con «riprova tra…». Le prove automatiche consumano la stessa quota del telefono.
 
 ### Node-RED su `.20` — patch versionate in `backend/nodered/`
 | Patch | Cosa | Stato |
@@ -256,10 +256,12 @@ fermo all'avvio, Tailscale offline, `.15` nascosto dal Wi‑Fi) controllo recipr
 avvisi e consiglio pronto, riparazioni sicure, pagina nell'app. Progetto:
 [`AI_MODE/SALUTE_IMPIANTO.md`](AI_MODE/SALUTE_IMPIANTO.md). Da realizzare **dopo il deploy di T2 (VMC)**.
 
-**AI Smart, margine dei token (21/10/2026):** ogni domanda manda al modello **~7700 token** (misurati) e il piano
-gratuito di Groq ne ammette 8000 **al minuto**: oggi regge circa una domanda al minuto (a minuto esaurito: 413 →
-«riprova tra 60 s», `20261021-budget`). **In piano** (decisione dell'utente): snellire istruzioni, catalogo e
-schema sotto ~4000 token prima di T3 e T4; da decidere con l'utente: Groq Dev Tier a pagamento.
+**AI Smart, margine dei token (22/10/2026):** con `20261022-topics` una domanda manda ~1300 (luci) – ~4000
+(regole e comandi a tempo) token invece di ~7700; ~6300 se non si riconosce l'argomento. Limiti del piano gratuito:
+8000 al minuto e **200.000 al giorno** (scoperto il 22/10 esaurendolo con le prove: ~90 domande al giorno invece di
+~25). Prove: suite parziale (21 casi su 41 nella seconda tornata, poi limite giornaliero) e 15 frasi di comando
+tutte corrette; le differenze restanti dalla suite sono attese superate (riepilogo energia, «ultimi N giorni»).
+Groq Dev Tier: aggiornamento non disponibile il 21/10 («high demand»), da riprovare.
 
 ### Da indagare (16/10/2026)
 
