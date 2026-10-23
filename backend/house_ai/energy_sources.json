@@ -20,12 +20,12 @@
       "semantics": "cumulative kWh exported to the grid (meter clamp)"
     },
     "home_consumption_kwh": {
-      "feed_id": 37,
-      "name": "HomeReading",
-      "tag": "Node emontx3",
+      "feed_id": 312,
+      "name": "load_instant_power_KWh",
+      "tag": "TeslaPowerwall",
       "unit": "kWh",
       "interval_seconds": 300,
-      "semantics": "cumulative kWh used by the house (use_kwh of the MySolarBattery app)"
+      "semantics": "cumulative kWh used by the house (use_kwh of the MySolarBattery app since 23/10/2026)"
     },
     "solar_production_kwh": {
       "feed_id": 314,
@@ -61,8 +61,8 @@
     }
   },
   "limitations": [
-    "kWh from cumulative counters, as the EmonCMS MySolarBattery app (23/10/2026): house from emontx3 HomeReading, solar and battery from Tesla, grid import and export from emontx3 ImportReading/ExportReading because the Tesla site_instant_power_KWh (313) is the net balance.",
-    "The Tesla load (303) reads about 12 per cent less than emontx3 HomeReading on the same days.",
+    "kWh from cumulative counters, as the EmonCMS MySolarBattery app (23/10/2026): house, solar and battery from Tesla (house load_instant_power_KWh 312, same instrument as the battery, so the derived flows add up), grid import and export from emontx3 ImportReading/ExportReading because the Tesla site_instant_power_KWh (313) is the net balance.",
+    "emontx3 HomeReading (37) reads about 12 per cent more than the Tesla load on the same days; which one is right needs the utility meter.",
     "EmonCMS metadata leaves most units blank; units were validated against names, ranges and the power balance.",
     "These are operational measurements, not billing-grade meter readings."
   ]

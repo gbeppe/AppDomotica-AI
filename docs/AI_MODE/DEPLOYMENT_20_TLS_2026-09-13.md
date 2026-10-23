@@ -77,6 +77,16 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — consumo casa dal Powerwall
+
+`20261023-load312`: consumo casa da Tesla `load_instant_power_KWh` (312). Su richiesta dell'utente
+anche l'app MySolarBattery sul `.15` ora ha `use_kwh` = 312 (prima 37, emontx3 HomeReading), cambiato con
+`app/setconfig` (backup `/home/pi/AI_backups/emoncms/20261023T071122Z-before-mysolarbattery-use_kwh-312.json`).
+Motivo: il «rete → casa» dell'app è `use − scarica − solare diretto` (verificato sul sorgente) e con
+strumenti diversi dava 11,6 kWh contro 3,8 misurati; in più HomeReading dal 21/10 fa salti rispetto al
+Powerwall (6,1 contro 9,1 kWh il 21, 16,1 contro 8,9 il 22). Prova: settimana in corso 38,2 kWh, settimana
+scorsa 76,6.
+
 ## Release del 23 ottobre 2026 — contatori cumulativi e confronto col periodo in corso
 
 `20261023-counters`. **Contatori:** l'utente ha notato «consumo della settimana» 37 kWh contro i suoi

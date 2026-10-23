@@ -15,8 +15,8 @@ from server import handler
 
 NOW = datetime(2026, 10, 11, 14, 0, tzinfo=ZoneInfo('Europe/Rome'))
 # Cumulative kWh counters (energy_sources.json since 23/10/2026) growing at these powers in W:
-# PV 314, house 37, grid import 26 (none), grid export 29.
-POWER = {314: 2000, 37: 1000, 26: 0, 29: 500}
+# PV 314, house 312, grid import 26 (none), grid export 29.
+POWER = {314: 2000, 312: 1000, 26: 0, 29: 500}
 
 
 class Client:
