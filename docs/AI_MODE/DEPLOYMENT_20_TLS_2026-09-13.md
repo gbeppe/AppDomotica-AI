@@ -84,7 +84,7 @@ ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 ExportPower e i loro contatori 24/26/27/29 vengono dalla pinza CT1, HomePower/HomeReading = solare Tesla +
 CT1; GridPower 22 e SolarPower 32 sono copie di 305 e 307. CT1 e la rete Tesla concordano fino al 18/10,
 poi segno opposto (prima volta 19/10 14:56; 18/18 il 22/10, 42/42 il 23/10): adattatore di tensione
-dell'emonTx staccato o cambiato in quei giorni (confermato dall'utente). Prova: settimana in corso prelievo
+dell'emonTx staccato o cambiato in quei giorni (confermato dall'utente); spina girata dall'utente il 23/10 alle 09:23, segno di nuovo concorde alle 09:30. Prova: settimana in corso prelievo
 0,8 kWh, immissione 3,1 kWh (copertura 94,5 %); «Importato oggi» 0,03 kWh invece di 0,59. MyElectricFlow:
 configurazione coerente (tutto Tesla); i feed di flusso 419–425 sono vuoti (elaborazione mai avviata).
 
