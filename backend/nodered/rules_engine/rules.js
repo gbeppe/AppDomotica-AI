@@ -11,6 +11,8 @@
 // closed 'at' rules leave the list after 24 h.
 // RULES-ENGINE.4 (2026-10-18): VMC actions (phase T2): set_vmc_speed (plain speed 1-4), set_vmc_override
 // (manual priority until a moment, AI-CLIMATE-VMC-OVERRIDE.1), set_vmc_auto (back to AI Climate).
+// RULES-ENGINE.5 (2026-10-23): air conditioner actions (phase T4): set_ac_override (off, or heat/cool/dry
+// at a setpoint, until a moment at most 6 hours after the start; AI-CLIMATE-AC-OVERRIDE.1), set_ac_auto.
 const S = 'file';
 const P = 'zara/interface/';
 const MAX_ACTIVE = 10, TEST_MS = 24 * 3600000, DEFAULT_COOLDOWN_MIN = 30;
@@ -35,6 +37,8 @@ const SCENES = ['tv', 'sleep', 'all_on', 'all_off'];
 const THERMOSTATS = ['thermostat_living', 'thermostat_bath'];
 const FIREPLACE_MODES = ['Disattivato', 'Riscaldamento', 'Integrazione Caldaia', 'Acqua Sanitaria', 'Manuale'];
 const PROFILE_MODES = ['auto', 'spento', 'ridotto', 'pieno'];
+// Setpoint range per air conditioner mode: the codes of the IR dictionary (AI-CLIMATE-AC-OVERRIDE.1).
+const AC_RANGES = {heat: [16, 22], cool: [22, 28], dry: [23, 25]};
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const now = Date.now();
@@ -104,6 +108,14 @@ function validAction(a) {
             typeof a.until === 'string' && /[+-]\d\d:\d\d$|Z$/.test(a.until) && Date.parse(a.until) > now &&
             Date.parse(a.until) <= now + AT_AHEAD_MS + 4 * 3600000;
         case 'set_vmc_auto': return true;
+        case 'set_ac_override': {
+            const range = AC_RANGES[a.mode];
+            return (a.mode === 'off' ? a.setpoint === undefined || a.setpoint === null
+                    : !!range && Number.isInteger(a.setpoint) && a.setpoint >= range[0] && a.setpoint <= range[1]) &&
+                typeof a.until === 'string' && /[+-]\d\d:\d\d$|Z$/.test(a.until) && Date.parse(a.until) > now &&
+                Date.parse(a.until) <= now + AT_AHEAD_MS + 6 * 3600000;
+        }
+        case 'set_ac_auto': return true;
         default: return false;
     }
 }
@@ -153,6 +165,8 @@ function conditionsTrue(r) {
 // The same limits AI Smart applies today; null = allowed.
 function actionBlocked(a) {
     if (a.tool === 'set_vmc_override' && !(Date.parse(a.until) > now)) return 'fine della priorità VMC già passata';
+    if (a.tool === 'set_ac_override' && !(Date.parse(a.until) > now)) return 'fine del comando del condizionatore già passata';
+    if (a.tool === 'set_ac_override' && Date.parse(a.until) > now + 6 * 3600000) return 'comando del condizionatore oltre 6 ore';
     if (a.tool === 'set_fireplace_power' && devices.fireplaceMode !== 'Manuale') return 'caminetto non in Manuale';
     if (a.tool === 'set_fireplace_level' && (devices.fireplaceMode !== 'Manuale' || devices.fireplacePower !== true))
         return 'livello solo in Manuale a caminetto acceso';
@@ -170,6 +184,9 @@ function commandOf(a) {
         case 'set_vmc_speed': return {topic: P + 'ventilation/vmc/speed/cmd', payload: String(a.speed)};
         case 'set_vmc_override': return {topic: P + 'ventilation/vmc/override/cmd', payload: JSON.stringify({speed: a.speed, until: a.until})};
         case 'set_vmc_auto': return {topic: P + 'ventilation/vmc/override/cmd', payload: 'auto'};
+        case 'set_ac_override': return {topic: P + 'climate/ac/override/cmd', payload: JSON.stringify(
+            a.mode === 'off' ? {mode: 'off', until: a.until} : {mode: a.mode, setpoint: a.setpoint, until: a.until})};
+        case 'set_ac_auto': return {topic: P + 'climate/ac/override/cmd', payload: 'auto'};
     }
     return null;
 }

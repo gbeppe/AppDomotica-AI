@@ -200,3 +200,26 @@ test('VMC: plain speed, priority until a moment, back to automatic', () => {
   a.equal(mk('vmc-4', {tool: 'set_vmc_speed', speed: 5}).events[0].reason, 'azione non ammessa');
   a.equal(mk('vmc-5', {tool: 'set_vmc_override', speed: 2, until: '2026-10-18T17:00:00+02:00'}).events[0].reason, 'azione non ammessa');
 });
+
+// RULES-ENGINE.5: air conditioner actions (phase T4, AI-CLIMATE-AC-OVERRIDE.1).
+test('air conditioner: manual priority now or later, back to automatic, limits', () => {
+  at('2026-10-23T16:00:00+02:00'); const s = fresh();
+  const mk = (id, action, iso = '2026-10-23T16:00:00+02:00') => cmd(s, 'create', {id, text: id, trigger: {kind: 'at', at: iso}, action, start_active: true});
+  a.deepEqual(mk('ac-1', {tool: 'set_ac_override', mode: 'heat', setpoint: 20, until: '2026-10-23T22:00:00+02:00'}).cmds,
+    [{topic: P + 'climate/ac/override/cmd', payload: '{"mode":"heat","setpoint":20,"until":"2026-10-23T22:00:00+02:00"}'}]);
+  a.deepEqual(mk('ac-2', {tool: 'set_ac_override', mode: 'off', until: '2026-10-23T18:00:00+02:00'}).cmds,
+    [{topic: P + 'climate/ac/override/cmd', payload: '{"mode":"off","until":"2026-10-23T18:00:00+02:00"}'}]);
+  a.deepEqual(mk('ac-3', {tool: 'set_ac_auto'}).cmds, [{topic: P + 'climate/ac/override/cmd', payload: 'auto'}]);
+  for (const [id, bad] of [['ac-4', {tool: 'set_ac_override', mode: 'heat', setpoint: 25, until: '2026-10-23T18:00:00+02:00'}],
+                           ['ac-5', {tool: 'set_ac_override', mode: 'fan', setpoint: 24, until: '2026-10-23T18:00:00+02:00'}],
+                           ['ac-6', {tool: 'set_ac_override', mode: 'off', setpoint: 20, until: '2026-10-23T18:00:00+02:00'}],
+                           ['ac-7', {tool: 'set_ac_override', mode: 'cool', setpoint: 24, until: '2026-10-23T15:00:00+02:00'}]])
+    a.equal(mk(id, bad).events[0].reason, 'azione non ammessa');
+  // "dalle 18 alle 20": the rule waits, then sends; more than 6 hours from the start is refused when it fires.
+  mk('ac-8', {tool: 'set_ac_override', mode: 'dry', setpoint: 24, until: '2026-10-23T20:00:00+02:00'}, '2026-10-23T18:00:00+02:00');
+  mk('ac-9', {tool: 'set_ac_override', mode: 'cool', setpoint: 24, until: '2026-10-24T02:00:00+02:00'}, '2026-10-23T18:00:00+02:00');
+  at('2026-10-23T17:59:30+02:00'); a.deepEqual(tick(s).cmds, []);
+  at('2026-10-23T18:00:10+02:00'); const r = tick(s);
+  a.deepEqual(r.cmds, [{topic: P + 'climate/ac/override/cmd', payload: '{"mode":"dry","setpoint":24,"until":"2026-10-23T20:00:00+02:00"}'}]);
+  a.ok(r.events.some(e => e.rule_id === 'ac-9' && /oltre 6 ore/.test(e.reason || '')), JSON.stringify(r.events));
+});
