@@ -1,0 +1,27 @@
+{
+  "patch": "AI-CLIMATE-AC-OVERRIDE.1",
+  "modified_ids": [
+    "61992c8879c11f66"
+  ],
+  "removed_ids": [],
+  "added_ids": [
+    "d6411f0e3c9dfa48",
+    "befc5c6deaea61c7",
+    "badc2655c944f8b1",
+    "5c20b22e1212065d",
+    "4676fd8f3f8f24dc",
+    "01a6e7ef3adf57c9"
+  ],
+  "node_sha256_before": {
+    "61992c8879c11f66": "01f9440730d91f57be439ac70ba0fc5c8d2e8da46ede8f5434bc51359696af35"
+  },
+  "node_sha256_after": {
+    "61992c8879c11f66": "cb302d29b08a030d7c0670b0498a418b141841f53e092cfbb2aeb86ff6affa35",
+    "d6411f0e3c9dfa48": "bfde32fc02ce2afb4d6cee35d0343a687aebba36e1a6d58241b58aa285844d6c",
+    "befc5c6deaea61c7": "4949e279751935ca303dc143c93a7aeb633b03146c9457bec9fa6801f8ff773d",
+    "badc2655c944f8b1": "6c0fcc22118c902b9a3ba19fd5162f7de3e556b4f71bb7f30bc8782612e54ae6",
+    "5c20b22e1212065d": "d27652581b6e50e679a992ffcff77d48531a9ed8cd568af2d457b7e30bd6b20d",
+    "4676fd8f3f8f24dc": "2997febbd724bb100b9ab2c9788ce16b730c4880e09b1430927b835e65e4e22d",
+    "01a6e7ef3adf57c9": "ddcfe7de4ec762789f0ae38e5b8d9ed378b49e8d6ff73d4e4c55899fe48989d2"
+  }
+}

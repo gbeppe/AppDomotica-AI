@@ -30,10 +30,46 @@ caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'acc
 |---|---|---|---|
 | **T1** | luci, scene, caminetto | motore: trigger `at` (orario con data), regole `start_active`; AI Smart: strumento `schedule_command`; caminetto solo in Manuale | **attiva 18/10** |
 | T2 | VMC | priorità manuale con scadenza rispettata da AI Climate (`AI-CLIMATE-VMC-OVERRIDE.1`), azioni VMC nel motore (`RULES-ENGINE.4`), AI Smart `vmc_command`, pulsanti dell'app = priorità di 2 ore | Node-RED live 21/10; backend e app in rilascio |
-| T3 | piscina (pompa, skimmer, luce acqua, luce bordo) | protezioni per la pompa di filtrazione da decidere | da fare |
-| T4 | condizionatore | comando a tempo = **sospendere o forzare AI Climate** fino all'ora indicata (decisione dell'utente del 18/10/2026); oggi il condizionatore è solo in lettura | da progettare |
+| T3 | piscina (pompa, skimmer, luce acqua, luce bordo) | protezioni per la pompa di filtrazione da decidere | **rimandata** (utente, 23/10) |
+| T4 | condizionatore | priorità manuale con scadenza (spento o acceso in caldo/raffrescamento/deumidifica) rispettata da AI Climate; vedi sotto | **progettata 23/10** |
 | (opzione) | termostati | «metti il bagno a 21 fino alle 22» = setpoint ora + ripristino del precedente | da valutare |
 | — | irrigazione / OpenSprinkler | **mai** (regola 5 di `CLAUDE.md`) | — |
+
+## T4 — condizionatore (decisioni dell'utente del 23/10/2026)
+
+Oggi il condizionatore lo decide solo **AI Climate** (stati `OFF`, `COOLING_ON`, `NIGHT_DRY`,
+`STANDBY_INVERTER`, d'inverno `HEAT_DIURNO`/`HEAT_SICUREZZA_NOTTE`), con tempi minimi del compressore
+(15 min acceso, 15 spento), batteria minima, protezioni d'estate (scarica oltre 2,5 kW, riserva
+notturna) e un vigilante che rispegne un condizionatore acceso «da fuori» dopo 3 minuti.
+L'interruttore generale `AI_climate_enabling` spegne anche la VMC al minimo: non va bene per T4.
+
+Decisioni: **1a** spegni e accendi; **2a** vince la protezione della batteria (chiude la priorità e
+avvisa); **3a** tempi del compressore rispettati anche dai comandi manuali; **durata massima 6 ore**;
+sempre con conferma.
+
+| Frase | Effetto |
+|---|---|
+| «spegni il condizionatore fino alle 18» | spento; AI Climate non lo riaccende fino alle 18 |
+| «accendi il condizionatore in caldo a 20 fino alle 22» | caldo 20 °C (codici `eco16heat`…`eco22heat`) |
+| «accendi il condizionatore in raffrescamento a 24» | 24 °C (codici `22`…`28`); senza ora: 2 ore |
+| «metti il condizionatore in deumidifica fino alle 23» | deumidifica (codici `23dry`…`25dry`) |
+| «rimetti il condizionatore in automatico» | chiude la priorità; AI Climate riprende |
+
+Componenti, sullo schema della VMC:
+
+1. **Node-RED `AI-CLIMATE-AC-OVERRIDE.1`**: comando `zara/interface/climate/ac/override/cmd` =
+   `{"mode": "off|heat|cool|dry", "setpoint": n, "until": "<ISO con fuso>"}` (al più 6 ore avanti) o
+   `"auto"`; funzione «Condizionatore priorità manuale» (contesto `file`, stato retained
+   `…/override/stat`, scadenza controllata ogni 60 s); blocco nella funzione di AI Climate: impone lo
+   stato manuale (`MANUALE_SPENTO`/`MANUALE_CALDO`/…) e il codice IR, attende i tempi del compressore
+   (motivo `MANUALE_IN_ATTESA_COMPRESSORE`), lascia lavorare il vigilante; se scatta una protezione della
+   batteria chiude la priorità (motivo `PROTEZIONE_BATTERIA_CHIUDE_MANUALE`, avviso su ntfy). Alla
+   scadenza di un'accensione il condizionatore si spegne e AI Climate decide da capo (rispettando i 15
+   minuti di spento). VMC e Predictive Reserve invariati.
+2. **`RULES-ENGINE.5`**: azioni `set_ac_override` e `set_ac_auto` nel motore delle regole.
+3. **House AI**: strumento `ac_command` (`mode`, `setpoint`, `from`, `to`), regola con conferma, testi
+   («accendo il condizionatore in caldo a 20 °C fino alle 22, poi torna l'automatico»), guida utente.
+4. **App**: stato della priorità nella scheda Clima (come la VMC); se serve, lettura della conferma.
 
 ## T2 — VMC (decisioni dell'utente del 18/10/2026)
 
@@ -83,6 +119,7 @@ cambio. Quindi:
 | Data | Cosa |
 |---|---|
 | 18/10/2026 | Progetto scritto con le decisioni dell'utente (ordine T1–T4, VMC con velocità, condizionatore via AI Climate, regole a tempo attive subito) |
+| 23/10/2026 | T3 rimandata dall'utente. T4 progettata: decisioni 1a, 2a, 3a, durata massima 6 ore; analisi di AI Climate (stati, vigilante, codici IR del dizionario) |
 | 18/10/2026 21:17 | RULES-ENGINE.3 live sul `.20` (backup `20261018T191739Z-before-rules-engine3`); house_ai `20261018-timed-commands` (commit `b3c2897`); prove reali delle frasi senza comandi |
 | 18/10/2026 22:53 | **Prova dal telefono riuscita**: «alle 22:56 accendo la luce della libreria» creata 22:53:38 (notifica «Comando programmato»), eseguita 22:56:13 (`lights/libreria/power/cmd` true, notifica «Regola intervenuta»), regola chiusa |
 | 21/10/2026 23:00 | AI-CLIMATE-VMC-OVERRIDE.1 e RULES-ENGINE.4 live sul `.20` (backup `20261021T205755Z-before-ai-vmc-override`, `20261021T210015Z-before-rules-engine4`); house_ai `20261018-vmc`: «metti la VMC a 3» e «rimetti la VMC in automatico» corretti, le frasi con orario fallivano per il limite al minuto di Groq (413; ~7700 token a domanda) → `20261021-budget` |
