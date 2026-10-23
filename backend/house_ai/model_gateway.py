@@ -85,8 +85,8 @@ di una stanza (es. "living?") o "com'è il living" = quella stanza con metric al
 setpoint, richiesta di calore o valori del timer delle fasce usa current_thermostats;
 per impostare la temperatura usa set_thermostat_target con un valore del catalogo
 (16,0-22,0 °C a passi di 0,5). Richieste fuori intervallo, relative senza valore
-("alza un po'") o senza stanza richiedono chiarimento. Il condizionatore non è comandabile:
-lo gestisce solo il controller AI Climate.
+("alza un po'") o senza stanza richiedono chiarimento. Il condizionatore si comanda solo con
+ac_command, non con i termostati.
 '''),
     (('energy',), '''Per lo stato attuale dell'energia ("energia?", "stato fotovoltaico", "come va il fotovoltaico",
 "com'è l'energia", batteria e rete insieme) usa current_energy_overview con detail summary; per
@@ -157,6 +157,14 @@ to none; "fino alle 20" = from now, to 20:00; "dalle 18 alle 20" = from 18:00, t
 from 18:00, to none; "rimetti la VMC in automatico"/"riattiva AI Climate per la VMC" = speed auto.
 "Cancella la regola della VMC" = delete_rule about vmc.
 '''),
+    (('climate',), '''Condizionatore (climatizzatore, aria condizionata, pompa di calore): ac_command, al più 6 ore,
+poi torna AI Climate. mode: off "spegni"; heat "caldo/riscalda" 16-22; cool "freddo/raffresca" 22-28;
+dry "deumidifica" 23-25; setpoint none se non detto. "Spegni il condizionatore fino alle 18" = off,
+from now, to 18:00; "accendi il condizionatore in caldo a 20 fino alle 22" = heat, 20, from now, to
+22:00; "dalle 18 alle 20" = from 18:00, to 20:00; senza fine to none. "Accendi il condizionatore"
+senza modalità: chiedi se caldo, raffrescamento o deumidifica. "Rimetti il condizionatore in
+automatico" = mode auto. "Cancella la regola del condizionatore" = delete_rule about air_conditioner.
+'''),
     (('rules',), '''"Che regole ci sono?" = list_rules; "cancella la regola del caminetto/delle luci/dei termostati/
 del profilo" = delete_rule about fireplace/lights/thermostats/heating_profile; "cancella tutte
 le regole" = about all; "cancella la regola" senza dire quale = about any.
@@ -179,11 +187,11 @@ DOMAIN_TOOLS = {
                'current_energy_metric', 'backend_log_day'),
     'lights': ('current_lights', 'set_light_state', 'set_light_scene'),
     'climate': ('current_environment', 'current_air_conditioner', 'current_predictive_reserve',
-                'backend_log_day', 'vmc_command'),
+                'backend_log_day', 'vmc_command', 'ac_command'),
     'heating': ('current_environment', 'current_thermostats', 'set_thermostat_target', 'current_heating',
                 'set_fireplace_settings', 'set_fireplace_power', 'set_fireplace_level', 'current_heating_profile'),
     'rules': ('create_rule', 'list_rules', 'delete_rule'),
-    'timed': ('schedule_command', 'vmc_command'),
+    'timed': ('schedule_command', 'vmc_command', 'ac_command'),
 }
 # Words of each topic, on the question in lower case without accents. Generous on purpose: a missed topic
 # leaves its tools out, an extra one only costs tokens.
@@ -193,7 +201,7 @@ DOMAIN_WORDS = {name: re.compile(words) for name, words in {
               r'|previst|previsione|openmeteo|apprendimento|log\b|efficienza|cost|euro)',
     'lights': r'\b(luc[ei]|lampad|scen[ae]|modalita tv|tv\b|buonanotte|modalita notte|prolunga|portico|libreria'
               r'|lavanderia|ingresso|lettura|piscina)',
-    'climate': r'\b(condizionat|climatizzat|clima\b|ai climate|umidit|humidex|temperatur|vmc|ventilaz|recuperat'
+    'climate': r'\b(condizionat|climatizzat|pompa di calore|clima\b|ai climate|umidit|humidex|temperatur|vmc|ventilaz|recuperat'
                r'|riserva|predictive|pr\b|shadow|deumidif|camera|cameretta|living|sala\b|estern|fuori|stanz'
                r'|locale tecnico|aria\b)',
     'heating': r'\b(caminett|focolare|termocamin|palazzetti|stufa|puffer|pompa|pavimento|caldaia|solare termico'

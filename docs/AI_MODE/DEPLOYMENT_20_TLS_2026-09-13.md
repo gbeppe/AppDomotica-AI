@@ -77,6 +77,17 @@ giornaliera, eventi clima a evento, SHADOW dichiarato archivio fermo al
 Domanda reale dopo il deploy («Cosa dice il log shadow del Predictive Reserve di
 ieri?»): `insufficient_data`, «il log non è più aggiornato dal 06/09/2026».
 
+## Release del 23 ottobre 2026 — condizionatore a tempo (T4)
+
+`20261023-ac`: strumento `ac_command` (`mode` off/heat/cool/dry/auto, `setpoint`, `from`, `to`) che crea una
+regola «una volta» attiva subito con azione `set_ac_override` o `set_ac_auto` (RULES-ENGINE.5 → priorità
+manuale AI-CLIMATE-AC-OVERRIDE.1). Decisioni dell'utente: al più 6 ore (senza fine 2), temperature dei codici
+IR (caldo 16–22, raffrescamento 22–28, deumidifica 23–25; predefinite 20/24/24), conferma sempre;
+«accendi il condizionatore» senza modalità → chiarimento. Avviso nella risposta se AI Climate è disattivato
+(`SISTEMA_DISABILITATO_DA_UTENTE`). `ENGINE_ACTIONS` accetta le regole del condizionatore nell'elenco
+mandato dall'app; `delete_rule about air_conditioner`. Tolte dal prompt e dal catalogo le frasi «il
+condizionatore non è comandabile».
+
 ## Release del 23 ottobre 2026 — prelievo e immissione dal Powerwall
 
 `20261023-grid305`: `grid_import_kwh`/`grid_export_kwh` di nuovo dalla potenza Tesla 305 integrata

@@ -35,10 +35,10 @@ PROFILE_MODES = {"auto": "Automatico", "spento": "Spento", "ridotto": "Ridotto",
 ACTIONS = ("set_light_state", "set_light_scene", "set_thermostat_target", "set_fireplace_power",
            "set_fireplace_level", "set_fireplace_mode", "set_heating_profile")
 # Actions the engine accepts only from timed commands (phase T2); valid in the rules snapshot.
-ENGINE_ACTIONS = ACTIONS + ("set_vmc_speed", "set_vmc_override", "set_vmc_auto")
+ENGINE_ACTIONS = ACTIONS + ("set_vmc_speed", "set_vmc_override", "set_vmc_auto", "set_ac_override", "set_ac_auto")
 DAYS = {"all": [0, 1, 2, 3, 4, 5, 6], "weekdays": [1, 2, 3, 4, 5], "weekend": [0, 6]}
 DAYS_TEXT = {"all": "ogni giorno", "weekdays": "nei giorni feriali", "weekend": "sabato e domenica"}
-ABOUT = ("fireplace", "lights", "thermostats", "heating_profile", "vmc", "all", "any")
+ABOUT = ("fireplace", "lights", "thermostats", "heating_profile", "vmc", "air_conditioner", "all", "any")
 TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 MAX_RULES = 10
 ROME = ZoneInfo("Europe/Rome")
@@ -83,12 +83,24 @@ CATALOG.append({
                    "'riattiva AI Climate per la VMC' = speed auto. Confirmed in the app",
     "parameters": {"speed": ["1", "2", "3", "4", "auto"], "from": "now or HH:MM", "to": "HH:MM or none"}
 })
+CATALOG.append({
+    "name": "ac_command",
+    "description": "Air conditioner for a time, applied by AI Climate (at most 6 hours): mode off, heat (16-22 °C), "
+                   "cool (22-28 °C) or dry (23-25 °C), setpoint or none (20 heat, 24 cool/dry). 'Spegni il "
+                   "condizionatore fino alle 18' = off, from now, to 18:00; 'accendi il condizionatore in caldo a 20 "
+                   "fino alle 22' = heat 20, from now, to 22:00; 'dalle 18 alle 20' = from 18:00, to 20:00; no end = "
+                   "to none (2 hours). 'Rimetti il condizionatore in automatico' = auto. Without a mode for 'accendi' "
+                   "ask which one. Confirmed in the app",
+    "parameters": {"mode": ["off", "heat", "cool", "dry", "auto"], "setpoint": "°C or none",
+                   "from": "now or HH:MM", "to": "HH:MM or none"}
+})
 TOOL_NAMES = tuple(t["name"] for t in CATALOG)
 FIELDS = {"create_rule": {"id", "tool", "trigger", "metric", "op", "value", "at", "days", "action", "target",
                           "setting", "lifetime"},
           "list_rules": {"id", "tool"}, "delete_rule": {"id", "tool", "about"},
           "schedule_command": {"id", "tool", "action", "target", "setting", "at"},
-          "vmc_command": {"id", "tool", "speed", "from", "to"}}
+          "vmc_command": {"id", "tool", "speed", "from", "to"},
+          "ac_command": {"id", "tool", "mode", "setpoint", "from", "to"}}
 
 
 def _number(text):
@@ -111,6 +123,9 @@ def validate_operation(op):
     if tool == "vmc_command" and (op["speed"] not in ("1", "2", "3", "4", "auto")
                                    or not all(isinstance(op[k], str) and len(op[k]) <= 8 for k in ("from", "to"))):
         raise ValueError("Invalid VMC command")
+    if tool == "ac_command" and (op["mode"] not in ("off", "heat", "cool", "dry", "auto")
+                                  or not all(isinstance(op[k], str) and len(op[k]) <= 8 for k in ("setpoint", "from", "to"))):
+        raise ValueError("Invalid air conditioner command")
     if tool == "create_rule":
         if (op["trigger"] not in ("threshold", "time") or op["action"] not in ACTIONS
                 or op["lifetime"] not in ("once", "always")
@@ -260,8 +275,72 @@ def build_vmc(op, rules_snapshot, seq=0, now=None, humidity=None):
             "action": action, "lifetime": {"kind": "once"}, "start_active": True}
     return {**result, "status": "confirmation_required", "rule": rule, "text": text}
 
+# Air conditioner, phase T4 (user's decisions of 23/10/2026): AI Climate applies a manual priority for at
+# most 6 hours (AI-CLIMATE-AC-OVERRIDE.1); setpoint ranges are the codes of the IR dictionary.
+AC_RANGES = {"heat": (16, 22, 20), "cool": (22, 28, 24), "dry": (23, 25, 24)}
+AC_NAMES = {"heat": "in caldo", "cool": "in raffrescamento", "dry": "in deumidifica"}
+AC_DEFAULT = timedelta(hours=2)
+AC_MAX = timedelta(hours=6)
+
+
+def _ac_disabled(climate):
+    """True when the user switched AI Climate off: the manual priority has no effect then."""
+    reason = ((climate or {}).get("observations") or {}).get("recorded_reason") or {}
+    return reason.get("value") == "SISTEMA_DISABILITATO_DA_UTENTE"
+
+
+def build_ac(op, rules_snapshot, seq=0, now=None, climate=None):
+    """house_ai.rule_command.v1 for the air conditioner (phase T4): one 'at' rule that starts active."""
+    now = now or clock()
+    result = {"schema": "house_ai.rule_command.v1", "verb": "create", "scheduled": True,
+              "limitations": ["Priorità manuale applicata da AI Climate fino all'ora indicata (al più 6 ore), poi "
+                              "si spegne e torna l'automatico.",
+                              "Tempi del compressore rispettati: se è stato acceso o spento da meno di 15 minuti il "
+                              "comando parte allo scadere dei 15 minuti.",
+                              "D'estate una protezione della batteria può chiudere il comando (avviso su ntfy)."]}
+    pending = sum(1 for r in (rules_snapshot or {}).get("rules", []) if r["status"] != "expired")
+    if pending + seq >= MAX_RULES:
+        return {**result, "status": "rejected", "reason": "Ci sono già 10 regole attive: cancellane una."}
+    mode = op["mode"]
+    if mode == "auto":
+        action, text, start = {"tool": "set_ac_auto"}, "rimetto il condizionatore in automatico con AI Climate", now
+    else:
+        setpoint = None
+        if mode in AC_RANGES:
+            low, high, default = AC_RANGES[mode]
+            value = _number(op["setpoint"]) if op["setpoint"] != NONE else default
+            if value is None or value != int(value) or not low <= value <= high:
+                return {**result, "status": "rejected",
+                        "reason": f"temperatura non ammessa {AC_NAMES[mode]}: da {low} a {high} gradi"}
+            setpoint = int(value)
+        start = occurrence(op["from"], now) if op["from"] != NONE else now
+        end = occurrence(op["to"], now) if op["to"] != NONE else None
+        if start is None or (op["to"] != NONE and end is None):
+            return {**result, "status": "rejected", "reason": "orario non valido"}
+        if end is not None and end <= start:            # 'dalle 18 alle 20' said at 19: the start is now
+            start = now if start > now and end > now and start.date() != now.date() else start
+            while end <= start:
+                end += timedelta(days=1)
+        end = end or start + AC_DEFAULT
+        if end - start > AC_MAX:
+            return {**result, "status": "rejected", "reason": "il condizionatore si comanda al massimo per 6 ore"}
+        day = lambda d: "oggi" if d.date() == now.date() else "domani"
+        action = {"tool": "set_ac_override", "mode": mode, "until": end.isoformat(timespec="seconds")}
+        if setpoint is not None:
+            action["setpoint"] = setpoint
+        what = "spengo il condizionatore" if mode == "off" else f"accendo il condizionatore {AC_NAMES[mode]} a {setpoint} gradi"
+        text = ("" if start == now else f"alle {start:%H:%M} ({day(start)}) ") + what + f" fino alle {end:%H:%M}" \
+            + (" (domani)" if day(end) == "domani" else "") + ", poi torna l'automatico"
+    if _ac_disabled(climate):
+        text += " (attenzione: AI Climate è disattivato, il comando non avrà effetto finché non lo riattivi)"
+    rule = {"id": f"rt-{int(now.timestamp()):x}-{seq}", "text": text,
+            "trigger": {"kind": "at", "at": start.isoformat(timespec="seconds")}, "conditions": [],
+            "action": action, "lifetime": {"kind": "once"}, "start_active": True}
+    return {**result, "status": "confirmation_required", "rule": rule, "text": text}
+
+
 GROUPS = {"fireplace": ("set_fireplace_",), "lights": ("set_light_",), "thermostats": ("set_thermostat_",),
-          "heating_profile": ("set_heating_profile",), "vmc": ("set_vmc_",)}
+          "heating_profile": ("set_heating_profile",), "vmc": ("set_vmc_",), "air_conditioner": ("set_ac_",)}
 
 
 def delete_rules(about, rules_snapshot):

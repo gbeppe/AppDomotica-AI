@@ -1,6 +1,6 @@
 # Guida utente — AI Smart (app Z-AI)
 
-Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-grid305`.
+Aggiornata al **23/10/2026** · app `bld_a9748986` · backend House AI `20261023-ac`.
 
 AI Smart è la modalità dell'app in cui parli con la casa: fai domande a voce o per iscritto
 e ricevi risposte brevi, pensate per essere ascoltate. Può anche accendere e spegnere le luci,
@@ -228,7 +228,7 @@ ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 | «accendi tutte le luci» | accende le luci principali e della piscina (niente in modalità vacanza, meno luci con luci ECO) |
 | «spegni tutte le luci» | spegne tutte le luci interne, esterne e della piscina (circa 35 secondi) |
 
-### 4.10 Condizionatore e Predictive Reserve (solo lettura)
+### 4.10 Condizionatore e Predictive Reserve
 
 | Domande | Esempio di risposta |
 |---|---|
@@ -236,7 +236,8 @@ ingresso, ingresso servizio, luci piscina, luci pedana piscina, prolunga.
 | «il Predictive Reserve è attivo?», «come funziona adesso il PR?» | Il Predictive Reserve è disattivato. / … attivo in modalità SHADOW: blocca gli avvii notturni in deumidificazione. |
 | «perché stanotte il condizionatore non è partito?» | il motivo registrato quella notte nei log del clima; se quel giorno non ci sono stati cambi di stato, lo dice e riporta l'ultimo evento precedente (data, stato, motivo) |
 
-Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller AI Climate.
+Il condizionatore lo gestisce il controller AI Climate; da AI Smart lo si può **spegnere o accendere per
+un tempo** (al massimo 6 ore), poi torna l'automatico: vedi §4.14.
 
 ### 4.11 «Com'è andata oggi» e log della casa
 
@@ -298,9 +299,19 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 | «metti la VMC a velocità 3 fino alle 20» | Metto la VMC a velocità 3 fino alle 20:00, poi torna l'automatico. Confermi? |
 | «VMC a 2 dalle 18 alle 20» / «VMC a 2 dalle 18» | Alle 18:00 (oggi) metto la VMC a velocità 2 fino alle 20:00, poi torna l'automatico. Confermi? (senza fine: 2 ore) |
 | «rimetti la VMC in automatico» | Rimetto la VMC in automatico con AI Climate. Confermi? |
+| «accendi il condizionatore in caldo a 20 fino alle 22» | Accendo il condizionatore in caldo a 20 gradi fino alle 22:00, poi torna l'automatico. Confermi? |
+| «spegni il condizionatore fino alle 18» | Spengo il condizionatore fino alle 18:00, poi torna l'automatico. Confermi? |
+| «metti il condizionatore in deumidifica dalle 18 alle 20» | Alle 18:00 (oggi) accendo il condizionatore in deumidifica a 24 gradi fino alle 20:00, poi torna l'automatico. Confermi? |
+| «accendi il condizionatore» | In caldo, raffrescamento o deumidifica? |
+| «rimetti il condizionatore in automatico» | Rimetto il condizionatore in automatico con AI Climate. Confermi? |
 
-- **Luci, scene, caminetto e VMC**; poi piscina e condizionatore (tramite AI Climate). Mai
-  l'irrigazione.
+- **Luci, scene, caminetto, VMC e condizionatore**; la piscina più avanti. Mai l'irrigazione.
+- **Condizionatore:** spento, oppure caldo (16–22 °C, se non dici la temperatura 20), raffrescamento
+  (22–28 °C, 24) o deumidifica (23–25 °C, 24); **al massimo 6 ore**, senza ora di fine 2 ore. AI Climate
+  lo applica e alla fine lo spegne e riprende lui. Rispetta i **15 minuti del compressore**: se è stato
+  acceso o spento da poco, il comando parte allo scadere dei 15 minuti. D'estate, se la batteria
+  scarica troppo o la riserva per la notte non basta, la protezione **chiude il comando** e arriva un
+  avviso su ntfy. Se AI Climate è disattivato, la risposta lo dice: il comando non ha effetto.
 - **VMC:** con un orario è una **priorità manuale** che AI Climate rispetta fino alla fine, anche se
   l'umidità chiederebbe di più (in quel caso la risposta lo dice); senza orario è una velocità secca
   che AI Climate può cambiare. I tasti 1–4 dell'app danno la priorità per 2 ore; «Auto» la toglie.
@@ -315,14 +326,14 @@ Il condizionatore **non si comanda** da AI Smart: lo gestisce solo il controller
 
 ## 5. Cosa AI Smart non fa
 
-- Non comanda caldaia, pompa pavimento, condizionatore, piscina (pompa e skimmer),
+- Non comanda caldaia, pompa pavimento, piscina (pompa e skimmer),
   irrigazione, garage, Predictive Reserve; il livello del caminetto solo in Manuale.
 - Non inventa numeri, costi o tariffe e non fa ipotesi sulle cause.
 - Non ha memoria delle domande precedenti, salvo la risposta a un chiarimento (entro 2 minuti).
 - **Non esegue subito una richiesta detta come regola**: «quando…», «appena…», «alle 22…»
   diventano sempre una regola da confermare (§4.12), mai un comando immediato.
 - Non crea regole con due condizioni insieme o con azioni fuori elenco (irrigazione, piscina,
-  garage, condizionatore, caldaia).
+  garage, caldaia; il condizionatore solo con i comandi a tempo di §4.14).
 - A una richiesta non disponibile risponde che l'azione non è disponibile o chiede un chiarimento.
 
 ---
@@ -375,3 +386,4 @@ in cima.
 | 23/10/2026 | Confronto con un periodo in corso («questa settimana rispetto alla scorsa»): a parità di tempo trascorso (la settimana scorsa fino allo stesso giorno e ora). kWh dai contatori dell'app EmonCMS MySolarBattery. |
 | 23/10/2026 | Consumo casa dal contatore del Powerwall (feed 312), come ora l'app MySolarBattery: emontx3 HomeReading dal 21/10 fa salti (−34 % il 21, +81 % il 22). |
 | 23/10/2026 | Prelievo e immissione (e «Importato oggi/ieri» nella home) dal misuratore di rete del Powerwall: la pinza emontx3 misura al contrario dal 19/10 (adattatore di tensione dell'emonTx staccato o cambiato), quindi prelievo e immissione erano scambiati. |
+| 23/10/2026 | **Condizionatore a tempo** (§4.14): spento, caldo, raffrescamento o deumidifica fino a un'ora (al massimo 6 ore), poi torna AI Climate; conferma sempre; tempi del compressore rispettati; la protezione della batteria può chiudere il comando. |

@@ -31,7 +31,7 @@ caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'acc
 | **T1** | luci, scene, caminetto | motore: trigger `at` (orario con data), regole `start_active`; AI Smart: strumento `schedule_command`; caminetto solo in Manuale | **attiva 18/10** |
 | T2 | VMC | priorità manuale con scadenza rispettata da AI Climate (`AI-CLIMATE-VMC-OVERRIDE.1`), azioni VMC nel motore (`RULES-ENGINE.4`), AI Smart `vmc_command`, pulsanti dell'app = priorità di 2 ore | Node-RED live 21/10; backend e app in rilascio |
 | T3 | piscina (pompa, skimmer, luce acqua, luce bordo) | protezioni per la pompa di filtrazione da decidere | **rimandata** (utente, 23/10) |
-| T4 | condizionatore | priorità manuale con scadenza (spento o acceso in caldo/raffrescamento/deumidifica) rispettata da AI Climate; vedi sotto | **progettata 23/10** |
+| T4 | condizionatore | priorità manuale con scadenza (spento o acceso in caldo/raffrescamento/deumidifica) rispettata da AI Climate; vedi sotto | Node-RED live 23/10 (AI-CLIMATE-AC-OVERRIDE.1, RULES-ENGINE.5); backend `20261023-ac`; prova dal vivo da fare |
 | (opzione) | termostati | «metti il bagno a 21 fino alle 22» = setpoint ora + ripristino del precedente | da valutare |
 | — | irrigazione / OpenSprinkler | **mai** (regola 5 di `CLAUDE.md`) | — |
 
@@ -120,6 +120,7 @@ cambio. Quindi:
 |---|---|
 | 18/10/2026 | Progetto scritto con le decisioni dell'utente (ordine T1–T4, VMC con velocità, condizionatore via AI Climate, regole a tempo attive subito) |
 | 23/10/2026 | T3 rimandata dall'utente. T4 progettata: decisioni 1a, 2a, 3a, durata massima 6 ore; analisi di AI Climate (stati, vigilante, codici IR del dizionario) |
+| 23/10/2026 15:50–15:54 | AI-CLIMATE-AC-OVERRIDE.1 (test 9/9) e RULES-ENGINE.5 (16/16) live; backend `ac_command` (208 test); prova dal vivo rimandata dall'utente |
 | 18/10/2026 21:17 | RULES-ENGINE.3 live sul `.20` (backup `20261018T191739Z-before-rules-engine3`); house_ai `20261018-timed-commands` (commit `b3c2897`); prove reali delle frasi senza comandi |
 | 18/10/2026 22:53 | **Prova dal telefono riuscita**: «alle 22:56 accendo la luce della libreria» creata 22:53:38 (notifica «Comando programmato»), eseguita 22:56:13 (`lights/libreria/power/cmd` true, notifica «Regola intervenuta»), regola chiusa |
 | 21/10/2026 23:00 | AI-CLIMATE-VMC-OVERRIDE.1 e RULES-ENGINE.4 live sul `.20` (backup `20261021T205755Z-before-ai-vmc-override`, `20261021T210015Z-before-rules-engine4`); house_ai `20261018-vmc`: «metti la VMC a 3» e «rimetti la VMC in automatico» corretti, le frasi con orario fallivano per il limite al minuto di Groq (413; ~7700 token a domanda) → `20261021-budget` |
