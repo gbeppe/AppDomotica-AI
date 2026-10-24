@@ -29,6 +29,8 @@ Node-RED); `.15` Samsung 64 GB del **10/2019** (5 anni accesa), ~0,2 GB al giorn
 - NFS solo per `192.168.1.15` e `192.168.1.20`, lettura/scrittura, **nessuno squash** (proprietari dei
   file conservati per il ripristino), cestino di rete **disattivato** (la rotazione cancella ogni notte).
   Nessun utente QNAP: NFS autorizza per indirizzo. Verifica del 24/10 11:31 riuscita da entrambi.
+- Consultazione dal PC: cartelle degli host `750` root:0, cioè leggibili dal gruppo amministratori del QNAP
+  (gid 0; l'utente `giuseppe` è amministratore, `admin` è disattivato) e da nessun altro: dentro ci sono segreti.
 - **L'immagine settimanale è il backup principale**: sul `.4` deve esserci sempre un'immagine pronta da
   scrivere su una SD (o SSD) nuova e ripartire; i giorni dopo l'immagine si recuperano dai **backup
   mirati dei file** (ogni notte, solo le cartelle che cambiano e contano). I dati emoncms restano al

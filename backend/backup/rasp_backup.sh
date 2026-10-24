@@ -143,7 +143,9 @@ exclude_args() {
 # ---------------------------------------------------------------------------------------------
 do_init() {
     mount_share
-    install -d -m 0700 "$TARGET" "$TARGET/snapshots" "$TARGET/images"
+    # 0750 root:0 -> readable by the QNAP administrators group (gid 0), nobody else
+    install -d -m 0750 "$TARGET" "$TARGET/snapshots" "$TARGET/images"
+    chmod 0750 "$TARGET" "$TARGET/snapshots" "$TARGET/images"
     if [ ! -f "$TARGET/.rasp-backup-target" ]; then
         printf '# DomoPi backup destination marker: the backup refuses to write without it,\n# so that an unmounted share is never filled on the SD card.\ncreated=%s\nhost=%s\n' \
             "$(date -Is)" "$HOST_DIR" > "$TARGET/.rasp-backup-target"
