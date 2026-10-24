@@ -10,7 +10,7 @@ e fase F0 di [`UNIFICAZIONE_NODERED_MQTT.md`](UNIFICAZIONE_NODERED_MQTT.md).
 
 | Host | Backup | Esito |
 |---|---|---|
-| `.15` | `emoncms-drive-backup.timer` ogni notte: dati emoncms (feed, SQL, configurazione) in sincronia su NFS `192.168.1.4:/emoncms-backup`, con verifica | **funziona** (23/10 23:22, 22 min, nessun errore) |
+| `.15` | `emoncms-drive-backup.timer` ogni notte (00:00–01:00): script ufficiale del modulo backup di emoncms (`/opt/emoncms/modules/backup/drive-backup.sh` 2.6.0, OpenEnergyMonitor, non modificato), configurato dall'utente verso NFS `192.168.1.4:/emoncms-backup` (`drive-backup-path.conf`, marcatore `.emoncms-backup-target`); feed in sincronia (copia speculare, senza versioni), dump SQL giornalieri (~5 settimane) e settimanali, `emonhub.conf` e `settings.ini`; verifica settimanale domenica 04:00–05:00 | **funziona** (22–24/10, 22 min, ~2,7 MB scritti per notte); ma con `--if-mounted` **salta in silenzio** se la cartella non è montata: la verifica del 18/10 04:37 è stata saltata («not mounted»). Il 24/10 aggiunto il montaggio automatico (§3) |
 | `.15` | cron del 1° del mese `~/regular.backup.sh`: export emoncms + flussi Node-RED via rsync su `192.168.1.4/ZaraHome` | arriva, ma i flussi copiati sono quelli **vecchi di giugno** (`~/.node-red/flows_emonpi.json`): il Node-RED del `.15` lavora in modalità progetti (`projects/emonpi/`) |
 | `.20` | cron del venerdì 01:01 `~/regular.backup.sh`: solo flussi, credenziali e `settings.js` di Node-RED via rsync su `192.168.1.74/BACKUPS` | **funziona** (23/10 01:00) |
 | `.20` | «chiavetta» USB: lettore di schede con SD da 62,5 GB, partizione btrfs `Backup`, montata dal desktop in `/media/pi/Backup2` (maggio–giugno 2026) | **mai scritta** (contatore btrfs +1 per avvio, nessuno script la usa); scheda tolta durante i problemi di alimentazione |
@@ -42,7 +42,7 @@ Node-RED); `.15` Samsung 64 GB del **10/2019** (5 anni accesa), ~0,2 GB al giorn
 
 | Livello | Quando | Contenuto | Serve a |
 |---|---|---|---|
-| **Immagine** (`image`) | domenica 04:40 | file `.img` avviabile con la stessa tabella delle partizioni della SD (stesso identificativo, quindi stessi PARTUUID) e l'ultima partizione ridotta allo spazio usato + 20 % + 1 GiB; aggiornato con `rsync` a sistema acceso; coppia A/B; poi **verificato** e, una volta al mese, copiato come immagine mensile | rimettere tutto su un disco nuovo in ~20 minuti |
+| **Immagine** (`image`) | `.20` domenica 04:40, `.15` sabato 04:40 (lontano dalla verifica settimanale di emoncms) | file `.img` avviabile con la stessa tabella delle partizioni della SD (stesso identificativo, quindi stessi PARTUUID) e l'ultima partizione ridotta allo spazio usato + 20 % + 1 GiB; aggiornato con `rsync` a sistema acceso; coppia A/B; poi **verificato** e, una volta al mese, copiato come immagine mensile | rimettere tutto su un disco nuovo in ~20 minuti |
 | **Backup mirato dei file** (`snapshot`) | ogni notte 03:40 (±10 min) | dump di MariaDB, poi `rsync` delle cartelle elencate in `backup-<host>.conf` in `snapshots/AAAA-MM-GG/`; i file uguali al giorno prima sono collegamenti fisici (non occupano spazio) | recuperare i giorni dopo l'immagine, un file, una configurazione o un database |
 | **Esito** | a ogni giro | `/var/lib/domopi-backup/status-{snapshot,image}.json`, copia sul QNAP | avviso della salute impianto (B4) |
 
@@ -77,6 +77,13 @@ riavvio non c'è niente da rimontare (i timer hanno `Persistent=true`: un giro s
 l'avvio). Se il QNAP cade a metà, il montaggio `soft` fa fallire rsync invece di bloccarlo; in chiusura lo smontaggio
 passa a `umount -l` se quello normale non riesce; i backup mirati incompiuti dei giorni prima (`.incomplete-*`) si
 cancellano al giro dopo; l'immagine senza `.ok` viene rifatta.
+
+Montaggio del backup emoncms sul `.15` (24/10, decisione dell'utente): in `fstab` la riga di
+`192.168.1.4:/emoncms-backup` ha in più `x-systemd.automount,x-systemd.mount-timeout=30` (copia dell'originale in
+`/home/pi/AI_backups/backup/20261024T115124Z-before-fstab-automount/fstab`): se all'avvio il NAS non risponde, la
+cartella si monta da sola al primo accesso invece di restare smontata fino al riavvio. `drive-backup.sh` accede al
+percorso e quindi fa partire il montaggio; con il NAS giù ora si ferma con un errore invece di saltare. Provato:
+prima dell'accesso `autofs`, dopo `nfs4`.
 
 Prove di guasto del 24/10 sul `.20` (stato a parte, `DOMOPI_BACKUP_STATE`): cartella inesistente (fermo in 0 s),
 QNAP irraggiungibile `192.0.2.1` (fermo in 121 s, «Connection timed out»), marcatore mancante (fermo prima di
@@ -134,8 +141,8 @@ SSD (§6) la prova di ripristino e la migrazione sono la stessa operazione.
 | B0 | cartella `rasp-backup` sul `.4`, regole NFS, prova di scrittura da `.15` e `.20` | **fatta** 24/10 |
 | B1 | progetto e script (`backend/backup/`), test della rotazione; revisione con l'utente: backup mirati, verifica dell'immagine, immagini mensili | **fatta** 24/10 |
 | B2 | `.20`: installazione con timer spenti, `init`, prova a secco, primo backup mirato e prima immagine a mano osservando carico e luci, poi timer | **in corso**: 24/10 12:29 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T102900Z-before-backup-s4`), `init` e prove a secco riuscite (backup mirato 33 percorsi, 275 MB; immagine su `…-A.img`); corretto: una prova a secco non vale più come backup (`last_ok`); 13:04 primo backup mirato (275 MB, 106 s); prima immagine con timer temporaneo `domopi-backup-image-first` il 25/10 alle 01:30; timer automatici dopo il controllo dell'immagine |
-| B3 | `.15`: come B2 | **in corso**: 24/10 13:14 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T111442Z-before-backup-s4`), prove a secco riuscite; 13:15 primo backup mirato (17 percorsi, 40 MB, 31 s); prima immagine con timer temporaneo il 25/10 alle 04:15 |
-| B4 | salute impianto: avviso se il backup mirato ha più di 26 ore, l'immagine più di 8 giorni o l'ultimo giro è fallito; manuale aggiornato | da fare |
+| B3 | `.15`: come B2 | **in corso**: 24/10 13:14 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T111442Z-before-backup-s4`), prove a secco riuscite; 13:15 primo backup mirato (17 percorsi, 40 MB, 31 s); prima immagine con timer temporaneo il 25/10 alle 06:30 (spostata dalle 04:15 per la verifica di emoncms) |
+| B4 | salute impianto: avviso se il backup mirato ha più di 26 ore, l'immagine più di 8 giorni o l'ultimo giro è fallito; sul `.15` anche il backup di emoncms (`status.json` sul NAS: ultimo giro oltre 26 ore, errori, cartella non montata); manuale aggiornato | da fare |
 | B5 | passaggio a SSD dall'immagine (§6), prima `.15` o `.20` a scelta dell'utente: è anche la prova di ripristino | quando arriva l'hardware |
 | B6 | dopo due settimane senza problemi: togliere il cron settimanale del `.20` e quello mensile del `.15` (coperti dai nuovi backup) | da fare |
 
@@ -203,4 +210,6 @@ Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD originale, accendere
   riavvio di `systemd-journald` e `--vacuum-size=500M`: da 3,9 GB a 528 MB, disco da 15 a 11 GB usati.
   Prima era senza limiti (predefinito: 10 % del disco fino a 4 GB). Ritorno indietro: togliere il file e
   riavviare `systemd-journald`.
+- Sul `.15` resta `/etc/emoncms-nas.cred` (600, root, 12/09): credenziali del vecchio montaggio SMB del QNAP, commentato in
+  `fstab` e sostituito da NFS. Non serve più: da cancellare (e, se era un utente QNAP dedicato, disattivarlo).
 - La SD nel lettore USB del `.20`: controllarne il contenuto in sola lettura quando l'utente la rimette.

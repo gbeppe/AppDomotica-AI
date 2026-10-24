@@ -11,7 +11,7 @@ host, una configurazione per host (`backup-20.conf`, `backup-15.conf` → `/etc/
 |---|---|---|
 | `rasp_backup.sh init` | una volta | crea `<host>/{snapshots,images}` e il marcatore `.rasp-backup-target` |
 | `rasp_backup.sh snapshot` | ogni notte 03:40 (timer) | dump MariaDB in `/var/backups/domopi/mysql/`, poi backup mirato con rsync delle cartelle in `SNAPSHOT_SOURCES` (configurazione), con collegamenti fisici al giorno prima (`--link-dest`); rotazione 14 giorni + 8 settimane |
-| `rasp_backup.sh image` | domenica 04:40 (timer) | aggiorna con rsync l'immagine `.img` avviabile della coppia A/B senza `.ok` valido, la verifica (`fsck`, PARTUUID in `cmdline.txt`, kernel, `fstab`) e una volta al mese la copia come `<host>-M-AAAA-MM.img` (ultime 2) |
+| `rasp_backup.sh image` | domenica 04:40 (timer; sul `.15` sabato, `domopi-backup-image-timer-15.conf`) | aggiorna con rsync l'immagine `.img` avviabile della coppia A/B senza `.ok` valido, la verifica (`fsck`, PARTUUID in `cmdline.txt`, kernel, `fstab`) e una volta al mese la copia come `<host>-M-AAAA-MM.img` (ultime 2) |
 | `… --dry-run` | prove | mostra cosa farebbe, senza scrivere sul QNAP |
 | `rasp_backup.sh rotate-test <date…>` | test | stampa le istantanee che la rotazione cancellerebbe |
 

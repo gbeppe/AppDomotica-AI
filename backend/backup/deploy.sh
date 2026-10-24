@@ -23,6 +23,12 @@ install)
     install -d -m 0755 "$ETC"
     install -m 0644 "$HERE/backup-$HOST.conf" "$ETC/backup.conf"
     for u in $UNITS; do install -m 0644 "$HERE/$u" /etc/systemd/system/; done
+    # per-host schedule of the image (the .15 runs it on Saturday, see the file)
+    if [ -f "$HERE/domopi-backup-image-timer-$HOST.conf" ]; then
+        install -d /etc/systemd/system/domopi-backup-image.timer.d
+        install -m 0644 "$HERE/domopi-backup-image-timer-$HOST.conf" \
+            "/etc/systemd/system/domopi-backup-image.timer.d/$HOST-schedule.conf"
+    fi
     systemctl daemon-reload
     if [ "${3:-}" != --no-timers ]; then
         systemctl enable --now domopi-backup-snapshot.timer domopi-backup-image.timer
@@ -32,6 +38,7 @@ install)
 rollback)
     systemctl disable --now domopi-backup-snapshot.timer domopi-backup-image.timer 2>/dev/null || true
     for u in $UNITS; do rm -f "/etc/systemd/system/$u"; done
+    rm -rf /etc/systemd/system/domopi-backup-image.timer.d
     systemctl daemon-reload
     rm -rf /opt/domopi-backup "$ETC"
     echo "removed (status in /var/lib/domopi-backup and the copies on the QNAP are kept)"
