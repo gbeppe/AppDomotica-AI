@@ -141,8 +141,26 @@ backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall
   0,001», «If ZERO, skip next», «Log to feed». Lo storico parte dal 23/10 ~09:55; AI Smart usa ancora la potenza
   305 (passaggio a 447/448 quando ci sarà storico). Backup dei processi (vuoti):
   `20261023T075435Z-before-site-energy-feeds-inputs.tsv`.
-- **MyElectricFlow** (id 5): configurazione coerente (tutto Tesla); feed di flusso 419–425 vuoti (elaborazione
-  mai avviata dal pulsante dell'app).
+- **MyElectricFlow** (id 5): configurazione coerente (tutto Tesla). I feed di flusso 419–425 sono **pieni dal 24/10**
+  (storico dal 26/05/2023), vedi sotto.
+
+### EmonCMS (`.15`) — modulo `postprocess` e PHP 7.3 (24/10/2026)
+- Il pulsante «Run post-processor» di MyElectricFlow dava «Post-processor failed: OK»: il `.15` (emonSD-24Jul20,
+  Raspbian 10, **PHP 7.3**) ha il modulo `/opt/emoncms/modules/postprocess` aggiornato da git (ultimo pull 05/10/2026,
+  commit `81eccb1`), che usa sintassi di PHP 8 e non si carica più. Le elaborazioni salvate risultano concluse fino a
+  febbraio 2026: rotto con gli aggiornamenti di settembre–ottobre.
+- Correzione locale (conferma dell'utente): in `common.php` tolte le etichette degli argomenti con nome (righe 170,
+  172, 202, 204, 210, 216, 217, 220, 221) e il tipo di ritorno `: float|int` di `bfo` (r. 194); spostato fuori da
+  `processes/` il file `basic_formula.php`, tutto PHP 8 (`match`, `str_contains`) e non usato da nessuna elaborazione.
+  Originali in `/home/pi/AI_backups/emoncms/20261024T133843Z-before-postprocess-php73/`.
+- Poi `app/process?id=5`: 5 blocchi in ~50 s. Verifica sui contatori Powerwall (22, 23 e 24/10): somma dei flussi
+  entro 0,05 kWh da solare 314, casa 312, carica 310, scarica 311, prelievo 447. Anomalia solo il **19/10** (giorno
+  degli incidenti: flussi solari 24,9 kWh contro 8,9 del contatore), lasciata così. I flussi si aggiornano da soli a
+  ogni apertura della pagina dell'app (ricalcolo delle ultime 12 ore).
+- **Attenzione agli aggiornamenti:** un `git pull` del modulo può rimettere i file rotti o fermarsi sulle modifiche
+  locali. Riapplicare: rimettere da parte `processes/basic_formula.php` e ripetere le sostituzioni su `common.php`,
+  poi `php -l` su tutti i file del modulo. Soluzione vera: ricostruzione del `.15` su emonSD-01Feb24 (Bookworm,
+  PHP 8.1) insieme all'SSD, punto aperto di [`AI_MODE/BACKUP_RASPBERRY.md`](AI_MODE/BACKUP_RASPBERRY.md).
 - **Luce TV** (Broadlink «3on»): si accendeva e rispegneva subito dall'app. Il codice aveva 21 ripetizioni
   incorporate (secondo valore del codice), lette dalla presa come due pressioni; dalla dashboard partivano due
   «3on» e finiva accesa per caso. Ripetizioni portate a 5 in `/home/pi/broadlink/SharedData/jsonIrCode` (tasto 11),
@@ -267,8 +285,8 @@ SW=) con isteresi e tempi minimi, e preparare la prova di riaccensione. Unione i
 impianto S1, punto C (broker senza anonimi); alle 18:00 **timer del riscaldamento active** (vecchi timer del `.15` spenti) e riquadro «Condizionatore a tempo» nell'app (T4 passo 4). Prossimi, nell'ordine dell'utente: **T4** (condizionatore
 via AI Climate), **S3** (pagina «Salute impianto» nell'app); **T3 (piscina) rimandata** su richiesta
 dell'utente. Da fare a margine: **prova dal vivo di T4** (comando manuale breve, es. caldo 20 °C per 20 minuti: accende davvero il condizionatore, solo con il via libera dell'utente; rimandata il 23/10); rotazione della password `emonpi` dopo la verifica dei port forward
-del router; S2 dopo la settimana di osservazione (fino al 30/10, osserva l'utente); feed di flusso
-vuoti di MyElectricFlow; AI Smart sui contatori 447/448 quando avranno storico.
+del router; S2 dopo la settimana di osservazione (fino al 30/10, osserva l'utente); ~~feed di flusso
+vuoti di MyElectricFlow~~ (fatto il 24/10); AI Smart sui contatori 447/448 quando avranno storico.
 
 **Fase P — preriscaldo del puffer con il caminetto (17/10/2026):** idea dell'utente approvata a
 tappe (dati → avviso caldaia oltre il 20 % → consiglio del giorno → automatico con ritorno a Manuale).

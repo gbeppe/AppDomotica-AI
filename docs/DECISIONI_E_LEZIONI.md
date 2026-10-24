@@ -60,6 +60,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 
 | Tema | Lezione |
 |---|---|
+| EmonCMS e PHP | Il `.15` ha un sistema del 2020 (PHP 7.3) ma i moduli emoncms si aggiornano da git all'ultima versione, scritta per PHP 8: il 24/10 il modulo `postprocess` non si caricava più e l'app MyElectricFlow mostrava solo «Post-processor failed: OK» (il messaggio riporta lo stato HTTP, non l'errore). Per capire un errore delle app emoncms rifare la chiamata con `curl` sul `.15` e leggere la risposta; `php -l` sui file del modulo trova subito la sintassi non supportata. Dopo ogni aggiornamento dei moduli ricontrollare; la soluzione vera è un emonSD recente (vedi HANDOFF). |
 | Digital Twin Router | Le tabelle di traduzione sono in cache nel context del nodo e si ricostruiscono solo se cambia la chiave `router_initialized_vNNN`: incrementarla in ogni patch al registro (ROUTER-CLEANUP.2). I test offline devono simulare un context già inizializzato dal codice vecchio. |
 | Router e `.15` | Ogni voce del router ha il suo broker (`home` = `.20`, `emon` = `.15`): la logica di riscaldamento gira su `.15` e ascolta solo il suo broker. Il router legge invece gli stati `zara/domotics/#` da entrambi, quindi un valore retained sbagliato su uno dei due falsa lo stato. Verificare sempre su entrambi i broker che il comando arrivi a destinazione. |
 | Node-RED MQTT | I nodi `mqtt in` in auto-detect trasformano `"1"` nel numero `1`: le regole di stato devono accettare entrambe le forme. |

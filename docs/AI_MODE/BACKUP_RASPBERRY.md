@@ -210,6 +210,14 @@ Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD originale, accendere
   riavvio di `systemd-journald` e `--vacuum-size=500M`: da 3,9 GB a 528 MB, disco da 15 a 11 GB usati.
   Prima era senza limiti (predefinito: 10 % del disco fino a 4 GB). Ritorno indietro: togliere il file e
   riavviare `systemd-journald`.
-- Sul `.15` resta `/etc/emoncms-nas.cred` (600, root, 12/09): credenziali del vecchio montaggio SMB del QNAP, commentato in
-  `fstab` e sostituito da NFS. Non serve più: da cancellare (e, se era un utente QNAP dedicato, disattivarlo).
+- ~~`/etc/emoncms-nas.cred` sul `.15`~~ **cancellato il 24/10** (richiesta dell'utente): credenziali del vecchio
+  montaggio SMB del QNAP, sostituito da NFS. Ne resta una copia nell'istantanea del 24/10 sul QNAP
+  (`rasp-backup/192-168-1-15/snapshots/2026-10-24/etc/`); se era un utente QNAP dedicato, disattivarlo.
+- **Ricostruzione del `.15` su un emonSD recente**, insieme a B5: oggi emonSD-24Jul20 (Raspbian 10, PHP 7.3, 32 bit)
+  con moduli emoncms aggiornati per PHP 8 (il 24/10 si è rotto `postprocess`, corretto a mano, vedi HANDOFF).
+  Immagine scelta: **emonSD-01Feb24** (Bookworm 32 bit, PHP 8.1, Pi 4, hardware emonPi1/emonBase con RFM su
+  `/dev/ttyAMA0`); la 10Mar26 (Trixie 64 bit) è preconfigurata per emonPi3 e richiederebbe di adattare `emonhub.conf`.
+  Non è un aggiornamento ma una ricostruzione: Node-RED del caminetto copiato identico, Mosquitto con gli utenti,
+  emonhub, dati emoncms (modulo di backup, export/import), backup S4, montaggi NFS, script del fotovoltaico.
+  L'SSD prende il sistema nuovo, la SD attuale resta intatta come ritorno indietro. Da pianificare con l'utente.
 - La SD nel lettore USB del `.20`: controllarne il contenuto in sola lettura quando l'utente la rimette.
