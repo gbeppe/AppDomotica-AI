@@ -1,0 +1,11 @@
+[Unit]
+Description=DomoPi weekly bootable image to the QNAP (phase S4)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/domopi-backup/rasp_backup.sh image
+Nice=19
+IOSchedulingClass=idle
+TimeoutStartSec=6h

@@ -1,0 +1,11 @@
+[Unit]
+Description=DomoPi nightly backup snapshot to the QNAP (phase S4)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/domopi-backup/rasp_backup.sh snapshot
+Nice=19
+IOSchedulingClass=idle
+TimeoutStartSec=4h

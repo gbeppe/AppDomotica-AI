@@ -298,6 +298,17 @@ Studio di fattibilità in [`AI_MODE/UNIFICAZIONE_NODERED_MQTT.md`](AI_MODE/UNIFI
 destinazione `.15` richiede una emonSD nuova e il ricollegamento dei dispositivi; in valutazione la
 destinazione **`.20`** (tab del `.15` identici, nodi broker rimappati, nessun dispositivo da toccare,
 caminetto per ultimo). Nessuna modifica fatta; prima le decisioni del §6 e il backup delle SD (F0).
+Lo studio è **rimandato** a dopo il progetto in corso (decisione dell'utente del 23/10).
+
+**Backup dei Raspberry, S4 (24/10/2026):** cartella NFS `rasp-backup` sul QNAP principale `192.168.1.4`
+(il QNAP `.74` fa il backup del `.4`), autorizzata solo per `.15` e `.20`, nessuno squash; prova di
+scrittura riuscita. Progetto [`AI_MODE/BACKUP_RASPBERRY.md`](AI_MODE/BACKUP_RASPBERRY.md) e script
+`backend/backup/`: **immagine avviabile la domenica = backup principale** (A/B, verificata, più 2
+mensili), backup mirato delle cartelle importanti ogni notte con dump MariaDB (14 giorni + 8 settimane).
+Da fare: installazione su `.20` e `.15` con conferma (B2–B3), avviso nella salute impianto (B4),
+passaggio a **SSD** dall'immagine = prova di ripristino (B5; l'utente compra SSD SATA 2,5" e adattatori
+StarTech USB312SAT3CB «USB A 5 Gbps»; sul `.15` va cambiato l'`fstab` dell'SSD con i PARTUUID). Trovati
+anche i backup esistenti (§1 del documento): sul `.15` quello mensile copia flussi Node-RED vecchi di giugno.
 
 ### Da indagare (16/10/2026)
 

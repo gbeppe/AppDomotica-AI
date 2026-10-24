@@ -111,7 +111,7 @@ Consiglio: **a + b**; c solo se l'utente lo preferisce.
 | **S1** | script di controllo con timer systemd sul `.20` e sul `.15`, controllo reciproco, avvisi ntfy su `domopi-casa` con consiglio, stato retained `zara/system/health/<host>/stat`; prima settimana **solo osservazione** (avvisi a una soglia larga, per tarare) | da fare dopo T2 |
 | **S2** | riparazioni automatiche della lista sopra; Tailscale e ntfy di riserva sul `.15` se scelto in D2 | da fare |
 | **S3** | pagina «Salute impianto» nell'app con il controllo dal Wi‑Fi; strumento AI Smart `system_health` | fatta il 23/10: pagina (cuore nella barra in alto, controllo dal Wi‑Fi all'apertura e con «Ricontrolla», app `bld_ef64491d`) e strumento AI Smart `system_health` (backend `20261023-health`, l'app passa i riepiloghi) |
-| S4 | (opzione) immagine di backup automatica, storico dei guasti | da valutare |
+| S4 | backup a caldo sul QNAP `.4` (istantanea ogni notte, immagine avviabile ogni settimana), avviso se un backup salta; storico dei guasti | progetto e script del 24/10: [`BACKUP_RASPBERRY.md`](BACKUP_RASPBERRY.md), `backend/backup/`; installazione da fare |
 
 File previsti: `backend/health/` (script, unità systemd, `README.md`, `deploy.sh` con backup e
 rollback come per le patch Node-RED). Ogni deploy sugli host con conferma dell'utente.
