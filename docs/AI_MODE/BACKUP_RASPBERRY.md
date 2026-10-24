@@ -121,7 +121,7 @@ SSD (§6) la prova di ripristino e la migrazione sono la stessa operazione.
 |---|---|---|
 | B0 | cartella `rasp-backup` sul `.4`, regole NFS, prova di scrittura da `.15` e `.20` | **fatta** 24/10 |
 | B1 | progetto e script (`backend/backup/`), test della rotazione; revisione con l'utente: backup mirati, verifica dell'immagine, immagini mensili | **fatta** 24/10 |
-| B2 | `.20`: installazione con timer spenti, `init`, prova a secco, primo backup mirato e prima immagine a mano osservando carico e luci, poi timer | da fare, con conferma |
+| B2 | `.20`: installazione con timer spenti, `init`, prova a secco, primo backup mirato e prima immagine a mano osservando carico e luci, poi timer | **in corso**: 24/10 12:29 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T102900Z-before-backup-s4`), `init` e prove a secco riuscite (backup mirato 33 percorsi, 275 MB; immagine su `…-A.img`); corretto: una prova a secco non vale più come backup (`last_ok`) |
 | B3 | `.15`: come B2 | da fare, con conferma |
 | B4 | salute impianto: avviso se il backup mirato ha più di 26 ore, l'immagine più di 8 giorni o l'ultimo giro è fallito; manuale aggiornato | da fare |
 | B5 | passaggio a SSD dall'immagine (§6), prima `.15` o `.20` a scelta dell'utente: è anche la prova di ripristino | quando arriva l'hardware |
@@ -185,6 +185,10 @@ Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD originale, accendere
   script `regular.backup.sh` (stampata per errore il 24/10 leggendo un file di verifica sul `.20`). Da
   cambiare sui QNAP; con B6 gli script che la usano spariscono.
 - Confermare che la replica del `.4` sul `.74` comprenda la nuova cartella `rasp-backup`.
-- Journal del `.20` a 4 GB, riscritto di continuo: proposta separata di limitarlo (`SystemMaxUse=500M`),
-  riduce le scritture sulla SD e il carico delle ricerche nei log.
+- ~~Journal del `.20` a 4 GB~~ **fatto il 24/10 12:42** (richiesta dell'utente): vecchio journal (maggio–ottobre,
+  4,0 GB) archiviato sul QNAP in `rasp-backup/192-168-1-20/journal-archive/20261024`, poi
+  `/etc/systemd/journald.conf.d/50-domopi-size.conf` (`SystemMaxUse=500M`, `SystemMaxFileSize=50M`),
+  riavvio di `systemd-journald` e `--vacuum-size=500M`: da 3,9 GB a 528 MB, disco da 15 a 11 GB usati.
+  Prima era senza limiti (predefinito: 10 % del disco fino a 4 GB). Ritorno indietro: togliere il file e
+  riavviare `systemd-journald`.
 - La SD nel lettore USB del `.20`: controllarne il contenuto in sola lettura quando l'utente la rimette.

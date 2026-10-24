@@ -87,7 +87,8 @@ write_status() {   # mode, ok(true/false), details
     [ -f "$file" ] && prev_ok=$(sed -n 's/.*"last_ok": *\("[^"]*"\|null\).*/\1/p' "$file")
     [ -n "$prev_ok" ] || prev_ok=null
     local last_ok=$prev_ok
-    [ "$2" = true ] && last_ok="\"$now\""
+    # a dry run never counts as a backup for the health check
+    [ "$2" = true ] && [ "$DRY" = 0 ] && last_ok="\"$now\""
     printf '{"schema": "domopi.backup_status.v1", "mode": "%s", "host": "%s", "last_run": "%s", "ok": %s, "last_ok": %s, "duration_s": %d, "details": "%s", "dry_run": %s}\n' \
         "$1" "$HOST_DIR" "$now" "$2" "$last_ok" $(($(date +%s) - STARTED)) "$3" \
         "$([ "$DRY" = 1 ] && echo true || echo false)" > "$file.tmp"
