@@ -72,6 +72,16 @@ montata, stessa lezione di `drive-backup.sh`), un backup alla volta (`flock`), p
 e disco (il `.20` è sensibile all'I/O: i comandi IR delle luci rallentano), un'immagine interrotta o non
 verificata non sostituisce quella buona.
 
+La cartella NFS **non è in `fstab`**: ogni giro la monta su `/mnt/rasp-backup` e la smonta alla fine, quindi al
+riavvio non c'è niente da rimontare (i timer hanno `Persistent=true`: un giro saltato a Raspberry spento parte dopo
+l'avvio). Se il QNAP cade a metà, il montaggio `soft` fa fallire rsync invece di bloccarlo; in chiusura lo smontaggio
+passa a `umount -l` se quello normale non riesce; i backup mirati incompiuti dei giorni prima (`.incomplete-*`) si
+cancellano al giro dopo; l'immagine senza `.ok` viene rifatta.
+
+Prove di guasto del 24/10 sul `.20` (stato a parte, `DOMOPI_BACKUP_STATE`): cartella inesistente (fermo in 0 s),
+QNAP irraggiungibile `192.0.2.1` (fermo in 121 s, «Connection timed out»), marcatore mancante (fermo prima di
+scrivere): ogni volta `ok: false` con il motivo, cartella smontata, **nessun file scritto sulla SD**.
+
 Perdita massima dopo un guasto: **un giorno** (immagine + backup mirato della notte); dati emoncms: una notte.
 
 ### Spazio previsto

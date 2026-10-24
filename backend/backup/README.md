@@ -21,6 +21,8 @@ Sicurezze:
 - un solo backup alla volta (`flock`), priorità minima di CPU e disco (`Nice=19`, `IOSchedulingClass=idle`);
 - un'immagine interrotta o non verificata non sostituisce quella buona: `<immagine>.ok` si scrive solo
   dopo la verifica;
+- QNAP irraggiungibile o caduto a metà: il giro fallisce con `ok: false` (montaggio `soft`), smontaggio forzato
+  (`umount -l`) se serve, cartelle `.incomplete-*` dei giorni prima cancellate al giro dopo;
 - i percorsi mancanti del backup mirato vengono segnalati nel registro e nello stato, non fermano il giro;
 - esclusi i file enormi rigenerati ogni giorno e inutili per il ripristino (journal di systemd,
   cronologia delle query di Pi-hole sul `.20`, `node_modules` di Node-RED nel backup mirato), le cache,

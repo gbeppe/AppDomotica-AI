@@ -10,7 +10,7 @@
 set -euo pipefail
 
 CONF=${DOMOPI_BACKUP_CONF:-/etc/domopi-backup/backup.conf}
-STATE=/var/lib/domopi-backup
+STATE=${DOMOPI_BACKUP_STATE:-/var/lib/domopi-backup}
 LOCK=/run/domopi-backup.lock
 MODE=${1:-}
 DRY=0
@@ -103,12 +103,18 @@ cleanup() {
     if [ "$rc" != 0 ] && [ "$MODE" != init ]; then
         write_status "$MODE" false "${RESULT_ERROR:-failed with code $rc}"
     fi
-    for m in /run/domopi-backup-image/*; do mountpoint -q "$m" 2>/dev/null && umount "$m"; done
+    for m in /run/domopi-backup-image/*; do mountpoint -q "$m" 2>/dev/null && safe_umount "$m"; done
     [ -n "${LOOP:-}" ] && losetup -d "$LOOP" 2>/dev/null
-    [ "$MOUNTED_BY_US" = 1 ] && umount "$MOUNT" 2>/dev/null
+    [ "$MOUNTED_BY_US" = 1 ] && safe_umount "$MOUNT"
     exit "$rc"
 }
 trap cleanup EXIT
+
+# With the QNAP unreachable a normal umount can fail or hang: fall back to a lazy one, which
+# detaches at once, so no stale mount stays behind until the next reboot.
+safe_umount() {
+    timeout 60 umount "$1" 2>/dev/null || umount -l "$1" 2>/dev/null || log "could not unmount $1"
+}
 
 mount_share() {
     install -d -m 0755 "$MOUNT"
@@ -161,6 +167,13 @@ do_snapshot() {
     snaps=$TARGET/snapshots
     new=$snaps/.incomplete-$today
     latest=$snaps/latest
+    # unfinished snapshots of earlier days (a run that failed, e.g. the QNAP went away) are useless
+    local stale
+    for stale in "$snaps"/.incomplete-*; do
+        [ -e "$stale" ] && [ "$stale" != "$new" ] || continue
+        log "remove unfinished $(basename "$stale")"
+        [ "$DRY" = 1 ] || rm -rf "$stale"
+    done
     [ -d "$snaps/$today" ] && mv "$snaps/$today" "$new"
     local args=(-aHxR --numeric-ids --delete --delete-excluded --stats)
     [ -e "$latest" ] && args+=(--link-dest="$(readlink -f "$latest")")
