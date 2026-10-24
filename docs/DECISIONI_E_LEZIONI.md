@@ -99,6 +99,12 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 
 ## Fatti utili sull'impianto
 
+- Powerwall (gateway `192.168.1.46`, API locale con l'utente `customer`): `backup_reserve_percent` è nella scala del
+  gateway, **5 = 0 % nell'app** Tesla, e la carica letta in locale scende fino a ~4,9 %. Gli endpoint
+  `/api/operation`, `/api/system_status`, `/api/sitemaster`, `grid_status`, `grid_faults`, `system/update/status`
+  rispondono col firmware 26.34.0; `/api/troubleshooting/problems` no. Il 23/10 il gateway ha smesso di caricare dal
+  solare senza cambi di impostazione e si è sbloccato spostando la riserva: vedi HANDOFF (TESLA-STATUS.1).
+
 - Timer dei termostati su `.15` (light-scheduler "SOLO caminetto"/"Con Caldaia" secondo
   `palazzettiModalita`): setpoint = max in fascia, min fuori fascia; riscrive al cambio fascia, al
   cambio di min/max e ogni 8 h. La modalità vacanza su `.20` forza 17 °C ogni 2 h; gli scheduler

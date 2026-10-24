@@ -171,6 +171,24 @@ backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall
   `~/.node-red/flows_domopi.json` era una copia del 20/06. 14 flow obsoleti (copie in `~/.node-red` e candidati
   PR di settembre) archiviati in `/home/pi/AI_backups/nodered/20261023-obsolete-flows.tar.gz` e cancellati.
 
+### Powerwall: stato del gateway in EmonCMS (24/10/2026)
+- **Incidente del 23/10:** dalle 07 alle 16 tutto il fotovoltaico (fino a 4 kW) è andato in rete e la batteria non si
+  è caricata, continuando ad alimentare la casa (dal 52 % alla riserva del 5 % la sera). Nessuna modifica alle
+  impostazioni (utente); il 24/10 mattina l'utente ha spostato la riserva nell'app (0 → 10 → 0 %) e la carica è
+  ripartita. Il gateway ora: autoconsumo, riserva 5 (= 0 % nell'app), nessun servizio di rete, nessun blocco sulla
+  batteria; firmware 26.34.0 dal 05/10 08:36 (17 giorni normali dopo l'aggiornamento); avvisi di sovratensione
+  (251–253 V) solo l'11/10; `connected_to_tesla: false` anche se l'app Tesla mostra i dati in tempo reale (verificato dall'utente il
+  24/10): su questo firmware il campo non indica il collegamento al cloud, quindi `pw_cloud_connected` non va usato
+  per gli avvisi. Nessun nodo del `.15`, del
+  `.20` o del backend scrive al Powerwall. Il «battery → grid 2,86 kWh» di MyElectricFlow quel giorno è un effetto del
+  calcolo «solare prima»: la batteria copriva la casa mentre il solare usciva.
+- **Flusso dell'utente «Get Tesla Status»** (`/api/status`, ogni ora) → `gw_fw_version` (feed 453) e `gw_uptime_h`
+  (454); l'ora di avvio si ricava dall'uptime, perché il gateway scrive l'ora italiana con fuso «+0800».
+- **TESLA-STATUS.1** (`backend/nodered/tesla_status/`), live dal 24/10 17:24: ogni 5 min modalità, riserva, potenza
+  chiesta alla batteria, sorgente del comando, cloud Tesla, servizi di rete, limiti di carica, salute e contatori
+  della batteria, avvisi di rete, stato dell'aggiornamento → 21 input `pw_*` (feed 455–475, nodo `TeslaPowerwall`).
+  Prossimo: avviso nella salute impianto su cambio di modalità o riserva e batteria che non carica con solare in rete.
+
 ### Firmware delle schede ESP
 Sketch versionati in [`../firmware/`](../firmware/README.md) (credenziali solo in `secrets.h`
 locale, controllo `python3 firmware/check_firmware.py`). Caminetto: `palazzetti_v2` caricato e
