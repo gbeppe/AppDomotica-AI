@@ -48,3 +48,22 @@ F2: il ramo `Irradiance=` si **toglie**; F3: previsione reale Open-Meteo sul pia
 ciascuna falda, accanto al valore teorico (`emon/planetary/forecast_smodule`, `forecast_smodule2` e il
 riepilogo `zara/interface/energy/solar_forecast/stat`). Patch Node-RED:
 [`../nodered/solar_tilted/`](../nodered/solar_tilted/README.md) (SOLAR-TILTED.1).
+
+## Confronto previsione / reale (`compare_forecast.py`, 24/10/2026)
+
+Gira sul `.15` e legge direttamente i file PHPFina di EmonCMS (sola lettura, senza chiave): per un
+giorno stampa le medie orarie in W, i kWh, lo scarto della previsione e l'efficienza effettiva di
+ciascuna falda (reale elettrico / luce prevista) da confrontare con i coefficienti 0,15 e 0,205.
+
+```sh
+ssh pi@192.168.1.15 'python3 - 2026-10-24' < compare_forecast.py   # senza data: oggi
+```
+
+Produzione reale per falda (confermato dall'utente il 24/10): l'inverter **Huawei** (feed 426
+`ac_power`) è sulla falda **Eclipse**; la Viessmann è il totale Tesla (307 `solar_instant_power`)
+meno il Huawei. Sugli ultimi 15 giorni sereni il Huawei segue la curva teorica Eclipse e il resto
+quella Viessmann; il Huawei fa in media il 40 % del totale.
+
+I pannelli Eclipse hanno circa 10 anni (utente, 24/10): l'efficienza reale è più bassa di quella di
+targa per l'invecchiamento (tipicamente 0,5–0,8 % all'anno), oltre alle perdite di inverter,
+temperatura e sporco. Il coefficiente 0,15 va rivisto sulle giornate serene misurate.
