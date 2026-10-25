@@ -115,8 +115,14 @@ Sul `.4` ci sono 1,6 TB liberi.
    - `.15`: `sudo parted /dev/<disco> resizepart 3 100%` e `sudo resize2fs /dev/<disco>3`.
 5. Riportare i giorni dopo l'immagine dal backup mirato più recente (`snapshots/latest/`) con
    `rsync -aH --numeric-ids` e, se serve, il dump di MariaDB.
-6. Sul `.15`: dati emoncms della notte precedente da `emoncms-drive-backup` (procedura del modulo
-   emoncms, da provare in B5).
+6. Sul `.15` l'immagine **non contiene i dati di emoncms** (decisione dell'utente del 25/10,
+   `IMAGE_SKIP_DATA=/var/opt/emoncms`): la partizione 3 ha solo le cartelle (`phpfina/`, `phptimeseries/`, …)
+   con proprietari e permessi. **Prima del primo avvio**, dal PC con il disco collegato: allargare la
+   partizione 3 (`parted resizepart 3 100%` + `resize2fs`), montarla e copiarci le cartelle dei feed dal backup
+   di emoncms (`192.168.1.4:/emoncms-backup/emoncms/phpfina`, `phptimeseries`, … con `rsync -a --numeric-ids`);
+   il database `emoncms` dell'immagine è quello della sera della copia, il dump più recente è in
+   `snapshots/latest/var/backups/domopi/mysql/emoncms.sql.gz`. Senza i dati emoncms ripartirebbe con i
+   feed vuoti. Da provare in B5 (per il `.15` la migrazione a SSD si fa invece con la copia diretta).
 
 ### Un file o una configurazione
 
@@ -160,7 +166,15 @@ SSD (§6) la prova di ripristino e la migrazione sono la stessa operazione.
   `RSYNC_MAX_VM_MB=600`) e si ferma con errore invece di soffocare il Raspberry; `OOMScoreAdjust=500` nelle unità.
   Il controllo della memoria per servizio (`MemoryMax=`) non funziona: nei kernel di `.15` e `.20` il cgroup della
   memoria è disattivato (si attiverebbe con `cgroup_enable=memory` in `cmdline.txt` e un riavvio).
-- Test senza root: `tests/test_paths.sh` (montaggi ed esclusioni) oltre a `tests/test_rotation.sh`.
+- **Dati di emoncms fuori dall'immagine del `.15`** (decisione dell'utente del 25/10): hanno già il loro backup
+  notturno con verifica settimanale; l'immagine tiene la partizione 3 con le sole cartelle, piccola (1 GiB), e
+  il ripristino diventa immagine + backup di emoncms (§4 punto 6). Un'immagine con l'ultima partizione più
+  grande del doppio del necessario viene ricreata.
+- `sfdisk --disk-id` non esiste sul `.15` (util-linux 2.33): l'identificativo si legge da `sfdisk -d`
+  (`label-id`). La prima immagine completa del `.15` del 25/10 (13:21–13:5x, rsync sempre sotto 40 MB, sistema
+  in 6 minuti) si era fermata qui, alla verifica.
+- Test senza root: `tests/test_paths.sh` (montaggi, esclusioni, dati saltati, identificativo del disco) oltre a
+  `tests/test_rotation.sh`.
 - Lezione: una prova a secco di rsync sull'intera SD del `.20` per misurare la memoria ha rallentato SSH per circa
   15 minuti (nessun servizio fermo). Prove pesanti sui Raspberry di casa solo con un limite di memoria.
 

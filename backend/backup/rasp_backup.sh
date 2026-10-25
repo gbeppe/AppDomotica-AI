@@ -27,6 +27,7 @@ KEEP_MONTHLY=2
 SNAPSHOT_SOURCES="/etc"
 SNAPSHOT_EXCLUDES=()   # added to EXCLUDES for the nightly snapshot only
 IMAGE_EXCLUDES=()      # added to EXCLUDES for the weekly image only: keep it bootable and complete
+IMAGE_SKIP_DATA=       # mount points of data partitions saved elsewhere: the image keeps only their folders
 DEVICE=/dev/mmcblk0
 RSYNC_MAX_VM_MB=600
 
@@ -47,6 +48,9 @@ partnum() { echo "$1" | sed 's/.*[^0-9]//'; }
 root_of() { awk '$2 == "/" {print $1; exit}'; }
 binds_of() { awk '$2 != "/" {print $2, $1}'; }
 mounted_at() { findmnt -rn -o TARGET,FSROOT "$1" | root_of; }
+skipped_data() { case " $IMAGE_SKIP_DATA " in *" $1 "*) return 0 ;; esac; return 1; }
+# disk identifier of a device or image file; sfdisk --disk-id is missing in util-linux 2.33 (.15)
+disk_id() { sfdisk -d "$1" | sed -n 's/^label-id: *0x//p'; }
 bind_mounts() { findmnt -rn -o TARGET,FSROOT "$1" | binds_of; }
 
 # Exclude patterns written for / (like /home/*/.cache/*) rewritten for a copy of the top-level folder
@@ -95,6 +99,15 @@ fi
 if [ "$MODE" = exclude-test ]; then   # folder patterns…
     shift
     excludes_for_dir "$@"
+    exit 0
+fi
+if [ "$MODE" = skip-test ]; then       # mount point, IMAGE_SKIP_DATA value
+    IMAGE_SKIP_DATA=${3:-}
+    if skipped_data "$2"; then echo skip; else echo copy; fi
+    exit 0
+fi
+if [ "$MODE" = diskid-test ]; then     # image file (no root needed)
+    disk_id "$2"
     exit 0
 fi
 if [ "$MODE" = mount-test ]; then     # findmnt -rn -o TARGET,FSROOT lines on stdin
@@ -273,14 +286,29 @@ image_paths() {
     else echo "$b"; fi
 }
 
-image_too_small() {   # file: true when a partition of the SD no longer fits its image partition
-    local part n used img_s
+part_used() {   # partition: bytes the image has to hold (only the folders of a skipped data partition)
+    local mp
+    mp=$(mounted_at "$1")
+    if skipped_data "$mp"; then echo 0; else df -B1 --output=used "$mp" | tail -1; fi
+}
+
+last_part_sectors() {   # used bytes -> size of the image's last partition: used + 20 % + 1 GiB, MiB-aligned
+    local size_s=$(( ($1 * 12 / 10 + 1073741824) / 512 ))
+    echo $(( (size_s + 2047) / 2048 * 2048 ))
+}
+
+# true when the image must be recreated: a partition of the SD no longer fits, or the last partition
+# is more than twice the size it would get now (a data partition newly skipped, a big cleanup)
+image_needs_rebuild() {   # file
+    local part n used img_s last
+    last=$(sfdisk -d "$DEVICE" | grep "^$DEVICE" | tail -1 | cut -d' ' -f1)
     for part in $(sfdisk -d "$DEVICE" | grep "^$DEVICE" | cut -d' ' -f1); do
         n=$(partnum "$part")
-        used=$(df -B1 --output=used "$(mounted_at "$part")" | tail -1)
+        used=$(part_used "$part")
         img_s=$(sfdisk -d "$1" | grep -E "^$1p?$n :" | sed -n 's/.*size= *\([0-9]*\).*/\1/p')
         [ -n "$img_s" ] || return 0
         [ "$used" -gt $((img_s * 512 * 9 / 10)) ] && return 0
+        if [ "$part" = "$last" ] && [ "$img_s" -gt $(( $(last_part_sectors "$used") * 2 )) ]; then return 0; fi
     done
     return 1
 }
@@ -291,9 +319,8 @@ create_image() {   # file
     last=$(echo "$dump" | grep "^$DEVICE" | tail -1)
     local lastdev=${last%% *}
     start=$(echo "$last" | sed -n 's/.*start= *\([0-9]*\).*/\1/p')
-    used=$(df -B1 --output=used "$(mounted_at "$lastdev")" | tail -1)
-    size_s=$(( (used * 12 / 10 + 1073741824) / 512 ))
-    size_s=$(( (size_s + 2047) / 2048 * 2048 ))
+    used=$(part_used "$lastdev")
+    size_s=$(last_part_sectors "$used")
     total=$(( (start + size_s + 2048) * 512 ))
     log "create $(basename "$file"): $((total / 1048576)) MiB (sparse)"
     rm -f "$file"
@@ -332,8 +359,8 @@ do_image() {
     rm -f "$file.ok"
     if [ ! -e "$file" ]; then
         create_image "$file"
-    elif image_too_small "$file"; then
-        log "the SD grew beyond $(basename "$file"): recreating"
+    elif image_needs_rebuild "$file"; then
+        log "partition sizes changed for $(basename "$file"): recreating"
         create_image "$file"
     fi
     LOOP=$(losetup -f --show -P "$file")
@@ -357,6 +384,10 @@ do_image() {
             pats=("${EXCLUDES[@]}" "${IMAGE_EXCLUDES[@]}")
             for b in "${binds[@]}"; do pats+=("${b#* }/*"); done
             copy_root "$dst" "${pats[@]}" || rc=$?
+        elif skipped_data "$src"; then
+            # saved by its own backup (emoncms on the .15): only the folders, with owners and modes
+            log "image: $src data skipped (IMAGE_SKIP_DATA), folders only"
+            rsync_lim -aHx --numeric-ids --delete -f '+ */' -f '- *' "$src/" "$dst/" || rc=$?
         else
             bex=()
             for b in "${binds[@]}"; do
@@ -416,7 +447,8 @@ copy_root() {   # dst, exclude patterns written for /...
 # at the image's own root partition, kernel, fstab and init present.
 verify_image() {   # file
     local file=$1 diskid part type dst=/run/domopi-backup-image/verify
-    diskid=$(sfdisk --disk-id "$file" | sed 's/^0x//')
+    diskid=$(disk_id "$file")
+    [ -n "$diskid" ] || { RESULT_ERROR="no disk identifier in $(basename "$file")"; exit 1; }
     LOOP=$(losetup -f --show -P -r "$file")
     for part in "$LOOP"p*; do
         type=$(blkid -o value -s TYPE "$part")

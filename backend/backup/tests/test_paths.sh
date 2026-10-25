@@ -1,6 +1,7 @@
 #!/bin/bash
 # Mount points and exclude patterns of rasp_backup.sh, without root: bash backend/backup/tests/test_paths.sh
 set -euo pipefail
+PATH=$PATH:/sbin:/usr/sbin   # sfdisk for a normal user on Raspbian
 SCRIPT=$(cd "$(dirname "$0")/.." && pwd)/rasp_backup.sh
 fail=0
 check() {   # name, expected, actual
@@ -36,5 +37,20 @@ for c in 20 15; do
     check ".$c snapshot without node_modules" "1" "$(echo "$snap" | grep -c node_modules)"
     check ".$c image with node_modules" "0" "$(echo "$img" | grep -c node_modules || true)"
 done
+
+# skipped data partitions (emoncms on the .15): folders only
+check "skip emoncms" "skip" "$(bash "$SCRIPT" skip-test /var/opt/emoncms /var/opt/emoncms)"
+check "root never skipped" "copy" "$(bash "$SCRIPT" skip-test / /var/opt/emoncms)"
+check "prefix is not a match" "copy" "$(bash "$SCRIPT" skip-test /var/opt /var/opt/emoncms)"
+check "nothing skipped by default" "copy" "$(bash "$SCRIPT" skip-test /var/opt/emoncms)"
+check ".15 skips emoncms data" "/var/opt/emoncms" "$(bash -c ". '$(dirname "$SCRIPT")/backup-15.conf'; echo \"\$IMAGE_SKIP_DATA\"")"
+check ".20 skips nothing" "" "$(bash -c "IMAGE_SKIP_DATA=; . '$(dirname "$SCRIPT")/backup-20.conf'; echo \"\$IMAGE_SKIP_DATA\"")"
+
+# disk identifier read from sfdisk -d (sfdisk --disk-id is missing on the .15)
+img=$(mktemp)
+truncate -s 8M "$img"
+printf 'label: dos\nlabel-id: 0x43ed7bb4\n2048,,c\n' | sfdisk --quiet "$img" >/dev/null 2>&1
+check "disk id" "43ed7bb4" "$(bash "$SCRIPT" diskid-test "$img")"
+rm -f "$img"
 
 exit $fail

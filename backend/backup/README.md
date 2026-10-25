@@ -30,6 +30,8 @@ Sicurezze:
 - dopo il passaggio a SSD: `DEVICE=/dev/sda` nella configurazione (predefinito `/dev/mmcblk0`);
 - esclusioni separate: `SNAPSHOT_EXCLUDES` solo per il backup mirato, `IMAGE_EXCLUDES` solo per l'immagine
   (che deve restare completa: i moduli di Node-RED ci sono);
+- `IMAGE_SKIP_DATA`: partizioni di dati salvate da un altro backup, di cui l'immagine tiene solo le cartelle
+  (sul `.15` i dati di emoncms; ripristino in due passi, vedi il documento §4);
 - memoria: la partizione di sistema si copia una cartella principale alla volta e ogni rsync ha un limite
   (`RSYNC_MAX_VM_MB`, predefinito 600); i montaggi doppi (log2ram di emonSD) sono gestiti.
 
