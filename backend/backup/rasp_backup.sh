@@ -25,8 +25,10 @@ KEEP_DAILY=14
 KEEP_WEEKLY=8
 KEEP_MONTHLY=2
 SNAPSHOT_SOURCES="/etc"
-EXTRA_EXCLUDES=()
+SNAPSHOT_EXCLUDES=()   # added to EXCLUDES for the nightly snapshot only
+IMAGE_EXCLUDES=()      # added to EXCLUDES for the weekly image only: keep it bootable and complete
 DEVICE=/dev/mmcblk0
+RSYNC_MAX_VM_MB=600
 
 EXCLUDES=(
     /proc/* /sys/* /dev/* /run/* /tmp/* /var/tmp/* /mnt/* /media/* /lost+found
@@ -38,6 +40,31 @@ log() { echo "$(date '+%F %T') $*"; }
 
 # partition number of /dev/mmcblk0p2, /dev/sda2 or /path/file.img2 -> 2
 partnum() { echo "$1" | sed 's/.*[^0-9]//'; }
+
+# "TARGET FSROOT" lines of one partition (findmnt -rn): where its root is mounted, and the bind mounts
+# of its subfolders as "<folder in the partition> <mount point>". On emonSD the root partition is also
+# at /var/log.bak (log2ram keeps the real /var/log there), so a partition can have several mounts.
+root_of() { awk '$2 == "/" {print $1; exit}'; }
+binds_of() { awk '$2 != "/" {print $2, $1}'; }
+mounted_at() { findmnt -rn -o TARGET,FSROOT "$1" | root_of; }
+bind_mounts() { findmnt -rn -o TARGET,FSROOT "$1" | binds_of; }
+
+# Exclude patterns written for / (like /home/*/.cache/*) rewritten for a copy of the top-level folder
+# $1 alone: /home/*/.cache/* -> /*/.cache/* for "home"; patterns of other folders are dropped and
+# unanchored ones kept. A pattern naming a top-level entry itself (/lost+found) is left to the caller.
+excludes_for_dir() {   # folder, patterns...
+    local d=$1 p first rest
+    shift
+    for p in "$@"; do
+        if [ "${p#/}" = "$p" ]; then printf -- '--exclude=%s\n' "$p"; continue; fi
+        first=${p#/}
+        rest=${first#*/}
+        [ "$rest" != "$first" ] || continue
+        first=${first%%/*}
+        # shellcheck disable=SC2053
+        if [[ $d == $first ]]; then printf -- '--exclude=/%s\n' "$rest"; fi
+    done
+}
 
 # ---------------------------------------------------------------------------------------------
 # Rotation: keep the newest KEEP_DAILY snapshots, then the newest snapshot of each ISO week for
@@ -63,6 +90,17 @@ rotation_deletions() {
 if [ "$MODE" = rotate-test ]; then
     shift
     rotation_deletions "$@"
+    exit 0
+fi
+if [ "$MODE" = exclude-test ]; then   # folder patterns…
+    shift
+    excludes_for_dir "$@"
+    exit 0
+fi
+if [ "$MODE" = mount-test ]; then     # findmnt -rn -o TARGET,FSROOT lines on stdin
+    lines=$(cat)
+    echo "root=$(echo "$lines" | root_of)"
+    echo "$lines" | binds_of | sed 's/^/bind=/'
     exit 0
 fi
 
@@ -141,10 +179,19 @@ dump_databases() {
     done
 }
 
-exclude_args() {
-    local e
-    for e in "${EXCLUDES[@]}" "${EXTRA_EXCLUDES[@]}"; do printf -- '--exclude=%s\n' "$e"; done
+exclude_args() {   # snapshot|image
+    local e extra=()
+    if [ "$1" = image ]; then extra=("${IMAGE_EXCLUDES[@]}"); else extra=("${SNAPSHOT_EXCLUDES[@]}"); fi
+    for e in "${EXCLUDES[@]}" "${extra[@]}"; do printf -- '--exclude=%s\n' "$e"; done
 }
+
+# rsync with an address-space limit: if it runs away it stops with an error instead of starving the
+# Raspberry (the first image of the .20 grew to ~900 MB and was killed by the kernel on 25/10/2026;
+# the memory cgroup is disabled in these kernels, so MemoryMax= in the unit would do nothing)
+rsync_lim() { prlimit --as=$((RSYNC_MAX_VM_MB * 1048576)) rsync "$@"; }
+
+# 24 = files vanished during the copy: normal on a live system
+rsync_ok() { [ "$1" = 0 ] || [ "$1" = 24 ]; }
 
 # ---------------------------------------------------------------------------------------------
 do_init() {
@@ -178,7 +225,7 @@ do_snapshot() {
     local args=(-aHxR --numeric-ids --delete --delete-excluded --stats)
     [ -e "$latest" ] && args+=(--link-dest="$(readlink -f "$latest")")
     [ "$DRY" = 1 ] && args+=(--dry-run)
-    mapfile -t ex < <(exclude_args)
+    mapfile -t ex < <(exclude_args snapshot)
     local sources=() s missing=0
     # unquoted on purpose: one path per word, globs expanded here
     for s in $SNAPSHOT_SOURCES; do
@@ -187,9 +234,8 @@ do_snapshot() {
     [ "${#sources[@]}" -gt 0 ] || { RESULT_ERROR="no snapshot source exists"; exit 1; }
     log "snapshot $today: ${#sources[@]} paths"
     local out rc=0
-    out=$(rsync "${args[@]}" "${ex[@]}" "${sources[@]}" "$new/" 2>&1) || rc=$?
-    # 24 = files vanished during the copy: normal on a live system
-    if [ "$rc" != 0 ] && [ "$rc" != 24 ]; then
+    out=$(rsync_lim "${args[@]}" "${ex[@]}" "${sources[@]}" "$new/" 2>&1) || rc=$?
+    if ! rsync_ok "$rc"; then
         echo "$out" | tail -20
         RESULT_ERROR="rsync exit $rc"
         exit 1
@@ -231,7 +277,7 @@ image_too_small() {   # file: true when a partition of the SD no longer fits its
     local part n used img_s
     for part in $(sfdisk -d "$DEVICE" | grep "^$DEVICE" | cut -d' ' -f1); do
         n=$(partnum "$part")
-        used=$(df -B1 --output=used "$(findmnt -n -o TARGET "$part")" | tail -1)
+        used=$(df -B1 --output=used "$(mounted_at "$part")" | tail -1)
         img_s=$(sfdisk -d "$1" | grep -E "^$1p?$n :" | sed -n 's/.*size= *\([0-9]*\).*/\1/p')
         [ -n "$img_s" ] || return 0
         [ "$used" -gt $((img_s * 512 * 9 / 10)) ] && return 0
@@ -245,7 +291,7 @@ create_image() {   # file
     last=$(echo "$dump" | grep "^$DEVICE" | tail -1)
     local lastdev=${last%% *}
     start=$(echo "$last" | sed -n 's/.*start= *\([0-9]*\).*/\1/p')
-    used=$(df -B1 --output=used "$(findmnt -n -o TARGET "$lastdev")" | tail -1)
+    used=$(df -B1 --output=used "$(mounted_at "$lastdev")" | tail -1)
     size_s=$(( (used * 12 / 10 + 1073741824) / 512 ))
     size_s=$(( (size_s + 2047) / 2048 * 2048 ))
     total=$(( (start + size_s + 2048) * 512 ))
@@ -292,27 +338,43 @@ do_image() {
     fi
     LOOP=$(losetup -f --show -P "$file")
     install -d -m 0700 /run/domopi-backup-image
-    local part n src dst rc
-    mapfile -t ex < <(exclude_args)
+    local part n src dst rc b t pats bex binds
     for part in $(sfdisk -d "$DEVICE" | grep "^$DEVICE" | cut -d' ' -f1); do
         n=$(partnum "$part")
-        src=$(findmnt -n -o TARGET "$part")
+        src=$(mounted_at "$part")
+        [ -n "$src" ] || { RESULT_ERROR="partition $part is not mounted"; exit 1; }
+        mapfile -t binds < <(bind_mounts "$part")
         dst=/run/domopi-backup-image/p$n
         install -d "$dst"
         mount "${LOOP}p$n" "$dst"
         log "image: partition $n ($src)"
         rc=0
         if [ "$(blkid -o value -s TYPE "$part")" = vfat ]; then
-            rsync -rt --modify-window=1 --delete "$src/" "$dst/" || rc=$?
+            rsync_lim -rt --modify-window=1 --delete "$src/" "$dst/" || rc=$?
+        elif [ "$src" = / ]; then
+            # exclude patterns are written for /, so they apply to the root partition only;
+            # bind mounts of the same partition are copied to their real place below
+            pats=("${EXCLUDES[@]}" "${IMAGE_EXCLUDES[@]}")
+            for b in "${binds[@]}"; do pats+=("${b#* }/*"); done
+            copy_root "$dst" "${pats[@]}" || rc=$?
         else
-            # exclude patterns are written for /, so apply them only to the root partition
-            if [ "$src" = / ]; then
-                rsync -aHx --numeric-ids --delete --delete-excluded "${ex[@]}" "$src/" "$dst/" || rc=$?
-            else
-                rsync -aHx --numeric-ids --delete "$src/" "$dst/" || rc=$?
-            fi
+            bex=()
+            for b in "${binds[@]}"; do
+                t=${b#* }
+                case $t in "$src"/*) bex+=("--exclude=/${t#"$src"/}/*") ;; esac
+            done
+            rsync_lim -aHx --numeric-ids --delete "${bex[@]}" "$src/" "$dst/" || rc=$?
         fi
-        if [ "$rc" != 0 ] && [ "$rc" != 24 ]; then RESULT_ERROR="rsync partition $n exit $rc"; exit 1; fi
+        rsync_ok "$rc" || { RESULT_ERROR="rsync partition $n exit $rc"; exit 1; }
+        # a folder of this partition hidden by another mount but visible elsewhere (emonSD: the real
+        # /var/log is under the log2ram tmpfs, bind-mounted at /var/log.bak) goes to its own place
+        for b in "${binds[@]}"; do
+            log "image: ${b#* } -> ${b%% *}"
+            install -d "$dst${b%% *}"
+            rc=0
+            rsync_lim -aHx --numeric-ids --delete "${b#* }/" "$dst${b%% *}/" || rc=$?
+            rsync_ok "$rc" || { RESULT_ERROR="rsync ${b#* } exit $rc"; exit 1; }
+        done
         umount "$dst"
     done
     losetup -d "$LOOP"
@@ -322,6 +384,32 @@ do_image() {
     keep_monthly "$file"
     write_status image true "$(basename "$file") refreshed and verified"
     log "image done: $file"
+}
+
+# Root partition, one top-level folder at a time: shorter file lists keep rsync's memory low and the
+# log shows how far it got. First the top level alone (files, links, empty folders and mount points,
+# deleting what is gone), then each folder of the same filesystem with the patterns rewritten for it.
+copy_root() {   # dst, exclude patterns written for /...
+    local dst=$1 d p skip rc=0 dev ex=() dex
+    shift
+    for p in "$@"; do ex+=("--exclude=$p"); done
+    rsync_lim -dlptgoDHx --numeric-ids --delete --delete-excluded "${ex[@]}" / "$dst/" || rc=$?
+    rsync_ok "$rc" || return "$rc"
+    dev=$(stat -c %d /)
+    # names without spaces at the top level of a Raspberry root
+    for d in $(ls -A /); do
+        [ -d "/$d" ] && [ ! -L "/$d" ] || continue
+        [ "$(stat -c %d "/$d")" = "$dev" ] || continue
+        skip=0
+        # shellcheck disable=SC2053
+        for p in "$@"; do if [[ /$d == $p ]]; then skip=1; fi; done
+        [ "$skip" = 0 ] || continue
+        log "image: /$d"
+        mapfile -t dex < <(excludes_for_dir "$d" "$@")
+        rc=0
+        rsync_lim -aHx --numeric-ids --delete --delete-excluded "${dex[@]}" "/$d/" "$dst/$d/" || rc=$?
+        rsync_ok "$rc" || return "$rc"
+    done
 }
 
 # Read-only checks before an image is marked good: every filesystem clean, the boot partition points

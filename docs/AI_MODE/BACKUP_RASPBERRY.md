@@ -140,11 +140,29 @@ SSD (§6) la prova di ripristino e la migrazione sono la stessa operazione.
 |---|---|---|
 | B0 | cartella `rasp-backup` sul `.4`, regole NFS, prova di scrittura da `.15` e `.20` | **fatta** 24/10 |
 | B1 | progetto e script (`backend/backup/`), test della rotazione; revisione con l'utente: backup mirati, verifica dell'immagine, immagini mensili | **fatta** 24/10 |
-| B2 | `.20`: installazione con timer spenti, `init`, prova a secco, primo backup mirato e prima immagine a mano osservando carico e luci, poi timer | **in corso**: 24/10 12:29 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T102900Z-before-backup-s4`), `init` e prove a secco riuscite (backup mirato 33 percorsi, 275 MB; immagine su `…-A.img`); corretto: una prova a secco non vale più come backup (`last_ok`); 13:04 primo backup mirato (275 MB, 106 s); prima immagine con timer temporaneo `domopi-backup-image-first` il 25/10 alle 01:30; timer automatici dopo il controllo dell'immagine |
-| B3 | `.15`: come B2 | **in corso**: 24/10 13:14 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T111442Z-before-backup-s4`), prove a secco riuscite; 13:15 primo backup mirato (17 percorsi, 40 MB, 31 s); prima immagine con timer temporaneo il 25/10 alle 06:30 (spostata dalle 04:15 per la verifica di emoncms) |
-| B4 | salute impianto: avviso se il backup mirato ha più di 26 ore, l'immagine più di 8 giorni o l'ultimo giro è fallito; sul `.15` anche il backup di emoncms (`status.json` sul NAS: ultimo giro oltre 26 ore, errori, cartella non montata); manuale aggiornato | da fare |
-| B5 | passaggio a SSD dall'immagine (§6), prima `.15` o `.20` a scelta dell'utente: è anche la prova di ripristino | quando arriva l'hardware |
+| B2 | `.20`: installazione con timer spenti, `init`, prova a secco, primo backup mirato e prima immagine a mano osservando carico e luci, poi timer | **in corso**: 24/10 12:29 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T102900Z-before-backup-s4`), `init` e prove a secco riuscite (backup mirato 33 percorsi, 275 MB; immagine su `…-A.img`); corretto: una prova a secco non vale più come backup (`last_ok`); 13:04 primo backup mirato (275 MB, 106 s); prima immagine con timer temporaneo `domopi-backup-image-first` il 25/10 alle 01:30: **fallita** (rsync fermato dal kernel per memoria a 02:17, ~900 MB su 1,9 GB di RAM e 100 MB di swap; nessun `.ok`), correzioni del 25/10 sotto; timer automatici dopo due immagini riuscite |
+| B3 | `.15`: come B2 | **in corso**: 24/10 13:14 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T111442Z-before-backup-s4`), prove a secco riuscite; 13:15 primo backup mirato (17 percorsi, 40 MB, 31 s); prima immagine con timer temporaneo il 25/10 alle 06:30 (spostata dalle 04:15 per la verifica di emoncms): **fallita** in 50 s (la partizione di sistema è montata anche come `/var/log.bak` da log2ram e lo script prendeva le due righe come un solo percorso) |
+| B4 | salute impianto: avviso se il backup mirato ha più di 26 ore, l'immagine più di 8 giorni o l'ultimo giro è fallito; sul `.15` anche il backup di emoncms (`status.json` sul NAS: ultimo giro oltre 26 ore, errori, cartella non montata); dopo B5 lo stato SMART degli SSD; manuale aggiornato | da fare |
+| B5 | passaggio a SSD dall'immagine (§6), prima il `.20` (scelta dell'utente del 24/10), poi il `.15`: è anche la prova di ripristino | `.20` da mercoledì 28/10 (primo adattatore), `.15` dopo venerdì 30/10 |
 | B6 | dopo due settimane senza problemi: togliere il cron settimanale del `.20` e quello mensile del `.15` (coperti dai nuovi backup) | da fare |
+
+### Correzioni dopo le prime immagini (25/10/2026)
+
+- **Punti di montaggio:** di ogni partizione si usa solo il montaggio della sua radice (`findmnt` `FSROOT` = `/`);
+  le cartelle della partizione nascoste da un altro montaggio ma visibili altrove si copiano al loro posto
+  nell'immagine. Su emonSD la `/var/log` vera della SD (sotto il tmpfs di log2ram, vista in `/var/log.bak`)
+  finisce in `/var/log` dell'immagine, così Mosquitto, Apache ed emoncms ritrovano le loro cartelle di log.
+- **Esclusioni separate:** `SNAPSHOT_EXCLUDES` (backup mirato: moduli di Node-RED, database delle query di
+  Pi-hole) e `IMAGE_EXCLUDES` (immagine: solo il database di Pi-hole, che si rigenera). Prima l'immagine escludeva
+  anche `node_modules` di Node-RED: un ripristino avrebbe avuto Node-RED senza moduli.
+- **Memoria:** la partizione di sistema si copia una cartella principale alla volta (`/usr`, `/home`, `/var`, …;
+  elenco più corto e avanzamento nel registro); ogni rsync ha un limite di memoria (`prlimit --as`,
+  `RSYNC_MAX_VM_MB=600`) e si ferma con errore invece di soffocare il Raspberry; `OOMScoreAdjust=500` nelle unità.
+  Il controllo della memoria per servizio (`MemoryMax=`) non funziona: nei kernel di `.15` e `.20` il cgroup della
+  memoria è disattivato (si attiverebbe con `cgroup_enable=memory` in `cmdline.txt` e un riavvio).
+- Test senza root: `tests/test_paths.sh` (montaggi ed esclusioni) oltre a `tests/test_rotation.sh`.
+- Lezione: una prova a secco di rsync sull'intera SD del `.20` per misurare la memoria ha rallentato SSH per circa
+  15 minuti (nessun servizio fermo). Prove pesanti sui Raspberry di casa solo con un limite di memoria.
 
 ## 6. Passaggio a SSD
 
@@ -159,15 +177,29 @@ Priorità: il `.15` per rischio (SD di 5 anni), il `.20` per prestazioni (10 vol
 
 ### Hardware (scelto con l'utente il 24/10)
 
-- **SSD SATA 2,5"** da 240–500 GB, uno per host. Preferiti con DRAM e TLC: Samsung 870 EVO, Kingston
-  KC600 (Crucial MX500 se disponibile in 250/500 GB); vanno bene anche Crucial BX500 o Lexar NQ100
-  (senza DRAM, ~80 TB di durata: decenni al ritmo del `.20`).
-- **Adattatore StarTech USB312SAT3CB, variante «USB A 5 Gbps»** (chip ASMedia ASM1153E, UASP, nessuna
-  sospensione automatica), uno per host; serve anche per scrivere l'immagine dal PC. Da evitare gli
+- **SSD SATA 2,5": Lexar NQ100 256 GB e Lexar NS100 256 GB**, uno per host (ordinati dall'utente il 24/10,
+  arrivo 25/10 e 28/10). Senza DRAM,
+  durata dichiarata di alcune decine di TB scritti: decenni al ritmo del `.20` (~2,3 GB/giorno). Scartato il
+  Samsung 870 EVO (DRAM, TLC, 150 TB, 5 anni) perché costava il doppio (110 € contro 53 €) senza vantaggi
+  utili per questo carico; la protezione vera sono le immagini settimanali. Alternative equivalenti: SanDisk
+  SSD Plus, Kingston KC600, Crucial BX500/MX500. Da evitare i vecchi dischi meccanici da 2,5" (lenti nelle
+  piccole scritture sparse, ~1 A all'avvio dalla USB del Pi, età): al più per provare un ripristino dal PC.
+- **Adattatore StarTech USB3S2SAT3CB** (USB 3.0 5 Gbps, chip ASMedia ASM1153E secondo StarTech, UASP; da
+  confermare con `lsusb` all'arrivo), uno per host, ordinati il 24/10 (arrivo 28/10 e 30/10); serve anche per scrivere l'immagine dal PC. Da evitare gli
   adattatori mSATA e quelli USB‑C (sul Pi 4 la USB‑C è solo alimentazione); chip JMicron funzionano ma
   possono richiedere `usb-storage.quirks`.
 - Collegamento a una **porta USB 3 blu**, cavo corto; un SSD SATA da 2,5" (~0,5 A) non richiede un
   alimentatore separato con l'alimentatore dedicato del Pi. Un **UPS** resta consigliato.
+
+### Controlli all'arrivo degli SSD (prima di B5)
+
+- Collegare ogni SSD con il suo adattatore a una porta USB 3 del `.20` (o al PC): `smartctl -i -a` per
+  modello, **firmware** e stato SMART (annotarli qui); `lsusb -t` per il driver `uas`.
+- **TRIM attraverso l'adattatore:** `lsblk --discard` (DISC-GRAN/DISC-MAX diversi da 0). Con l'ASM1153E di
+  solito serve una regola udev che imposti `provisioning_mode=unmap`, poi `fstrim -v` di prova; dopo B5
+  attivare `fstrim.timer`.
+- Il controllo SMART degli SSD (usura, settori riallocati, errori) entra negli avvisi della salute impianto
+  (B4).
 
 ### Prerequisiti verificati il 24/10
 

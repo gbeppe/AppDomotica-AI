@@ -27,7 +27,11 @@ Sicurezze:
 - esclusi i file enormi rigenerati ogni giorno e inutili per il ripristino (journal di systemd,
   cronologia delle query di Pi-hole sul `.20`, `node_modules` di Node-RED nel backup mirato), le cache,
   `/proc`, `/sys`, `/dev`, `/run`, `/tmp`, i montaggi in `/mnt` e `/media`, lo swap.
-- dopo il passaggio a SSD: `DEVICE=/dev/sda` nella configurazione (predefinito `/dev/mmcblk0`).
+- dopo il passaggio a SSD: `DEVICE=/dev/sda` nella configurazione (predefinito `/dev/mmcblk0`);
+- esclusioni separate: `SNAPSHOT_EXCLUDES` solo per il backup mirato, `IMAGE_EXCLUDES` solo per l'immagine
+  (che deve restare completa: i moduli di Node-RED ci sono);
+- memoria: la partizione di sistema si copia una cartella principale alla volta e ogni rsync ha un limite
+  (`RSYNC_MAX_VM_MB`, predefinito 600); i montaggi doppi (log2ram di emonSD) sono gestiti.
 
 Esito: `/var/lib/domopi-backup/status-{snapshot,image}.json` (schema `domopi.backup_status.v1`: `ok`,
 `last_ok`, durata, dettagli), copiato anche in `<host>/` sul QNAP; lo leggerà il controllo della
@@ -41,6 +45,7 @@ stato di Tailscale): la cartella sul QNAP non va aperta ad altri host né condiv
 
 ```sh
 bash backend/backup/tests/test_rotation.sh        # rotazione, sul PC, senza root
+bash backend/backup/tests/test_paths.sh           # montaggi ed esclusioni, sul PC, senza root
 bash -n backend/backup/rasp_backup.sh             # sintassi
 ```
 

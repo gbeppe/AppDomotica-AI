@@ -341,9 +341,11 @@ Lo studio è **rimandato** a dopo il progetto in corso (decisione dell'utente de
 scrittura riuscita. Progetto [`AI_MODE/BACKUP_RASPBERRY.md`](AI_MODE/BACKUP_RASPBERRY.md) e script
 `backend/backup/`: **immagine avviabile la domenica = backup principale** (A/B, verificata, più 2
 mensili), backup mirato delle cartelle importanti ogni notte con dump MariaDB (14 giorni + 8 settimane).
-Da fare: installazione su `.20` e `.15` con conferma (B2–B3), avviso nella salute impianto (B4),
+Installato con timer spenti il 24/10; **prime immagini del 25/10 fallite** (`.20` memoria esaurita, `.15`
+doppio montaggio di log2ram) e correzioni dello script lo stesso giorno (§3 del documento); timer automatici dopo
+due immagini riuscite. Da fare: avviso nella salute impianto (B4),
 passaggio a **SSD** dall'immagine = prova di ripristino (B5; l'utente compra SSD SATA 2,5" e adattatori
-StarTech USB312SAT3CB «USB A 5 Gbps»; sul `.15` va cambiato l'`fstab` dell'SSD con i PARTUUID). Trovati
+StarTech USB3S2SAT3CB, ordinati il 24/10; sul `.15` va cambiato l'`fstab` dell'SSD con i PARTUUID). Trovati
 anche i backup esistenti (§1 del documento): sul `.15` quello mensile copia flussi Node-RED vecchi di giugno.
 
 ### Da indagare (16/10/2026)
