@@ -189,6 +189,13 @@ backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall
   della batteria, avvisi di rete, stato dell'aggiornamento → 21 input `pw_*` (feed 455–475, nodo `TeslaPowerwall`).
   Prossimo: avviso nella salute impianto su cambio di modalità o riserva e batteria che non carica con solare in rete.
 
+### Alexa sul `.20` (25/10/2026)
+- **ALEXA-HUE.1** ([`../backend/nodered/alexa_hue/`](../backend/nodered/alexa_hue/README.md)): Apache sulla porta 80
+  passa all'hub Hue emulato di Node-RED (8980) solo `/api` e `/description.xml` (gli Echo recenti usano solo la
+  porta 80; il vecchio reindirizzamento iptables era sparito il 10/10). Alexa tiene 21 dispositivi (luci, scene,
+  caminetto, ventilazione, luci piscina, skimmer); 11 disattivati; «Alexa Speak» disattivata (porta 3456 chiusa).
+  Provato dall'utente: le luci rispondono. I nodi `amazon-echo-device` non vanno cancellati e ricreati.
+
 ### Firmware delle schede ESP
 Sketch versionati in [`../firmware/`](../firmware/README.md) (credenziali solo in `secrets.h`
 locale, controllo `python3 firmware/check_firmware.py`). Caminetto: `palazzetti_v2` caricato e

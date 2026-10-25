@@ -1,0 +1,181 @@
+[
+  {
+    "id": "76a23d01.16f5c4",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "pompa piscina",
+    "topic": "",
+    "x": 420,
+    "y": 1700,
+    "wires": [
+      [
+        "4e52307b.f13c18"
+      ]
+    ]
+  },
+  {
+    "id": "7aad86f7.e4cb48",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "condizionatore",
+    "topic": "",
+    "x": 420,
+    "y": 1840,
+    "wires": [
+      [
+        "4e3186c6.76a36"
+      ]
+    ]
+  },
+  {
+    "id": "11e80807.b024b8",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "temperatura condizionatore",
+    "topic": "",
+    "x": 460,
+    "y": 1880,
+    "wires": [
+      [
+        "7843b80f.ab10e"
+      ]
+    ]
+  },
+  {
+    "id": "1c0918b6.74bd57",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "pompa calore",
+    "topic": "",
+    "x": 420,
+    "y": 1980,
+    "wires": [
+      [
+        "3550d974.56579e"
+      ]
+    ]
+  },
+  {
+    "id": "edcefbb.3ae8088",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "temperatura pompa calore",
+    "topic": "",
+    "x": 460,
+    "y": 2020,
+    "wires": [
+      [
+        "349b11dc.b3e8e6"
+      ]
+    ]
+  },
+  {
+    "id": "a06626c997c4eba7",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "acqua calda",
+    "topic": "zara/domotics/attivaACS",
+    "x": 410,
+    "y": 100,
+    "wires": [
+      [
+        "c2c4c5f318910c45"
+      ]
+    ]
+  },
+  {
+    "id": "7a4dad77.cbb034",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "telecamera uno",
+    "topic": "",
+    "x": 420,
+    "y": 140,
+    "wires": [
+      [
+        "b5c9e8f8.eeb9"
+      ]
+    ]
+  },
+  {
+    "id": "efa740f6.689958",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "telecamera due",
+    "topic": "",
+    "x": 420,
+    "y": 180,
+    "wires": [
+      [
+        "caf92a63.30b42"
+      ]
+    ]
+  },
+  {
+    "id": "a8f18120.6b8528",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "telecamera tre",
+    "topic": "",
+    "x": 420,
+    "y": 220,
+    "wires": [
+      [
+        "3c998e31.622f62"
+      ]
+    ]
+  },
+  {
+    "id": "8fa5c4aa.4d46e",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "telecamera quattro",
+    "topic": "",
+    "x": 430,
+    "y": 260,
+    "wires": [
+      [
+        "6dc89f2d.9ff4b"
+      ]
+    ]
+  },
+  {
+    "id": "14a91636.9a3722",
+    "type": "amazon-echo-device",
+    "z": "1f6dc345.d2b8c5",
+    "name": "telecamera cinque",
+    "topic": "",
+    "x": 430,
+    "y": 300,
+    "wires": [
+      [
+        "78f52c35.09fe64"
+      ]
+    ]
+  },
+  {
+    "id": "e141894f92e50703",
+    "type": "tab",
+    "label": "Alexa Speak",
+    "disabled": false,
+    "info": "",
+    "env": []
+  },
+  {
+    "id": "2870eea5a7aae9d9",
+    "type": "alexa-remote-account",
+    "name": "zara",
+    "authMethod": "proxy",
+    "proxyOwnIp": "192.168.1.20",
+    "proxyPort": "3456",
+    "cookieFile": "/home/pi/alexa.json",
+    "refreshInterval": "3",
+    "alexaServiceHost": "alexa.amazon.it",
+    "pushDispatchHost": "",
+    "amazonPage": "amazon.it",
+    "acceptLanguage": "it_IT",
+    "onKeywordInLanguage": "on",
+    "userAgent": "",
+    "autoInit": "on"
+  }
+]
