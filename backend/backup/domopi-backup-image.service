@@ -10,4 +10,7 @@ Nice=19
 IOSchedulingClass=idle
 # first to go if memory runs out (the memory cgroup is off in these kernels: no MemoryMax=)
 OOMScoreAdjust=500
+# stop: SIGTERM to the script only, which stops rsync and cleans up (mounts, loop devices)
+KillMode=mixed
+TimeoutStopSec=120
 TimeoutStartSec=6h

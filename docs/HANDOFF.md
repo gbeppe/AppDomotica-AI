@@ -350,7 +350,9 @@ scrittura riuscita. Progetto [`AI_MODE/BACKUP_RASPBERRY.md`](AI_MODE/BACKUP_RASP
 mensili), backup mirato delle cartelle importanti ogni notte con dump MariaDB (14 giorni + 8 settimane).
 Installato con timer spenti il 24/10; **prime immagini del 25/10 fallite** (`.20` memoria esaurita, `.15`
 doppio montaggio di log2ram) e correzioni dello script lo stesso giorno (§3 del documento); timer automatici dopo
-due immagini riuscite. Da fare: avviso nella salute impianto (B4),
+due immagini riuscite. Aggiornamento 26/10: backup mirato ogni notte attivo su entrambi, immagine del `.15` attiva
+(sabato), immagine del `.20` **sospesa** dopo due prove che lo hanno rallentato fino a non rispondere (B5 del `.20`
+dal PC a Raspberry spento); B4 (avvisi dei backup nella salute impianto) attivo. Da fare: avviso nella salute impianto (B4),
 passaggio a **SSD** dall'immagine = prova di ripristino (B5; l'utente compra SSD SATA 2,5" e adattatori
 StarTech USB3S2SAT3CB, ordinati il 24/10; sul `.15` va cambiato l'`fstab` dell'SSD con i PARTUUID). Trovati
 anche i backup esistenti (§1 del documento): sul `.15` quello mensile copia flussi Node-RED vecchi di giugno.

@@ -31,6 +31,7 @@ IMAGE_SKIP_DATA=       # mount points of data partitions saved elsewhere: the im
 IMAGE_STAGING=         # local folder where the image is built, then copied to the QNAP as one file (.20)
 DEVICE=/dev/mmcblk0
 RSYNC_MAX_VM_MB=600
+IMAGE_SPLIT_FILES=10000   # largest folder copied by one rsync; bigger ones are split into their subfolders
 
 EXCLUDES=(
     /proc/* /sys/* /dev/* /run/* /tmp/* /var/tmp/* /mnt/* /media/* /lost+found
@@ -54,21 +55,45 @@ skipped_data() { case " $IMAGE_SKIP_DATA " in *" $1 "*) return 0 ;; esac; return
 disk_id() { sfdisk -d "$1" | sed -n 's/^label-id: *0x//p'; }
 bind_mounts() { findmnt -rn -o TARGET,FSROOT "$1" | binds_of; }
 
-# Exclude patterns written for / (like /home/*/.cache/*) rewritten for a copy of the top-level folder
-# $1 alone: /home/*/.cache/* -> /*/.cache/* for "home"; patterns of other folders are dropped and
-# unanchored ones kept. A pattern naming a top-level entry itself (/lost+found) is left to the caller.
-excludes_for_dir() {   # folder, patterns...
-    local d=$1 p first rest
+# Exclude patterns written for / (like /home/*/.cache/*) rewritten for a copy of the folder /$1 alone
+# ($1 relative, "" for the root, "home/pi" deeper): /home/*/.cache/* -> /*/.cache/* for "home" and
+# /.cache/* for "home/pi"; patterns of other folders are dropped and unanchored ones kept. A pattern
+# naming the folder itself or one of its parents is left to the caller (path_excluded).
+excludes_for_path() {   # relative folder, patterns...
+    local rel=$1 p i ok comps=() pc=()
     shift
+    [ -z "$rel" ] || IFS=/ read -ra comps <<< "$rel"
     for p in "$@"; do
         if [ "${p#/}" = "$p" ]; then printf -- '--exclude=%s\n' "$p"; continue; fi
-        first=${p#/}
-        rest=${first#*/}
-        [ "$rest" != "$first" ] || continue
-        first=${first%%/*}
-        # shellcheck disable=SC2053
-        if [[ $d == $first ]]; then printf -- '--exclude=/%s\n' "$rest"; fi
+        IFS=/ read -ra pc <<< "${p#/}"
+        [ "${#pc[@]}" -gt "${#comps[@]}" ] || continue
+        ok=1
+        for ((i = 0; i < ${#comps[@]}; i++)); do
+            # shellcheck disable=SC2053
+            [[ ${comps[i]} == ${pc[i]} ]] || { ok=0; break; }
+        done
+        [ "$ok" = 1 ] || continue
+        printf -- '--exclude=/%s\n' "$(IFS=/; echo "${pc[*]:${#comps[@]}}")"
     done
+}
+
+# true when an anchored pattern names exactly the folder /$1 (so the whole folder is left out)
+path_excluded() {   # relative folder, patterns...
+    local rel=$1 p i ok comps=() pc=()
+    shift
+    IFS=/ read -ra comps <<< "$rel"
+    for p in "$@"; do
+        [ "${p#/}" != "$p" ] || continue
+        IFS=/ read -ra pc <<< "${p#/}"
+        [ "${#pc[@]}" -eq "${#comps[@]}" ] || continue
+        ok=1
+        for ((i = 0; i < ${#comps[@]}; i++)); do
+            # shellcheck disable=SC2053
+            [[ ${comps[i]} == ${pc[i]} ]] || { ok=0; break; }
+        done
+        [ "$ok" = 1 ] && return 0
+    done
+    return 1
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -97,9 +122,14 @@ if [ "$MODE" = rotate-test ]; then
     rotation_deletions "$@"
     exit 0
 fi
-if [ "$MODE" = exclude-test ]; then   # folder patterns…
+if [ "$MODE" = exclude-test ]; then   # relative folder, patterns…
     shift
-    excludes_for_dir "$@"
+    excludes_for_path "$@"
+    exit 0
+fi
+if [ "$MODE" = excluded-test ]; then  # relative folder, patterns…
+    shift
+    if path_excluded "$@"; then echo excluded; else echo copied; fi
     exit 0
 fi
 if [ "$MODE" = skip-test ]; then       # mount point, IMAGE_SKIP_DATA value
@@ -129,6 +159,7 @@ exec 9>"$LOCK"
 flock -w 10800 9 || { log "another backup is still running"; exit 1; }
 
 MOUNTED_BY_US=0
+LOOPS=()
 STARTED=$(date +%s)
 RESULT_ERROR=
 
@@ -156,11 +187,13 @@ cleanup() {
         write_status "$MODE" false "${RESULT_ERROR:-failed with code $rc}"
     fi
     for m in /run/domopi-backup-image/*; do mountpoint -q "$m" 2>/dev/null && safe_umount "$m"; done
-    [ -n "${LOOP:-}" ] && losetup -d "$LOOP" 2>/dev/null
+    for m in "${LOOPS[@]}"; do losetup -d "$m" 2>/dev/null; done
     [ "$MOUNTED_BY_US" = 1 ] && safe_umount "$MOUNT"
     exit "$rc"
 }
 trap cleanup EXIT
+# stopped by systemctl stop or Ctrl-C: still clean up and record the failure
+trap '[ -z "$RSYNC_PID" ] || kill "$RSYNC_PID" 2>/dev/null; wait 2>/dev/null; RESULT_ERROR="stopped by a signal"; exit 143' TERM INT HUP
 
 # With the QNAP unreachable a normal umount can fail or hang: fall back to a lazy one, which
 # detaches at once, so no stale mount stays behind until the next reboot.
@@ -202,7 +235,38 @@ exclude_args() {   # snapshot|image
 # rsync with an address-space limit: if it runs away it stops with an error instead of starving the
 # Raspberry (the first image of the .20 grew to ~900 MB and was killed by the kernel on 25/10/2026;
 # the memory cgroup is disabled in these kernels, so MemoryMax= in the unit would do nothing)
-rsync_lim() { prlimit --as=$((RSYNC_MAX_VM_MB * 1048576)) rsync "$@"; }
+# Run in the background and waited for, so that a stop signal reaches the trap at once (bash runs traps
+# only after a foreground child ends) and the cleanup unmounts and frees the loop devices.
+RSYNC_PID=
+rsync_lim() {
+    local rc=0
+    prlimit --as=$((RSYNC_MAX_VM_MB * 1048576)) rsync "$@" &
+    RSYNC_PID=$!
+    wait "$RSYNC_PID" || rc=$?
+    RSYNC_PID=
+    return "$rc"
+}
+
+# One loop device per image partition (offset and size from the image's table), never `losetup -P`: the
+# image partitions carry the SD's PARTUUIDs on purpose (restore), udev then points
+# /dev/disk/by-partuuid/<id>-01 at the loop device, and when that goes away systemd unmounts /boot,
+# which the .20 mounts by PARTUUID (26/10/2026, 13:44-13:51). Without a partition table on the loop
+# device there are no PARTUUIDs to collide.
+# Sets PART_DEV (not printed: a $(...) subshell would lose the LOOPS record and leak the device).
+part_loop() {   # image, partition number [-r]
+    local line start size
+    line=$(sfdisk -d "$1" | grep -E "^$1p?$2 :")
+    start=$(echo "$line" | sed -n 's/.*start= *\([0-9]*\).*/\1/p')
+    size=$(echo "$line" | sed -n 's/.*size= *\([0-9]*\).*/\1/p')
+    # --direct-io: writes go straight to the image file instead of being cached twice (loop device and
+    # backing file); with a slow SD or link the double cache took ~500 MB on the .20 (26/10/2026)
+    PART_DEV=$(losetup -f --show ${3:-} --direct-io=on -o $((start * 512)) --sizelimit $((size * 512)) "$1")
+    LOOPS+=("$PART_DEV")
+}
+
+part_numbers() { sfdisk -d "$1" | grep -E "^$1p?[0-9]+ :" | cut -d' ' -f1 | sed 's/.*[^0-9]//'; }
+
+free_loops() { local m; for m in "${LOOPS[@]}"; do losetup -d "$m" 2>/dev/null || true; done; LOOPS=(); }
 
 # 24 = files vanished during the copy: normal on a live system
 rsync_ok() { [ "$1" = 0 ] || [ "$1" = 24 ]; }
@@ -336,21 +400,21 @@ create_image() {   # file
     echo "$dump" | grep -vE '^(device|last-lba|first-lba):' \
         | sed "s#^\($lastdev : start= *$start, size= *\)[0-9]*#\1$size_s#" \
         | sfdisk --quiet "$file"
-    LOOP=$(losetup -f --show -P "$file")
-    local part n src type label
+    local part n src type label dev
     for part in $(echo "$dump" | grep "^$DEVICE" | cut -d' ' -f1); do
         n=$(partnum "$part")
         src=$part
         type=$(blkid -o value -s TYPE "$src")
         label=$(blkid -o value -s LABEL "$src" || true)
+        part_loop "$file" "$n"
+        dev=$PART_DEV
         case "$type" in
-            vfat) mkfs.vfat -F 32 ${label:+-n "$label"} "${LOOP}p$n" >/dev/null ;;
-            ext4|ext3|ext2) "mkfs.$type" -q -F ${label:+-L "$label"} "${LOOP}p$n" ;;
+            vfat) mkfs.vfat -F 32 ${label:+-n "$label"} "$dev" >/dev/null ;;
+            ext4|ext3|ext2) "mkfs.$type" -q -F ${label:+-L "$label"} "$dev" ;;
             *) RESULT_ERROR="unsupported filesystem $type on $src"; exit 1 ;;
         esac
     done
-    losetup -d "$LOOP"
-    LOOP=
+    free_loops
 }
 
 # The image on the QNAP is written in place through a loop device over NFS (.15, fast link), or, with
@@ -402,7 +466,6 @@ refresh_image() {   # file: create or update it from the running system and veri
         log "partition sizes changed for $(basename "$file"): recreating"
         create_image "$file"
     fi
-    LOOP=$(losetup -f --show -P "$file")
     install -d -m 0700 /run/domopi-backup-image
     local part n src dst rc b t pats bex binds
     for part in $(sfdisk -d "$DEVICE" | grep "^$DEVICE" | cut -d' ' -f1); do
@@ -412,7 +475,8 @@ refresh_image() {   # file: create or update it from the running system and veri
         mapfile -t binds < <(bind_mounts "$part")
         dst=/run/domopi-backup-image/p$n
         install -d "$dst"
-        mount "${LOOP}p$n" "$dst"
+        part_loop "$file" "$n"
+        mount "$PART_DEV" "$dst"
         log "image: partition $n ($src)"
         rc=0
         if [ "$(blkid -o value -s TYPE "$part")" = vfat ]; then
@@ -423,7 +487,7 @@ refresh_image() {   # file: create or update it from the running system and veri
             pats=("${EXCLUDES[@]}" "${IMAGE_EXCLUDES[@]}")
             for b in "${binds[@]}"; do pats+=("${b#* }/*"); done
             [ -z "$IMAGE_STAGING" ] || pats+=("$IMAGE_STAGING/*")
-            copy_root "$dst" "${pats[@]}" || rc=$?
+            copy_tree "" "$dst" "${pats[@]}" || rc=$?
         elif skipped_data "$src"; then
             # saved by its own backup (emoncms on the .15): only the folders, with owners and modes
             log "image: $src data skipped (IMAGE_SKIP_DATA), folders only"
@@ -447,36 +511,38 @@ refresh_image() {   # file: create or update it from the running system and veri
             rsync_ok "$rc" || { RESULT_ERROR="rsync ${b#* } exit $rc"; exit 1; }
         done
         umount "$dst"
+        free_loops
     done
-    losetup -d "$LOOP"
-    LOOP=
     verify_image "$file"
 }
 
-# Root partition, one top-level folder at a time: shorter file lists keep rsync's memory low and the
-# log shows how far it got. First the top level alone (files, links, empty folders and mount points,
-# deleting what is gone), then each folder of the same filesystem with the patterns rewritten for it.
-copy_root() {   # dst, exclude patterns written for /...
-    local dst=$1 d p skip rc=0 dev ex=() dex
-    shift
-    for p in "$@"; do ex+=("--exclude=$p"); done
-    rsync_lim -dlptgoDHx --numeric-ids --delete --delete-excluded "${ex[@]}" / "$dst/" || rc=$?
+# Root partition, split by size: rsync keeps the whole file list of a run in memory (~3-4 KB per file
+# on the .20 with the long Node.js paths: /home alone, 120 000 files, took ~450 MB and the kernel stopped
+# it, 25-26/10/2026). A folder with more than IMAGE_SPLIT_FILES entries is copied as its own level (files,
+# links, empty folders and mount points, deleting what is gone) and then folder by folder, recursively;
+# smaller ones in one run. The log shows how far it got.
+copy_tree() {   # relative folder ("" = root), image root, exclude patterns written for /...
+    local rel=$1 dst=$2 src n d dev rc=0 ex=()
+    shift 2
+    src=/$rel
+    mapfile -t ex < <(excludes_for_path "$rel" "$@")
+    n=$(find "$src" -xdev 2>/dev/null | head -n $((IMAGE_SPLIT_FILES + 1)) | wc -l)
+    if [ "$n" -le "$IMAGE_SPLIT_FILES" ]; then
+        log "image: $src"
+        rsync_lim -aHx --numeric-ids --delete --delete-excluded "${ex[@]}" "$src/" "$dst/$rel/" || rc=$?
+        return "$rc"
+    fi
+    rsync_lim -dlptgoDHx --numeric-ids --delete --delete-excluded "${ex[@]}" "$src/" "$dst/$rel/" || rc=$?
     rsync_ok "$rc" || return "$rc"
-    dev=$(stat -c %d /)
-    # names without spaces at the top level of a Raspberry root
-    for d in $(ls -A /); do
-        [ -d "/$d" ] && [ ! -L "/$d" ] || continue
-        [ "$(stat -c %d "/$d")" = "$dev" ] || continue
-        skip=0
-        # shellcheck disable=SC2053
-        for p in "$@"; do if [[ /$d == $p ]]; then skip=1; fi; done
-        [ "$skip" = 0 ] || continue
-        log "image: /$d"
-        mapfile -t dex < <(excludes_for_dir "$d" "$@")
+    dev=$(stat -c %d "$src/")
+    while IFS= read -r -d '' d; do
+        [ "$(stat -c %d "$src/$d")" = "$dev" ] || continue     # other filesystems (-x)
+        path_excluded "${rel:+$rel/}$d" "$@" && continue
         rc=0
-        rsync_lim -aHx --numeric-ids --delete --delete-excluded "${dex[@]}" "/$d/" "$dst/$d/" || rc=$?
+        copy_tree "${rel:+$rel/}$d" "$dst" "$@" || rc=$?
         rsync_ok "$rc" || return "$rc"
-    done
+    done < <(find "$src/" -mindepth 1 -maxdepth 1 -type d -printf '%f\0' | sort -z)
+    return 0
 }
 
 # Read-only checks before an image is marked good: every filesystem clean, the boot partition points
@@ -485,26 +551,29 @@ verify_image() {   # file
     local file=$1 diskid part type dst=/run/domopi-backup-image/verify
     diskid=$(disk_id "$file")
     [ -n "$diskid" ] || { RESULT_ERROR="no disk identifier in $(basename "$file")"; exit 1; }
-    LOOP=$(losetup -f --show -P -r "$file")
-    for part in "$LOOP"p*; do
-        type=$(blkid -o value -s TYPE "$part")
+    local n dev p1 p2
+    for n in $(part_numbers "$file"); do
+        part_loop "$file" "$n" -r
+        dev=$PART_DEV
+        [ "$n" = 1 ] && p1=$dev
+        [ "$n" = 2 ] && p2=$dev
+        type=$(blkid -p -o value -s TYPE "$dev")
         case "$type" in
-            vfat) fsck.vfat -n "$part" >/dev/null || { RESULT_ERROR="fsck ${part##*/} failed"; exit 1; } ;;
-            ext*) e2fsck -fn "$part" >/dev/null 2>&1 || { RESULT_ERROR="e2fsck ${part##*/} failed"; exit 1; } ;;
+            vfat) fsck.vfat -n "$dev" >/dev/null || { RESULT_ERROR="fsck of partition $n failed"; exit 1; } ;;
+            ext*) e2fsck -fn "$dev" >/dev/null 2>&1 || { RESULT_ERROR="e2fsck of partition $n failed"; exit 1; } ;;
         esac
     done
     install -d "$dst"
-    mount -o ro "${LOOP}p1" "$dst"
+    mount -o ro "$p1" "$dst"
     grep -q "root=PARTUUID=$diskid-02" "$dst/cmdline.txt" \
         || { umount "$dst"; RESULT_ERROR="cmdline.txt does not point at PARTUUID $diskid-02"; exit 1; }
     ls "$dst"/kernel*.img >/dev/null 2>&1 || { umount "$dst"; RESULT_ERROR="no kernel in the boot partition"; exit 1; }
     umount "$dst"
-    mount -o ro "${LOOP}p2" "$dst"
+    mount -o ro "$p2" "$dst"
     [ -s "$dst/etc/fstab" ] && [ -e "$dst/sbin/init" ] \
         || { umount "$dst"; RESULT_ERROR="fstab or init missing in the root partition"; exit 1; }
     umount "$dst"
-    losetup -d "$LOOP"
-    LOOP=
+    free_loops
     log "image verified"
 }
 

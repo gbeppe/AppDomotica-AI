@@ -29,6 +29,23 @@ check "proc empty" "--exclude=/*
 --exclude=*.tmp" "$(bash "$SCRIPT" exclude-test proc "${pats[@]}")"
 check "usr untouched" "--exclude=*.tmp" "$(bash "$SCRIPT" exclude-test usr "${pats[@]}")"
 
+# deeper folders (recursive split of big folders, 26/10)
+check "root keeps all" "--exclude=/proc/*
+--exclude=/home/*/.cache/*
+--exclude=/var/swap
+--exclude=/var/log.bak/*
+--exclude=/lost+found
+--exclude=/etc/pihole/pihole-FTL.db
+--exclude=*.tmp" "$(bash "$SCRIPT" exclude-test "" "${pats[@]}")"
+check "home/pi" "--exclude=/.cache/*
+--exclude=*.tmp" "$(bash "$SCRIPT" exclude-test home/pi "${pats[@]}")"
+check "home/pi/.node-red" "--exclude=*.tmp" "$(bash "$SCRIPT" exclude-test home/pi/.node-red "${pats[@]}")"
+check "var/lib staging" "--exclude=/domopi-backup/staging/*" "$(bash "$SCRIPT" exclude-test var/lib '/var/lib/domopi-backup/staging/*')"
+check "lost+found left out" "excluded" "$(bash "$SCRIPT" excluded-test lost+found "${pats[@]}")"
+check "var/swap left out" "excluded" "$(bash "$SCRIPT" excluded-test var/swap "${pats[@]}")"
+check "home/pi copied" "copied" "$(bash "$SCRIPT" excluded-test home/pi "${pats[@]}")"
+check "glob folder left out" "excluded" "$(bash "$SCRIPT" excluded-test home/pi/node_modules '/home/*/node_modules')"
+
 # the image keeps the Node-RED modules, the snapshot drops them (both hosts)
 for c in 20 15; do
     conf=$(dirname "$SCRIPT")/backup-$c.conf
