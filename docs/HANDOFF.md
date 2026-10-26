@@ -196,6 +196,20 @@ backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall
   caminetto, ventilazione, luci piscina, skimmer); 11 disattivati; «Alexa Speak» disattivata (porta 3456 chiusa).
   Provato dall'utente: le luci rispondono. I nodi `amazon-echo-device` non vanno cancellati e ricreati.
 
+### Pulizia del `.20` (26/10/2026, decisioni dell'utente)
+- Cancellati: `~/.nvm.P` (copia di Node.js non usata, 905 MB), due profili Chromium con nome casuale e
+  `~/.wwebjs_cache` (prove passate di un browser/WhatsApp, non usati da nulla), contenuto di `~/.cache`.
+- `~/zigbee2mqttBACKUP` archiviata sul QNAP (`rasp-backup/192-168-1-20/archivio/zigbee2mqttBACKUP-20261026.tar.gz`,
+  integrità e numero di voci controllati) e cancellata.
+- Node-RED: tolti 17 pacchetti della palette senza nodi nei flow, tramite l'Admin API (`DELETE /nodes/<modulo>`,
+  rifiuta i moduli in uso); `node_modules` da 32 089 a 6 438 file; tutti i 75 tipi usati restano registrati. Backup
+  completo prima: `rasp-backup/192-168-1-20/archivio/node-red-20261026-before-palette-cleanup.tar.gz`. Un primo
+  tentativo con `npm uninstall` aveva tolto anche `node-red-contrib-moment` (usato): flow fermi 15:43–15:46,
+  ripristinati dal backup.
+- Totale: ~1,5 GB e ~60 000 file in meno (backup e immagini più leggeri).
+- Rete: il `.20` ora è a 1000 Mbit/s (sul TP-Link TL-SG108); verso il QNAP `.4` resta un tratto a 100 Mbit/s
+  (switch D-Link DES-1008PA in cascata), da ricablare con il tecnico.
+
 ### Firmware delle schede ESP
 Sketch versionati in [`../firmware/`](../firmware/README.md) (credenziali solo in `secrets.h`
 locale, controllo `python3 firmware/check_firmware.py`). Caminetto: `palazzetti_v2` caricato e
