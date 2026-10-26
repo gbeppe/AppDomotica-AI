@@ -30,6 +30,9 @@ Sicurezze:
 - dopo il passaggio a SSD: `DEVICE=/dev/sda` nella configurazione (predefinito `/dev/mmcblk0`);
 - esclusioni separate: `SNAPSHOT_EXCLUDES` solo per il backup mirato, `IMAGE_EXCLUDES` solo per l'immagine
   (che deve restare completa: i moduli di Node-RED ci sono);
+- `IMAGE_STAGING` (solo `.20`): l'immagine si costruisce in un file locale e poi si copia sul QNAP con un
+  solo flusso (`dd`, I/O diretto, buchi conservati) e si verifica di nuovo sul QNAP; scritta direttamente via
+  NFS era troppo lenta e rsync accumulava memoria fino all'intervento del kernel (25–26/10/2026);
 - `IMAGE_SKIP_DATA`: partizioni di dati salvate da un altro backup, di cui l'immagine tiene solo le cartelle
   (sul `.15` i dati di emoncms; ripristino in due passi, vedi il documento §4);
 - memoria: la partizione di sistema si copia una cartella principale alla volta e ogni rsync ha un limite

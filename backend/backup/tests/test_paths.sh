@@ -46,6 +46,10 @@ check "nothing skipped by default" "copy" "$(bash "$SCRIPT" skip-test /var/opt/e
 check ".15 skips emoncms data" "/var/opt/emoncms" "$(bash -c ". '$(dirname "$SCRIPT")/backup-15.conf'; echo \"\$IMAGE_SKIP_DATA\"")"
 check ".20 skips nothing" "" "$(bash -c "IMAGE_SKIP_DATA=; . '$(dirname "$SCRIPT")/backup-20.conf'; echo \"\$IMAGE_SKIP_DATA\"")"
 
+# the .20 builds its image on the SD and copies it (writes through NFS too slow there, 25-26/10); the .15 does not
+check ".20 staging" "/var/lib/domopi-backup/staging" "$(bash -c "IMAGE_STAGING=; . '$(dirname "$SCRIPT")/backup-20.conf'; echo \"\$IMAGE_STAGING\"")"
+check ".15 no staging" "" "$(bash -c "IMAGE_STAGING=; . '$(dirname "$SCRIPT")/backup-15.conf'; echo \"\$IMAGE_STAGING\"")"
+
 # disk identifier read from sfdisk -d (sfdisk --disk-id is missing on the .15)
 img=$(mktemp)
 truncate -s 8M "$img"

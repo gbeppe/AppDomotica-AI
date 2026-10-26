@@ -28,6 +28,7 @@ SNAPSHOT_SOURCES="/etc"
 SNAPSHOT_EXCLUDES=()   # added to EXCLUDES for the nightly snapshot only
 IMAGE_EXCLUDES=()      # added to EXCLUDES for the weekly image only: keep it bootable and complete
 IMAGE_SKIP_DATA=       # mount points of data partitions saved elsewhere: the image keeps only their folders
+IMAGE_STAGING=         # local folder where the image is built, then copied to the QNAP as one file (.20)
 DEVICE=/dev/mmcblk0
 RSYNC_MAX_VM_MB=600
 
@@ -286,10 +287,17 @@ image_paths() {
     else echo "$b"; fi
 }
 
-part_used() {   # partition: bytes the image has to hold (only the folders of a skipped data partition)
-    local mp
+part_used() {   # partition: bytes the image has to hold (only the folders of a skipped data partition,
+                # and never the local working image itself)
+    local mp used staged=0
     mp=$(mounted_at "$1")
-    if skipped_data "$mp"; then echo 0; else df -B1 --output=used "$mp" | tail -1; fi
+    if skipped_data "$mp"; then echo 0; return; fi
+    used=$(df -B1 --output=used "$mp" | tail -1)
+    if [ -n "$IMAGE_STAGING" ] && [ -d "$IMAGE_STAGING" ] \
+        && [ "$(stat -c %d "$IMAGE_STAGING")" = "$(stat -c %d "$mp")" ]; then
+        staged=$(du -sB1 "$IMAGE_STAGING" | cut -f1)
+    fi
+    echo $((used - staged))
 }
 
 last_part_sectors() {   # used bytes -> size of the image's last partition: used + 20 % + 1 GiB, MiB-aligned
@@ -345,18 +353,49 @@ create_image() {   # file
     LOOP=
 }
 
+# The image on the QNAP is written in place through a loop device over NFS (.15, fast link), or, with
+# IMAGE_STAGING, built in a local file and then copied as one stream (.20: through NFS the writes were so
+# slow that rsync piled up ~900 MB waiting for them and was killed by the kernel, 25-26/10/2026).
 do_image() {
     mount_share
     dump_databases
-    local file
+    local file work
     file=$(image_paths)
     if [ "$DRY" = 1 ]; then
-        log "dry run: would refresh $file"
+        log "dry run: would refresh $file${IMAGE_STAGING:+ through $IMAGE_STAGING}"
         sfdisk -d "$DEVICE"
         write_status image true "dry run, target $(basename "$file")"
         return
     fi
     rm -f "$file.ok"
+    if [ -z "$IMAGE_STAGING" ]; then
+        refresh_image "$file"
+        work=$file
+    else
+        install -d -m 0700 "$IMAGE_STAGING"
+        work=$IMAGE_STAGING/$HOST_DIR.img
+        refresh_image "$work"
+        copy_to_share "$work" "$file"
+        verify_image "$file"
+    fi
+    date -Is > "$file.ok"
+    keep_monthly "$file" "$work"
+    write_status image true "$(basename "$file") refreshed and verified"
+    log "image done: $file"
+}
+
+# Direct I/O (no dirty pages piling up for the NFS writeback) and holes kept as holes.
+copy_to_share() {   # local image, image on the share
+    log "copy $(basename "$1") -> $(basename "$2")"
+    rm -f "$2.tmp"
+    dd if="$1" of="$2.tmp" bs=4M conv=sparse oflag=direct status=none \
+        || { RESULT_ERROR="copy to the QNAP failed"; exit 1; }
+    truncate -s "$(stat -c %s "$1")" "$2.tmp"
+    mv "$2.tmp" "$2"
+}
+
+refresh_image() {   # file: create or update it from the running system and verify it
+    local file=$1
     if [ ! -e "$file" ]; then
         create_image "$file"
     elif image_needs_rebuild "$file"; then
@@ -383,6 +422,7 @@ do_image() {
             # bind mounts of the same partition are copied to their real place below
             pats=("${EXCLUDES[@]}" "${IMAGE_EXCLUDES[@]}")
             for b in "${binds[@]}"; do pats+=("${b#* }/*"); done
+            [ -z "$IMAGE_STAGING" ] || pats+=("$IMAGE_STAGING/*")
             copy_root "$dst" "${pats[@]}" || rc=$?
         elif skipped_data "$src"; then
             # saved by its own backup (emoncms on the .15): only the folders, with owners and modes
@@ -411,10 +451,6 @@ do_image() {
     losetup -d "$LOOP"
     LOOP=
     verify_image "$file"
-    date -Is > "$file.ok"
-    keep_monthly "$file"
-    write_status image true "$(basename "$file") refreshed and verified"
-    log "image done: $file"
 }
 
 # Root partition, one top-level folder at a time: shorter file lists keep rsync's memory low and the
@@ -474,13 +510,17 @@ verify_image() {   # file
 
 # Once a month the freshly verified image is also kept as <host>-M-YYYY-MM.img (last KEEP_MONTHLY):
 # protects against a fault or a wrong setting found more than two weeks later.
-keep_monthly() {   # file
+keep_monthly() {   # verified image on the share, same image to copy from (local when staged)
     [ "$KEEP_MONTHLY" -gt 0 ] || return 0
     local m=$TARGET/images/$HOST_DIR-M-$(date +%Y-%m).img old
     [ -e "$m.ok" ] && return 0
     log "monthly copy $(basename "$m")"
-    cp --sparse=always "$1" "$m.tmp"
-    mv "$m.tmp" "$m"
+    if [ "$2" = "$1" ]; then
+        cp --sparse=always "$1" "$m.tmp"
+        mv "$m.tmp" "$m"
+    else
+        copy_to_share "$2" "$m"
+    fi
     cp "$1.ok" "$m.ok"
     for old in $(ls "$TARGET/images/" | grep -E "^$HOST_DIR-M-[0-9]{4}-[0-9]{2}\.img$" | sort -r | tail -n +$((KEEP_MONTHLY + 1))); do
         log "monthly rotation: delete $old"
