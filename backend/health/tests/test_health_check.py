@@ -22,7 +22,7 @@ def context(commands=None, **over):
             if ' '.join(cmd).startswith(key):
                 return value
         return 0, ''
-    ctx = {'run': run, 'tcp_open': lambda host, port: True, 'ping': lambda host: True,
+    ctx = {'run': run, 'read_file': lambda path: '', 'tcp_open': lambda host, port: True, 'ping': lambda host: True,
            'http_alive': lambda url, insecure=False: True, 'broker_probe': lambda spec: True,
            'glob': lambda pattern: [pattern], 'mosquitto_settings': lambda paths: {},
            'disk_usage': lambda path: Usage(0, 0, 2000 * 1024 * 1024), 'mem_available_mb': lambda: 900,
@@ -105,6 +105,73 @@ class CheckTests(unittest.TestCase):
         state['_emontx_sign']['mismatches'] = 5
         h.check_emontx_sign(cfg, context(small, state=state))
         self.assertEqual(state['_emontx_sign']['mismatches'], 5)  # low power: no evidence either way
+
+
+class BackupTests(unittest.TestCase):
+    NOW = 1_793_000_000.0   # 2026-10-26T08:53:20Z
+    CFG = {'backups': {'rasp': [{'mode': 'snapshot', 'max_age_h': 26}, {'mode': 'image', 'max_age_h': 192}],
+                       'emoncms': {'status_file': '/media/nas-backup/emoncms/status.json',
+                                   'mount': '/media/nas-backup', 'max_age_h': 26}}}
+
+    def status(self, ok=True, hours=2, dry=False, details='done'):
+        stamp = datetime.fromtimestamp(self.NOW - hours * 3600).astimezone().isoformat(timespec='seconds')
+        return json.dumps({'schema': 'domopi.backup_status.v1', 'ok': ok, 'last_ok': stamp,
+                           'details': details, 'dry_run': dry})
+
+    def run_check(self, files, emoncms=(0, None), mounted=0):
+        def read_file(path):
+            if path not in files:
+                raise OSError(path)
+            return files[path]
+        em_code, em_text = emoncms
+        if em_text is None:
+            em_text = json.dumps({'last_run': '2026-10-26T03:47:56Z', 'mode': 'verify', 'errors': False})
+        ctx = context({'timeout 20 cat': (em_code, em_text), 'findmnt': (mounted, '')},
+                      read_file=read_file, now=lambda: self.NOW)
+        return {r['id']: r for r in h.check_backups(self.CFG, ctx)}
+
+    def files(self, snap, img):
+        return {'/var/lib/domopi-backup/status-snapshot.json': snap, '/var/lib/domopi-backup/status-image.json': img}
+
+    def test_recent_backups_are_ok(self):
+        out = self.run_check(self.files(self.status(hours=5), self.status(hours=24 * 6)))
+        self.assertTrue(all(r['ok'] for r in out.values()), out)
+        self.assertIn('5 ore fa', out['backup:snapshot']['detail'])
+        self.assertIn('6 giorni fa', out['backup:image']['detail'])
+        self.assertIn('verify', out['backup:emoncms']['detail'])
+
+    def test_old_or_failed_or_missing(self):
+        out = self.run_check(self.files(self.status(hours=27), self.status(hours=24 * 9)))
+        self.assertFalse(out['backup:snapshot']['ok'])
+        self.assertFalse(out['backup:image']['ok'])
+        failed = self.status(ok=False, hours=3, details='rsync partition 2 exit 137')
+        out = self.run_check(self.files(failed, self.status()))
+        self.assertFalse(out['backup:snapshot']['ok'])
+        self.assertIn('fallito (rsync partition 2 exit 137)', out['backup:snapshot']['detail'])
+        out = self.run_check({})
+        self.assertFalse(out['backup:image']['ok'])
+        self.assertIn('nessun esito', out['backup:image']['detail'])
+
+    def test_dry_run_is_not_a_failure_but_does_not_refresh(self):
+        out = self.run_check(self.files(self.status(ok=True, hours=30, dry=True), self.status()))
+        self.assertFalse(out['backup:snapshot']['ok'])
+        self.assertNotIn('fallito', out['backup:snapshot']['detail'])
+
+    def test_emoncms_old_errors_or_unmounted(self):
+        old = json.dumps({'last_run': '2026-10-24T03:00:00Z', 'mode': 'sync', 'errors': False})
+        self.assertFalse(self.run_check(self.files(self.status(), self.status()), (0, old))['backup:emoncms']['ok'])
+        bad = json.dumps({'last_run': '2026-10-26T03:47:56Z', 'mode': 'sync', 'errors': True})
+        res = self.run_check(self.files(self.status(), self.status()), (0, bad))['backup:emoncms']
+        self.assertFalse(res['ok'])
+        self.assertIn('con errori', res['detail'])
+        res = self.run_check(self.files(self.status(), self.status()), (124, ''), mounted=1)['backup:emoncms']
+        self.assertFalse(res['ok'])
+        self.assertIn('non montata', res['detail'])
+
+    def test_iso_epoch(self):
+        self.assertEqual(h.iso_epoch('2026-10-25T03:47:56Z'), h.iso_epoch('2026-10-25T04:47:56+01:00'))
+        self.assertIsNone(h.iso_epoch('ieri'))
+        self.assertIsNone(h.iso_epoch(None))
 
 
 class AlertTests(unittest.TestCase):

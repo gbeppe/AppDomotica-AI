@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DomoPi health check (phase S1): one run, started every 2 minutes by a systemd timer.
+"""DomoPi health check (phase S1, backups since S4/B4): one run, started every 2 minutes by a systemd timer.
 
 Runs on both Raspberry Pis, outside Node-RED and House AI, which are among the things it checks.
 Reads only; never touches OpenSprinkler; never prints or publishes secrets (credentials come from
@@ -11,6 +11,7 @@ files named in the configuration). Each run:
      beyond the house addresses).
 Python 3.7 compatible (the .15 runs Raspbian 10), standard library plus paho when configured.
 """
+import calendar
 import glob
 import json
 import os
@@ -272,13 +273,79 @@ def check_emontx_sign(cfg, ctx):
                    title='emonTx al contrario')]
 
 
+def iso_epoch(text):
+    """Seconds since the epoch of '2026-10-25T14:18:12+01:00' or '2026-10-25T03:47:56Z'; None if unreadable."""
+    try:
+        if text.endswith('Z'):
+            return calendar.timegm(time.strptime(text, '%Y-%m-%dT%H:%M:%SZ'))
+        return datetime.fromisoformat(text).timestamp()
+    except (AttributeError, TypeError, ValueError):
+        return None
+
+
+def age_text(seconds):
+    return '%.0f ore' % (seconds / 3600) if seconds < 3 * 86400 else '%.0f giorni' % (seconds / 86400)
+
+
+def check_backups(cfg, ctx):
+    """Phase S4 (B4): the backups on the QNAP are recent and the last run did not fail."""
+    spec = cfg['backups']
+    now = ctx['now']()
+    out = []
+    for item in spec.get('rasp', []):
+        title = {'snapshot': 'Backup mirato', 'image': 'Immagine di backup'}[item['mode']]
+        path = os.path.join(spec.get('status_dir', '/var/lib/domopi-backup'), 'status-%s.json' % item['mode'])
+        try:
+            status = json.loads(ctx['read_file'](path))
+        except (OSError, ValueError):
+            status = None
+        last_ok = iso_epoch(status.get('last_ok') or '') if status else None
+        age = None if last_ok is None else now - last_ok
+        failed = status is not None and not status.get('ok') and not status.get('dry_run')
+        ok = age is not None and age <= item['max_age_h'] * 3600 and not failed
+        if status is None:
+            detail = 'nessun esito in %s' % path
+        elif failed:
+            detail = 'ultimo giro fallito (%s); ultimo riuscito %s' % (
+                status.get('details', '?'), 'mai' if age is None else age_text(age) + ' fa')
+        else:
+            detail = 'ultimo riuscito %s' % ('mai' if age is None else age_text(age) + ' fa')
+        out.append(result('backup:' + item['mode'], ok, detail,
+                          'Guarda «journalctl -u domopi-backup-%s -n 30» e lo stato del QNAP 192.168.1.4; '
+                          'il giro si rilancia con «sudo systemctl start domopi-backup-%s».'
+                          % (item['mode'], item['mode']), title=title))
+    em = spec.get('emoncms')
+    if em:
+        # reading the file mounts the share (systemd automount); a timeout keeps a dead QNAP from blocking
+        code, text = ctx['run'](['timeout', '20', 'cat', em['status_file']], timeout=25)
+        mounted = ctx['run'](['findmnt', '-n', '-t', 'nfs,nfs4', em['mount']])[0] == 0
+        try:
+            status = json.loads(text) if code == 0 else None
+        except ValueError:
+            status = None
+        last = iso_epoch(status.get('last_run') or '') if status else None
+        age = None if last is None else now - last
+        errors = bool(status.get('errors')) if status else False
+        ok = mounted and age is not None and age <= em['max_age_h'] * 3600 and not errors
+        if not mounted or status is None:
+            detail = 'cartella %s non montata o esito illeggibile' % em['mount']
+        else:
+            detail = 'ultimo giro (%s) %s fa%s' % (status.get('mode', '?'), age_text(age) if age is not None else '?',
+                                                  ', con errori' if errors else '')
+        out.append(result('backup:emoncms', ok, detail,
+                          'Il backup di emoncms (emoncms-drive-backup) non è aggiornato: controlla il QNAP, '
+                          '«findmnt %s» e /var/log/emoncms/drivebackup.log.' % em['mount'],
+                          title='Backup emoncms'))
+    return out
+
+
 CHECKS = {
     'power': (check_power, 0), 'services': (check_services, 0), 'broker': (check_broker, 0),
     'http': (check_http, 0), 'tailscale': (check_tailscale, 0), 'reachability': (check_reachability, 0),
     'energy_data': (check_energy_data, 0), 'emontx_sign': (check_emontx_sign, 0),
     'mosquitto_config': (check_mosquitto_config, 900), 'internet': (check_internet, 900),
     'resources': (check_resources, 900), 'kernel_errors': (check_kernel_errors, 900),
-    'clock': (check_clock, 900),
+    'clock': (check_clock, 900), 'backups': (check_backups, 900),
 }
 
 
@@ -413,7 +480,7 @@ def main(config_path):
     except (OSError, ValueError):
         state = {}
     now = time.time()
-    ctx = {'run': run, 'tcp_open': tcp_open, 'ping': ping, 'http_alive': http_alive,
+    ctx = {'run': run, 'read_file': read_secret, 'tcp_open': tcp_open, 'ping': ping, 'http_alive': http_alive,
            'broker_probe': broker_probe, 'glob': glob.glob, 'mosquitto_settings': mosquitto_settings,
            'disk_usage': shutil.disk_usage, 'mem_available_mb': mem_available_mb,
            'now': lambda: now, 'state': state}

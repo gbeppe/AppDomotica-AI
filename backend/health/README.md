@@ -27,6 +27,8 @@ su entrambi i Raspberry, fuori da Node-RED e House AI. Ogni giro:
 | dati energia: ultimo valore dei feed Powerwall (305) ed emonTx (24) < 10 min | — | ✓ |
 | emonTx al contrario: pinza CT1 e rete Powerwall di segno opposto per 10 letture | — | ✓ |
 | disco, memoria, temperatura, errori della scheda, orologio | ✓ | ✓ |
+| backup sul QNAP (S4): mirato < 26 h, immagine < 8 giorni, ultimo giro non fallito (`/var/lib/domopi-backup/status-*.json`) | ✓ | ✓ |
+| backup di emoncms: `status.json` sul QNAP < 26 h, senza errori, `/media/nas-backup` montata | — | ✓ |
 
 Credenziali (copiate dal deploy, mai stampate): `/etc/domopi-health/ntfy.token` (token di
 `domopi-nodered`), sul `.20` `/etc/domopi-health/mqtt/mosquitto_{sub,pub}` (opzioni `-u/-P`, letti con
@@ -40,7 +42,7 @@ Nessuna riparazione automatica in S1 (prima settimana di osservazione); S2 aggiu
 ## Test e prova a secco
 
 ```sh
-python3 -B -m unittest discover -s tests          # 14 casi, comandi e rete simulati
+python3 -B -m unittest discover -s tests          # 19 casi, comandi e rete simulati
 sudo python3 -B health_check.py prova.json         # config senza "ntfy"/"publish", stato in /tmp
 ```
 

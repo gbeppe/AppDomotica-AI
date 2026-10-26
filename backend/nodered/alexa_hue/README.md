@@ -11,6 +11,8 @@ porta 80**, qualunque porta annunci l'hub; il vecchio reindirizzamento iptables 
    `proxy_http`). Nessuna regola del firewall: sopravvive ai riavvii e alle modifiche di iptables/Tailscale.
    Pi-hole 6 non usa quegli indirizzi su Apache. Backup: `/home/pi/AI_backups/alexa/20261025T134416Z-before-hue-proxy/`.
    Ritorno indietro: `sudo a2disconf domopi-alexa-hue && sudo systemctl reload apache2`.
+   Dal 26/10 `timeout=15 retry=0` sui due `ProxyPass`: durante il backup notturno l'hub rispondeva lento e ogni
+   richiesta di Alexa teneva occupato un processo di Apache fino a 300 s (139 processi, 872 MB).
 2. **Node-RED** (questa patch, 13 nodi): disattivati 11 dispositivi non usati a voce (pompa piscina,
    condizionatore e temperatura, pompa di calore e temperatura, acqua calda, telecamere 1–5); disattivati la
    scheda «Alexa Speak» e l'account `alexa-remote-account` (annunci già scollegati dal 19/10; chiusa la porta
