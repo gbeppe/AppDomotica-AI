@@ -31,6 +31,7 @@ IMAGE_SKIP_DATA=       # mount points of data partitions saved elsewhere: the im
 IMAGE_STAGING=         # local folder where the image is built, then copied to the QNAP as one file (.20)
 DEVICE=/dev/mmcblk0
 RSYNC_MAX_VM_MB=600
+LOOP_DIRECT_IO=off
 IMAGE_SPLIT_FILES=10000   # largest folder copied by one rsync; bigger ones are split into their subfolders
 
 EXCLUDES=(
@@ -258,9 +259,10 @@ part_loop() {   # image, partition number [-r]
     line=$(sfdisk -d "$1" | grep -E "^$1p?$2 :")
     start=$(echo "$line" | sed -n 's/.*start= *\([0-9]*\).*/\1/p')
     size=$(echo "$line" | sed -n 's/.*size= *\([0-9]*\).*/\1/p')
-    # --direct-io: writes go straight to the image file instead of being cached twice (loop device and
-    # backing file); with a slow SD or link the double cache took ~500 MB on the .20 (26/10/2026)
-    PART_DEV=$(losetup -f --show ${3:-} --direct-io=on -o $((start * 512)) --sizelimit $((size * 512)) "$1")
+    # LOOP_DIRECT_IO=on: writes go straight to the image file instead of being cached twice (loop device
+    # and backing file); meant for a local staging file. Off by default: on the .15, with the image on
+    # NFS, the filesystems written that way could not be mounted (26/10/2026).
+    PART_DEV=$(losetup -f --show ${3:-} --direct-io="$LOOP_DIRECT_IO" -o $((start * 512)) --sizelimit $((size * 512)) "$1")
     LOOPS+=("$PART_DEV")
 }
 

@@ -181,6 +181,10 @@ SSD (§6) la prova di ripristino e la migrazione sono la stessa operazione.
   Correzione: un disco virtuale per partizione con offset e dimensione, senza tabella delle partizioni (niente
   PARTUUID doppi). Nello stesso giorno ripristinata la funzione di rotazione, cancellata per errore in una modifica
   (sarebbe fallito il backup mirato notturno del `.20`; i test l'hanno trovato prima).
+- Prova del `.15` con lo script corretto (26/10 15:00–15:09): riuscita, `192-168-1-15-B.img` verificata, rsync
+  sotto 40 MB. La scrittura diretta del disco virtuale (`--direct-io`) è ora facoltativa (`LOOP_DIRECT_IO`, spenta
+  di default, accesa solo nella configurazione del `.20`): con l'immagine su NFS i file system scritti così non si
+  montavano (prima prova del `.15` delle 14:59, immagine B scartata, nessun `.ok`).
 - Lezione: una prova a secco di rsync sull'intera SD del `.20` per misurare la memoria ha rallentato SSH per circa
   15 minuti (nessun servizio fermo). Prove pesanti sui Raspberry di casa solo con un limite di memoria.
 
