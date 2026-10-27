@@ -63,6 +63,7 @@ Priorità: **U** = urgente, arriva anche di notte con priorità alta; **N** = no
 | **Backup mirato** | entrambi | N | l'ultimo backup mirato riuscito sul QNAP ha più di 26 ore, o l'ultimo giro è fallito (il motivo è nell'avviso) | guarda `journalctl -u domopi-backup-snapshot -n 30` e che il QNAP `192.168.1.4` sia acceso; si rilancia con `sudo systemctl start domopi-backup-snapshot` |
 | **Immagine di backup** | entrambi | N | l'ultima immagine verificata ha più di 8 giorni, o l'ultimo giro è fallito | `journalctl -u domopi-backup-image -n 30`; si rilancia con `sudo systemctl start domopi-backup-image` (sul `.15` circa 10 minuti, sul `.20` di più). Senza immagine recente un guasto della scheda costa giorni di lavoro |
 | **Backup emoncms** | `.15` | N | il backup di emoncms (feed e database) non gira da più di 26 ore, ha avuto errori o la cartella `/media/nas-backup` non si monta | controlla il QNAP, `findmnt /media/nas-backup` e `/var/log/emoncms/drivebackup.log`. Sul `.15` l'immagine non contiene i dati di emoncms: senza questo backup lo storico non è protetto |
+| **Powerwall non carica** | `.15` | N | la batteria si scarica oltre 200 W mentre la casa immette in rete più di 500 W, per 20 minuti di fila (carica sotto il 95 %): in autoconsumo non succede mai. È il caso del 23/10, quando il solare è andato tutto in rete e la batteria ha alimentato la casa fino alla riserva. Una pausa della carica (per esempio all'80 %) non lo fa scattare. Si chiude dopo 30 minuti normali | controlla l'app Tesla (modalità, riserva, avvisi); il 24/10 si è sbloccata spostando la riserva (0 → 10 → 0 %). Nell'avviso c'è anche la potenza che il gateway chiede alla batteria |
 | **Controllo …** | entrambi | N | il controllo stesso ha avuto un errore | guarda `journalctl -u domopi-health -n 20` o chiedi all'agente |
 
 ## 4. Vedere lo stato quando vuoi
@@ -123,6 +124,7 @@ La configurazione di ogni Raspberry è in `/etc/domopi-health/config.json` (nel 
 | `mosquitto.expect` | configurazione attesa del broker | `persistence true`, `allow_anonymous false` |
 | `emoncms_feeds` | feed energia da sorvegliare e età massima | Powerwall 305 ed emonTx 24, 600 s |
 | `emontx_sign` | soglia di potenza e letture per «emonTx al contrario» | 150 W, 10 letture |
+| `powerwall_charge` | soglie di «Powerwall non carica» | scarica 200 W, immissione 500 W, carica sotto 95 %, 10 letture (20 minuti) per avvisare, 15 (30 minuti) per chiudere |
 | `backups` | età massima dei backup (fase S4, controllo ogni 15 minuti) | backup mirato 26 ore, immagine 192 ore (8 giorni); sul `.15` backup emoncms 26 ore |
 
 Le modifiche si fanno nel repository e si installano con `deploy.sh`, come ogni cambiamento: le prepara
@@ -148,5 +150,6 @@ l'agente e le conferma l'utente.
 |---|---|
 | 23/10/2026 10:13 | S1 attiva su `.20` e `.15`. Primo avviso: `persistence false` sul Mosquitto del `.15` (così da almeno il 2020); corretto alle 10:16 con `persistence true` |
 | 23/10/2026 | Pagina «Salute impianto» e cuore nella barra in alto dell'app (fase S3), build `bld_ef64491d` |
+| 27/10/2026 | Avviso «Powerwall non carica» sul `.15` (regola scelta dall'utente). Provato sullo storico dal 21 al 27/10: scatta solo il 23/10 (dalle 09:52 alle 15:44), mai negli altri giorni |
 | 26/10/2026 | Controllo dei backup (fase S4, B4) attivo su `.20` e `.15`: backup mirato, immagine e, sul `.15`, backup di emoncms. Atteso subito l'avviso «Immagine di backup» del `.20` (immagine non ancora riuscita) |
 | 23/10/2026 10:23 e 10:34 | Broker `.20` e `.15` senza accesso anonimo: atteso `allow_anonymous false`; sul `.15` il controllo usa l'utente `emonpi`. Nel log del `.15` compare un «Socket error» a ogni giro del `.20`: è il suo test di raggiungibilità della porta 1883, non un dispositivo rifiutato |

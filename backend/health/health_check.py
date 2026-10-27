@@ -273,6 +273,44 @@ def check_emontx_sign(cfg, ctx):
                    title='emonTx al contrario')]
 
 
+def check_powerwall_charge(cfg, ctx):
+    """23/10/2026: for hours the Powerwall powered the house while all the solar went to the grid, down to the
+    reserve. In self-consumption the battery never discharges while power is exported: alert when it does for
+    `readings` checks in a row (2 minutes apart). A charge pause (e.g. at 80 %) keeps the battery at ~0 W and
+    does not count. Once raised, the alert clears only after `clear_readings` normal checks in a row, so a
+    passing cloud does not send "fixed" and a new alert (23/10 replay: 11:00-11:20)."""
+    spec = cfg['powerwall_charge']
+    now = ctx['now']()
+    state = ctx['state'].setdefault('_pw_charge', {'count': 0, 'active': False, 'clear': 0})
+    state.setdefault('active', False)
+    state.setdefault('clear', 0)
+    values = {}
+    for name in ('soc', 'battery', 'grid', 'target'):
+        feed = spec.get(name + '_feed')
+        stamp = redis_feed(ctx, feed, 'time') if feed else None
+        fresh = stamp is not None and now - stamp <= spec.get('max_age_s', 600)
+        values[name] = redis_feed(ctx, feed, 'value') if fresh else None
+    soc, battery, grid = values['soc'], values['battery'], values['grid']
+    if None not in (soc, battery, grid):
+        anomalous = battery > spec['discharge_w'] and -grid > spec['export_w'] and soc < spec['soc_max']
+        state['count'] = state['count'] + 1 if anomalous else 0
+        state['clear'] = 0 if anomalous else state['clear'] + 1
+        if state['count'] >= spec['readings']:
+            state['active'] = True
+        elif state['active'] and state['clear'] >= spec.get('clear_readings', 15):
+            state['active'] = False
+    ok = not state['active']
+    target = values['target']
+    detail = ('batteria %s W, rete %s W, carica %s %%%s' % (
+        '?' if battery is None else int(battery), '?' if grid is None else int(grid),
+        '?' if soc is None else int(soc), '' if target is None else ', il gateway chiede %d W' % target))
+    if not ok:
+        detail = 'si scarica mentre il solare va in rete (%s)' % detail
+    return [result('powerwall_charge', ok, detail,
+                   'Controlla l\'app Tesla (modalità, riserva, avvisi). Il 24/10 si è sbloccata spostando la riserva '
+                   '(0 -> 10 -> 0 %). Il dettaglio è nei feed pw_* di EmonCMS.', title='Powerwall non carica')]
+
+
 def iso_epoch(text):
     """Seconds since the epoch of '2026-10-25T14:18:12+01:00' or '2026-10-25T03:47:56Z'; None if unreadable."""
     try:
@@ -345,7 +383,7 @@ CHECKS = {
     'energy_data': (check_energy_data, 0), 'emontx_sign': (check_emontx_sign, 0),
     'mosquitto_config': (check_mosquitto_config, 900), 'internet': (check_internet, 900),
     'resources': (check_resources, 900), 'kernel_errors': (check_kernel_errors, 900),
-    'clock': (check_clock, 900), 'backups': (check_backups, 900),
+    'clock': (check_clock, 900), 'backups': (check_backups, 900), 'powerwall_charge': (check_powerwall_charge, 0),
 }
 
 

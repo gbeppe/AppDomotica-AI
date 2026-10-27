@@ -174,6 +174,52 @@ class BackupTests(unittest.TestCase):
         self.assertIsNone(h.iso_epoch(None))
 
 
+class PowerwallChargeTests(unittest.TestCase):
+    CFG = {'powerwall_charge': {'soc_feed': 304, 'battery_feed': 306, 'grid_feed': 305, 'target_feed': 461,
+                                'discharge_w': 200, 'export_w': 500, 'soc_max': 95, 'readings': 10, 'clear_readings': 15}}
+
+    def step(self, state, soc, battery, grid, target=300.0, now=1_000_000.0):
+        values = {304: soc, 306: battery, 305: grid, 461: target}
+
+        def run(cmd, timeout=15):
+            feed = int(cmd[2].split(':')[1])
+            return 0, str(now - 30 if cmd[3] == 'time' else values[feed]) + '\n'
+        return h.check_powerwall_charge(self.CFG, context(run=run, now=lambda: now, state=state))[0]
+
+    def test_23_october_pattern_alerts_after_20_minutes(self):
+        # 23/10 12:00: battery +453 W to the house, grid -4017 W, SOC 38 %
+        state = {}
+        for i in range(9):
+            self.assertTrue(self.step(state, 38, 453, -4017)['ok'])
+        res = self.step(state, 38, 453, -4017)
+        self.assertFalse(res['ok'])
+        self.assertIn('si scarica mentre il solare va in rete', res['detail'])
+        self.assertIn('il gateway chiede 300 W', res['detail'])
+
+    def test_charge_pause_and_normal_days_never_alert(self):
+        state = {}
+        for _ in range(30):
+            self.assertTrue(self.step(state, 80, 0, -2500)['ok'])        # pause at 80 %, export
+            self.assertTrue(self.step(state, 50, -2000, -100)['ok'])     # charging from solar
+            self.assertTrue(self.step(state, 30, 400, 50)['ok'])         # evening: battery feeds the house
+            self.assertTrue(self.step(state, 99, 300, -800)['ok'])       # full battery
+
+    def test_clears_only_after_30_quiet_minutes(self):
+        state = {}
+        for _ in range(10):
+            self.step(state, 38, 453, -4017)
+        for _ in range(14):
+            self.assertFalse(self.step(state, 38, 0, -3000)['ok'])      # passing cloud: still raised
+        self.assertTrue(self.step(state, 38, 0, -3000)['ok'])
+
+    def test_stale_data_is_ignored(self):
+        state = {'_pw_charge': {'count': 5, 'active': False, 'clear': 0}}
+        def run(cmd, timeout=15):
+            return 0, ('1000.0' if cmd[3] == 'time' else '450') + '\n'      # data 999 000 s old
+        h.check_powerwall_charge(self.CFG, context(run=run, now=lambda: 1_000_000.0, state=state))
+        self.assertEqual(state['_pw_charge']['count'], 5)
+
+
 class AlertTests(unittest.TestCase):
     cfg = {'confirm': {'peer': 3}, 'quiet_hours': [23, 7]}
     day = datetime(2026, 10, 23, 10, 0)
