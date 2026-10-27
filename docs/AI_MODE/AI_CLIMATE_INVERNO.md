@@ -151,7 +151,35 @@ Se lo studio dice che conviene, si ottimizza l'algoritmo (fasi W). Risultati nel
   calore, ~45–60 € a inverno) e batteria che resterebbe comunque carica (fino a ~90–130 € in più, solo se non fa
   comprare luce la notte); mai con luce comprata. Ordine di grandezza **50–150 € su ~630 (8–25 %)**.
 
-### 7.5 Da fare
+### 7.5 Cosa ha fatto davvero il condizionatore (inverni 2023-24 e 2025-26)
+- **Ora per ora** (176 ore con il condizionatore acceso e caminetto spento, confrontate con ore dello stesso mese,
+  stessa fascia oraria, esterno entro ±1,5 °C): ha funzionato soprattutto alle **12–14 di giornate miti** (13,5 °C
+  esterni), 1,06 kWh el./ora. La caldaia in quelle ore lavorava già poco: 0,35 → 0,10 kWh di calore all'ora, cioè
+  **0,23 kWh di gas risparmiati per kWh elettrico**. Il living saliva di +0,20 °C/ora contro +0,05 (circa +0,3 °C).
+- **Giorno per giorno** (26 giorni con condizionatore > 1 kWh e caminetto spento, contro giorni con esterno entro
+  ±1 °C): 5,0 kWh el./giorno, caldaia **−1,8 kWh di calore**, pompa del pavimento −0,3 ore → **0,36 kWh di gas per kWh
+  elettrico**.
+- **Perché così poco:** la caldaia lavora per tenere il puffer a 40 °C per il pavimento negli orari dei termostati
+  (pompa del pavimento: picchi alle 4–5, 13–15 e 17); il condizionatore a mezzogiorno scalda l'aria del living, non
+  riduce le perdite del puffer né il lavoro del pavimento, e alza soprattutto la temperatura (comfort).
+- **In euro:** 0,36 × 0,098 ≈ **0,035 € di gas per kWh elettrico**, meno di quanto vale lo stesso kWh venduto in
+  scambio sul posto (~0,075 €). **Usato come finora, il condizionatore d'inverno ha dato comfort, non risparmio.**
+
+### 7.6 Conclusione dello studio
+- Il condizionatore produce calore a basso costo (rendimento ~3) **ma** quel calore fa risparmiare gas solo se
+  **sostituisce il lavoro del pavimento nel living**: altrimenti diventa solo qualche decimo di grado in più.
+- Strategia proposta («coordinata»): nelle ore di FV in più (e batteria che resterebbe piena) il condizionatore
+  scalda il living **e** la temperatura impostata del termostato del living scende di ~1 °C nello stesso periodo,
+  così il pavimento del living non chiede calore; fuori da quelle ore tutto torna come prima. Massimo risparmio
+  atteso: il calore dal FV non usato (580–800 kWh, ~45–60 € a inverno) più l'eventuale batteria disponibile.
+- Senza questo coordinamento il condizionatore d'inverno non conviene economicamente (va bene solo per il comfort
+  in giornate miti), e l'algoritmo attuale andrebbe almeno corretto per non usarlo inutilmente (W2–W4).
+- Verifica sul campo proposta: in alcune giornate di sole di novembre–dicembre, prova coordinata contro giornate
+  simili senza; misura di caldaia, pompa del pavimento e temperature.
+- **Decisione dell'utente (27/10/2026): prova sul campo** della strategia coordinata; se i numeri confermano, si
+  ottimizza l'algoritmo in quella direzione.
+
+### 7.7 Da fare
 - Quota del calore della casa che il condizionatore può sostituire (scalda solo il living): analisi delle ore
   in cui ha funzionato (2023-24, 135 kWh) e del suo effetto sulla temperatura del living e sulla caldaia.
 - Rendimento reale del condizionatore col freddo dai consumi misurati (362) e dalla temperatura del living.
@@ -161,4 +189,4 @@ Se lo studio dice che conviene, si ottimizza l'algoritmo (fasi W). Risultati nel
 
 | Data | Fatto |
 |---|---|
-| 27/10/2026 | Progetto aperto. Audit della logica e dell'accensione delle 08:05 (sezioni 1–3). Nessuna modifica. Risposte dell'utente (sezione 5); deciso lo studio preliminare sui dati (5-bis). |
+| 27/10/2026 | Progetto aperto. Audit della logica e dell'accensione delle 08:05 (sezioni 1–3). Nessuna modifica. Risposte dell'utente (sezione 5); deciso lo studio preliminare sui dati (5-bis). Studio sui 3 inverni (sezione 7): il condizionatore usato finora ha dato comfort, non risparmio; scelta la prova sul campo della strategia coordinata. |
