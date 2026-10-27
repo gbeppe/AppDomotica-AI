@@ -105,7 +105,10 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 - Powerwall (gateway `192.168.1.46`, API locale con l'utente `customer`): `backup_reserve_percent` è nella scala del
   gateway, **5 = 0 % nell'app** Tesla, e la carica letta in locale scende fino a ~4,9 %. Gli endpoint
   `/api/operation`, `/api/system_status`, `/api/sitemaster`, `grid_status`, `grid_faults`, `system/update/status`
-  rispondono col firmware 26.34.0; `/api/troubleshooting/problems` no. Il 23/10 il gateway ha smesso di caricare dal
+  rispondono col firmware 26.34.0; `/api/troubleshooting/problems` no. **Le scritture locali sono vietate**
+  all'utente `customer` (27/10: `POST /api/operation` con i valori invariati → 403 «User does not have adequate
+  access rights»): la riserva si cambia solo dall'app Tesla (o dal cloud Tesla, scartato per ora dall'utente).
+  Riserva impostata dall'utente al 5 % il 27/10 (9,75 nella scala del gateway). Il 23/10 il gateway ha smesso di caricare dal
   solare senza cambi di impostazione e si è sbloccato spostando la riserva: vedi HANDOFF (TESLA-STATUS.1).
 
 - Timer dei termostati su `.15` (light-scheduler "SOLO caminetto"/"Con Caldaia" secondo

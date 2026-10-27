@@ -193,6 +193,11 @@ backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall
   della batteria, avvisi di rete, stato dell'aggiornamento → 21 input `pw_*` (feed 455–475, nodo `TeslaPowerwall`).
   Prossimo: avviso nella salute impianto su cambio di modalità o riserva e batteria che non carica con solare in rete.
 
+### AI Climate d'inverno (27/10/2026)
+Progetto [`AI_MODE/AI_CLIMATE_INVERNO.md`](AI_MODE/AI_CLIMATE_INVERNO.md): audit della logica di riscaldamento
+del condizionatore (function `61992c8879c11f66`), accensione inutile del 27/10 08:05 (18,9 °C contro soglia 19,0;
+il «surplus» stava caricando la batteria; compressore mai partito), problemi P1–P9 e fasi W1–W8. Nessuna modifica.
+
 ### Alexa sul `.20` (25/10/2026)
 - **ALEXA-HUE.1** ([`../backend/nodered/alexa_hue/`](../backend/nodered/alexa_hue/README.md)): Apache sulla porta 80
   passa all'hub Hue emulato di Node-RED (8980) solo `/api` e `/description.xml` (gli Echo recenti usano solo la
