@@ -1,0 +1,15 @@
+{
+  "patch": "TESLA-FW-INSTALL.1",
+  "host": "192.168.1.15",
+  "modified_ids": [
+    "5811d15d.e9acb8"
+  ],
+  "added_ids": [],
+  "removed_ids": [],
+  "node_sha256_before": {
+    "5811d15d.e9acb8": "95c180124c2274fbe2aebf070558aa8e7302507eeca0e6e18dc9673458984e07"
+  },
+  "node_sha256_after": {
+    "5811d15d.e9acb8": "d57461ad7ab611a524d8b79411483acbfaa9f7a70255f33f38d98655f3d4cb19"
+  }
+}

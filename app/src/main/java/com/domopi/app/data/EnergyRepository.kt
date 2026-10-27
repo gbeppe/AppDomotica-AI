@@ -13,6 +13,13 @@ import java.time.ZonedDateTime
 
 data class HistoryPoint(val timestamp: Long, val value: Float)
 
+/**
+ * Powerwall gateway firmware (feeds 453, 476, 477, TESLA-FW-INSTALL.1). The gateway does not report when the
+ * firmware was installed: Node-RED takes the gateway boot time when the version changes ([installedExact]),
+ * otherwise the last known boot.
+ */
+data class GatewayFirmware(val version: String, val installedSec: Long?, val installedExact: Boolean)
+
 data class EnergyHistory(
     val solar: List<HistoryPoint> = emptyList(),
     val consumption: List<HistoryPoint> = emptyList(),
@@ -70,6 +77,26 @@ object EmonCmsParser {
             val ts = (pair.getOrNull(0) as? JsonPrimitive)?.longOrNull ?: return@mapNotNull null
             FeedSample(ts, (pair.getOrNull(1) as? JsonPrimitive)?.floatOrNull)
         })
+    }
+
+    /** Values of feed/fetch.json ([263400, 1791182201, 0]); null for a feed without a value. */
+    fun parseFetch(status: Int, body: String): List<Double?>? {
+        if (status !in 200..299) return null
+        val element = try { Json.parseToJsonElement(body) } catch (_: Exception) { return null }
+        return (element as? JsonArray)?.map { (it as? JsonPrimitive)?.doubleOrNull }
+    }
+
+    /** Powerwall gateway firmware as stored by Node-RED on the .15 (263400 -> "26.34.0"). */
+    fun firmwareText(code: Double?): String? {
+        val c = code?.toLong()?.takeIf { it > 0 } ?: return null
+        return "${c / 10000}.${c / 100 % 100}.${c % 100}"
+    }
+
+    fun gatewayFirmware(values: List<Double?>?): GatewayFirmware? {
+        if (values == null) return null
+        val version = firmwareText(values.getOrNull(0)) ?: return null
+        val installed = values.getOrNull(1)?.toLong()?.takeIf { it > 0 }
+        return GatewayFirmware(version, installed, values.getOrNull(2) == 1.0)
     }
 
     /** Normalizes EmonCMS millisecond timestamps to seconds. */
@@ -131,6 +158,24 @@ class EnergyRepository(private val emoncmsIp: String, private val apiKey: String
                 if (result.value.count { it.value != null } < 2) EnergyResult.Failure(EnergyFetchError.NoData)
                 else EnergyResult.Success(EmonCmsParser.gridImportKwh(result.value, todayStartSec, interval.toLong()))
         }
+    }
+
+    /** Latest firmware values; null when EmonCMS is not configured or does not answer. */
+    suspend fun fetchGatewayFirmware(): GatewayFirmware? = withContext(Dispatchers.IO) {
+        if (emoncmsIp.isEmpty() || apiKey.isBlank()) return@withContext null
+        val query = "feed/fetch.json?ids=453,476,477&apikey=$apiKey"
+        for (url in listOf("http://$emoncmsIp/emoncms/$query", "http://$emoncmsIp/$query")) {
+            try {
+                val response = client.get(url)
+                EmonCmsParser.parseFetch(response.status.value, response.bodyAsText())?.let {
+                    return@withContext EmonCmsParser.gatewayFirmware(it)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
+        }
+        null
     }
 
     private suspend fun fetchFeedData(feedId: Int, start: Long, end: Long, interval: Int): EnergyResult<List<FeedSample>> {

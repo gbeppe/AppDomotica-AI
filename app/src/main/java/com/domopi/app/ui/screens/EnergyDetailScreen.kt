@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.domopi.app.data.EnergyHistory
 import com.domopi.app.data.EnergyFetchError
 import com.domopi.app.data.EnergyRepository
+import com.domopi.app.data.GatewayFirmware
 import com.domopi.app.data.EnergyResult
 import com.domopi.app.data.describeEnergyError
 import com.domopi.app.data.HistoryPoint
@@ -40,6 +41,11 @@ fun EnergyDetailScreen(emoncmsIp: String, apiKey: String, onBack: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var selectedHours by remember { mutableIntStateOf(24) }
     var reload by remember { mutableIntStateOf(0) }
+    var firmware by remember { mutableStateOf<GatewayFirmware?>(null) }
+
+    LaunchedEffect(emoncmsIp, apiKey, reload) {
+        firmware = EnergyRepository(emoncmsIp, apiKey).fetchGatewayFirmware()
+    }
 
     LaunchedEffect(selectedHours, emoncmsIp, apiKey, reload) {
         isLoading = true
@@ -118,7 +124,7 @@ fun EnergyDetailScreen(emoncmsIp: String, apiKey: String, onBack: () -> Unit) {
                     }
                     
                     item {
-                        SummaryStats(history!!)
+                        SummaryStats(history!!, firmware)
                         Spacer(Modifier.height(32.dp))
                     }
                 }
@@ -287,7 +293,7 @@ fun LegendItem(label: String, color: Color) {
 }
 
 @Composable
-fun SummaryStats(history: EnergyHistory) {
+fun SummaryStats(history: EnergyHistory, firmware: GatewayFirmware?) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("INDICATORI CHIAVE", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
@@ -300,6 +306,9 @@ fun SummaryStats(history: EnergyHistory) {
             
             val avgCons = history.consumption.map { it.value }.average().takeIf { !it.isNaN() } ?: 0.0
             DetailStat("Consumo Medio", "${avgCons.toInt()} W")
+
+            DetailStat("Firmware gateway", firmware?.version ?: "—")
+            DetailStat("Installato", installedText(firmware))
         }
     }
 }
@@ -310,4 +319,12 @@ fun DetailStat(label: String, value: String) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
     }
+}
+
+/** "dal 05/10/2026 (ultimo riavvio)" until Node-RED sees the version change, then "il 12/11/2026". */
+fun installedText(firmware: GatewayFirmware?): String {
+    val sec = firmware?.installedSec ?: return "—"
+    val date = java.time.Instant.ofEpochSecond(sec).atZone(java.time.ZoneId.systemDefault())
+        .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    return if (firmware.installedExact) "il $date" else "dal $date (ultimo riavvio)"
 }

@@ -184,6 +184,10 @@ backup `/home/pi/AI_backups/solar/20261021T215045Z-before-f1`. F2/F3 decise dall
   calcolo «solare prima»: la batteria copriva la casa mentre il solare usciva.
 - **Flusso dell'utente «Get Tesla Status»** (`/api/status`, ogni ora) → `gw_fw_version` (feed 453) e `gw_uptime_h`
   (454); l'ora di avvio si ricava dall'uptime, perché il gateway scrive l'ora italiana con fuso «+0800».
+- **TESLA-FW-INSTALL.1** (`backend/nodered/tesla_fw_install/`, 27/10): data di installazione del firmware ricavata
+  dal cambio di versione (ora di avvio del gateway), feed 476/477; per 26.34.0 è l'ultimo avvio, 05/10 08:36.
+  L'app la mostra in «Storico Energia» con la versione («dal 05/10/2026 (ultimo riavvio)»). L'utente non ha trovato
+  avvisi nell'app Tesla per il 23/10: causa del blocco ancora ignota.
 - **TESLA-STATUS.1** (`backend/nodered/tesla_status/`), live dal 24/10 17:24: ogni 5 min modalità, riserva, potenza
   chiesta alla batteria, sorgente del comando, cloud Tesla, servizi di rete, limiti di carica, salute e contatori
   della batteria, avvisi di rete, stato dell'aggiornamento → 21 input `pw_*` (feed 455–475, nodo `TeslaPowerwall`).

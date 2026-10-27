@@ -1,0 +1,20 @@
+[
+  {
+    "id": "5811d15d.e9acb8",
+    "type": "function",
+    "z": "ab593fb1.208fc",
+    "name": "",
+    "func": "// Stato del gateway Tesla -> input numerici per EmonCMS\n  const s = msg.payload;\n\n  // Il gateway dà l'uptime in formato Go, per esempio \"464h13m21.51s\"\n  function goDurationToSeconds(d) {\n      const m = String(d).match(/(?:(\\d+)h)?(?:(\\d+)m(?!s))?(?:([\\d.]+)s)?/);\n      if (!m) return null;\n      return (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0);\n  }\n\n  // La versione \"26.34.0 7d707328\" diventa 263400 (anno*10000 + mese*100 + patch)\n  const v = String(s.version).split(\" \")[0].split(\".\").map(Number);\n  const fw = v.length >= 3 ? v[0] * 10000 + v[1] * 100 + v[2] : null;\n\n  const up = goDurationToSeconds(s.up_time_seconds);   // secondi dall'avvio\n\n  msg.payload = {\n      gw_start_time: up === null ? null : Math.round(Date.now() / 1000 - up),\n      gw_uptime_h: up === null ? null : Math.round(up / 36) / 100,\n      gw_fw_version: fw,\n      gw_is_new: s.is_new ? 1 : 0,\n      gw_cellular_disabled: s.cellular_disabled ? 1 : 0,\n      gw_can_reboot: s.can_reboot ? 1 : 0,\n      gw_commission_count: Number(s.commission_count) || 0\n  };\n  // Toglie i valori non validi, che EmonCMS rifiuterebbe\n  for (const k in msg.payload) if (msg.payload[k] === null) delete msg.payload[k];\n\n  // msg.nodegroup = \"tesla_gateway\";   // nome del nodo in EmonCMS, oppure lo imposti nel nodo emoncms\n  return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "x": 1050,
+    "y": 320,
+    "wires": [
+      [
+        "9f03278f.1e0008"
+      ]
+    ]
+  }
+]
