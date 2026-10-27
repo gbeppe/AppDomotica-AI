@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>La casa d'inverno</title>
+<style>
+/* Layout: report a una colonna; ogni sezione = una domanda, un grafico, due righe di lettura */
+:root {
+  --bg: #f4f6f5; --panel: #ffffff; --ink: #1c2422; --muted: #5b6764; --line: #d8dfdc;
+  --gas: #d9822b; --pellet: #8a5a3b; --ac: #2f8fb8; --pv: #e3b505; --exp: #6aa84f; --imp: #b5443a;
+  --tout: #5161c9; --liv: #c2407a; --pump: #7a6fb0; --soc: #3d9a8b;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121716; --panel: #1a2120; --ink: #e2e9e6; --muted: #98a6a2; --line: #2c3633; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--font); }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-right)) 64px max(16px, env(safe-area-inset-left)); display: grid; gap: 24px; }
+h1 { font-size: 1.9rem; line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.25rem; margin: 0 0 4px; text-wrap: balance; }
+.lead { color: var(--muted); margin: 6px 0 0; max-width: 72ch; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 14px; display: grid; gap: 10px; min-width: 0; }
+.q { color: var(--muted); margin: 0; max-width: 72ch; }
+.read { margin: 0; max-width: 78ch; }
+.read b { font-weight: 650; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 4px; }
+.card .t { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.card .v { font: 600 1.6rem var(--mono); }
+.card .s { font-size: .9rem; color: var(--muted); }
+.chart { position: relative; height: 320px; min-width: 0; }
+.chart.tall { height: 380px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls button { font: inherit; font-size: .9rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.controls button[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .85rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+ul.notes { margin: 0; padding-left: 20px; color: var(--muted); max-width: 80ch; }
+footer { color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>La casa d'inverno</h1>
+    <p class="lead">Come caldaia a gas, caminetto a pellet, fotovoltaico, Powerwall e condizionatore hanno lavorato negli
+      inverni dal 2023-24 al 2025-26, e quanto è costato. Dati EmonCMS (ogni ora), temperatura esterna da Open-Meteo,
+      gas dalle bollette. <span id="gen"></span></p>
+  </header>
+
+  <section>
+    <h2>Quanto costa scaldare la casa</h2>
+    <p class="q">Novembre–marzo di ogni inverno: gas, pellet ed elettricità del caminetto.</p>
+    <div class="cards" id="cards"></div>
+    <p class="read" id="cardsRead"></p>
+  </section>
+
+  <section>
+    <h2>Chi ha scaldato</h2>
+    <p class="q">Calore prodotto da ogni fonte (kWh) e costo (€), inverno per inverno.</p>
+    <div class="chart"><canvas id="cWinters"></canvas></div>
+    <p class="read">Gas e pellet costano quasi uguale per kWh di calore (<b>~0,10 €</b>); il caminetto ha dato più calore
+      negli ultimi due inverni. Il condizionatore ha prodotto pochissimo.</p>
+  </section>
+
+  <section>
+    <h2>Mese per mese</h2>
+    <p class="q">Calore per fonte e temperatura esterna media; sotto, costi del mese.</p>
+    <div class="chart tall"><canvas id="cMonthHeat"></canvas></div>
+    <div class="chart"><canvas id="cMonthCost"></canvas></div>
+    <p class="read">Il riscaldamento si concentra da dicembre a febbraio. Da maggio a ottobre il gas è zero: l'acqua calda
+      la fa il solare termico.</p>
+  </section>
+
+  <section>
+    <h2>Energia elettrica: fotovoltaico e rete</h2>
+    <p class="q">Produzione FV, consumi della casa, energia venduta e comprata, per mese.</p>
+    <div class="chart"><canvas id="cMonthElec"></canvas></div>
+    <p class="read">Anche d'inverno ogni mese va in rete energia FV (circa <b>450 kWh</b> fra novembre e marzo): è l'energia
+      che il condizionatore potrebbe usare. L'energia comprata resta poca grazie al Powerwall.</p>
+  </section>
+
+  <section>
+    <h2>Anno per anno</h2>
+    <p class="q">Da maggio ad aprile.</p>
+    <div class="tablewrap"><table id="tYears"></table></div>
+  </section>
+
+  <section>
+    <h2>Giorno per giorno</h2>
+    <p class="q">Scegli l'inverno: calore per fonte, temperatura esterna e del living; sotto, FV venduto e carica della batteria.</p>
+    <div class="controls" id="dayCtl"></div>
+    <div class="chart tall"><canvas id="cDayHeat"></canvas></div>
+    <div class="chart"><canvas id="cDayElec"></canvas></div>
+    <p class="read">I giorni di caminetto (barre marroni) sono quasi sempre i più freddi; nelle giornate di sole la
+      batteria arriva piena e l'energia in più va in rete.</p>
+  </section>
+
+  <section>
+    <h2>Ora per ora: una giornata tipo</h2>
+    <p class="q">Media di ogni ora sull'inverno scelto. Quando lavora il pavimento, quando c'è sole.</p>
+    <div class="controls" id="hourCtl"></div>
+    <div class="chart tall"><canvas id="cHour"></canvas></div>
+    <div class="chart"><canvas id="cHourT"></canvas></div>
+    <p class="read">La pompa del pavimento ha i picchi alle <b>4–5, 13–15 e 17</b> (orari dei termostati); la caldaia
+      segue il puffer. Il sole e l'energia venduta sono fra le 10 e le 15.</p>
+  </section>
+
+  <section>
+    <h2>Il condizionatore: cosa ha fatto davvero</h2>
+    <p class="q">Ore e giorni con il condizionatore acceso (caminetto spento), confrontati con ore e giorni simili senza.</p>
+    <div class="cards" id="acCards"></div>
+    <p class="read">Ha funzionato soprattutto a mezzogiorno di giornate miti, quando la caldaia lavorava già poco: per ogni
+      kWh elettrico ha fatto risparmiare solo <b>0,23–0,36 kWh di gas</b> (circa 0,035 €), meno di quanto vale lo stesso
+      kWh venduto (~0,075 €). Il resto è diventato comfort: living ~0,3 °C più caldo. Per risparmiare gas deve
+      sostituire il lavoro del pavimento nel living (prova sul campo decisa il 27/10/2026).</p>
+  </section>
+
+  <section>
+    <h2>Metodo e limiti</h2>
+    <ul class="notes" id="method"></ul>
+  </section>
+
+  <footer>Progetto: docs/AI_MODE/AI_CLIMATE_INVERNO.md · dati generati da build_data.py.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const C = { gas: css('--gas'), pellet: css('--pellet'), ac: css('--ac'), pv: css('--pv'), exp: css('--exp'),
+    imp: css('--imp'), tout: css('--tout'), liv: css('--liv'), pump: css('--pump'), soc: css('--soc'),
+    ink: css('--ink'), muted: css('--muted'), line: css('--line') };
+  Chart.defaults.color = C.muted;
+  Chart.defaults.borderColor = C.line;
+  Chart.defaults.font.family = css('--font');
+  Chart.defaults.maintainAspectRatio = false;
+  Chart.defaults.locale = 'it-IT';
+  Chart.defaults.plugins.legend.labels.boxWidth = 12;
+  const fmt = (v, d = 0) => v == null ? '—' : v.toLocaleString('it-IT', {maximumFractionDigits: d, minimumFractionDigits: d});
+  const MESI = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+  const mLabel = m => MESI[+m.slice(5, 7) - 1] + ' ' + m.slice(2, 4);
+  const P = DATA.params;
+  document.getElementById('gen').textContent = 'Aggiornata il ' + DATA.generated + '.';
+
+  // --- cards ---
+  const cards = document.getElementById('cards');
+  DATA.winters.forEach(w => {
+    const sacks = w.fire_h * P.pellet_kg_h / 15;
+    const el = document.createElement('div'); el.className = 'card';
+    el.innerHTML = `<span class="t">Inverno ${w.label}</span><span class="v">${fmt(w.eur_heat)} €</span>
+      <span class="s">gas ${fmt(w.gas_smc)} Smc${w.gas_smc_bill ? ' (bollette)' : ' (stima)'} · pellet ~${fmt(sacks)} sacchi · ${fmt(w.hdd)} gradi giorno</span>`;
+    cards.append(el);
+  });
+  document.getElementById('cardsRead').innerHTML = `Inverni simili per freddo (gradi giorno 1.650–1.750). Il 2023-24 non ha
+    bollette del gas (stima dalla caldaia); il pellet degli altri inverni è stimato dalle ore di caminetto rispetto ai
+    <b>55 sacchi</b> del 2025-26.`;
+
+  // --- winters ---
+  new Chart(document.getElementById('cWinters'), {
+    data: { labels: DATA.winters.map(w => w.label), datasets: [
+      { type: 'bar', label: 'Caldaia (kWh)', data: DATA.winters.map(w => w.boiler), backgroundColor: C.gas, stack: 'h', yAxisID: 'y' },
+      { type: 'bar', label: 'Caminetto (kWh)', data: DATA.winters.map(w => w.fire), backgroundColor: C.pellet, stack: 'h', yAxisID: 'y' },
+      { type: 'bar', label: 'Condizionatore (kWh el.)', data: DATA.winters.map(w => w.ac), backgroundColor: C.ac, stack: 'h', yAxisID: 'y' },
+      { type: 'line', label: 'Costo (€)', data: DATA.winters.map(w => w.eur_heat), borderColor: C.ink, backgroundColor: C.ink, yAxisID: 'y2', tension: 0 },
+    ] },
+    options: { scales: { y: { stacked: true, title: { display: true, text: 'kWh di calore' } },
+      y2: { position: 'right', grid: { display: false }, title: { display: true, text: '€' }, beginAtZero: true } } }
+  });
+
+  // --- months ---
+  const M = DATA.months.filter(m => m.n >= 20);
+  new Chart(document.getElementById('cMonthHeat'), {
+    data: { labels: M.map(m => mLabel(m.m)), datasets: [
+      { type: 'bar', label: 'Caldaia', data: M.map(m => m.boiler || 0), backgroundColor: C.gas, stack: 'h' },
+      { type: 'bar', label: 'Caminetto', data: M.map(m => m.fire || 0), backgroundColor: C.pellet, stack: 'h' },
+      { type: 'bar', label: 'Condizionatore (el.)', data: M.map(m => m.ac || 0), backgroundColor: C.ac, stack: 'h' },
+      { type: 'line', label: 'Esterno (°C)', data: M.map(m => m.tout), borderColor: C.tout, backgroundColor: C.tout, yAxisID: 'y2', pointRadius: 2 },
+      { type: 'line', label: 'Living (°C)', data: M.map(m => m.liv), borderColor: C.liv, backgroundColor: C.liv, yAxisID: 'y2', pointRadius: 2 },
+    ] },
+    options: { scales: { y: { stacked: true, title: { display: true, text: 'kWh di calore' } }, x: { stacked: true },
+      y2: { position: 'right', grid: { display: false }, title: { display: true, text: '°C' } } } }
+  });
+  new Chart(document.getElementById('cMonthCost'), {
+    type: 'bar',
+    data: { labels: M.map(m => mLabel(m.m)), datasets: [
+      { label: 'Gas', data: M.map(m => m.eur_gas), backgroundColor: C.gas },
+      { label: 'Pellet', data: M.map(m => m.eur_pellet), backgroundColor: C.pellet },
+      { label: 'Elettricità comprata', data: M.map(m => m.eur_elec_buy), backgroundColor: C.imp },
+      { label: 'Energia venduta (−)', data: M.map(m => -m.eur_elec_sell), backgroundColor: C.exp },
+    ] },
+    options: { scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: '€' } } } }
+  });
+  new Chart(document.getElementById('cMonthElec'), {
+    type: 'bar',
+    data: { labels: M.map(m => mLabel(m.m)), datasets: [
+      { label: 'FV prodotto', data: M.map(m => m.pv), backgroundColor: C.pv },
+      { label: 'Casa', data: M.map(m => m.load), backgroundColor: C.muted },
+      { label: 'Venduta', data: M.map(m => m.exp), backgroundColor: C.exp },
+      { label: 'Comprata', data: M.map(m => m.imp), backgroundColor: C.imp },
+    ] },
+    options: { scales: { y: { title: { display: true, text: 'kWh' } } } }
+  });
+
+  // --- years table ---
+  const ty = document.getElementById('tYears');
+  ty.innerHTML = '<tr><th>Anno</th><th>FV kWh</th><th>Casa kWh</th><th>Venduta kWh</th><th>Comprata kWh</th><th>Gas Smc</th><th>Caminetto h</th><th>€ gas</th><th>€ pellet</th><th>€ luce comprata</th><th>€ venduta</th></tr>' +
+    DATA.years.map(y => `<tr><td>${y.label}</td><td>${fmt(y.pv)}</td><td>${fmt(y.load)}</td><td>${fmt(y.exp)}</td><td>${fmt(y.imp)}</td><td>${fmt(y.gas_smc)}</td><td>${fmt(y.fire_h)}</td><td>${fmt(y.eur_gas)}</td><td>${fmt(y.eur_pellet)}</td><td>${fmt(y.eur_elec_buy)}</td><td>${fmt(y.eur_elec_sell)}</td></tr>`).join('');
+
+  // --- days and hours with winter selector ---
+  const winterOf = d => { const y = +d.slice(0, 4), m = +d.slice(5, 7); return m >= 11 ? `${y}-${String((y + 1) % 100).padStart(2, '0')}` : (m <= 3 ? `${y - 1}-${String(y % 100).padStart(2, '0')}` : null); };
+  const labels = DATA.winters.map(w => w.label);
+  let dayCharts = [], hourCharts = [];
+  function selector(id, onPick) {
+    const box = document.getElementById(id);
+    labels.forEach((l, i) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Inverno ' + l;
+      b.addEventListener('click', () => { [...box.children].forEach(x => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); onPick(l); });
+      box.append(b); });
+    box.lastChild.click();
+  }
+  selector('dayCtl', w => {
+    dayCharts.forEach(c => c.destroy());
+    const D = DATA.days.filter(d => winterOf(d.d) === w);
+    const lab = D.map(d => d.d.slice(8, 10) + '/' + d.d.slice(5, 7));
+    dayCharts = [
+      new Chart(document.getElementById('cDayHeat'), {
+        data: { labels: lab, datasets: [
+          { type: 'bar', label: 'Caldaia', data: D.map(d => d.boiler), backgroundColor: C.gas, stack: 'h' },
+          { type: 'bar', label: 'Caminetto', data: D.map(d => d.fire), backgroundColor: C.pellet, stack: 'h' },
+          { type: 'bar', label: 'Condizionatore (el.)', data: D.map(d => d.ac), backgroundColor: C.ac, stack: 'h' },
+          { type: 'line', label: 'Esterno (°C)', data: D.map(d => d.tout), borderColor: C.tout, yAxisID: 'y2', pointRadius: 0, borderWidth: 1.5 },
+          { type: 'line', label: 'Living (°C)', data: D.map(d => d.liv), borderColor: C.liv, yAxisID: 'y2', pointRadius: 0, borderWidth: 1.5 },
+        ] },
+        options: { scales: { x: { stacked: true, ticks: { maxTicksLimit: 12 } }, y: { stacked: true, title: { display: true, text: 'kWh di calore' } },
+          y2: { position: 'right', grid: { display: false }, title: { display: true, text: '°C' } } } }
+      }),
+      new Chart(document.getElementById('cDayElec'), {
+        data: { labels: lab, datasets: [
+          { type: 'bar', label: 'FV prodotto', data: D.map(d => d.pv), backgroundColor: C.pv },
+          { type: 'bar', label: 'Venduta', data: D.map(d => d.exp), backgroundColor: C.exp },
+          { type: 'bar', label: 'Comprata', data: D.map(d => d.imp), backgroundColor: C.imp },
+          { type: 'line', label: 'Carica batteria media (%)', data: D.map(d => d.soc), borderColor: C.soc, yAxisID: 'y2', pointRadius: 0, borderWidth: 1.5 },
+        ] },
+        options: { scales: { x: { ticks: { maxTicksLimit: 12 } }, y: { title: { display: true, text: 'kWh' } },
+          y2: { position: 'right', min: 0, max: 100, grid: { display: false }, title: { display: true, text: '%' } } } }
+      }),
+    ];
+  });
+  selector('hourCtl', w => {
+    hourCharts.forEach(c => c.destroy());
+    const p = DATA.profiles[w]; const lab = [...Array(24).keys()].map(h => h + ':00');
+    const pct = a => a.map(v => v == null ? null : +(v * 100).toFixed(1));
+    hourCharts = [
+      new Chart(document.getElementById('cHour'), {
+        data: { labels: lab, datasets: [
+          { type: 'bar', label: 'Caldaia (kW di calore)', data: p.boiler, backgroundColor: C.gas, yAxisID: 'y' },
+          { type: 'line', label: 'FV (kW)', data: p.pv, borderColor: C.pv, backgroundColor: C.pv, yAxisID: 'y', pointRadius: 0 },
+          { type: 'line', label: 'Venduta (kW)', data: p.exp, borderColor: C.exp, yAxisID: 'y', pointRadius: 0 },
+          { type: 'line', label: 'Condizionatore (kW el.)', data: p.ac, borderColor: C.ac, yAxisID: 'y', pointRadius: 0 },
+          { type: 'line', label: 'Pompa pavimento (% del tempo)', data: pct(p.pump), borderColor: C.pump, yAxisID: 'y2', pointRadius: 0, borderDash: [4, 3] },
+          { type: 'line', label: 'Caminetto acceso (% del tempo)', data: pct(p.fire), borderColor: C.pellet, yAxisID: 'y2', pointRadius: 0, borderDash: [4, 3] },
+        ] },
+        options: { scales: { y: { title: { display: true, text: 'kW' }, beginAtZero: true },
+          y2: { position: 'right', min: 0, max: 100, grid: { display: false }, title: { display: true, text: '%' } } } }
+      }),
+      new Chart(document.getElementById('cHourT'), {
+        type: 'line',
+        data: { labels: lab, datasets: [
+          { label: 'Esterno (°C)', data: p.tout, borderColor: C.tout, pointRadius: 0 },
+          { label: 'Living (°C)', data: p.liv, borderColor: C.liv, pointRadius: 0 },
+          { label: 'Carica batteria (%)', data: p.soc, borderColor: C.soc, pointRadius: 0, yAxisID: 'y2' },
+        ] },
+        options: { scales: { y: { title: { display: true, text: '°C' } }, y2: { position: 'right', min: 0, max: 100, grid: { display: false }, title: { display: true, text: '%' } } } }
+      }),
+    ];
+  });
+
+  // --- AC cards ---
+  const A = DATA.ac_effect, acBox = document.getElementById('acCards');
+  [['Gas risparmiato per kWh elettrico', `${fmt(A.ratio_hour, 2)}–${fmt(A.ratio_day, 2)}`, `${A.hours} ore e ${A.days} giorni confrontati`],
+   ['Caldaia con / senza condizionatore', `${fmt(A.boiler_with, 2)} / ${fmt(A.boiler_without, 2)}`, 'kWh di calore all\'ora, esterno medio ' + fmt(A.tout, 1) + ' °C'],
+   ['Living: salita oraria', `+${fmt(A.liv_rise_with, 2)} / +${fmt(A.liv_rise_without, 2)} °C`, 'con / senza condizionatore']].forEach(([t, v, s]) => {
+    const el = document.createElement('div'); el.className = 'card';
+    el.innerHTML = `<span class="t">${t}</span><span class="v">${v}</span><span class="s">${s}</span>`; acBox.append(el);
+  });
+
+  // --- method ---
+  const notes = [
+    `Calore della caldaia stimato da fiamma e modulazione (5–24 kW) e corretto di ×${fmt(P.boiler_cal, 2)} per coincidere con le bollette del gas (221 Smc nel 2024-25, ~264 nel 2025-26).`,
+    `Caminetto acceso quando il suo circuito assorbe oltre 115 W; pellet ${fmt(P.pellet_kg_h, 2)} kg/ora (55 sacchi da 15 kg in 331 ore nel 2025-26), ${fmt(P.pellet_kwh_kg, 2)} kWh di calore per kg.`,
+    `Prezzi: gas ${fmt(P.gas_eur_smc, 2)} €/Smc, pellet ${fmt(P.pellet_eur_kg, 2)} €/kg, energia comprata ${fmt(P.elec_buy, 2)} €/kWh (parte variabile), venduta ${fmt(P.elec_sell, 3)} €/kWh (scambio sul posto, ~180 € l'anno).`,
+    'Temperatura esterna da Open-Meteo (i sensori di casa segnano ~1 °C in più e nel 2025-26 non hanno registrato).',
+    'Il condizionatore non ha misure dei consumi nell\'inverno 2024-25 (fra lo Shelly tolto a settembre 2024 e il contatore attuale da marzo 2025).',
+    'I costi del riscaldamento escludono le quote fisse delle bollette.',
+  ];
+  document.getElementById('method').innerHTML = notes.map(n => '<li>' + n + '</li>').join('');
+})();
+</script>
+</body>
+</html>

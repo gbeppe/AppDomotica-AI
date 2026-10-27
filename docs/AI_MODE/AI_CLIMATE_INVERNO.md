@@ -115,6 +115,9 @@ Se lo studio dice che conviene, si ottimizza l'algoritmo (fasi W). Risultati nel
   solare termico).
 - Luce comprata d'inverno: 45–224 kWh al mese (FV e batteria coprono quasi tutto).
 
+Pagina con dati e grafici per ora, giorno, mese e anno: [`studio_inverno/index.html`](studio_inverno/index.html)
+(«La casa d'inverno»; rigenerabile con gli script della stessa cartella).
+
 ### 7.3 Risultati preliminari
 
 | Inverno (nov–mar) | Gradi giorno (18 °C) | Gas reale | Caldaia, ore di fiamma | Caminetto, ore | FV prodotto / immesso | Condizionatore |
