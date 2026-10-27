@@ -92,6 +92,71 @@ caminetto a pellet, solare termico, FV, batteria, carichi), stima di quanto gas 
 usando il condizionatore con il FV in più e la batteria lasciata carica per la casa, e con quale comfort.
 Se lo studio dice che conviene, si ottimizza l'algoritmo (fasi W). Risultati nella sezione 7.
 
+## 7. Studio: il condizionatore d'inverno conviene? (in corso)
+
+### 7.1 Impianto (dall'utente, 27/10)
+- Caldaia a gas Fondital Itaca KRB 24 (24 kW) e caminetto a pellet Palazzetti scaldano il **puffer** (800 l);
+  il puffer alto alimenta il **pavimento radiante** (orari dei termostati) e l'acqua calda sanitaria. In inverno
+  la caldaia è in solo riscaldamento a 40 °C, senza timer: parte quando il puffer scende. Solare termico quasi
+  nullo d'inverno.
+- Condizionatore Hitachi RAD-25RPE / RAC-25NPE (classe 2,5 kW; in caldo ~3,4 kW): scalda **l'aria del living**,
+  fuori dal circuito del puffer.
+- Prezzi: gas 1 €/Smc, pellet 6 €/15 kg; energia comprata ~0,22–0,26 €/kWh variabile (PUN + perdite, contributi,
+  oneri, accise, IVA; dalle bollette Edison); energia venduta (GSE) da confermare, per ora 0,10 €/kWh.
+
+### 7.2 Dati
+- EmonCMS dal 01/05/2023, medie orarie di 36 feed (caldaia 179/181, caminetto 147, puffer 41/42, pompa del
+  pavimento 137, living 242, camera 189, bagno 246/388, termostati 234–241, condizionatore 263/362, Powerwall
+  303–307). Strumenti e dati di lavoro nello scratchpad della sessione, non nel repository.
+- **Temperatura esterna da Open-Meteo** (archivio orario): i sensori di casa segnano in media +1 °C e
+  nell'inverno 2025-26 non hanno registrato.
+- **Gas reale dalle bollette** (contatore 950 → 1 465 mc, 03/2024–05/2026): inverno 2024-25 (nov–mar) **221 Smc**,
+  2025-26 (ott–mar) **~264 Smc**; 2023-24 non coperto (bollette da marzo 2024). Estate: 0 Smc (acqua calda dal
+  solare termico).
+- Luce comprata d'inverno: 45–224 kWh al mese (FV e batteria coprono quasi tutto).
+
+### 7.3 Risultati preliminari
+
+| Inverno (nov–mar) | Gradi giorno (18 °C) | Gas reale | Caldaia, ore di fiamma | Caminetto, ore | FV prodotto / immesso | Condizionatore |
+|---|---|---|---|---|---|---|
+| 2023-24 | 1 652 | — | 825 | 172 | 2 028 / 432 kWh | 135 kWh |
+| 2024-25 | 1 755 | 221 Smc | 591 | 295 | 2 200 / 468 kWh | ~10 kWh (dati quasi assenti) |
+| 2025-26 | 1 671 | ~264 Smc | 845 | 331 | 2 082 / 471 kWh | 46 kWh |
+
+- La stima del calore della caldaia da fiamma e modulazione (5–24 kW) supera le bollette del 44–52 %: va corretta
+  di ~0,66. Calore reale della caldaia ~2 200–2 700 kWh a inverno.
+- **Tetto del calore dal condizionatore con energia non usata** (esterno < 15 °C, living < 20,5 °C, 8–20, max
+  1 kW elettrico, rendimento 2–4,5 secondo la temperatura esterna, stima prudente da scheda):
+  - dal FV che andava in rete: **580–800 kWh di calore** a inverno (57–79 Smc, 40–80 € netti secondo il prezzo
+    di vendita);
+  - dalla batteria che il mattino dopo era ancora sopra il 20 %: **950–1 380 kWh di calore** (93–136 Smc), da
+    verificare: usarla la sera può far comprare energia la notte.
+  - Il solo FV non usato equivale a circa **un quarto/un terzo del gas reale**.
+- Regressione giornaliera caldaia ~ gradi + ore di caminetto non affidabile (R² 0,33): il caminetto si accende nei
+  giorni più freddi e i due effetti si confondono.
+
+### 7.4 Costo del calore (inverno 2025-26, dati dell'utente)
+- Pellet: **55 sacchi** da 15 kg a inverno (825 kg, 330 €); energia venduta in **scambio sul posto, ~180 € l'anno**
+  per ~2 250–2 400 kWh immessi → ~0,075 €/kWh.
+
+| Fonte | Costo a inverno | Calore | Costo del calore |
+|---|---|---|---|
+| Gas (caldaia, rendimento ~0,95) | ~264 € | ~2 680 kWh | **~0,098 €/kWh** |
+| Pellet (4,8 kWh/kg, rendimento ~0,88) | 330 € + ~39 € di elettricità del caminetto (161 kWh) | ~3 490 kWh | **~0,106 €/kWh** (~0,11 con le perdite in più del puffer) |
+| Condizionatore con FV che andava in rete | — | — | **~0,023 €/kWh** (rendimento 3,2) |
+| Condizionatore con luce comprata | — | — | ~0,075 €/kWh sopra 5 °C esterni, ~0,09 col freddo |
+
+- Gas e pellet costano quasi uguale; riscaldamento totale ~630 € a inverno.
+- **Conclusione provvisoria:** il condizionatore conviene solo «opportunistico»: FV in più (580–800 kWh di
+  calore, ~45–60 € a inverno) e batteria che resterebbe comunque carica (fino a ~90–130 € in più, solo se non fa
+  comprare luce la notte); mai con luce comprata. Ordine di grandezza **50–150 € su ~630 (8–25 %)**.
+
+### 7.5 Da fare
+- Quota del calore della casa che il condizionatore può sostituire (scalda solo il living): analisi delle ore
+  in cui ha funzionato (2023-24, 135 kWh) e del suo effetto sulla temperatura del living e sulla caldaia.
+- Rendimento reale del condizionatore col freddo dai consumi misurati (362) e dalla temperatura del living.
+- Simulazione ora per ora con la batteria lasciata carica per la casa, poi la conclusione: conviene o no.
+
 ## 6. Diario
 
 | Data | Fatto |
