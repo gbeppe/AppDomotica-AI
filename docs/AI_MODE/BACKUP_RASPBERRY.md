@@ -308,9 +308,9 @@ file system nuovo. Il desktop del `.20` (pcmanfm/udisks) **monta da solo** un di
 `ID_VENDOR_ID` non valgono per questo adattatore, serve `ID_USB_VENDOR_ID` (sull'SSD c'è
 `/etc/udev/rules.d/99-domopi-no-automount-sd.rules` per la SD).
 
-**Prossimo passo:** cavo micro-HDMI (HDMI 0, vicino all'alimentazione) per vedere dove si ferma l'avvio dall'SSD;
-prima ripassare le modifiche del giorno (seconda passata come al punto 5, pochi minuti di servizi fermi).
-Ripiego: avvio misto (SD solo per l'avvio, `cmdline.txt` della SD su `root=PARTUUID=2026d020-02`).
+**Superato la sera stessa:** l'utente ha deciso di reinstallare il `.20` da zero ([`RICOSTRUZIONE_20.md`](RICOSTRUZIONE_20.md));
+la copia sull'SSD si archivia sul QNAP, poi Raspberry Pi OS Lite pulito e prova di avvio sul Raspberry 4 senza
+schermo (il cavo micro-HDMI serve solo se non parte).
 
 ### Procedura generale (dall'immagine sul QNAP, con l'utente presente)
 

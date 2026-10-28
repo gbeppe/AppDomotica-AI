@@ -47,7 +47,7 @@ i flow fermi, broker e House AI senza collegamenti verso dispositivi veri).
 
 | Passo | Cosa |
 |---|---|
-| C1 | Raspberry Pi OS Lite sull'SSD con Raspberry Pi Imager (utente `pi`, chiave SSH, nome provvisorio, Europe/Rome); prima prova di avvio sul Raspberry 4 con lo schermo HDMI |
+| C1 | Raspberry Pi OS Lite sull'SSD con Raspberry Pi Imager (utente `pi`, chiave SSH, nome provvisorio `domopi-new`, Europe/Rome); prova di avvio sul Raspberry 4 **senza schermo** (successo = indirizzo dal router e SSH; ~5 minuti di fermo del `.20`). Solo se non parte: cavo micro-HDMI per vedere l'errore, ripiego avvio misto con una SD nuova solo per l'avvio |
 | C2 | Base: aggiornamenti, rete, `smartmontools`, TRIM (regola udev + `fstrim.timer`), nessun montaggio automatico |
 | C3 | Mosquitto (due listener, utenti e ACL dal backup, persistenza, drop-in) |
 | C4 | Node 22, Node-RED 5.0.8, palette (20 pacchetti), progetto `domopi` con `.git`, `settings.js`, context, Admin API, https |
@@ -65,3 +65,4 @@ Ritorno indietro al cambio: spegnere, rimettere la SD attuale, accendere.
 | Data | Fatto |
 |---|---|
 | 28/10/2026 | Decisione dell'utente (reinstallazione, Raspberry 3 come banco). SD `bootcode.bin` per il Raspberry 3 preparata. Inventario (sezione 1). otmonitor 64 bit scelto. Nessuna modifica al `.20`. |
+| 28/10/2026 sera | **C1**: Raspberry Pi OS Lite 64 bit (Debian 13 trixie, kernel 6.18) scritto con l'Imager; il Raspberry 3 parte dall'SSD con la SD `bootcode.bin` (lampeggio regolare del verde = normale). cloud-init ha applicato solo nome e utente: Wi-Fi bloccato (paese non impostato, sistemato con `raspi-config nonint do_wifi_country IT` e `nmcli --ask device wifi connect`), nessuna chiave SSH (messe con `ssh-copy-id`; con l'agente del PC `id_rsa` si blocca: voce `domopi-new` in `~/.ssh/config` con `IdentityAgent none`), fuso orario Europe/London, `sudo` con password. **Alimentazione:** col primo cavo cali di tensione continui (`0x50005`) e un blocco di 3,5 minuti; con l'altro cavo prova di 10 minuti (4 GB scritti e letti, ~35 MB/s, limite USB 2) con 60/60 letture `0x0`, nessun blocco né errore. Pulizia: Bluetooth e udisks2 spenti, cloud-init disattivato (`/etc/cloud/cloud-init.disabled`), fuso Europe/Rome; `sudo` senza password per `pi` (`/etc/sudoers.d/010_pi-nopasswd`, scelta dell'utente). Indirizzo provvisorio `192.168.1.72` (Wi-Fi). |
