@@ -224,6 +224,19 @@ Priorità: il `.15` per rischio (SD di 5 anni), il `.20` per prestazioni (10 vol
   attivare `fstrim.timer`.
 - Il controllo SMART degli SSD (usura, settori riallocati, errori) entra negli avvisi della salute impianto
   (B4).
+- **Fatti il 28/10/2026** (un SSD per Raspberry, porta USB blu; `smartmontools` installato su entrambi, `smartd`
+  spento; SMART letto con `smartctl -d sat`):
+
+  | | NQ100 → `.20` | NS100 → `.15` |
+  |---|---|---|
+  | Firmware | SN21395 | SN21561 |
+  | SMART | PASSED, 0 ore, 0 scritture, 0 riallocati, 0 errori CRC, 28 °C | PASSED, 0 ore, 0 scritture, 0 riallocati, 0 errori CRC, 28 °C |
+  | Adattatore | StarTech `14b0:0206`, driver `uas`, 5 Gbit/s | uguale |
+  | TRIM | `provisioning_mode=full` di base; con `unmap` il disco accetta il TRIM (prova di 1 MB su disco vuoto) | uguale |
+  | Alimentazione | nessun calo (`throttled=0x0`) | nessun calo |
+
+  Dopo B5: regola udev `ACTION=="add|change", ATTRS{idVendor}=="14b0", ATTRS{idProduct}=="0206",
+  SUBSYSTEM=="scsi_disk", ATTR{provisioning_mode}="unmap"` e `fstrim.timer`.
 
 ### Prerequisiti verificati il 24/10
 
@@ -235,7 +248,32 @@ Priorità: il `.15` per rischio (SD di 5 anni), il `.20` per prestazioni (10 vol
   `/dev/sda1/2/3`, quindi l'`fstab` dell'SSD va cambiato con i PARTUUID (`PARTUUID=43ed7bb4-01/02/03`)
   prima del primo avvio, altrimenti il sistema non parte.
 
-### Procedura (per ciascun host, con l'utente presente)
+### Procedura del `.20` (decisa il 26–28/10/2026): copia dal PC a Raspberry spento
+
+Le immagini del `.20` costruite col sistema acceso lo hanno rallentato fino a non rispondere (25–26/10), quindi la
+SD si copia sull'SSD **dal PC** con [`backend/backup/clone_sd_to_ssd.sh`](../../backend/backup/clone_sd_to_ssd.sh):
+stessa tabella delle partizioni e stesso identificativo del disco (i PARTUUID di `cmdline.txt` e `fstab` del `.20`
+restano validi, verificato), partizione di avvio byte per byte, sistema con `e2image` (solo i blocchi usati),
+ultima partizione allargata a tutto l'SSD, controlli finali. La SD viene solo letta. Senza `--yes` mostra il piano.
+
+**Il `.20` è il DNS della casa (Pi-hole):** da spento nessun dispositivo naviga, nemmeno il PC con questa sessione.
+Prima di spegnerlo, sul PC: `sudo resolvectl dns wlp8s0 1.1.1.1 192.168.1.20`; dopo: `sudo resolvectl revert wlp8s0`.
+Scegliere un momento in cui la casa può restare ~20 minuti senza Internet (caminetto, caldaia e `.15` non ne
+dipendono).
+
+1. DNS del PC come sopra; backup mirato fresco sul `.20` (`sudo systemctl start domopi-backup-snapshot`), poi
+   `sudo poweroff`.
+2. Togliere alimentazione e SD; l'NQ100 con il suo adattatore passa al PC, la SD nel lettore del PC.
+3. Sul PC `lsblk -d -o NAME,SIZE,MODEL` per riconoscere i due dischi; `sudo bash clone_sd_to_ssd.sh <SD> <SSD>`
+   (piano), poi con `--yes`.
+4. SSD sulla porta USB blu del `.20`, SD nel cassetto con etichetta, accendere (bootloader 2023: prima SD, poi USB).
+5. Controlli: sistema su `sda`, driver `uas`, servizi e salute impianto, Node-RED (https), broker, Alexa, app.
+6. Dopo: regola udev del TRIM e `fstrim.timer`; `DEVICE=/dev/sda` nella configurazione del backup; riattivare timer
+   e avviso dell'immagine (la salute impianto del repository ha ancora il controllo); DNS del PC ripristinato.
+
+Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD, accendere.
+
+### Procedura generale (dall'immagine sul QNAP, con l'utente presente)
 
 1. Ultima immagine verificata sul `.4` (lanciare `domopi-backup-image.service` a mano la sera prima).
 2. Dal PC: collegare l'SSD con l'adattatore, scrivere l'immagine
@@ -255,6 +293,11 @@ Priorità: il `.15` per rischio (SD di 5 anni), il `.20` per prestazioni (10 vol
 Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD originale, accendere.
 
 ## 7. Punti aperti
+
+- **DNS di riserva** nel router (dopo B5, da discutere): oggi il `.20` è l'unico DNS (Pi-hole) e da spento la casa resta
+  senza Internet; un secondo DNS nel DHCP dà continuità ma alcuni dispositivi lo userebbero a volte, saltando i filtri.
+- **`.15`: decisione dell'utente del 28/10:** sistema nuovo con Raspberry Pi OS Lite e lo **script di installazione
+  ufficiale di emoncms** (EmonScripts) al posto dell'immagine emonSD; da pianificare dopo il `.20`.
 
 - **Password rsync** dei moduli sul `.4` e sul `.74`: è quella predefinita, scritta in chiaro negli
   script `regular.backup.sh` (stampata per errore il 24/10 leggendo un file di verifica sul `.20`). Da
