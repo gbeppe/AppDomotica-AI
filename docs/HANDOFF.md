@@ -386,6 +386,9 @@ verificato), caricatore di avvio aggiornato al 23/09/2026, ma l'avvio da USB non
 SD. Prossimo passo con cavo micro-HDMI e schermo; ripiego avvio misto. Diario e lezioni in
 [`AI_MODE/BACKUP_RASPBERRY.md`](AI_MODE/BACKUP_RASPBERRY.md) §6. Il `.15` si ricostruisce con sistema nuovo:
 [`AI_MODE/RICOSTRUZIONE_15.md`](AI_MODE/RICOSTRUZIONE_15.md) (inventario e piano; in attesa del `.20`).
+Decisione della sera del 28/10: anche il `.20` si **reinstalla da zero** (Raspberry Pi OS Lite 64 bit, otmonitor a 64
+bit) sull'SSD, costruito sul Raspberry 3 dell'utente come banco mentre il `.20` resta in funzione:
+[`AI_MODE/RICOSTRUZIONE_20.md`](AI_MODE/RICOSTRUZIONE_20.md) (inventario e ordine di costruzione).
 
 ### Da indagare (16/10/2026)
 
