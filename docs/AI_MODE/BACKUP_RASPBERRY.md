@@ -51,7 +51,7 @@ Cartelle del backup mirato (prova del 24/10: `.20` 343 MB e 12 mila file, `.15` 
 | `.20` | `.15` |
 |---|---|
 | `/etc` (Mosquitto, house-ai, ntfy, Pi-hole senza la cronologia delle query, systemd), `config.txt` e `cmdline.txt` | `/etc` (Mosquitto, emonhub, systemd), `config.txt` e `cmdline.txt` |
-| `~/.node-red` senza `node_modules`, `~/AI_climate`, `~/.config` (token `domopi`, house-ai, otmonitor), script in `~` | `~/.node-red` senza `node_modules` (flussi veri in `projects/emonpi/`), `~/data` (log caminetto e pompa), `~/.config`, script in `~` |
+| **tutta `/home/pi` dal 28/10** (richiesta dell'utente: log, script, codici IR di Broadlink in `~/broadlink`, `~/otgw`, `~/irrigation`, `~/AI_patches`, `~/AI_backups`…) senza `~/.node-red/node_modules`, `~/.cache`, `~/.npm`, `~/.local/share/pnpm`; prima copia 558 MB, verificata sul QNAP (Broadlink: 100 file identici) | `~/.node-red` senza `node_modules` (flussi veri in `projects/emonpi/`), `~/data` (log caminetto e pompa), `~/.config`, script in `~` |
 | `/opt/domopi-*`, `/var/lib/{mosquitto,ntfy,tailscale}`, `/var/cache/ntfy`, crontab, `/root`, `/usr/local` | `/opt/domopi-*`, `/var/lib/mosquitto`, crontab, `/root`, `/usr/local`, `settings.ini` di emoncms |
 | dump `domotica` | dump `emoncms` (dati dei feed: backup emoncms) |
 
