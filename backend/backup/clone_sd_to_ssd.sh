@@ -7,6 +7,12 @@
 #   sudo bash clone_sd_to_ssd.sh <sd> <ssd>          shows what it would do, writes nothing
 #   sudo bash clone_sd_to_ssd.sh <sd> <ssd> --yes    copies
 # e.g. sudo bash clone_sd_to_ssd.sh /dev/mmcblk0 /dev/sdb --yes
+# REPAIR_COPY=1: the SD has filesystem errors (e2fsck -fn fails): copy it as it is, leave the SD untouched, and
+# repair the copy on the SSD with e2fsck -fy (the .20 SD on 28/10/2026: orphan list and directory entries of
+# deleted files). Files the repair removes go to lost+found; restore them from the nightly snapshot.
+# Lesson of 28/10/2026: on the .20 the repair detached whole directories the running kernel still read (1230
+# libraries, /etc/mysql) and the copy did not boot. With a damaged SD prefer rsync -aHAXx from the running
+# system onto a new filesystem (BACKUP_RASPBERRY.md §6, diary of the .20).
 set -euo pipefail
 SD=${1:?sd device}
 SSD=${2:?ssd device}
@@ -48,10 +54,15 @@ done
 for n in "${nums[@]}"; do
     t=$(blkid -o value -s TYPE "$(part "$SD" "$n")" || true)
     case "$t" in vfat|ext2|ext3|ext4) ;; *) die "partition $n: unsupported filesystem '$t'";; esac
-    [ "$t" = vfat ] || e2fsck -fn "$(part "$SD" "$n")" >/dev/null || die "the SD partition $n has errors: copy stopped"
+    if [ "$t" != vfat ] && ! e2fsck -fn "$(part "$SD" "$n")" >/dev/null 2>&1; then
+        [ "${REPAIR_COPY:-}" = 1 ] || die "the SD partition $n has errors: copy stopped (REPAIR_COPY=1 copies and repairs the copy)"
+        echo "the SD partition $n has errors: it is copied as it is and the copy is repaired (SD untouched)"
+    fi
 done
 echo "== partition table"
 sfdisk --dump "$SD" | grep -vE '^(device|last-lba|first-lba):' | sfdisk --quiet --wipe always "$SSD"
+# the label-id in the dump was not kept on 28/10/2026 (SSD came out e0d4036e): set it explicitly
+sfdisk --disk-id "$SSD" "0x$diskid" >/dev/null
 partprobe "$SSD"; udevadm settle
 for n in "${nums[@]}"; do
     src=$(part "$SD" "$n"); dst=$(part "$SSD" "$n"); t=$(blkid -o value -s TYPE "$src")
@@ -60,10 +71,18 @@ for n in "${nums[@]}"; do
         dd if="$src" of="$dst" bs=4M conv=fsync status=progress
     else
         e2image -ra -p "$src" "$dst"
+        if [ "${REPAIR_COPY:-}" = 1 ]; then
+            echo "== repair of the copy, partition $n"
+            rc=0; e2fsck -fy "$dst" > "/root/clone-repair-p$n.log" 2>&1 || rc=$?
+            # 0 clean, 1 errors corrected, 2 corrected and reboot advised; anything above is a failure
+            [ "$rc" -le 2 ] || die "e2fsck could not repair partition $n (code $rc, log /root/clone-repair-p$n.log)"
+            echo "repaired (e2fsck code $rc), log /root/clone-repair-p$n.log"
+        fi
     fi
 done
 echo "== grow partition $last"
 parted -s "$SSD" resizepart "$last" 100%
+sfdisk --disk-id "$SSD" "0x$diskid" >/dev/null     # parted may rewrite the table
 partprobe "$SSD"; udevadm settle
 lastdst=$(part "$SSD" "$last")
 if [ "$(blkid -o value -s TYPE "$lastdst")" != vfat ]; then e2fsck -fy "$lastdst" >/dev/null || true; resize2fs "$lastdst"; fi

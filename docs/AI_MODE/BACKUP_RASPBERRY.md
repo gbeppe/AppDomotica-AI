@@ -149,7 +149,7 @@ SSD (§6) la prova di ripristino e la migrazione sono la stessa operazione.
 | B2 | `.20`: installazione con timer spenti, `init`, prova a secco, primo backup mirato e prima immagine a mano osservando carico e luci, poi timer | **in corso**: 24/10 12:29 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T102900Z-before-backup-s4`), `init` e prove a secco riuscite (backup mirato 33 percorsi, 275 MB; immagine su `…-A.img`); corretto: una prova a secco non vale più come backup (`last_ok`); 13:04 primo backup mirato (275 MB, 106 s); prima immagine con timer temporaneo `domopi-backup-image-first` il 25/10 alle 01:30: **fallita** (rsync fermato dal kernel per memoria a 02:17, ~900 MB su 1,9 GB di RAM e 100 MB di swap; nessun `.ok`), correzioni del 25/10 sotto; **seconda prova del 26/10 01:30 fallita** anch'essa per memoria, dopo 3 ore su `/home` (rsync 886 MB su tre processi, ognuno sotto il limite di 600 MB): la scrittura nell'immagine (disco virtuale sopra NFS, scheda di rete del `.20` a 100 Mbit/s) è molto più lenta della lettura e i dati in attesa si accumulano in memoria; in più Apache teneva 139 processi (richieste di Alexa in attesa fino a 300 s, corretto con `timeout=15`). Correzione preparata il 26/10 (`IMAGE_STAGING=/var/lib/domopi-backup/staging` in `backup-20.conf`: immagine costruita sulla SD, ~10 GB occupati su 45 liberi, poi copiata sul QNAP con `dd` a I/O diretto e verificata di nuovo lì); provata a mano il 26/10 pomeriggio: **sospesa**. Anche scrivendo sulla SD rsync cresceva (fino a ~650 MB su una sola cartella) e il `.20` è diventato lentissimo per circa 20 minuti (SSH quasi muto; Node-RED, broker e servizi rimasti attivi), fermato a mano. Correzioni comunque utili tenute nello script: copia a pezzi di al massimo 10 000 file, disco virtuale con `--direct-io`, arresto pulito. **Decisione:** nessuna altra prova dell'immagine sul `.20` in funzione; B5 del `.20` copiando la SD sull'SSD dal PC a `.20` spento; l'immagine del `.20` si rivede dopo l'SSD. Cancellata `~/.nvm.P` (905 MB, 39 000 file, copia non usata, decisione dell'utente). Il file di lavoro incompleto resta in `/var/lib/domopi-backup/staging/` (3 GB). **Timer:** dal 26/10 backup mirato ogni notte acceso; immagine spenta fino alla correzione |
 | B3 | `.15`: come B2 | **in corso**: 24/10 13:14 installato con timer spenti (backup `/home/pi/AI_backups/backup/20261024T111442Z-before-backup-s4`), prove a secco riuscite; 13:15 primo backup mirato (17 percorsi, 40 MB, 31 s); **timer accesi il 26/10** (backup mirato ogni notte, immagine il sabato); prima immagine con timer temporaneo il 25/10 alle 06:30 (spostata dalle 04:15 per la verifica di emoncms): **fallita** in 50 s (la partizione di sistema è montata anche come `/var/log.bak` da log2ram e lo script prendeva le due righe come un solo percorso) |
 | B4 | salute impianto: avviso se il backup mirato ha più di 26 ore, l'immagine più di 8 giorni o l'ultimo giro è fallito; sul `.15` anche il backup di emoncms (`status.json` sul NAS: ultimo giro oltre 26 ore, errori, cartella non montata); dopo B5 lo stato SMART degli SSD; manuale aggiornato | **attivo dal 26/10** (`check_backups` in `backend/health`, 5 test); l'avviso «Immagine di backup» del `.20` resta finché l'immagine non è corretta; SMART dopo B5 |
-| B5 | passaggio a SSD dall'immagine (§6), prima il `.20` (scelta dell'utente del 24/10), poi il `.15`: è anche la prova di ripristino | `.20` da mercoledì 28/10 (primo adattatore), `.15` dopo venerdì 30/10 |
+| B5 | passaggio a SSD dall'immagine (§6), prima il `.20` (scelta dell'utente del 24/10), poi il `.15`: è anche la prova di ripristino | **`.20` in corso** (28/10, diario in §6): SSD pronto e verificato (copia con `rsync` dal sistema in funzione), avvio da USB ancora non riuscito, `.20` di nuovo sulla SD; prossima prova con lo schermo HDMI. `.15`: ricostruzione, [`RICOSTRUZIONE_15.md`](RICOSTRUZIONE_15.md) |
 | B6 | dopo due settimane senza problemi: togliere il cron settimanale del `.20` e quello mensile del `.15` (coperti dai nuovi backup) | da fare |
 
 ### Correzioni dopo le prime immagini (25/10/2026)
@@ -273,6 +273,45 @@ dipendono).
 
 Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD, accendere.
 
+### Diario del `.20` (28/10/2026) e procedura corretta
+
+1. 14:31 backup mirato, `.20` spento. `clone_sd_to_ssd.sh` si è fermato prima di scrivere: **la SD del `.20` ha
+   errori ext4** (`e2fsck -fn`): lista degli orfani rovinata, ~300 voci di cartella verso file cancellati
+   (phpMyAdmin, binlog di MariaDB), cartelle con il blocco di controllo rovinato (una in
+   `/usr/lib/node_modules/node-red/node_modules/npm/…`). Probabilmente dai cali di tensione del 17–19/10.
+2. Copia con `REPAIR_COPY=1` (copia così com'è e ripara solo la copia sull'SSD, ~40 min a 4 MB/s dal lettore del
+   PC). Struttura perfetta (`e2fsck` codice 0), ma **3 407 elementi finiti in `lost+found`**: `e2fsck` ha staccato
+   il contenuto delle cartelle col blocco di controllo rovinato, che il kernel in funzione invece legge. Sull'SSD
+   mancavano 1 230 file in `/usr/lib/aarch64-linux-gnu`, 15 in `/etc` (tutta `/etc/mysql`), 9 in
+   `/var/lib/dpkg/info`. In più `sfdisk` non aveva copiato l'identificativo del disco (corretto a mano e nello
+   script).
+3. Avvio dall'SSD non riuscito (porta blu, poi nera; spie rossa e verde fisse, nessuna rete), anche con
+   `usb-storage.quirks=14b0:0206:u`. Caricatore di avvio aggiornato con lo strumento ufficiale (conferma
+   dell'utente): da 11/01/2023 a **23/09/2026** (canale `default` del repository `raspberrypi/rpi-eeprom`; l'archivio
+   di bullseye si ferma al 2023) con `USB_MSD_STARTUP_DELAY=2000`; copia del vecchio in
+   `/home/pi/AI_backups/eeprom/`. Ancora nessun avvio.
+4. Sul `.20` acceso l'SSD collegato a caldo è perfetto: `uas` a 5 Gbit/s, nessun reset, nessun calo
+   (`throttled=0x0`); `uas` e `usb-storage` sono incorporati nel kernel 6.1.21; caratteristiche ext4 uguali alla SD.
+   Il confronto dei file ha trovato i mancanti del punto 2.
+5. **SSD rifatto sul `.20`**: identificativo del disco proprio `2026d020` (diverso dalla SD `ba3739cc`, così non si
+   confondono), `mkfs.ext4` con gli strumenti del `.20`, `rsync -aHAXx --numeric-ids --delete` dal sistema in
+   funzione (`systemd-run` con `Nice=19`, I/O idle, `MemoryMax=700M`; 22 minuti, 176 944 elementi, 8,4 GB, nessun
+   errore, `.20` sempre reattivo), seconda passata con i servizi che scrivono fermati (17:39:44–17:41:21), partizione di
+   avvio allineata, `fstab` e `cmdline.txt` dell'SSD su `2026d020-01/02`, `e2fsck` codice 0.
+6. Avvio dall'SSD ancora non riuscito. La prova di avvio misto (SD per l'avvio, sistema dall'SSD) **non è
+   avvenuta**: sul `.20` il `cmdline.txt` della SD scritto dal PC risultava **vuoto (0 byte)** e il caricatore ha
+   usato la versione vecchia: **la SD non conserva in modo affidabile le scritture**. `cmdline.txt` della SD
+   rimesso a posto e riletto. Il `.20` è sulla SD, servizi regolari.
+
+**Lezioni:** con una SD danneggiata non riparare la copia: ricopiare con `rsync` dal sistema in funzione su un
+file system nuovo. Il desktop del `.20` (pcmanfm/udisks) **monta da solo** un disco collegato: le regole udev con
+`ID_VENDOR_ID` non valgono per questo adattatore, serve `ID_USB_VENDOR_ID` (sull'SSD c'è
+`/etc/udev/rules.d/99-domopi-no-automount-sd.rules` per la SD).
+
+**Prossimo passo:** cavo micro-HDMI (HDMI 0, vicino all'alimentazione) per vedere dove si ferma l'avvio dall'SSD;
+prima ripassare le modifiche del giorno (seconda passata come al punto 5, pochi minuti di servizi fermi).
+Ripiego: avvio misto (SD solo per l'avvio, `cmdline.txt` della SD su `root=PARTUUID=2026d020-02`).
+
 ### Procedura generale (dall'immagine sul QNAP, con l'utente presente)
 
 1. Ultima immagine verificata sul `.4` (lanciare `domopi-backup-image.service` a mano la sera prima).
@@ -316,7 +355,8 @@ Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD originale, accendere
 - ~~`/etc/emoncms-nas.cred` sul `.15`~~ **cancellato il 24/10** (richiesta dell'utente): credenziali del vecchio
   montaggio SMB del QNAP, sostituito da NFS. Ne resta una copia nell'istantanea del 24/10 sul QNAP
   (`rasp-backup/192-168-1-15/snapshots/2026-10-24/etc/`); se era un utente QNAP dedicato, disattivarlo.
-- **Ricostruzione del `.15` su un emonSD recente**, insieme a B5: oggi emonSD-24Jul20 (Raspbian 10, PHP 7.3, 32 bit)
+- ~~Ricostruzione del `.15` su un emonSD recente~~ superata il 28/10: sistema nuovo con EmonScripts, piano in
+  [`RICOSTRUZIONE_15.md`](RICOSTRUZIONE_15.md). Nota originale: oggi emonSD-24Jul20 (Raspbian 10, PHP 7.3, 32 bit)
   con moduli emoncms aggiornati per PHP 8 (il 24/10 si è rotto `postprocess`, corretto a mano, vedi HANDOFF).
   Immagine scelta: **emonSD-01Feb24** (Bookworm 32 bit, PHP 8.1, Pi 4, hardware emonPi1/emonBase con RFM su
   `/dev/ttyAMA0`); la 10Mar26 (Trixie 64 bit) è preconfigurata per emonPi3 e richiederebbe di adattare `emonhub.conf`.

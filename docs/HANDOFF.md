@@ -380,6 +380,13 @@ passaggio a **SSD** dall'immagine = prova di ripristino (B5; l'utente compra SSD
 StarTech USB3S2SAT3CB, ordinati il 24/10; sul `.15` va cambiato l'`fstab` dell'SSD con i PARTUUID). Trovati
 anche i backup esistenti (§1 del documento): sul `.15` quello mensile copia flussi Node-RED vecchi di giugno.
 
+**Aggiornamento 28/10/2026 (B5 del `.20`, in corso):** la SD del `.20` ha errori ext4 e non conserva in modo
+affidabile le scritture. SSD NQ100 rifatto sul `.20` con `rsync` dal sistema in funzione (identificativo `2026d020`,
+verificato), caricatore di avvio aggiornato al 23/09/2026, ma l'avvio da USB non riesce ancora: il `.20` gira sulla
+SD. Prossimo passo con cavo micro-HDMI e schermo; ripiego avvio misto. Diario e lezioni in
+[`AI_MODE/BACKUP_RASPBERRY.md`](AI_MODE/BACKUP_RASPBERRY.md) §6. Il `.15` si ricostruisce con sistema nuovo:
+[`AI_MODE/RICOSTRUZIONE_15.md`](AI_MODE/RICOSTRUZIONE_15.md) (inventario e piano; in attesa del `.20`).
+
 ### Da indagare (16/10/2026)
 
 - **Scheda della pompa del pavimento (`.21`, `floorpump_v2`) scollegata (23/10):** non risponde al ping e non si
