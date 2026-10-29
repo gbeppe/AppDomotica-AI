@@ -393,6 +393,11 @@ bit) sull'SSD, costruito sul Raspberry 3 dell'utente come banco mentre il `.20` 
 5.0.8, MariaDB 11.8, PHP 8.4); stessa identità Tailscale, stesso IP, replica verso il QNAP ripuntata. Accesso SSH:
 voce `domopi-new` del PC (chiave `id_ed25519_codex_domopi`, senza agente). Da osservare: Groq, otmonitor con la
 caldaia accesa, app da fuori casa, notte. Prossimo: `.15` sul banco Raspberry 3 ([`AI_MODE/RICOSTRUZIONE_15.md`](AI_MODE/RICOSTRUZIONE_15.md)).
+**29/10/2026 pomeriggio: cambio del `.15` fatto.** Raspberry 4 con SSD NS100, Raspberry Pi OS Lite Bookworm, emoncms 12.2 via
+EmonScripts (PHP 8.4, MariaDB 10.11) con i dati ripristinati, Node-RED 5.0.8 con il progetto `emonpi` (Twitter e Volumio
+disattivati, scheda FusionSolar tolta), lettura Modbus dell'inverter Huawei spostata dal Raspberry 3 al `.15`
+(`huawei2emoncms`). Alias SSH `emonpi-new` → `.15`. Vecchie SD dei due Raspberry nel cassetto; istruzioni per chi è in
+casa in [`AI_MODE/RITORNO_SD.md`](AI_MODE/RITORNO_SD.md).
 
 ### Da indagare (16/10/2026)
 
