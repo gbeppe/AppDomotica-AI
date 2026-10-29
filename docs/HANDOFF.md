@@ -389,6 +389,10 @@ SD. Prossimo passo con cavo micro-HDMI e schermo; ripiego avvio misto. Diario e 
 Decisione della sera del 28/10: anche il `.20` si **reinstalla da zero** (Raspberry Pi OS Lite 64 bit, otmonitor a 64
 bit) sull'SSD, costruito sul Raspberry 3 dell'utente come banco mentre il `.20` resta in funzione:
 [`AI_MODE/RICOSTRUZIONE_20.md`](AI_MODE/RICOSTRUZIONE_20.md) (inventario e ordine di costruzione).
+**29/10/2026: cambio fatto.** Il `.20` gira sul Raspberry 4 con l'SSD (Raspberry Pi OS Lite trixie, Node 22, Node-RED
+5.0.8, MariaDB 11.8, PHP 8.4); stessa identità Tailscale, stesso IP, replica verso il QNAP ripuntata. Accesso SSH:
+voce `domopi-new` del PC (chiave `id_ed25519_codex_domopi`, senza agente). Da osservare: Groq, otmonitor con la
+caldaia accesa, app da fuori casa, notte. Prossimo: `.15` sul banco Raspberry 3 ([`AI_MODE/RICOSTRUZIONE_15.md`](AI_MODE/RICOSTRUZIONE_15.md)).
 
 ### Da indagare (16/10/2026)
 
