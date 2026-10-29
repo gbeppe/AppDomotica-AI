@@ -57,8 +57,11 @@ Priorità: **U** = urgente, arriva anche di notte con priorità alta; **N** = no
 | **emonTx al contrario** | `.15` | N | la pinza della rete dell'emonTx misura con il segno opposto al Powerwall per 10 letture di fila (circa 20 minuti con potenza sopra 150 W) | l'adattatore di tensione dell'emonTx è stato girato o cambiato: **gira la spina di 180°** (successo dal 19 al 23/10) |
 | **Disco** | entrambi | N | meno di 500 MB liberi | fai spazio: `sudo du -xh / --max-depth=2 \| sort -h \| tail`. Il `.15` ha un disco piccolo (~900 MB liberi) |
 | **Memoria** | entrambi | N | meno di 100 MB di memoria disponibile | guarda i processi con `top` |
-| **Temperatura CPU** | entrambi | N | oltre 75 °C | controlla ventilazione e posizione |
-| **Scheda SD** | entrambi | U | errori della scheda di memoria nel kernel | **fai subito l'immagine di backup** della scheda; valuta il passaggio a SSD |
+| **Temperatura CPU** | entrambi | N, **U** oltre 75 °C | oltre 70 °C (il Raspberry rallenta da solo da 80 °C; la sala tecnica d'estate arriva a ~34 °C) | controlla ventilazione, posizione e i cuscinetti termici del case |
+| **Errori del disco** | entrambi | U | nel kernel errori di lettura o scrittura, errori ext4, reset della USB o comandi dell'SSD interrotti (`uas_eh_…`) nell'ultima ora | controlla cavo e adattatore dell'SSD sulla porta blu; se continua, fai subito un backup |
+| **SSD** | entrambi | U | lo stato SMART dell'SSD non è PASSED, oppure SMART non si legge (disco staccato) | backup subito e sostituzione del disco; se non si legge, controlla il collegamento |
+| **Errori SSD** | entrambi | U (N se sono solo errori CRC) | crescono i settori riallocati, in attesa o illeggibili, oppure gli errori CRC, rispetto al primo controllo (29/10/2026: tutti a 0) | settori: backup e sostituzione; CRC: è il cavo o l'adattatore USB, ricollegalo o cambialo |
+| **Usura SSD**, **Temperatura SSD** | entrambi | N | vita residua sotto il 20 % (solo se il disco la riporta; gli NQ100/NS100 non la riportano), disco oltre 65 °C | prepara la sostituzione; controlla la ventilazione |
 | **Orologio** | entrambi | N | l'ora non è sincronizzata (le regole a orario sbaglierebbero) | controlla `timedatectl` e la rete |
 | **Backup mirato** | entrambi | N | l'ultimo backup mirato riuscito sul QNAP ha più di 26 ore, o l'ultimo giro è fallito (il motivo è nell'avviso) | guarda `journalctl -u domopi-backup-snapshot -n 30` e che il QNAP `192.168.1.4` sia acceso; si rilancia con `sudo systemctl start domopi-backup-snapshot` |
 | **Immagine di backup** | entrambi | N | l'ultima immagine verificata ha più di 8 giorni, o l'ultimo giro è fallito | `journalctl -u domopi-backup-image -n 30`; si rilancia con `sudo systemctl start domopi-backup-image` (sul `.15` circa 10 minuti, sul `.20` di più). Senza immagine recente un guasto della scheda costa giorni di lavoro |
@@ -126,6 +129,8 @@ La configurazione di ogni Raspberry è in `/etc/domopi-health/config.json` (nel 
 | `emontx_sign` | soglia di potenza e letture per «emonTx al contrario» | 150 W, 10 letture |
 | `powerwall_charge` | soglie di «Powerwall non carica» | scarica 200 W, immissione 500 W, carica sotto 95 %, 10 letture (20 minuti) per avvisare, 15 (30 minuti) per chiudere |
 | `backups` | età massima dei backup (fase S4, controllo ogni 15 minuti) | backup mirato 26 ore, immagine 192 ore (8 giorni); sul `.15` backup emoncms 26 ore |
+| `ssd` (controllo ogni ora) | dispositivo e soglie del controllo SMART: `{"device": "/dev/sda", "life_min_pct": 20, "temp_max_c": 65}` (valori predefiniti, la chiave si può omettere); i contatori di partenza stanno nello stato (`_ssd`) | `/dev/sda`, 20 %, 65 °C |
+| `temp_warn_c`, `temp_max_c` | temperatura CPU: avviso e avviso urgente | 70 °C, 75 °C |
 
 Le modifiche si fanno nel repository e si installano con `deploy.sh`, come ogni cambiamento: le prepara
 l'agente e le conferma l'utente.

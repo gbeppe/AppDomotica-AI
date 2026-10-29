@@ -2,7 +2,7 @@
   "host_label": ".15",
   "state_file": "/var/lib/domopi-health/state.json",
   "checks": ["power", "services", "broker", "http", "reachability", "energy_data", "emontx_sign",
-             "mosquitto_config", "internet", "resources", "kernel_errors", "clock", "backups", "powerwall_charge"],
+             "mosquitto_config", "internet", "resources", "kernel_errors", "clock", "backups", "ssd", "powerwall_charge"],
   "services": ["mosquitto", "nodered", "emonhub", "emoncms_mqtt", "feedwriter", "redis-server", "mariadb",
                "apache2"],
   "urgent_services": ["mosquitto", "nodered", "emonhub"],

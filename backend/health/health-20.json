@@ -2,7 +2,7 @@
   "host_label": ".20",
   "state_file": "/var/lib/domopi-health/state.json",
   "checks": ["power", "services", "broker", "http", "tailscale", "reachability", "mosquitto_config",
-             "internet", "resources", "kernel_errors", "clock", "backups"],
+             "internet", "resources", "kernel_errors", "clock", "backups", "ssd"],
   "services": ["mosquitto", "nodered", "house-ai-backend", "house-ai-gateway", "house-ai-lan", "ntfy",
                "pihole-FTL", "tailscaled", "apache2"],
   "urgent_services": ["mosquitto", "nodered"],

@@ -82,6 +82,47 @@ class CheckTests(unittest.TestCase):
         self.assertEqual(out, {'disk': False, 'memory': False, 'temperature': False})
         sd = h.check_kernel_errors({}, context({'journalctl -k': (0, 'mmc0: Timeout waiting for hardware cmd error\n')}))
         self.assertFalse(sd[0]['ok'])
+        usb = h.check_kernel_errors({}, context({'journalctl -k': (0, 'sd 0:0:0:0: [sda] tag#3 uas_eh_abort_handler 0 uas-tag 4\n')}))
+        self.assertFalse(usb[0]['ok'])
+
+    def test_temperature_warning_then_urgent(self):
+        def temp(c):
+            ctx = context({'vcgencmd measure_temp': (0, "temp=%s'C\n" % c)},
+                          disk_usage=lambda p: Usage(0, 0, 9000 * 1024 * 1024), mem_available_mb=lambda: 900)
+            return [r for r in h.check_resources({}, ctx) if r['id'] == 'temperature'][0]
+        self.assertTrue(temp('52.5')['ok'])
+        warm = temp('72.0')
+        self.assertFalse(warm['ok'])
+        self.assertFalse(warm['urgent'])
+        self.assertTrue(temp('76.0')['urgent'])
+
+    def test_ssd_smart(self):
+        def smart(passed='PASSED', realloc=0, crc=0, temp=26, life=None):
+            rows = ['=== START OF READ SMART DATA SECTION ===',
+                    'SMART overall-health self-assessment test result: %s' % passed,
+                    'ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE',
+                    '  5 Reallocated_Sector_Ct   0x0032   100   100   050    Old_age   Always       -       %d' % realloc,
+                    '194 Temperature_Celsius     0x0022   100   100   050    Old_age   Always       -       %d (Min/Max 22/33)' % temp,
+                    '199 UDMA_CRC_Error_Count    0x0032   100   100   050    Old_age   Always       -       %d' % crc]
+            if life is not None:
+                rows.append('231 SSD_Life_Left           0x0013   %03d   %03d   010    Pre-fail  Always       -       0' % (life, life))
+            return (0, '\n'.join(rows) + '\n')
+        state = {}
+        ok = {r['id']: r for r in h.check_ssd({}, context({'smartctl': smart()}, state=state))}
+        self.assertTrue(all(r['ok'] for r in ok.values()))
+        self.assertEqual(state['_ssd'], {'5': 0, '199': 0})
+        crc = {r['id']: r for r in h.check_ssd({}, context({'smartctl': smart(crc=3)}, state=state))}
+        self.assertFalse(crc['ssd_errors']['ok'])
+        self.assertFalse(crc['ssd_errors']['urgent'])
+        self.assertIn('cavo', crc['ssd_errors']['advice'])
+        bad = {r['id']: r for r in h.check_ssd({}, context({'smartctl': smart(passed='FAILED!', realloc=8, temp=70, life=15)}, state=state))}
+        self.assertFalse(bad['ssd']['ok'])
+        self.assertTrue(bad['ssd']['urgent'])
+        self.assertTrue(bad['ssd_errors']['urgent'])
+        self.assertFalse(bad['ssd_life']['ok'])
+        self.assertFalse(bad['ssd_temperature']['ok'])
+        missing = h.check_ssd({}, context({'smartctl': (2, 'Smartctl open device: /dev/sda failed\n')}))
+        self.assertEqual([r['ok'] for r in missing], [False])
 
     def test_energy_data_age_from_redis(self):
         cfg = {'emoncms_feeds': [{'name': 'Powerwall', 'feed': 305, 'max_age_s': 600},

@@ -211,18 +211,83 @@ def check_resources(cfg, ctx):
     code, temp = ctx['run'](['vcgencmd', 'measure_temp'])
     match = re.search(r'temp=([\d.]+)', temp)
     if code == 0 and match:
+        # warning from temp_warn_c, urgent from temp_max_c (the Pi slows itself down from 80 °C; the technical
+        # room reaches ~34 °C in summer)
         celsius = float(match.group(1))
-        out.append(result('temperature', celsius <= cfg.get('temp_max_c', 75), '%.1f °C' % celsius,
-                          'CPU calda: controlla ventilazione e posizione.', title='Temperatura CPU'))
+        urgent = celsius > cfg.get('temp_max_c', 75)
+        out.append(result('temperature', celsius <= cfg.get('temp_warn_c', 70), '%.1f °C' % celsius,
+                          'CPU calda: controlla ventilazione, posizione e i cuscinetti termici del case.',
+                          urgent=urgent, title='Temperatura CPU'))
     return out
 
 
+KERNEL_DISK_ERRORS = re.compile(r'(?i)(mmc\d.*(error|timeout)|I/O error|EXT4-fs error|uas_eh_\w+|'
+                                r'reset (SuperSpeed|high-speed) USB device|sd \d+:\d+:\d+:\d+: .*(timing out|abort))')
+
+
 def check_kernel_errors(cfg, ctx):
+    # The id stays sd_errors so that the alert state survives the move from SD to SSD (29/10/2026)
     code, kernel = ctx['run'](['journalctl', '-k', '--since', '-1 hour', '--no-pager', '-q'], timeout=30)
-    errors = len(re.findall(r'(?i)(mmc\d.*(error|timeout)|I/O error|EXT4-fs error)', kernel)) if code == 0 else 0
-    return [result('sd_errors', errors == 0, '%d errori della scheda o del disco nell\'ultima ora' % errors,
-                   'Fai subito l\'immagine di backup; valuta il passaggio a SSD.', urgent=errors > 0,
-                   title='Scheda SD')]
+    errors = len(KERNEL_DISK_ERRORS.findall(kernel)) if code == 0 else 0
+    return [result('sd_errors', errors == 0, '%d errori del disco o della USB nell\'ultima ora' % errors,
+                   'Controlla cavo e adattatore dell\'SSD (porta blu); se continua, fai subito un backup.',
+                   urgent=errors > 0, title='Errori del disco')]
+
+
+SMART_COUNTERS = {5: 'settori riallocati', 197: 'settori in attesa', 198: 'settori illeggibili',
+                  199: 'errori CRC del cavo'}
+SMART_LIFE_LEFT = (169, 177, 231, 233)  # remaining life in percent, where the drive reports it
+
+
+def smart_attributes(text):
+    attrs = {}
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) >= 10 and parts[0].isdigit():
+            raw = re.match(r'\d+', parts[9])
+            attrs[int(parts[0])] = {'name': parts[1], 'value': int(parts[3]) if parts[3].isdigit() else None,
+                                    'raw': int(raw.group(0)) if raw else None}
+    return attrs
+
+
+def check_ssd(cfg, ctx):
+    """SMART of the system SSD behind the USB adapter: health, growing error counters, life, temperature."""
+    spec = cfg.get('ssd', {})
+    device = spec.get('device', '/dev/sda')
+    code, text = ctx['run'](['smartctl', '-d', 'sat', '-H', '-A', device], timeout=30)
+    if not re.search(r'overall-health self-assessment test result', text):
+        return [result('ssd', False, 'SMART non leggibile su %s (codice %d)' % (device, code),
+                       'Controlla che l\'SSD sia collegato e «sudo smartctl -d sat -a %s».' % device, title='SSD')]
+    out = []
+    passed = re.search(r'test result: PASSED', text) is not None
+    out.append(result('ssd', passed, 'stato SMART %s' % ('PASSED' if passed else 'NON PASSED'),
+                      'Il disco segnala un guasto: fai subito un backup e prepara la sostituzione.',
+                      urgent=not passed, title='SSD'))
+    attrs = smart_attributes(text)
+    baseline = ctx['state'].setdefault('_ssd', {})
+    grown = []
+    for number, label in sorted(SMART_COUNTERS.items()):
+        raw = attrs.get(number, {}).get('raw')
+        if raw is None:
+            continue
+        first = baseline.setdefault(str(number), raw)
+        if raw > first:
+            grown.append('%s %d (erano %d)' % (label, raw, first))
+    crc_only = grown and all('CRC' in item for item in grown)
+    out.append(result('ssd_errors', not grown, ', '.join(grown) if grown else 'nessun contatore di errori in crescita',
+                      'Errori CRC: cavo o adattatore USB, prova a ricollegarlo o a cambiarlo.' if crc_only else
+                      'Il disco sta perdendo settori: fai un backup e prepara la sostituzione.',
+                      urgent=bool(grown) and not crc_only, title='Errori SSD'))
+    life = [attrs[n]['value'] for n in SMART_LIFE_LEFT if attrs.get(n, {}).get('value') is not None]
+    if life:
+        left = min(life)
+        out.append(result('ssd_life', left >= spec.get('life_min_pct', 20), 'vita residua %d %%' % left,
+                          'SSD consumato: prepara la sostituzione.', title='Usura SSD'))
+    temp = attrs.get(194, {}).get('raw')
+    if temp is not None:
+        out.append(result('ssd_temperature', temp <= spec.get('temp_max_c', 65), '%d °C' % temp,
+                          'SSD caldo: controlla la ventilazione intorno al disco.', title='Temperatura SSD'))
+    return out
 
 
 def check_clock(cfg, ctx):
@@ -384,6 +449,7 @@ CHECKS = {
     'mosquitto_config': (check_mosquitto_config, 900), 'internet': (check_internet, 900),
     'resources': (check_resources, 900), 'kernel_errors': (check_kernel_errors, 900),
     'clock': (check_clock, 900), 'backups': (check_backups, 900), 'powerwall_charge': (check_powerwall_charge, 0),
+    'ssd': (check_ssd, 3600),
 }
 
 
