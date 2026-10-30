@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.domopi.app.data.AcOverride
+import com.domopi.app.data.AcState
+import com.domopi.app.ui.components.AcStateLine
 
 private data class AcButton(val label: String, val mode: String, val setpoint: Int?, val confirm: String)
 
@@ -21,11 +23,12 @@ private val BUTTONS = listOf(
  * Step 4 of phase T4 (docs/AI_MODE/COMANDI_A_TEMPO.md): the manual priority of the air conditioner
  * (AI-CLIMATE-AC-OVERRIDE.1 on .20) with "Auto" to give it back to AI Climate. Every button asks for a
  * confirmation and lasts 2 hours (user's decisions of 23/10/2026); compressor timers and battery
- * protection stay with the .20.
+ * protection stay with the .20. Under the buttons the state of AI-CLIMATE-AC-STATE.1 in one line, so the
+ * effect of a button (or the safeguard holding it back) is visible here (user, 30/10/2026).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AcOverrideCard(override: AcOverride?, closedReason: String?, publish: (String) -> Unit) {
+fun AcOverrideCard(override: AcOverride?, closedReason: String?, state: AcState? = null, publish: (String) -> Unit) {
     var pending by remember { mutableStateOf<AcButton?>(null) }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -46,6 +49,7 @@ fun AcOverrideCard(override: AcOverride?, closedReason: String?, publish: (Strin
                         onClick = { pending = b }, label = { Text(b.label) })
                 }
             }
+            AcStateLine(state)
         }
     }
     pending?.let { b ->

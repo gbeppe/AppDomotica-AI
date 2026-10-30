@@ -243,7 +243,7 @@ fun AiManagedScreen(
                 StatusCard(aiData, envState, hvacState)
             }
 
-            item { AcOverrideCard(hvacState.ac.override, hvacState.ac.overrideClosed) { mqttManager.publish(AcOverride.TOPIC_CMD, it) } }
+            item { AcOverrideCard(hvacState.ac.override, hvacState.ac.overrideClosed, hvacState.ac.state) { mqttManager.publish(AcOverride.TOPIC_CMD, it) } }
 
             // 2 & 3. Tempi Compressore
             item {
@@ -444,7 +444,7 @@ fun StatusCard(
                     border = BorderStroke(1.dp, statusColor.copy(alpha = 0.5f))
                 ) {
                     Text(
-                        text = statusText,
+                        text = hvacState.ac.state?.currentLabel ?: statusText,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         color = statusColor,
                         style = MaterialTheme.typography.labelLarge,
@@ -464,146 +464,155 @@ fun StatusCard(
                 AcReasonCategory.UNKNOWN -> MaterialTheme.colorScheme.onSurfaceVariant
             }
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                color = categoryColor.copy(alpha = 0.08f),
-                border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.3f))
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        val icon = when (reasonInfo.category) {
-                            AcReasonCategory.CRITICAL -> Icons.Default.Error
-                            AcReasonCategory.WARNING -> Icons.Default.Warning
-                            AcReasonCategory.NORMAL -> Icons.Default.CheckCircle
-                            AcReasonCategory.UNKNOWN -> Icons.Default.Info
-                        }
-                        Icon(icon, contentDescription = null, tint = categoryColor, modifier = Modifier.size(20.dp))
-                        Text(
-                            text = reasonInfo.userTitle.ifEmpty { reasonInfo.code },
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = categoryColor
-                        )
-                    }
-
-                    if (reasonInfo.userExplanation.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = reasonInfo.userExplanation,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    reasonInfo.remainingTimerMinutes?.let { remMin ->
-                        if (remMin > 0) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Surface(
-                                color = categoryColor.copy(alpha = 0.15f),
-                                shape = MaterialTheme.shapes.extraSmall,
-                                border = BorderStroke(0.5.dp, categoryColor.copy(alpha = 0.4f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = "⏱️ Tempo residuo: $remMin min",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = categoryColor
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if (reasonInfo.description.isNotEmpty() && reasonInfo.description != reasonInfo.userExplanation) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = reasonInfo.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    if (reasonInfo.quandoCompare.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "📌 Quando compare: ${reasonInfo.quandoCompare}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    if (reasonInfo.effetto.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "⚙️ Effetto: ${reasonInfo.effetto}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    if (reasonInfo.soglieCostanti.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "📐 ${reasonInfo.soglieCostanti}",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = categoryColor
-                        )
-                    }
-
-                    if (reasonInfo.metrics.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+            // AI-CLIMATE-AC-STATE.1: the logic codes only on request (the state is in the line of
+            // "Condizionatore a tempo" and in the HVAC screen; user, 30/10/2026)
+            var technical by remember { mutableStateOf(false) }
+            TextButton(onClick = { technical = !technical }, contentPadding = PaddingValues(0.dp)) {
+                Text(if (technical) "Nascondi dettagli tecnici" else "Dettagli tecnici: ${reasonInfo.userTitle.ifEmpty { reasonInfo.code }}",
+                    style = MaterialTheme.typography.labelMedium)
+            }
+            if (technical) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    color = categoryColor.copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.3f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            reasonInfo.metrics.forEach { metric ->
+                            val icon = when (reasonInfo.category) {
+                                AcReasonCategory.CRITICAL -> Icons.Default.Error
+                                AcReasonCategory.WARNING -> Icons.Default.Warning
+                                AcReasonCategory.NORMAL -> Icons.Default.CheckCircle
+                                AcReasonCategory.UNKNOWN -> Icons.Default.Info
+                            }
+                            Icon(icon, contentDescription = null, tint = categoryColor, modifier = Modifier.size(20.dp))
+                            Text(
+                                text = reasonInfo.userTitle.ifEmpty { reasonInfo.code },
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = categoryColor
+                            )
+                        }
+
+                        if (reasonInfo.userExplanation.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = reasonInfo.userExplanation,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        reasonInfo.remainingTimerMinutes?.let { remMin ->
+                            if (remMin > 0) {
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Surface(
-                                    color = categoryColor.copy(alpha = 0.12f),
+                                    color = categoryColor.copy(alpha = 0.15f),
                                     shape = MaterialTheme.shapes.extraSmall,
-                                    border = BorderStroke(0.5.dp, categoryColor.copy(alpha = 0.25f))
+                                    border = BorderStroke(0.5.dp, categoryColor.copy(alpha = 0.4f))
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         Text(
-                                            text = "${metric.label}: ",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontSize = 10.sp
-                                        )
-                                        Text(
-                                            text = metric.value,
+                                            text = "⏱️ Tempo residuo: $remMin min",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = categoryColor,
-                                            fontSize = 11.sp
+                                            color = categoryColor
                                         )
                                     }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Codice logica: ${reasonInfo.code}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontSize = 10.sp
-                    )
+                        if (reasonInfo.description.isNotEmpty() && reasonInfo.description != reasonInfo.userExplanation) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = reasonInfo.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        if (reasonInfo.quandoCompare.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "📌 Quando compare: ${reasonInfo.quandoCompare}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        if (reasonInfo.effetto.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "⚙️ Effetto: ${reasonInfo.effetto}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        if (reasonInfo.soglieCostanti.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "📐 ${reasonInfo.soglieCostanti}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = categoryColor
+                            )
+                        }
+
+                        if (reasonInfo.metrics.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                reasonInfo.metrics.forEach { metric ->
+                                    Surface(
+                                        color = categoryColor.copy(alpha = 0.12f),
+                                        shape = MaterialTheme.shapes.extraSmall,
+                                        border = BorderStroke(0.5.dp, categoryColor.copy(alpha = 0.25f))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "${metric.label}: ",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 10.sp
+                                            )
+                                            Text(
+                                                text = metric.value,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = categoryColor,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Codice logica: ${reasonInfo.code}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontSize = 10.sp
+                        )
+                    }
                 }
             }
 
@@ -615,6 +624,14 @@ fun StatusCard(
                 MetricItem("Humidex", "%.1f".format(locale, envState.living.humidex))
                 MetricItem("Setpoint", "%.1f°C".format(locale, data.statoCondizionatore.temperaturaImpostataC))
                 MetricItem("VMC", hvacState.vmc.speed.toString())
+            }
+            hvacState.ac.state?.let { st ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    MetricItem("Surplus FV", st.surplusW?.let { "$it W" } ?: "—")
+                    MetricItem("Batteria", st.soc?.let { "$it %" } ?: "—")
+                    MetricItem("Consumo AC", "${st.powerW} W")
+                }
             }
         }
     }

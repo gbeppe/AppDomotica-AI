@@ -31,7 +31,9 @@ data class AcStatus(
     val active: Boolean = false,
     val override: AcOverride? = null,
     /** Why the last manual priority was closed (battery protection), until the next state. */
-    val overrideClosed: String? = null
+    val overrideClosed: String? = null,
+    /** What it is doing, its confirmation and the change held back by a safeguard (AI-CLIMATE-AC-STATE.1). */
+    val state: AcState? = null
 )
 
 @Serializable

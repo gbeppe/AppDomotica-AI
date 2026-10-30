@@ -750,6 +750,11 @@ class MqttManager {
             return
         }
 
+        if (device == "ac" && prop == "state") {
+            AcState.parse(payload)?.let { st -> _hvacState.update { it.copy(ac = it.ac.copy(state = st)) } }
+            return
+        }
+
         if (device == "ac" && prop == "override") {
             val (override, closed) = AcOverride.parse(payload)
             _hvacState.update { it.copy(ac = it.ac.copy(override = override, overrideClosed = closed)) }

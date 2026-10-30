@@ -106,6 +106,7 @@ Limiti Groq gratuiti per `gpt-oss-120b`: **8000 token al minuto** e **200.000 to
 | `lights_echo_guard` (LIGHTS-ECHO-GUARD.1) | "function 17" consuma per 10 s l'eco dello stato pubblicato dalle catene IR: niente ping-pong accendi/spegni con due comandi opposti ravvicinati (incidente 15/10 21:27); backup `/home/pi/AI_backups/nodered/20261015T212857Z-before-lights-echo-guard` | live dal 15/10 23:29; prova del 16/10 08:46 superata (doppio tocco: 4 invii IR, poi silenzio) |
 | `lights_echo_guard2` (LIGHTS-ECHO-GUARD.2) | le 18 funzioni che pubblicano lo stato dopo le catene Broadlink annunciano l'eco nel registro globale `lightsPendingEchoes`; "function 17" lo consuma prima dell'anti-loop, qualunque sia l'origine del comando (dashboard, Alexa, programmazioni): un solo invio radio per tocco (prima la dashboard mandava «3on» due volte); backup `/home/pi/AI_backups/nodered/20261023T080307Z-before-lights-echo-guard2` | live dal 23/10 10:03; prova superata (dashboard e app: 4 tocchi, 4 invii) |
 | `ai_ac_override` (AI-CLIMATE-AC-OVERRIDE.1) | T4: priorità manuale del condizionatore (`zara/interface/climate/ac/override/cmd`, spento o caldo/raffrescamento/deumidifica, al più 6 ore) rispettata da AI Climate con i tempi del compressore; una protezione della batteria la chiude e avvisa su ntfy; backup `/home/pi/AI_backups/nodered/20261023T135015Z-before-ai-ac-override` | live dal 23/10 15:50 (prova dal vivo rimandata) |
+| `ai_ac_state` (AI-CLIMATE-AC-STATE.1) | stato del condizionatore per l'app, retained `zara/interface/climate/ac/state/stat` (`domopi.ac_state.v1`): attuale, riscontro dal consumo, richiesto e salvaguardia con l'ora di fine, allarmi; settima uscita della funzione di AI Climate, decisioni invariate; backup `/home/pi/AI_backups/nodered/20261030T133118Z-before-ai-ac-state` | live dal 30/10 14:31 |
 | `rules_engine5` (RULES-ENGINE.5) | azioni `set_ac_override` (spento o caldo/raffrescamento/deumidifica, fine al più 6 ore dopo) e `set_ac_auto`; solo la funzione del motore; backup `/home/pi/AI_backups/nodered/20261023T135429Z-before-rules-engine5` | live dal 23/10 15:54 |
 | `solar_tilted` (SOLAR-TILTED.1) | F2: tolto il ramo rotto `Irradiance=` del tab «start local scripts»; F3: previsione Open-Meteo della luce sul piano di ciascuna falda (ogni ora), `emon/planetary/forecast_smodule`/`forecast_smodule2` sul `.15` ogni 300 s e riepilogo retained `zara/interface/energy/solar_forecast/stat` (kWh di luce oggi/domani); backup `/home/pi/AI_backups/nodered/20261023T160950Z-before-solar-tilted` | live dal 23/10 18:09 |
 | `heating_profile` (HEATING-PROFILE.1) | nuovo tab: profilo di riscaldamento Spento/Ridotto/Pieno (auto da media esterna 72 h, soglie 10/16 °C da EmonCMS) e timer dei termostati (fascia → massimo, fuori → minimo), parte in **shadow**; sostituisce i timer del `.15` | live dal 16/10 12:44; **timer active dal 23/10 18:00** (dopo TASMOTA-TIMERS-OFF.1) |
@@ -398,6 +399,14 @@ EmonScripts (PHP 8.4, MariaDB 10.11) con i dati ripristinati, Node-RED 5.0.8 con
 disattivati, scheda FusionSolar tolta), lettura Modbus dell'inverter Huawei spostata dal Raspberry 3 al `.15`
 (`huawei2emoncms`). Alias SSH `emonpi-new` → `.15`. Vecchie SD dei due Raspberry nel cassetto; istruzioni per chi è in
 casa in [`AI_MODE/RITORNO_SD.md`](AI_MODE/RITORNO_SD.md).
+**30/10/2026.** Backup: immagini mensili (`.15` primo sabato, `.20` dopo il case), vecchi `regular.backup.sh` tolti (B6),
+archivio mensile di emoncms `backend/backup/emoncms_monthly_export.sh` sul `.15`, cartelle obsolete dei QNAP cancellate.
+Sul `.20` mancava l'estensione **Mosquitto di PHP** usata da `solarEnergy.php` (fotovoltaico teorico fermo dal 29/10):
+compilata dall'utente da `openenergymonitor/Mosquitto-PHP` come fa EmonScripts, feed 146/302 ripartiti alle 13:34.
+**T4 provata dal vivo**; nuovo stato del condizionatore AI-CLIMATE-AC-STATE.1 live e riquadro dell'app
+([`AI_MODE/COMANDI_A_TEMPO.md`](AI_MODE/COMANDI_A_TEMPO.md)). Calibrazione delle falde: dati dell'utente (Eclipse 12
+pannelli 3 kWp, circa 10 anni; Viessmann 12 pannelli 3,6 kWp, circa 3 anni, inverter che d'estate taglia a 3 kW);
+confronto della giornata serena del 30/10 da fare a sera.
 
 ### Da indagare (16/10/2026)
 

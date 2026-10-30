@@ -13,7 +13,7 @@ Progetto e decisioni dell'utente (23/10/2026): [`docs/AI_MODE/COMANDI_A_TEMPO.md
   «link in» nel tab «Avvisi (DomoPi)» collegato alla funzione «notifica ntfy» esistente.
 - Funzione di AI Climate, due blocchi:
   - **A** prima della decisione del condizionatore: ricorda stato e orari del giro; finita una priorità,
-    chiude lo stato manuale (spento, dopo i 15 minuti minimi di marcia) prima della logica AI;
+    chiude lo stato manuale (spento, dopo il tempo minimo di marcia: impostazione dell'app, 25 minuti al 30/10) prima della logica AI;
   - **B** dopo la decisione: finché dura la priorità annulla la decisione AI del giro e applica stato e
     codice IR manuali con i tempi del compressore (`MANUALE_IN_ATTESA_COMPRESSORE_<n>_MIN`); una protezione
     della batteria (d'estate: scarica oltre 2,5 kW o riserva notturna) la chiude invece

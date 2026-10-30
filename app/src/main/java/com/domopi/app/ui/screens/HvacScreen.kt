@@ -1,5 +1,6 @@
 package com.domopi.app.ui.screens
 
+import com.domopi.app.ui.components.AcStateCard
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -73,6 +74,9 @@ fun HvacScreen(mqttManager: MqttManager, onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 0. Condizionatore (AI-CLIMATE-AC-STATE.1): current → safeguard → requested
+            item { AcStateCard(hvacState.ac.state) }
+
             // 1. VMC
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {

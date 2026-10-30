@@ -56,6 +56,8 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | 18/10 | Lezione: sul `.15` un caminetto acceso a mano non si spegne con la fascia oraria (in Manuale gli orari non contano): AI Smart non deve far credere il contrario | `HANDOFF.md` §7 |
 | 18/10 | **Comandi a tempo** per tutti i dispositivi comandabili (ordine T1 luci/scene/caminetto, T2 VMC con velocità, T3 piscina, T4 condizionatore tramite sospensione o forzatura di AI Climate); ogni orario futuro è una regola «una volta» con data, **attiva subito** senza giorno di prova | `AI_MODE/COMANDI_A_TEMPO.md` |
 
+| 30/10 | Condizionatore senza display: l'app mostra **stato attuale → salvaguardia → stato richiesto** con tre icone (lampeggia solo quella corrente; arrivato, resta una sola icona con la conferma dal consumo), riga testuale sotto i pulsanti in AI Managed Control, icone nello stile Hitachi; i dati da AI-CLIMATE-AC-STATE.1 (formato e quattro scelte dell'utente, comprese le richieste di AI Climate trattenute dal compressore) | `AI_MODE/COMANDI_A_TEMPO.md` |
+
 ## Lezioni tecniche
 
 | Tema | Lezione |
@@ -106,6 +108,8 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | Tailscale subnet router sul sistema nuovo | Senza `net.ipv4.ip_forward = 1` (`/etc/sysctl.d/99-tailscale.conf`) da fuori casa si raggiunge solo il `.20` stesso, non emoncms del `.15` né gli altri dispositivi: `tailscaled` lo segnala nel log («IP forwarding is disabled»). Le librerie Python usate da servizi che girano come `root` vanno installate per tutto il sistema (`python3-…` di Debian), non solo per `pi`. |
 | MariaDB 11.8 → replica sul QNAP 10.5 | La 11.8 usa di default la collation `utf8mb4_uca1400_ai_ci` (id 2048), sconosciuta alla 10.5: lo slave si ferma. Sul master `character_set_collations = utf8mb4=utf8mb4_general_ci`. Il client 11.8 pretende TLS: verso il QNAP `--skip-ssl`. Per riallineare lo slave: `STOP SLAVE`, dump con `--master-data=2`, caricamento, `CHANGE MASTER TO` sulla posizione del dump, `START SLAVE`. |
 | emoncms sul sistema nuovo (`.15`) | EmonScripts su Bookworm: `pip install redis` fallisce (controllo `EXTERNALLY-MANAGED` sbagliato) → `python3-redis` da Debian, altrimenti `service-runner` non parte; emonhub non viene attivato all'avvio → `systemctl enable emonhub`. Con PHP 8 un valore vuoto in Redis (`process:ratechange:<feed>`) manda in crash `emoncms_mqtt` e ferma tutti gli input MQTT (emonTx): togliere la chiave. Prima di fermare emoncms per una copia, lasciare che `feedwriter` scriva i buffer `feed:*:buffer` (fino a 5 minuti di dati). Il banco non può leggere il backup NFS del QNAP senza un permesso per il suo indirizzo (dato temporaneo, in sola lettura). |
+| Script del `.20` dopo la reinstallazione | `php -l` non basta: `solarEnergy.php` usa l'estensione `Mosquitto\Client` (PECL Mosquitto-PHP), che il sistema nuovo non aveva; il fotovoltaico teorico si è fermato senza allarmi. Dopo un cambio di sistema provare ogni script lanciato dai flow, non solo la sintassi |
+| Priorità manuale del condizionatore | Con AI Climate disabilitato (`AI_climate_enabling` false) la priorità manuale **non ha effetto**: il blocco è nella parte abilitata della funzione. I tempi minimi del compressore sono quelli dell'app (25/20 min al 30/10), non 15 |
 
 ## Fatti utili sull'impianto
 

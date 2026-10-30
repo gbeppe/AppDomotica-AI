@@ -1,0 +1,17 @@
+{
+  "patch": "AI-CLIMATE-AC-STATE.1",
+  "modified_ids": [
+    "61992c8879c11f66"
+  ],
+  "removed_ids": [],
+  "added_ids": [
+    "471e73d3ed54c19a"
+  ],
+  "node_sha256_before": {
+    "61992c8879c11f66": "cb302d29b08a030d7c0670b0498a418b141841f53e092cfbb2aeb86ff6affa35"
+  },
+  "node_sha256_after": {
+    "61992c8879c11f66": "ed85ca2a4763bda49321d2bd687738c6bf3ae7fa330fa4d8cd164579bf957542",
+    "471e73d3ed54c19a": "74ab637e1b573e53ee6874ebfe66ee68df5758b0ffcf328c7dd89646ee3ddb25"
+  }
+}

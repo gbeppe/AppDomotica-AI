@@ -31,7 +31,7 @@ caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'acc
 | **T1** | luci, scene, caminetto | motore: trigger `at` (orario con data), regole `start_active`; AI Smart: strumento `schedule_command`; caminetto solo in Manuale | **attiva 18/10** |
 | T2 | VMC | priorità manuale con scadenza rispettata da AI Climate (`AI-CLIMATE-VMC-OVERRIDE.1`), azioni VMC nel motore (`RULES-ENGINE.4`), AI Smart `vmc_command`, pulsanti dell'app = priorità di 2 ore | Node-RED live 21/10; backend e app in rilascio |
 | T3 | piscina (pompa, skimmer, luce acqua, luce bordo) | protezioni per la pompa di filtrazione da decidere | **rimandata** (utente, 23/10) |
-| T4 | condizionatore | priorità manuale con scadenza (spento o acceso in caldo/raffrescamento/deumidifica) rispettata da AI Climate; vedi sotto | Node-RED live 23/10 (AI-CLIMATE-AC-OVERRIDE.1, RULES-ENGINE.5); backend `20261023-ac`; app: riquadro «Condizionatore a tempo» (23/10); prova dal vivo da fare |
+| T4 | condizionatore | priorità manuale con scadenza (spento o acceso in caldo/raffrescamento/deumidifica) rispettata da AI Climate; vedi sotto | Node-RED live 23/10 (AI-CLIMATE-AC-OVERRIDE.1, RULES-ENGINE.5); backend `20261023-ac`; app: riquadro «Condizionatore a tempo» (23/10); **prova dal vivo fatta il 30/10**; stato per l'app AI-CLIMATE-AC-STATE.1 (30/10) |
 | (opzione) | termostati | «metti il bagno a 21 fino alle 22» = setpoint ora + ripristino del precedente | da valutare |
 | — | irrigazione / OpenSprinkler | **mai** (regola 5 di `CLAUDE.md`) | — |
 
@@ -39,7 +39,7 @@ caminetto fino alle 19:00» confermato, caminetto rimasto acceso alle 19: un'acc
 
 Oggi il condizionatore lo decide solo **AI Climate** (stati `OFF`, `COOLING_ON`, `NIGHT_DRY`,
 `STANDBY_INVERTER`, d'inverno `HEAT_DIURNO`/`HEAT_SICUREZZA_NOTTE`), con tempi minimi del compressore
-(15 min acceso, 15 spento), batteria minima, protezioni d'estate (scarica oltre 2,5 kW, riserva
+(impostazioni dell'app «Gestione Cicli Compressore», `user_min_run_time`/`user_min_off_time`: **25 min acceso, 20 spento** al 30/10; 15 è solo il valore di riserva), batteria minima, protezioni d'estate (scarica oltre 2,5 kW, riserva
 notturna) e un vigilante che rispegne un condizionatore acceso «da fuori» dopo 3 minuti.
 L'interruttore generale `AI_climate_enabling` spegne anche la VMC al minimo: non va bene per T4.
 
@@ -73,6 +73,31 @@ Componenti, sullo schema della VMC:
    «Stato operativo» (`AcOverride.kt`, `AcOverrideCard.kt`): priorità in corso («caldo 20 °C fino alle
    22:00»), pulsanti **Auto**, Spegni, Caldo 20°, Fresco 24°, Deumidifica (2 ore, **con conferma**),
    chiusura per protezione della batteria in rosso (`closed_reason` di `override/stat`).
+
+### Prova dal vivo (30/10/2026) e stato del condizionatore
+
+Prova con l'utente (AI Climate abilitato per la prova, poi di nuovo disabilitato): 13:38 «Caldo 20°» dall'app →
+`MANUALE_CALDO`, `eco20heat`, 24 W (solo ventola) poi 867–1075 W; spento dal telecomando, il vigilante lo ha
+riacceso alle 13:44; «Spegni» alle 13:54 eseguito alle **14:09** (25 minuti dalla riaccensione delle 13:44). Lezioni:
+**con AI Climate disabilitato la priorità manuale non ha effetto** (il blocco sta dentro la parte abilitata); il
+condizionatore è a infrarossi e senza display, e nell'app `MANUALE_CALDO` con «in attesa compressore» faceva
+ripremere «Spegni».
+
+Richiesta dell'utente, formato e quattro scelte concordati lo stesso giorno: **AI-CLIMATE-AC-STATE.1**
+([`backend/nodered/ai_ac_state/`](../../backend/nodered/ai_ac_state/README.md)) pubblica retained
+`zara/interface/climate/ac/state/stat` (`domopi.ac_state.v1`): stato attuale (modalità, temperatura, ultimo codice IR,
+da quando, chi: tu, AI Climate, vigilante), riscontro dal consumo (spento sotto 30 W, solo ventola sotto 200 W, in
+funzione da 200 W, nessun consumo dopo 6 minuti), stato richiesto e salvaguardia con l'ora di fine (tempi del
+compressore; anche le richieste di AI Climate trattenute, tranne la deumidifica notturna), allarmi, valori della casa.
+Solo codici; i testi li fa l'app. Le decisioni di AI Climate non cambiano. Live dal 30/10 14:31.
+
+App (design dell'utente, mockup «Condizionatore: tre stati»): scheda **Gestione impianti HVAC**, riquadro
+«Condizionatore» in cima: con una salvaguardia tre icone **attuale → salvaguardia (conto alla rovescia) → richiesto**,
+lampeggia solo quella corrente; arrivato allo stato richiesto resta una sola icona con la conferma dal consumo. Icone
+a linea nello stile del telecomando Hitachi (sole, fiocco esagonale, goccia con l'aria, «A»). In **AI Managed Control**
+la stessa informazione in una riga sotto i pulsanti di «Condizionatore a tempo»; i codici tecnici di «Stato operativo»
+solo su richiesta; surplus, batteria e consumo del condizionatore insieme a temperatura, humidex, setpoint e VMC. I
+comandi IR con «auto» nel nome (nessuno nel dizionario al 30/10) sono la modalità AUTO; `22`…`26` sono raffrescamento.
 
 ## T2 — VMC (decisioni dell'utente del 18/10/2026)
 
@@ -125,6 +150,7 @@ cambio. Quindi:
 | 23/10/2026 | T3 rimandata dall'utente. T4 progettata: decisioni 1a, 2a, 3a, durata massima 6 ore; analisi di AI Climate (stati, vigilante, codici IR del dizionario) |
 | 23/10/2026 15:50–15:54 | AI-CLIMATE-AC-OVERRIDE.1 (test 9/9) e RULES-ENGINE.5 (16/16) live; backend `ac_command` (208 test); prova dal vivo rimandata dall'utente |
 | 23/10/2026 | Passo 4: riquadro dell'app con stato, Auto e pulsanti di 2 ore con conferma |
+| 30/10/2026 | Prova dal vivo di T4 riuscita; AI-CLIMATE-AC-STATE.1 live (7 test) e riquadro del condizionatore nell'app |
 | 18/10/2026 21:17 | RULES-ENGINE.3 live sul `.20` (backup `20261018T191739Z-before-rules-engine3`); house_ai `20261018-timed-commands` (commit `b3c2897`); prove reali delle frasi senza comandi |
 | 18/10/2026 22:53 | **Prova dal telefono riuscita**: «alle 22:56 accendo la luce della libreria» creata 22:53:38 (notifica «Comando programmato»), eseguita 22:56:13 (`lights/libreria/power/cmd` true, notifica «Regola intervenuta»), regola chiusa |
 | 21/10/2026 23:00 | AI-CLIMATE-VMC-OVERRIDE.1 e RULES-ENGINE.4 live sul `.20` (backup `20261021T205755Z-before-ai-vmc-override`, `20261021T210015Z-before-rules-engine4`); house_ai `20261018-vmc`: «metti la VMC a 3» e «rimetti la VMC in automatico» corretti, le frasi con orario fallivano per il limite al minuto di Groq (413; ~7700 token a domanda) → `20261021-budget` |
