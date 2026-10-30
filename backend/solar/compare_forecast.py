@@ -19,7 +19,7 @@ import time
 
 PHPFINA = '/var/opt/emoncms/phpfina/'
 FEEDS = (449, 450, 451, 452, 146, 302, 307, 426)
-COEFF = {'Eclipse': 0.15, 'Viessmann': 0.205}
+COEFF = {'Eclipse': 0.12, 'Viessmann': 0.195}   # forecast inputs 1527/1528 since 30/10/2026
 
 
 def load(fid):

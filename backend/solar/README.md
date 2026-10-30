@@ -53,7 +53,7 @@ riepilogo `zara/interface/energy/solar_forecast/stat`). Patch Node-RED:
 
 Gira sul `.15` e legge direttamente i file PHPFina di EmonCMS (sola lettura, senza chiave): per un
 giorno stampa le medie orarie in W, i kWh, lo scarto della previsione e l'efficienza effettiva di
-ciascuna falda (reale elettrico / luce prevista) da confrontare con i coefficienti 0,15 e 0,205.
+ciascuna falda (reale elettrico / luce prevista) da confrontare con i coefficienti della previsione (0,12 e 0,195).
 
 ```sh
 ssh pi@192.168.1.15 'python3 - 2026-10-24' < compare_forecast.py   # senza data: oggi
@@ -66,4 +66,12 @@ quella Viessmann; il Huawei fa in media il 40 % del totale.
 
 I pannelli Eclipse hanno circa 10 anni (utente, 24/10): l'efficienza reale è più bassa di quella di
 targa per l'invecchiamento (tipicamente 0,5–0,8 % all'anno), oltre alle perdite di inverter,
-temperatura e sporco. Il coefficiente 0,15 va rivisto sulle giornate serene misurate.
+temperatura e sporco.
+
+**Coefficienti (30/10/2026, giornata limpida, ore 9–13):** in EmonCMS, solo sulla **previsione**: `forecast_smodule`
+(input 1527) da 0,15 a **0,12**, `forecast_smodule2` (1528) da 0,205 a **0,195**. Il teorico a cielo sereno (`smodule`,
+`smodule2`, feed 146 e 302) resta 0,15 e 0,205 di proposito: è il riferimento fisso dei grafici dell'utente, reale
+contro teorico di ciascuna falda. Copia dei precedenti in `/home/pi/AI_backups/emoncms/20261030-before-forecast-coeff.txt`
+sul `.15`. Falde: Eclipse 12 pannelli, 3 kWp, circa 10 anni; Viessmann 10 pannelli, 3,6 kWp, circa 3 anni, inverter che
+taglia a 3 kW. Da capire: col sole basso (7, 14–15) il reale è molto sotto il previsto; Viessmann a 0,195 supera
+il rendimento di targa 0,184 (luce prevista bassa a 15° o reale sovrastimato, Tesla − Huawei).
