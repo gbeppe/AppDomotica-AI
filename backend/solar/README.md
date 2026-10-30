@@ -73,5 +73,11 @@ temperatura e sporco.
 `smodule2`, feed 146 e 302) resta 0,15 e 0,205 di proposito: è il riferimento fisso dei grafici dell'utente, reale
 contro teorico di ciascuna falda. Copia dei precedenti in `/home/pi/AI_backups/emoncms/20261030-before-forecast-coeff.txt`
 sul `.15`. Falde: Eclipse 12 pannelli, 3 kWp, circa 10 anni; Viessmann 10 pannelli, 3,6 kWp, circa 3 anni, inverter che
-taglia a 3 kW. Da capire: col sole basso (7, 14–15) il reale è molto sotto il previsto; Viessmann a 0,195 supera
-il rendimento di targa 0,184 (luce prevista bassa a 15° o reale sovrastimato, Tesla − Huawei).
+taglia a 3 kW. Col sole basso (7, 14–15) il reale è molto sotto il previsto: edifici lontani a est e alberi a ovest nascondono il
+sole a inizio e fine giornata, soprattutto d'inverno (utente): i coefficienti si tarano sulle ore centrali. Da
+capire: la pinza dell'emonTx della Eclipse (feed 359) legge ~8 % più del Huawei (426) nelle ore centrali e coincide
+a bassa potenza; con la pinza i coefficienti sarebbero ~0,13 e ~0,185 (Viessmann vicina alla targa 0,184).
+
+Dashboard «planetary» (id 13): reale contro teorico per falda; il 30/10 aggiunti previsto elettrico 450/452 e Huawei
+426 in `content_json` (EmonCMS 12.2 converte lì le vecchie multigraph, la tabella `multigraph` non conta più); copia
+in `/home/pi/AI_backups/emoncms/20261030-dashboard13-before.json` sul `.15`.
