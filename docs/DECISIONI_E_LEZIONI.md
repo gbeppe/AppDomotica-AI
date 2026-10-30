@@ -58,6 +58,8 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 
 | 30/10 | Condizionatore senza display: l'app mostra **stato attuale → salvaguardia → stato richiesto** con tre icone (lampeggia solo quella corrente; arrivato, resta una sola icona con la conferma dal consumo), riga testuale sotto i pulsanti in AI Managed Control, icone nello stile Hitachi; i dati da AI-CLIMATE-AC-STATE.1 (formato e quattro scelte dell'utente, comprese le richieste di AI Climate trattenute dal compressore) | `AI_MODE/COMANDI_A_TEMPO.md` |
 
+| 30/10 | **DNS ridondante:** secondo Pi-hole sul `.15`, router con DNS 1 `.20` e DNS 2 `.15`. Scartati Pi-hole su ASUS o FRITZ!Box (non si installa sui firmware standard) e `1.1.1.1` come secondo DNS (salterebbe il blocco e risolverebbe male il nome di AI Smart in casa) | `backend/pihole/README.md` |
+
 ## Lezioni tecniche
 
 | Tema | Lezione |

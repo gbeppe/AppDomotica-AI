@@ -1,0 +1,2 @@
+# Pi-hole alignment .20 -> .15 (backend/pihole), after the export of the .20 at 02:50
+5 3 * * * root /opt/domopi-backup/pihole_sync.sh import >> /var/log/pihole-sync.log 2>&1

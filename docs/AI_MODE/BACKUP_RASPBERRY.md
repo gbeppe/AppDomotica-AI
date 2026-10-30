@@ -333,7 +333,7 @@ Ritorno indietro: spegnere, togliere l'SSD, rimettere la SD originale, accendere
 
 ## 7. Punti aperti
 
-- **DNS di riserva** nel router (dopo B5, da discutere): oggi il `.20` è l'unico DNS (Pi-hole) e da spento la casa resta
+- **DNS di riserva** (fatto il 30/10/2026, vedi `backend/pihole/README.md`): oggi il `.20` è l'unico DNS (Pi-hole) e da spento la casa resta
   senza Internet; un secondo DNS nel DHCP dà continuità ma alcuni dispositivi lo userebbero a volte, saltando i filtri.
 - **`.15`: decisione dell'utente del 28/10:** sistema nuovo con Raspberry Pi OS Lite e lo **script di installazione
   ufficiale di emoncms** (EmonScripts) al posto dell'immagine emonSD; da pianificare dopo il `.20`.

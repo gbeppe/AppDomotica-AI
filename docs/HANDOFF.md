@@ -406,7 +406,7 @@ compilata dall'utente da `openenergymonitor/Mosquitto-PHP` come fa EmonScripts, 
 **T4 provata dal vivo**; nuovo stato del condizionatore AI-CLIMATE-AC-STATE.1 live e riquadro dell'app
 ([`AI_MODE/COMANDI_A_TEMPO.md`](AI_MODE/COMANDI_A_TEMPO.md)). Calibrazione delle falde: dati dell'utente (Eclipse 12
 pannelli 3 kWp, circa 10 anni; Viessmann 12 pannelli 3,6 kWp, circa 3 anni, inverter che d'estate taglia a 3 kW);
-confronto della giornata serena del 30/10 da fare a sera. **Case di alluminio montato sul `.20`** (fermo 16:38–17:04): 37 °C con l'immagine in corso contro ~50 °C di prima; SSD sulla porta USB 3 (`uas`, 5 Gbit/s), OTGW sulla USB 2. Prima immagine del `.20` dall'SSD 17:09–17:39 riuscita. **Priorità: DNS ridondante** (secondo Pi-hole sul `.15`, Pi-hole del `.20` punto unico di guasto).
+confronto della giornata serena del 30/10 da fare a sera. **Case di alluminio montato sul `.20`** (fermo 16:38–17:04): 37 °C con l'immagine in corso contro ~50 °C di prima; SSD sulla porta USB 3 (`uas`, 5 Gbit/s), OTGW sulla USB 2. Prima immagine del `.20` dall'SSD 17:09–17:39 riuscita. **DNS ridondante fatto:** secondo Pi-hole sul `.15` ([`../backend/pihole/README.md`](../backend/pihole/README.md)), router ASUS con DNS 1 `.20` e DNS 2 `.15`, allineamento notturno via QNAP; prova con Pi-hole del `.20` fermo 17:48–17:50 riuscita da PC e telefono. Con il `.20` spento la casa naviga, ma AI Smart e ntfy restano fermi. Modifiche a Pi-hole solo sul `.20`.
 
 ### Da indagare (16/10/2026)
 
