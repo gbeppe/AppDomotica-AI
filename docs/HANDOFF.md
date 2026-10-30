@@ -68,7 +68,7 @@ Accesso remoto: **solo Tailscale** (tailnet `tailf30ba8.ts.net`; `.20` = `domopi
 ## 4. Componenti e stato (14/10/2026)
 
 ### App Android (`app/`, versione 9.9)
-Installata sul telefono: **`bld_d079a45f`** (27/10, commit `bfa717b`: firmware del gateway Powerwall e data di installazione in «Storico Energia»); prima **`bld_e3752488`** (23/10 18:05, commit `16f51e6`: riquadro «Condizionatore a tempo» nella schermata AI Climate, T4 passo 4); prima **`bld_d1ef3f89`** (23/10, commit `b50d8c5`: passa ad AI Smart i riepiloghi della salute, `current_system_health`); prima **`bld_ef64491d`** (23/10, commit `57de8f8`: pagina «Salute impianto» con il cuore nella barra in alto, fase S3); prima **`bld_a9748986`** (23/10, commit `63061e7`: legge il risultato del profilo di riscaldamento); prima `bld_289903a4` (23/10, commit `5302810`: lettura a voce di date e trattini, `spokenText` in `SpeechText.kt`: «21/10» → «21 ottobre», intervalli, «—» → «non disponibile»); prima `bld_059f6ff7` (23/10: VMC (T2) e risposta ai chiarimenti, `AssistantFollowUp`: la domanda successiva entro 2 minuti porta domanda e chiarimento, microfono riaperto dopo la lettura del chiarimento); prima `bld_bff71307` (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
+Installata sul telefono: **`bld_432183f9`** (30/10, commit `2bd9106`: stato del condizionatore con tre icone nella scheda HVAC e riga sotto «Condizionatore a tempo», AI-CLIMATE-AC-STATE.1); prima **`bld_d079a45f`** (27/10, commit `bfa717b`: firmware del gateway Powerwall e data di installazione in «Storico Energia»); prima **`bld_e3752488`** (23/10 18:05, commit `16f51e6`: riquadro «Condizionatore a tempo» nella schermata AI Climate, T4 passo 4); prima **`bld_d1ef3f89`** (23/10, commit `b50d8c5`: passa ad AI Smart i riepiloghi della salute, `current_system_health`); prima **`bld_ef64491d`** (23/10, commit `57de8f8`: pagina «Salute impianto» con il cuore nella barra in alto, fase S3); prima **`bld_a9748986`** (23/10, commit `63061e7`: legge il risultato del profilo di riscaldamento); prima `bld_289903a4` (23/10, commit `5302810`: lettura a voce di date e trattini, `spokenText` in `SpeechText.kt`: «21/10» → «21 ottobre», intervalli, «—» → «non disponibile»); prima `bld_059f6ff7` (23/10: VMC (T2) e risposta ai chiarimenti, `AssistantFollowUp`: la domanda successiva entro 2 minuti porta domanda e chiarimento, microfono riaperto dopo la lettura del chiarimento); prima `bld_bff71307` (17/10: invia il profilo di riscaldamento ad AI Smart, MQTT a sessione pulita; regole a voce; 16/10: profilo di riscaldamento nella scheda Clima, «Chiede/Non chiede calore», caminetto con fiamma; conferma per i comandi del riscaldamento). Funzioni principali e documenti:
 
 | Funzione | Documento |
 |---|---|
@@ -399,14 +399,14 @@ EmonScripts (PHP 8.4, MariaDB 10.11) con i dati ripristinati, Node-RED 5.0.8 con
 disattivati, scheda FusionSolar tolta), lettura Modbus dell'inverter Huawei spostata dal Raspberry 3 al `.15`
 (`huawei2emoncms`). Alias SSH `emonpi-new` → `.15`. Vecchie SD dei due Raspberry nel cassetto; istruzioni per chi è in
 casa in [`AI_MODE/RITORNO_SD.md`](AI_MODE/RITORNO_SD.md).
-**30/10/2026.** Backup: immagini mensili (`.15` primo sabato, `.20` dopo il case), vecchi `regular.backup.sh` tolti (B6),
+**30/10/2026.** Backup: immagini mensili (`.15` primo sabato, `.20` prima domenica), vecchi `regular.backup.sh` tolti (B6),
 archivio mensile di emoncms `backend/backup/emoncms_monthly_export.sh` sul `.15`, cartelle obsolete dei QNAP cancellate.
 Sul `.20` mancava l'estensione **Mosquitto di PHP** usata da `solarEnergy.php` (fotovoltaico teorico fermo dal 29/10):
 compilata dall'utente da `openenergymonitor/Mosquitto-PHP` come fa EmonScripts, feed 146/302 ripartiti alle 13:34.
 **T4 provata dal vivo**; nuovo stato del condizionatore AI-CLIMATE-AC-STATE.1 live e riquadro dell'app
 ([`AI_MODE/COMANDI_A_TEMPO.md`](AI_MODE/COMANDI_A_TEMPO.md)). Calibrazione delle falde: dati dell'utente (Eclipse 12
 pannelli 3 kWp, circa 10 anni; Viessmann 12 pannelli 3,6 kWp, circa 3 anni, inverter che d'estate taglia a 3 kW);
-confronto della giornata serena del 30/10 da fare a sera.
+confronto della giornata serena del 30/10 da fare a sera. **Case di alluminio montato sul `.20`** (fermo 16:38–17:04): 37 °C con l'immagine in corso contro ~50 °C di prima; SSD sulla porta USB 3 (`uas`, 5 Gbit/s), OTGW sulla USB 2. Prima immagine del `.20` dall'SSD 17:09–17:39 riuscita. **Priorità: DNS ridondante** (secondo Pi-hole sul `.15`, Pi-hole del `.20` punto unico di guasto).
 
 ### Da indagare (16/10/2026)
 

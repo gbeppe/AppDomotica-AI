@@ -188,8 +188,37 @@ Pagina con dati e grafici per ora, giorno, mese e anno: [`studio_inverno/index.h
 - Rendimento reale del condizionatore col freddo dai consumi misurati (362) e dalla temperatura del living.
 - Simulazione ora per ora con la batteria lasciata carica per la casa, poi la conclusione: conviene o no.
 
+## 8. Protocollo della prova sul campo (concordato con l'utente il 30/10/2026)
+
+**Obiettivo:** misurare se il condizionatore che scalda il living con il FV in più, **con il termostato del living
+1 °C più basso nello stesso periodo**, riduce il lavoro della caldaia. **Riuscita** se ogni kWh elettrico del
+condizionatore fa risparmiare almeno **0,77 kWh di calore della caldaia** (0,075 €/kWh di scambio sul posto diviso
+0,098 €/kWh del calore del gas); senza coordinamento lo studio ha trovato 0,23–0,36.
+
+**Quando:** la caldaia a gas si accende l'**8 dicembre** (utente), prima solo in caso di freddo improvviso. Senza
+caldaia non c'è niente da misurare: la prova parte con la caldaia accesa e prosegue a gennaio–febbraio finché ci sono
+almeno **5 giorni di prova e 5 di confronto**. Prima di allora si preparano gli strumenti.
+
+**Giorni:** di prova con sole previsto (FV di domani sopra una soglia da tarare sul FV di dicembre, indicativamente
+12–15 kWh) ed esterno 5–15 °C; di confronto con tempo simile senza strategia; alternati. Caminetto spento nella
+finestra (un giorno con il caminetto acceso si scarta).
+
+**Nei giorni di prova:** 10:30–15:00 condizionatore in caldo 20 °C e termostato del living 1 °C sotto il solito
+(17 invece di 18); dopo, tutto come prima. Primi 2–3 giorni a mano dall'app, poi una regola automatica.
+
+**Strumenti da preparare prima dell'8/12:**
+1. priorità manuale del condizionatore valida **anche con AI Climate disabilitato** (oggi non ha effetto, vedi
+   `COMANDI_A_TEMPO.md`), con patch e test;
+2. **interruzione** se per 15 minuti il condizionatore preleva dalla batteria o dalla rete (nuvole);
+3. regola automatica dei giorni di prova (condizionatore e termostato del living, ripristino alle 15:00);
+4. **riepilogo giornaliero** in sola lettura: calore della caldaia (fiamma e modulazione), ore della pompa del
+   pavimento, temperature di living, camera, bagno ed esterna (Open-Meteo), energia del condizionatore e da dove
+   viene (FV, batteria, rete), batteria al tramonto e il mattino dopo, ore del caminetto; a fine prova confronto e
+   verdetto.
+
 ## 6. Diario
 
 | Data | Fatto |
 |---|---|
 | 27/10/2026 | Progetto aperto. Audit della logica e dell'accensione delle 08:05 (sezioni 1–3). Nessuna modifica. Risposte dell'utente (sezione 5); deciso lo studio preliminare sui dati (5-bis). Studio sui 3 inverni (sezione 7): il condizionatore usato finora ha dato comfort, non risparmio; scelta la prova sul campo della strategia coordinata. |
+| 30/10/2026 | Protocollo della prova concordato (sezione 8); partenza con la caldaia, accesa l'8/12 salvo freddo improvviso; strumenti da preparare prima. |
