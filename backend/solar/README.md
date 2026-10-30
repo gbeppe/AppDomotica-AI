@@ -75,9 +75,13 @@ contro teorico di ciascuna falda. Copia dei precedenti in `/home/pi/AI_backups/e
 sul `.15`. Falde: Eclipse 12 pannelli, 3 kWp, circa 10 anni; Viessmann 10 pannelli, 3,6 kWp, circa 3 anni, inverter che
 taglia a 3 kW. Col sole basso (7, 14–15) il reale è molto sotto il previsto: edifici lontani a est e alberi a ovest nascondono il
 sole a inizio e fine giornata, soprattutto d'inverno (utente): i coefficienti si tarano sulle ore centrali. Da
-capire: la pinza dell'emonTx della Eclipse (feed 359) legge ~8 % più del Huawei (426) nelle ore centrali e coincide
-a bassa potenza; con la pinza i coefficienti sarebbero ~0,13 e ~0,185 (Viessmann vicina alla targa 0,184).
+capire: Viessmann a 0,195 supera la targa 0,184 (forse luce prevista bassa a 15°).
 
-Dashboard «planetary» (id 13): reale contro teorico per falda; il 30/10 aggiunti previsto elettrico 450/452 e Huawei
-426 in `content_json` (EmonCMS 12.2 converte lì le vecchie multigraph, la tabella `multigraph` non conta più); copia
+**Misura reale per falda (30/10/2026):** la pinza `power2` dell'emonTx (feed 359) legge ~8 % più del Huawei (426) nelle ore
+centrali e coincide a bassa potenza. Confronto con le app degli inverter del 30/10: Huawei 9,65 kWh (feed 9,64), Viessmann
+12,9 (Tesla − Huawei 12,67; Tesla − pinza 11,95): **vale il Huawei**. Feed virtuale 483 `pannelli_viessmann_reale`
+(Tesla 307 − Huawei 426). La pinza entra solo in 359, 360 e nei loro contatori; casa e tariffe usano Tesla e `power1`.
+
+Dashboard «planetary» (id 13): reale contro teorico per falda; il 30/10 grafici con Huawei 426 e Viessmann 483 al posto
+di 359 e 360, più il previsto 450/452, in `content_json` (EmonCMS 12.2 converte lì le vecchie multigraph, la tabella `multigraph` non conta più); copia
 in `/home/pi/AI_backups/emoncms/20261030-dashboard13-before.json` sul `.15`.
