@@ -47,6 +47,17 @@ input `zona_N`:
 Per ciascun input `zona_N_durata_s`: stessa procedura con motore **PHPTimeSeries**
 (variabile, un punto per irrigazione), nome `irrigazione_zona_N_durata_s`.
 
+**Stato al 30/10/2026** (emoncms del nuovo `.15`): `zona_1`…`zona_5` collegati ai feed **478–482**
+(`irrigazione_zona_N`, PHPFina 10 s, tag `irrigazione`). Gli input `zona_N_durata_s` compaiono alla
+prima irrigazione: vanno collegati allora (PHPTimeSeries). Decisione dell'utente: **una sola fonte**,
+questo nodo; il nodo `opensprinkler` (messaggi MQTT di OpenSprinkler, stazioni 0/1/3/4 numerate da 0,
+feed 215–231, fermo dal 22/09) resta solo come storico.
+
+Dall'API (emoncms 12.2) il collegamento vuole la lista dei processi in JSON:
+`POST input/process/set.json?inputid=<id>` con
+`processlist=[{"fn":"process__log_to_feed","args":[<feedid>]}]` (il vecchio formato `1:<feedid>`
+è rifiutato con «Invalid process list format»).
+
 Minuti d'irrigazione su un periodo = media del feed `zona_N` × durata del periodo, oppure
 somma dei valori `durata_s` / 60. I litri si ottengono moltiplicando per la portata di ogni zona.
 

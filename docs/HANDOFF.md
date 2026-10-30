@@ -290,8 +290,8 @@ mosquitto_sub -h localhost -u domotica -P "$(cat ~/.config/domopi/mqtt_domotica.
 Log broker: `sudo tail -f /var/log/mosquitto/mosquitto.log`. Il broker di `.15` richiede credenziali proprie.
 
 ## 6. Cose da fare dell'utente (non di un agente)
-- Collegare in EmonCMS gli input `irrigazione/zona_N` e `zona_N_durata_s` ai feed
-  (istruzioni in `backend/nodered/irrigation/README.md`).
+- ~~Collegare in EmonCMS gli input `irrigazione/zona_N`~~ fatto il 30/10 (feed 478–482); restano i
+  `zona_N_durata_s` alla prima irrigazione (`backend/nodered/irrigation/README.md`).
 - Rifare il login Alexa su `http://192.168.1.20:3456` solo se servono gli annunci di "Alexa Speak".
 - Eventuale: riservare un IP fisso al dispositivo TinyCam e disattivare il suo MAC casuale.
 
