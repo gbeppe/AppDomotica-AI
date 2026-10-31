@@ -1,0 +1,18 @@
+[
+  {
+    "id": "01a6e7ef3adf57c9",
+    "type": "link in",
+    "z": "835191316c016bc4",
+    "name": "avvisi da altri tab (AI Climate)",
+    "links": [
+      "4676fd8f3f8f24dc"
+    ],
+    "x": 140,
+    "y": 620,
+    "wires": [
+      [
+        "a880a8a1ebba64c6"
+      ]
+    ]
+  }
+]

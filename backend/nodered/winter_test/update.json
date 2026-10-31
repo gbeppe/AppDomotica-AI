@@ -1,0 +1,250 @@
+[
+  {
+    "id": "01a6e7ef3adf57c9",
+    "type": "link in",
+    "z": "835191316c016bc4",
+    "name": "avvisi da altri tab (AI Climate)",
+    "links": [
+      "4676fd8f3f8f24dc",
+      "ae9a3e2b686b0ff6"
+    ],
+    "x": 140,
+    "y": 620,
+    "wires": [
+      [
+        "a880a8a1ebba64c6"
+      ]
+    ]
+  },
+  {
+    "id": "62ddb1475ca0d776",
+    "type": "tab",
+    "label": "Prova invernale (DomoPi)",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "4dd4e0a01b3c2beb",
+    "type": "mqtt in",
+    "z": "62ddb1475ca0d776",
+    "name": "plan",
+    "topic": "zara/interface/heating/timer/plan/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 60,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "ff557faf3074f380",
+    "type": "mqtt in",
+    "z": "62ddb1475ca0d776",
+    "name": "solar_forecast",
+    "topic": "zara/interface/energy/solar_forecast/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 110,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "5e6e40c884be2861",
+    "type": "mqtt in",
+    "z": "62ddb1475ca0d776",
+    "name": "target_temperature",
+    "topic": "zara/interface/climate/thermostat_living/target_temperature/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 160,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "f5e17684444300fa",
+    "type": "mqtt in",
+    "z": "62ddb1475ca0d776",
+    "name": "power",
+    "topic": "zara/interface/fireplace/main/power/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 210,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "4c50b036a3e052ee",
+    "type": "mqtt in",
+    "z": "62ddb1475ca0d776",
+    "name": "override",
+    "topic": "zara/interface/climate/ac/override/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 260,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "c1d4cd47c8f69291",
+    "type": "mqtt in",
+    "z": "62ddb1475ca0d776",
+    "name": "esterno",
+    "topic": "zigbee2mqtt/Sonoff AirGuard TH esterno cucina",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 310,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "8dc1eb3dd3ea251f",
+    "type": "mqtt in",
+    "z": "62ddb1475ca0d776",
+    "name": "winter_test",
+    "topic": "zara/interface/climate/winter_test/cmd",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 180,
+    "y": 360,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "2b49856f0ef5efe6",
+    "type": "inject",
+    "z": "62ddb1475ca0d776",
+    "name": "ogni 60 s",
+    "props": [
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "60",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "30",
+    "topic": "tick",
+    "x": 150,
+    "y": 420,
+    "wires": [
+      [
+        "e91f0cee4e927191"
+      ]
+    ]
+  },
+  {
+    "id": "e91f0cee4e927191",
+    "type": "function",
+    "z": "62ddb1475ca0d776",
+    "name": "Prova invernale",
+    "func": "// WINTER-TEST.1 (2026-10-31): winter field test of AI Climate (docs/AI_MODE/AI_CLIMATE_INVERNO.md section 8).\n// Off until enabled. On suitable days (FV forecast at 08:30, outside temperature and fireplace at 10:30) test and\n// control days alternate. Test day, 10:30-15:00: air conditioner heat 20 \"solar only\" (AI-CLIMATE-AC-OVERRIDE.2) and\n// living thermostat 1 degree under the plan of the heating timers, set again if a timer changes it; at the end\n// the thermostat goes back to the plan. The state is in the file store: a restart resumes or closes the run.\n// Input zara/interface/climate/winter_test/cmd: {\"action\":\"on|off\"} or {\"action\":\"run\",\"until\":\"<ISO>\"} (trial).\n// Outputs: [MQTT commands and retained state, alert for the phone].\nconst PREFIX = 'zara/interface/climate/winter_test/';\nconst TH = 'zara/interface/climate/thermostat_living/target_temperature/';\nconst AC_CMD = 'zara/interface/climate/ac/override/cmd';\nconst MIN_KWH = 12, TEMP_MIN = 5, TEMP_MAX = 15, COEFF = {eclipse: 0.12, viessmann: 0.195};\nconst START = '10:30', LAST_START = '11:00', END = '15:00', NOTICE = '08:30', FLOOR = 16, MAX_MS = 6 * 3600000;\n\nconst now = new Date(), nowMs = now.getTime();\nconst p2 = n => String(Math.floor(Math.abs(n))).padStart(2, '0');\nconst day = now.getFullYear() + '-' + p2(now.getMonth() + 1) + '-' + p2(now.getDate());\nconst hhmm = p2(now.getHours()) + ':' + p2(now.getMinutes());\nconst iso = ms => { const d = new Date(ms), o = -d.getTimezoneOffset();\n    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + 'T' + p2(d.getHours()) + ':' + p2(d.getMinutes())\n        + ':' + p2(d.getSeconds()) + (o >= 0 ? '+' : '-') + p2(o / 60) + ':' + p2(o % 60); };\nconst cmds = [], alerts = [];\nconst send = (topic, payload, retain) => cmds.push({topic, payload, retain: !!retain});\nconst alert = (title, message) => alerts.push({payload: {title, tags: ['thermometer'], priority: 3, message}});\nconst wt = flow.get('winter_test', 'file') || {enabled: false, last_type: null, day: null, run: null, journal: []};\nconst planValue = () => flow.get('wt_plan') === undefined ? null : flow.get('wt_plan');\nconst log = entry => { wt.journal.push(Object.assign({day}, entry)); wt.journal = wt.journal.slice(-150); };\nconst finish = (result) => {\n    const run = wt.run;\n    wt.run = null;\n    const back = planValue() !== null ? planValue() : run.base;\n    if (back !== null) send(TH + 'cmd', String(back));\n    if (result !== 'fine') send(AC_CMD, 'auto');\n    const e = wt.journal.slice().reverse().find(x => x.started === run.started);\n    if (e) { e.ended = iso(nowMs); e.result = result; }\n    if (result !== 'fine') alert('Prova invernale chiusa', 'Motivo: ' + result + '. Termostato del living riportato al piano.');\n};\nconst startRun = (type, untilMs) => {\n    const base = planValue() !== null ? planValue() : flow.get('wt_target');\n    wt.run = {type, started: iso(nowMs), until: untilMs, base: base === undefined ? null : base, ac_seen: false};\n    log({type, started: wt.run.started, base: wt.run.base});\n    send(AC_CMD, JSON.stringify({mode: 'heat', setpoint: 20, until: iso(untilMs), solar_only: true}));\n};\nconst atToday = t => new Date(day + 'T' + t + ':00').getTime();\n\nconst t = msg.topic;\nif (t === 'zara/interface/heating/timer/plan/stat') {\n    try { const v = JSON.parse(msg.payload).thermostats.thermostat_living.value;\n        if (Number.isFinite(v)) flow.set('wt_plan', v); } catch (e) { node.warn('piano non leggibile'); }\n} else if (t === 'zara/interface/energy/solar_forecast/stat') {\n    try { const f = JSON.parse(msg.payload).faces;\n        flow.set('wt_kwh', f.eclipse.today_kwh * COEFF.eclipse + f.viessmann.today_kwh * COEFF.viessmann); } catch (e) { node.warn('previsione non leggibile'); }\n} else if (t === TH + 'stat') {\n    flow.set('wt_target', parseFloat(msg.payload));\n} else if (t === 'zara/interface/fireplace/main/power/stat') {\n    flow.set('wt_fire', String(msg.payload).trim() === 'true');\n} else if (t === 'zara/interface/climate/ac/override/stat') {\n    try { const o = JSON.parse(msg.payload);\n        if (wt.run) { if (o.active) wt.run.ac_seen = true; else if (wt.run.ac_seen && nowMs < wt.run.until - 90000) finish(o.closed_reason ? 'solo sole' : 'comando annullato'); } } catch (e) { node.warn('stato priorità non leggibile'); }\n} else if (t && t.startsWith('zigbee2mqtt/')) {\n    try { const v = JSON.parse(msg.payload).temperature; if (Number.isFinite(v)) flow.set('wt_out', v); } catch (e) { node.warn('esterno non leggibile'); }\n} else if (t === PREFIX + 'cmd') {\n    let c = msg.payload; try { c = JSON.parse(c); } catch (e) { c = null; }\n    const a = c && c.action;\n    if (a === 'on') wt.enabled = true;\n    else if (a === 'off') { wt.enabled = false; if (wt.run) finish('spenta a mano'); }\n    else if (a === 'run') {\n        const u = Date.parse(c.until);\n        if (wt.run || !Number.isFinite(u) || u <= nowMs || u > nowMs + MAX_MS || !/[+-]\\d\\d:\\d\\d$|Z$/.test(c.until)) node.warn('collaudo non valido');\n        else startRun('collaudo', u);\n    } else node.warn('comando non valido');\n} else if (t === 'tick') {\n    if (wt.enabled && hhmm >= NOTICE && hhmm < START && (!wt.day || wt.day.date !== day)) {\n        const kwh = flow.get('wt_kwh');\n        wt.day = {date: day, suitable: Number.isFinite(kwh) && kwh >= MIN_KWH, kwh: Number.isFinite(kwh) ? Math.round(kwh * 10) / 10 : null, done: false};\n        if (wt.day.suitable) {\n            const next = wt.last_type === 'prova' ? 'confronto' : 'prova';\n            alert('Prova invernale: giorno ' + next, next === 'prova'\n                ? 'Oggi FV previsto ' + wt.day.kwh + ' kWh: se l\\'esterno va bene, alle 10:30 parte la prova. Caminetto spento dalle 10:30 alle 15.'\n                : 'Oggi FV previsto ' + wt.day.kwh + ' kWh: giorno di confronto, tutto normale ma caminetto spento dalle 10:30 alle 15.');\n        }\n    }\n    if (wt.enabled && wt.day && wt.day.date === day && wt.day.suitable && !wt.day.done && hhmm >= START && hhmm < LAST_START) {\n        wt.day.done = true;\n        const out = flow.get('wt_out'), type = wt.last_type === 'prova' ? 'confronto' : 'prova';\n        const why = !Number.isFinite(out) ? 'esterno sconosciuto' : out < TEMP_MIN || out > TEMP_MAX ? 'esterno ' + out + ' °C'\n            : flow.get('wt_fire') ? 'caminetto acceso' : null;\n        if (why) log({type: 'saltato', reason: why, kwh: wt.day.kwh});\n        else {\n            wt.last_type = type;\n            if (type === 'prova') startRun('prova', atToday(END));\n            else log({type: 'confronto', kwh: wt.day.kwh, temp: out});\n        }\n    }\n    if (wt.run) {\n        if (nowMs >= wt.run.until) finish('fine');\n        else if (flow.get('wt_fire') && wt.run.type === 'prova') finish('caminetto acceso');\n        else {\n            const base = planValue() !== null ? planValue() : wt.run.base;\n            const want = base === null ? null : Math.max(FLOOR, base - 1);\n            if (want !== null && flow.get('wt_target') !== want) send(TH + 'cmd', String(want));\n        }\n    }\n}\nflow.set('winter_test', wt, 'file');\nsend(PREFIX + 'stat', JSON.stringify({schema: 'domopi.winter_test.v1', enabled: wt.enabled, last_type: wt.last_type, day: wt.day,\n    run: wt.run && {type: wt.run.type, started: wt.run.started, until: iso(wt.run.until), base: wt.run.base}, journal: wt.journal}), true);\nreturn [cmds.map(m => m), alerts];\n",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 240,
+    "wires": [
+      [
+        "ea282a0a050f7f28"
+      ],
+      [
+        "ae9a3e2b686b0ff6"
+      ]
+    ]
+  },
+  {
+    "id": "ea282a0a050f7f28",
+    "type": "mqtt out",
+    "z": "62ddb1475ca0d776",
+    "name": "comandi e stato",
+    "topic": "",
+    "qos": "1",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "3ed6302a.5af928",
+    "x": 780,
+    "y": 220,
+    "wires": []
+  },
+  {
+    "id": "ae9a3e2b686b0ff6",
+    "type": "link out",
+    "z": "62ddb1475ca0d776",
+    "name": "→ avviso ntfy",
+    "mode": "link",
+    "links": [
+      "01a6e7ef3adf57c9"
+    ],
+    "x": 760,
+    "y": 280
+  }
+]

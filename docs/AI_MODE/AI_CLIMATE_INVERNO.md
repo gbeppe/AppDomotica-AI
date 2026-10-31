@@ -199,20 +199,22 @@ condizionatore fa risparmiare almeno **0,77 kWh di calore della caldaia** (0,075
 caldaia non c'è niente da misurare: la prova parte con la caldaia accesa e prosegue a gennaio–febbraio finché ci sono
 almeno **5 giorni di prova e 5 di confronto**. Prima di allora si preparano gli strumenti.
 
-**Giorni:** di prova con sole previsto (FV di domani sopra una soglia da tarare sul FV di dicembre, indicativamente
-12–15 kWh) ed esterno 5–15 °C; di confronto con tempo simile senza strategia; alternati. Caminetto spento nella
+**Giorni:** di prova con sole previsto (FV previsto del giorno ≥ 12 kWh, soglia da tarare a dicembre, alle 8:30) ed esterno
+5–15 °C (alle 10:30); di confronto con tempo simile senza strategia; alternati. Caminetto spento nella
 finestra (un giorno con il caminetto acceso si scarta).
 
-**Nei giorni di prova:** 10:30–15:00 condizionatore in caldo 20 °C e termostato del living 1 °C sotto il solito
-(17 invece di 18); dopo, tutto come prima. Primi 2–3 giorni a mano dall'app, poi una regola automatica.
+**Nei giorni di prova:** 10:30–15:00 condizionatore in caldo 20 °C «solo sole» e termostato del living 1 °C sotto il piano dei
+timer; dopo, tutto come prima. Automatico da subito (31/10), con l'utente che controlla gli avvisi la prima settimana; collaudo prima
+dell'8/12, senza valore come misura.
 
 **Strumenti da preparare prima dell'8/12:**
 1. priorità manuale del condizionatore valida **anche con AI Climate disabilitato**: AI-CLIMATE-AC-OVERRIDE.2
    ([`../../backend/nodered/ai_ac_override2/`](../../backend/nodered/ai_ac_override2/README.md), 31/10);
 2. **interruzione** con l'opzione «solo sole»: più di 100 W da batteria o rete per 15 minuti di fila (stessa patch);
    pulsante «Caldo 20° FV» nell'app per i giorni a mano;
-3. regola automatica dei giorni di prova (condizionatore e termostato del living, ripristino alle 15:00);
-4. **riepilogo giornaliero** in sola lettura: calore della caldaia (fiamma e modulazione), ore della pompa del
+3. scheda Node-RED «Prova invernale» ([`../../backend/nodered/winter_test/`](../../backend/nodered/winter_test/README.md), WINTER-TEST.1,
+   31/10): sceglie i giorni, alterna prova e confronto, condizionatore e termostato, ripristino alle 15:00; spenta finché non si attiva;
+4. **riepilogo** in sola lettura (`report.py`, stessa cartella): calore della caldaia (fiamma e modulazione), ore della pompa del
    pavimento, temperature di living, camera, bagno ed esterna (Open-Meteo), energia del condizionatore e da dove
    viene (FV, batteria, rete), batteria al tramonto e il mattino dopo, ore del caminetto; a fine prova confronto e
    verdetto.
@@ -222,5 +224,6 @@ finestra (un giorno con il caminetto acceso si scarta).
 | Data | Fatto |
 |---|---|
 | 27/10/2026 | Progetto aperto. Audit della logica e dell'accensione delle 08:05 (sezioni 1–3). Nessuna modifica. Risposte dell'utente (sezione 5); deciso lo studio preliminare sui dati (5-bis). Studio sui 3 inverni (sezione 7): il condizionatore usato finora ha dato comfort, non risparmio; scelta la prova sul campo della strategia coordinata. |
+| 31/10/2026 | Strumenti 3 e 4: scheda WINTER-TEST.1 installata spenta e `report.py`. Collaudo 12:48–13:18 riuscito con AI Climate disabilitato: acceso, termostato 16,5 °C, spento e 17,5 °C alla fine. «Solo sole» provato solo nei test. Attivazione con la caldaia, 8/12. |
 | 31/10/2026 | Strumenti 1 e 2: AI-CLIMATE-AC-OVERRIDE.2 e pulsante «Caldo 20° FV» (decisioni dell'utente). |
 | 30/10/2026 | Protocollo della prova concordato (sezione 8); partenza con la caldaia, accesa l'8/12 salvo freddo improvviso; strumenti da preparare prima. |
