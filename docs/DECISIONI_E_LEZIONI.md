@@ -115,7 +115,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | Script del `.20` dopo la reinstallazione | `php -l` non basta: `solarEnergy.php` usa l'estensione `Mosquitto\Client` (PECL Mosquitto-PHP), che il sistema nuovo non aveva; il fotovoltaico teorico si è fermato senza allarmi. Dopo un cambio di sistema provare ogni script lanciato dai flow, non solo la sintassi |
 | Priorità manuale del condizionatore | Fino al 31/10 con AI Climate disabilitato la priorità manuale non aveva effetto (corretto da AI-CLIMATE-AC-OVERRIDE.2). I tempi minimi del compressore sono quelli dell'app (25/20 min al 30/10), non 15 |
 | Script sul `.15` | Mai leggere un feed PHPFina per intero in memoria: un riepilogo su 11 feed ha occupato 1,6 GB ed è stato chiuso dal kernel (31/10, nessun danno). Leggere i punti con `seek` e provare con `ulimit -v`. Lo stesso vale per i feed lunghi in `compare_forecast.py` |
-| Consumo del condizionatore | Il feed 362 `emeter_power2kWh` non conta (l'input moltiplica per −1 e tiene i positivi, 30/10: fermo durante la prova). Usare `emeter_total` (feed 354, PHPTimeSeries, Wh) |
+| Consumo del condizionatore | L'input `AC/emeter_power` (1198) moltiplicava per −1 e teneva i positivi: con la potenza positiva feed 353, 362 e seguenti restavano fermi (ultimo aumento 17/09, non contate le prove del 30–31/10). Dal 31/10 usa il valore assoluto; vecchia catena in `/home/pi/AI_backups/emoncms/20261031-before-ac-abs.txt` sul `.15`. Da verificare alla prossima accensione. `report.py` usa `emeter_total` (feed 354, Wh) |
 
 ## Fatti utili sull'impianto
 
