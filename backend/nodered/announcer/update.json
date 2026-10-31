@@ -1,0 +1,350 @@
+[
+  {
+    "id": "3916025424d2ee99",
+    "type": "function",
+    "z": "835191316c016bc4",
+    "name": "avvisi",
+    "func": "// HOUSE-ALERTS.1 (2026-10-17): house alerts on the phone through ntfy, channel domopi-casa.\n// Inputs: MQTT messages (topic + payload) and a tick every 60 s (msg.topic === 'tick').\n// Output: one message per notification, {payload: {key, title, message, tags, priority}}.\n// Each alert is sent on the transition, once; a repeat of the same alert waits at least 2 hours;\n// the \"back to normal\" message is sent only when the alert had been sent.\nconst MIN = 60000, REPEAT_MS = 120 * MIN, OFFLINE_MS = 5 * MIN;\nconst PUFFER = {high: 60, back: 58}, BATTERY = {low: 20, back: 25};\nconst STALE = {   // source topic on the emon broker -> [key, name, limit, consequence]\n    'emon/emonth5/temperature_calibrated': ['stale_living', 'sensore di temperatura del soggiorno', 30 * MIN, ''],\n    'emon/bagnoServizio/temperature': ['stale_bath', 'sensore di temperatura del bagno', 30 * MIN, ''],\n    'emon/weather/extTemp': ['stale_outdoor', 'temperatura esterna', 120 * MIN, ' Il profilo automatico non si aggiorna.'],\n};\nconst BOARDS = {'/esp8266/palazzetti/online': ['board_fireplace', 'del caminetto'],\n                '/esp8266/floorPump/online': ['board_floorpump', 'della pompa pavimento']};\nconst PROFILES = {spento: 'Spento', ridotto: 'Ridotto', pieno: 'Pieno'};\n\nconst now = msg.now || Date.now();\nconst s = context.get('s', 'file') || {start: now, last: {}, active: {}, sent: {}, offlineSince: {}, profile: null};\nconst out = [];\nconst deg = v => String(Math.round(v * 10) / 10).replace('.', ',');\nconst raise = (key, title, message, tags, priority) => {\n    if (s.active[key]) return;\n    s.active[key] = true;\n    if (s.sent[key] && now - s.sent[key] < REPEAT_MS) { s.active[key] = 'quiet'; return; }\n    s.sent[key] = now;\n    out.push({payload: {key, title, message, tags, priority}});\n};\nconst clear = (key, title, message) => {\n    const was = s.active[key];\n    delete s.active[key];\n    if (was === true) out.push({payload: {key: key + '_ok', title, message, tags: ['white_check_mark'], priority: 3}});\n};\n\nconst t = msg.topic, p = String(msg.payload).trim();\nif (t === 'tick') {\n    for (const [topic, [key, name, limit, consequence]] of Object.entries(STALE)) {\n        const last = s.last[topic] || s.start;\n        if (now - last > limit) {\n            const min = Math.round((now - last) / MIN);\n            const ago = min >= 120 ? Math.round(min / 60) + ' ore' : min + ' minuti';\n            raise(key, 'Dati mancanti', `Nessun valore (${name}) da ${ago}.${consequence}`, ['warning'], 3);\n        }\n    }\n    for (const [topic, [key, name]] of Object.entries(BOARDS)) {\n        const since = s.offlineSince[topic];\n        if (since && now - since >= OFFLINE_MS)\n            raise(key, 'Scheda scollegata', `La scheda ${name} è scollegata da ${Math.round((now - since) / MIN)} minuti.`, ['electric_plug'], 4);\n    }\n} else if (STALE[t]) {\n    s.last[t] = now;\n    const [key, name] = STALE[t];\n    clear(key, 'Dati di nuovo presenti', `${name.charAt(0).toUpperCase() + name.slice(1)}: valori di nuovo presenti.`);\n} else if (BOARDS[t]) {\n    const [key, name] = BOARDS[t];\n    if (p === 'offline') s.offlineSince[t] = s.offlineSince[t] || now;\n    else if (p === 'online') { delete s.offlineSince[t]; clear(key, 'Scheda collegata', `La scheda ${name} è di nuovo collegata.`); }\n} else if (t === 'zara/interface/heating/puffer/top_temperature/stat') {\n    const v = parseFloat(p);\n    if (Number.isFinite(v) && v >= 5 && v <= 110) {\n        if (v > PUFFER.high) raise('puffer_hot', `Puffer alto a ${deg(v)} °C`, `Sopra ${PUFFER.high} °C: controlla caminetto e pompe.`, ['fire', 'warning'], 4);\n        else if (v < PUFFER.back) clear('puffer_hot', 'Puffer rientrato', `Puffer alto tornato a ${deg(v)} °C.`);\n    }\n} else if (t === 'zara/interface/energy/battery/soc/stat') {\n    const v = parseFloat(p);\n    if (Number.isFinite(v) && v >= 0 && v <= 100) {\n        if (v < BATTERY.low) raise('battery_low', `Batteria al ${Math.round(v)} %`, `Sotto il ${BATTERY.low} %.`, ['battery'], 3);\n        else if (v > BATTERY.back) clear('battery_low', 'Batteria risalita', `Batteria al ${Math.round(v)} %.`);\n    }\n} else if (t === 'zara/interface/heating/profile/stat') {\n    let o; try { o = JSON.parse(p); } catch (e) { o = null; }\n    if (o && PROFILES[o.profile]) {\n        if (s.profile && s.profile !== o.profile) {\n            const how = o.mode === 'auto'\n                ? `L'automatico è passato da ${PROFILES[s.profile]} a ${PROFILES[o.profile]}` +\n                  (Number.isFinite(o.outdoor_mean_72h) ? ` (media esterna 72 ore ${deg(o.outdoor_mean_72h)} °C)` : '') + '.'\n                : `Profilo cambiato da ${PROFILES[s.profile]} a ${PROFILES[o.profile]}.`;\n            out.push({payload: {key: 'profile', title: `Profilo di riscaldamento: ${PROFILES[o.profile]}`,\n                message: how + (o.timer_mode === 'active' ? '' : ' Il timer è in prova: i termostati non cambiano.'),\n                tags: ['thermometer'], priority: 3}});\n        }\n        s.profile = o.profile;\n    }\n}\ncontext.set('s', s, 'file');   // survives restarts: no repeated alerts, staleness from the real last value\nreturn [out];\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 560,
+    "y": 240,
+    "wires": [
+      [
+        "a880a8a1ebba64c6",
+        "3ed3f787119c4110"
+      ]
+    ]
+  },
+  {
+    "id": "04162898aac8a590",
+    "type": "tab",
+    "label": "Annunci (DomoPi)",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "2f5e6634d71cd322",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "state",
+    "topic": "zara/interface/climate/ac/state/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 60,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "0eef7870f2279c86",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "power",
+    "topic": "zara/interface/fireplace/main/power/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 105,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "12683c16cdefe64f",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "mode",
+    "topic": "zara/interface/fireplace/main/mode/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 150,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "53107608d98f59e7",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "start_time",
+    "topic": "zara/interface/fireplace/main/start_time/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 195,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "afe98fa636a81319",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "stop_time",
+    "topic": "zara/interface/fireplace/main/stop_time/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 240,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "e31f173b1ee9a415",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "top_temperature",
+    "topic": "zara/interface/heating/puffer/top_temperature/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 285,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "cface4b924074ed2",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "soc",
+    "topic": "zara/interface/energy/battery/soc/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 330,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "17a35a17f822f37e",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "20",
+    "topic": "zara/system/health/20/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 375,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "63a1f65cd509a313",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "15",
+    "topic": "zara/system/health/15/stat",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "3ed6302a.5af928",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 420,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "bda6fe07b0158b82",
+    "type": "mqtt in",
+    "z": "04162898aac8a590",
+    "name": "solare",
+    "topic": "TeslaPowerwall/solar_instant_power",
+    "qos": "1",
+    "datatype": "utf8",
+    "broker": "cfd9898e.1367b8",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 465,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "e0dc71fb54204ef8",
+    "type": "inject",
+    "z": "04162898aac8a590",
+    "name": "ogni 60 s",
+    "props": [
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "60",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "30",
+    "topic": "tick",
+    "x": 150,
+    "y": 540,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "3ed3f787119c4110",
+    "type": "function",
+    "z": "835191316c016bc4",
+    "name": "copia verso annunci",
+    "func": "msg.alert = true;\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 310,
+    "wires": [
+      [
+        "3bcf0dc52658e6ce"
+      ]
+    ]
+  },
+  {
+    "id": "3bcf0dc52658e6ce",
+    "type": "link out",
+    "z": "835191316c016bc4",
+    "name": "→ annunci",
+    "mode": "link",
+    "links": [
+      "47d79ba230eeef5a"
+    ],
+    "x": 800,
+    "y": 310
+  },
+  {
+    "id": "47d79ba230eeef5a",
+    "type": "link in",
+    "z": "04162898aac8a590",
+    "name": "avvisi",
+    "links": [
+      "3bcf0dc52658e6ce"
+    ],
+    "x": 170,
+    "y": 600,
+    "wires": [
+      [
+        "df8d1a8ed33b4acb"
+      ]
+    ]
+  },
+  {
+    "id": "df8d1a8ed33b4acb",
+    "type": "function",
+    "z": "04162898aac8a590",
+    "name": "Annunciatore (ombra)",
+    "func": "// ANNOUNCER.1 (2026-10-31): voice announcements of the house, SHADOW phase (docs/AI_MODE/ANNUNCI_VOCALI.md): it\n// decides what it would say and only writes the log, nothing is spoken. Table and rules agreed with the user.\n// Inputs: MQTT state topics, the alerts of HOUSE-ALERTS.1 (msg.alert), a tick every 60 s.\n// Output: retained log zara/interface/announcer/log/stat.\nconst MIN = 60000, HOUR = 60 * MIN, PAUSE = 2 * HOUR, CAP_H = 3, CAP_D = 8;\nconst PUFFER = {high: 60, back: 58, confirm: MIN}, STALE_PEER = 15 * MIN;\nconst CRITICAL = /^(service:|http:|broker$|internet$)/;\nconst CALM = /^(puffer|battery|profile)/;   // alerts of HOUSE-ALERTS.1 not announced: puffer here, the others are phone only\nconst MODES = {heat: 'caldo', cool: 'raffrescamento', dry: 'deumidifica', standby: 'standby', auto: 'automatico'};\nconst BY = {user: 'manuale', ai: 'automatica', watchdog: 'dal vigilante'};\nconst now = new Date(), ms = now.getTime();\nconst p2 = n => String(n).padStart(2, '0');\nconst day = now.getFullYear() + '-' + p2(now.getMonth() + 1) + '-' + p2(now.getDate());\nconst hhmm = p2(now.getHours()) + ':' + p2(now.getMinutes());\nconst weekend = now.getDay() === 0 || now.getDay() === 6;\nconst active = hhmm >= (weekend ? '09:30' : '08:30') && hhmm < '21:30';\nconst a = flow.get('announcer', 'file') || {log: [], last: {}, hours: [], date: null, count: 0, kwh: 0, kwh_at: 0, alerts_today: 0,\n    ac: null, fire: null, peer: {}, bad: {}, puffer_since: 0, puffer_on: false, summary: null, seen: {}};\nif (a.date !== day) { a.date = day; a.count = 0; a.kwh = 0; a.alerts_today = 0; }\nlet wrote = false;\nconst log = (level, key, text, echo, result, volume) => {\n    a.log.push({ts: new Date(ms).toISOString(), level, key, text, echo, volume, result});\n    a.log = a.log.slice(-1000);\n    wrote = true;\n};\n// command = air conditioner and fireplace: they do not count in the cap and have no pause\nfunction say(level, key, text, echo, command) {\n    if (level === 'urgente') return log(level, key, text, active ? echo : 'living e camera', 'direbbe', active ? 'normale' : 'basso');\n    if (!active) return log(level, key, text, echo, 'tace: ore tranquille');\n    if (!command) {\n        if (ms - (a.last[key] || 0) < PAUSE) return log(level, key, text, echo, 'tace: già detto da meno di 2 ore');\n        a.hours = a.hours.filter(t => ms - t < HOUR);\n        if (a.hours.length >= CAP_H) return log(level, key, text, echo, 'tace: tetto orario');\n        if (a.count >= CAP_D) return log(level, key, text, echo, 'tace: tetto giornaliero');\n        a.hours.push(ms); a.count++; a.last[key] = ms; a.alerts_today++;\n    }\n    log(level, key, text, echo, 'direbbe', 'normale');\n}\nconst parse = v => { try { return JSON.parse(v); } catch (e) { return null; } };\nconst t = msg.topic;\nif (msg.alert) {\n    const al = msg.payload || {};\n    if (al.key && !CALM.test(al.key) && !al.key.endsWith('_ok')) say('informativo', al.key, al.title || al.message, 'living', false);\n} else if (t === 'zara/interface/climate/ac/state/stat') {\n    const s = parse(msg.payload);\n    if (s && s.current) {\n        const c = s.current, on = c.mode !== 'off', key = c.mode + '/' + c.setpoint;\n        if (a.ac !== null && a.ac !== key) {\n            const how = BY[c.by] || 'automatica';\n            say('informativo', 'ac', on ? 'Condizionatore acceso in ' + MODES[c.mode] + (c.setpoint ? ' a ' + c.setpoint + ' gradi' : '') + ', ' + how\n                : 'Condizionatore spento, ' + how, 'living', true);\n        }\n        a.ac = key;\n    }\n} else if (t === 'zara/interface/fireplace/main/mode/stat') { a.seen.mode = String(msg.payload);\n} else if (t === 'zara/interface/fireplace/main/start_time/stat') { a.seen.start = String(msg.payload);\n} else if (t === 'zara/interface/fireplace/main/stop_time/stat') { a.seen.stop = String(msg.payload);\n} else if (t === 'zara/interface/fireplace/main/power/stat') {\n    const on = String(msg.payload).trim() === 'true';\n    if (a.fire !== null && a.fire !== on) {\n        const m = a.seen.mode || '', auto = !/manuale/i.test(m);\n        say('informativo', 'fire', on ? 'Caminetto acceso in modalità ' + (auto ? 'automatica dalle ' + a.seen.start + ' alle ' + a.seen.stop : 'manuale') : 'Caminetto spento', 'living', true);\n    }\n    a.fire = on;\n} else if (t === 'zara/interface/heating/puffer/top_temperature/stat') {\n    const v = parseFloat(msg.payload);\n    if (v >= PUFFER.high) { if (!a.puffer_since) a.puffer_since = ms; a.puffer_v = v; }\n    else { a.puffer_since = 0; if (v < PUFFER.back) a.puffer_on = false; }\n} else if (t === 'TeslaPowerwall/solar_instant_power') {\n    const v = parseFloat(msg.payload);\n    if (a.kwh_at && ms - a.kwh_at < 10 * MIN && v > 0) a.kwh += v * (ms - a.kwh_at) / 3.6e9;\n    a.kwh_at = ms;\n} else if (t === 'zara/interface/energy/battery/soc/stat') { a.soc = parseFloat(msg.payload);\n} else if (t && t.startsWith('zara/system/health/')) {\n    const h = parse(msg.payload), id = t.split('/')[3];\n    if (h && h.checks) {\n        a.peer[id] = ms;\n        const bad = h.checks.filter(c => !c.ok).map(c => c.id), was = a.bad[id] || [];\n        for (const c of h.checks) {\n            if (c.ok || was.includes(c.id)) continue;\n            if (CRITICAL.test(c.id)) say('urgente', id + ':' + c.id, c.title + ' non funziona sul punto ' + id, 'living e camera');\n            else if (c.id === 'powerwall_charge') say('informativo', 'powerwall', 'La batteria non si sta caricando', 'living', false);\n        }\n        a.bad[id] = bad;\n    }\n} else if (t === 'tick') {\n    if (a.puffer_since && !a.puffer_on && ms - a.puffer_since >= PUFFER.confirm) {\n        a.puffer_on = true;\n        say('urgente', 'puffer', 'Attenzione: puffer a ' + Math.round(a.puffer_v) + ' gradi', 'living e camera');\n    }\n    if (a.peer['15'] && ms - a.peer['15'] > STALE_PEER && !a.peer_down) {\n        a.peer_down = true;\n        say('urgente', 'peer15', 'Il server punto 15 non risponde', 'living e camera');\n    } else if (a.peer['15'] && ms - a.peer['15'] <= STALE_PEER) a.peer_down = false;\n    if (hhmm >= '21:00' && hhmm < '21:05' && a.summary !== day) {\n        a.summary = day;\n        say('riepilogo', 'summary', 'Oggi ' + Math.round(a.kwh) + ' chilowattora, batteria ' + Math.round(a.soc || 0) + ' percento, '\n            + (a.alerts_today ? a.alerts_today + ' avvisi' : 'impianto regolare'), 'living', true);\n    }\n}\nflow.set('announcer', a, 'file');\nreturn wrote ? {topic: 'zara/interface/announcer/log/stat', retain: true,\n    payload: JSON.stringify({schema: 'domopi.announcer.v1', mode: 'shadow', log: a.log.slice(-100)})} : null;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 300,
+    "wires": [
+      [
+        "beb50b09ad9ba8d8"
+      ]
+    ]
+  },
+  {
+    "id": "beb50b09ad9ba8d8",
+    "type": "mqtt out",
+    "z": "04162898aac8a590",
+    "name": "registro",
+    "topic": "",
+    "qos": "1",
+    "retain": "true",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "3ed6302a.5af928",
+    "x": 760,
+    "y": 300,
+    "wires": []
+  }
+]
