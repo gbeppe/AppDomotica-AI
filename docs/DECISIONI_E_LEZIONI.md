@@ -60,6 +60,8 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 
 | 30/10 | **DNS ridondante:** secondo Pi-hole sul `.15`, router con DNS 1 `.20` e DNS 2 `.15`. Scartati Pi-hole su ASUS o FRITZ!Box (non si installa sui firmware standard) e `1.1.1.1` come secondo DNS (salterebbe il blocco e risolverebbe male il nome di AI Smart in casa) | `backend/pihole/README.md` |
 
+| 31/10 | Prova invernale: l'interruttore di AI Climate ferma solo l'automatico, una priorità manuale continua fino alla scadenza; opzione «solo sole» (oltre 100 W da batteria o rete per 15 minuti) e pulsante «Caldo 20° FV» | `backend/nodered/ai_ac_override2/README.md` |
+
 ## Lezioni tecniche
 
 | Tema | Lezione |
@@ -111,7 +113,7 @@ tecniche da non ripetere. Complementa [`HANDOFF.md`](HANDOFF.md).
 | MariaDB 11.8 → replica sul QNAP 10.5 | La 11.8 usa di default la collation `utf8mb4_uca1400_ai_ci` (id 2048), sconosciuta alla 10.5: lo slave si ferma. Sul master `character_set_collations = utf8mb4=utf8mb4_general_ci`. Il client 11.8 pretende TLS: verso il QNAP `--skip-ssl`. Per riallineare lo slave: `STOP SLAVE`, dump con `--master-data=2`, caricamento, `CHANGE MASTER TO` sulla posizione del dump, `START SLAVE`. |
 | emoncms sul sistema nuovo (`.15`) | EmonScripts su Bookworm: `pip install redis` fallisce (controllo `EXTERNALLY-MANAGED` sbagliato) → `python3-redis` da Debian, altrimenti `service-runner` non parte; emonhub non viene attivato all'avvio → `systemctl enable emonhub`. Con PHP 8 un valore vuoto in Redis (`process:ratechange:<feed>`) manda in crash `emoncms_mqtt` e ferma tutti gli input MQTT (emonTx): togliere la chiave. Prima di fermare emoncms per una copia, lasciare che `feedwriter` scriva i buffer `feed:*:buffer` (fino a 5 minuti di dati). Il banco non può leggere il backup NFS del QNAP senza un permesso per il suo indirizzo (dato temporaneo, in sola lettura). |
 | Script del `.20` dopo la reinstallazione | `php -l` non basta: `solarEnergy.php` usa l'estensione `Mosquitto\Client` (PECL Mosquitto-PHP), che il sistema nuovo non aveva; il fotovoltaico teorico si è fermato senza allarmi. Dopo un cambio di sistema provare ogni script lanciato dai flow, non solo la sintassi |
-| Priorità manuale del condizionatore | Con AI Climate disabilitato (`AI_climate_enabling` false) la priorità manuale **non ha effetto**: il blocco è nella parte abilitata della funzione. I tempi minimi del compressore sono quelli dell'app (25/20 min al 30/10), non 15 |
+| Priorità manuale del condizionatore | Fino al 31/10 con AI Climate disabilitato la priorità manuale non aveva effetto (corretto da AI-CLIMATE-AC-OVERRIDE.2). I tempi minimi del compressore sono quelli dell'app (25/20 min al 30/10), non 15 |
 
 ## Fatti utili sull'impianto
 

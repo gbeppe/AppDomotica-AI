@@ -327,8 +327,10 @@ un tempo** (al massimo 6 ore), poi torna l'automatico: vedi §4.14.
   priorità in corso, **Auto** (torna subito AI Climate) e pulsanti Spegni, Caldo 20°, Fresco 24°,
   Deumidifica per 2 ore, ciascuno con conferma. Sotto i pulsanti una riga dice cosa sta facendo il
   condizionatore e se un comando aspetta i tempi del compressore (per esempio «Caldo 20° → ⏳ 4:54 →
-  Spento»): non serve ripremere. Lo stesso, con le icone, nella scheda **Gestione impianti HVAC**. Con
-  AI Climate disabilitato i comandi a tempo del condizionatore non hanno effetto (l'app lo segnala).
+  Spento»): non serve ripremere. Lo stesso, con le icone, nella scheda **Gestione impianti HVAC**. I comandi a
+  tempo funzionano anche con AI Climate disabilitato. **Caldo 20° FV** è «solo sole»: si chiude da solo dopo 15 minuti
+  di prelievo da batteria o rete. Con AI Climate disabilitato, d'estate la protezione della batteria non chiude i
+  comandi manuali: l'app lo ricorda nel riquadro.
 
 ### 4.15 Salute dell'impianto (solo lettura)
 
@@ -407,5 +409,6 @@ in cima.
 | 23/10/2026 | Prelievo e immissione (e «Importato oggi/ieri» nella home) dal misuratore di rete del Powerwall: la pinza emontx3 misura al contrario dal 19/10 (adattatore di tensione dell'emonTx staccato o cambiato), quindi prelievo e immissione erano scambiati. |
 | 23/10/2026 | **Condizionatore a tempo** (§4.14): spento, caldo, raffrescamento o deumidifica fino a un'ora (al massimo 6 ore), poi torna AI Climate; conferma sempre; tempi del compressore rispettati; la protezione della batteria può chiudere il comando. |
 | 23/10/2026 | **Condizionatore a tempo nell'app** (§4.14): riquadro nella schermata AI Climate con stato, Auto e pulsanti di 2 ore con conferma. |
+| 31/10/2026 | **Condizionatore a tempo** (§4.14): funziona anche con AI Climate disabilitato; nuovo pulsante «Caldo 20° FV», solo con il sole. |
 | 30/10/2026 | **Stato del condizionatore nell'app** (§4.14): cosa sta facendo, conferma dal consumo, comando in attesa del compressore con conto alla rovescia, allarmi. |
 | 23/10/2026 | **Salute dell'impianto** (§4.15): «come sta l'impianto?», «ci sono guasti sul .15?» con guasti e consigli dei controlli di .20 e .15. |

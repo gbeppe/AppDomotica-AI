@@ -78,7 +78,7 @@ data class AcState(
     } ?: ""
 
     val alarmTexts: List<String> get() = alarms.mapNotNull { ALARMS[it] } +
-        (if (!aiEnabled) listOf("AI Climate disabilitato: il condizionatore resta spento e i comandi a tempo non hanno effetto") else emptyList())
+        (if (!aiEnabled) listOf("AI Climate disabilitato: fermo l'automatico, i comandi a tempo funzionano") else emptyList())
 
     /** Time left on the safeguard, "m:ss"; "a momenti" once it is over (the next cycle of the .20 acts). */
     fun countdown(now: OffsetDateTime = OffsetDateTime.now()): String = guard?.let {
@@ -99,6 +99,7 @@ data class AcState(
             "ON_NO_POWER" to "Comandato acceso ma non consuma: forse spento dal telecomando",
             "WATCHDOG_RESTART" to "Il vigilante ha rimandato il comando (spento dal telecomando?)",
             "BATTERY_CLOSED_MANUAL" to "Comando manuale chiuso dalla protezione della batteria",
+            "SOLAR_ONLY_CLOSED" to "Comando «solo sole» chiuso: prelevava da batteria o rete",
             "WATCHDOG_SUSPENDED" to "AI Climate sospeso dal vigilante: il condizionatore non risponde ai comandi",
         )
 

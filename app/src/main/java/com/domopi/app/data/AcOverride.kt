@@ -14,15 +14,16 @@ import java.time.temporal.ChronoUnit
 /**
  * Manual priority of the air conditioner (AI-CLIMATE-AC-OVERRIDE.1, phase T4 of COMANDI_A_TEMPO.md):
  * AI Climate keeps [mode] (off, heat, cool, dry) until [label], then switches it off and decides again.
+ * [solarOnly] (AI-CLIMATE-AC-OVERRIDE.2): closed after 15 minutes of battery or grid draw.
  */
 @Serializable
-data class AcOverride(val mode: String, val setpoint: Int?, val label: String) {
+data class AcOverride(val mode: String, val setpoint: Int?, val label: String, val solarOnly: Boolean = false) {
     val text: String get() = when (mode) {
         "off" -> "spento"
         "heat" -> "caldo $setpoint °C"
         "cool" -> "raffrescamento $setpoint °C"
         else -> "deumidifica $setpoint °C"
-    } + " fino alle $label"
+    } + (if (solarOnly) " solo sole" else "") + " fino alle $label"
 
     companion object {
         const val TOPIC_CMD = "zara/interface/climate/ac/override/cmd"
@@ -43,14 +44,14 @@ data class AcOverride(val mode: String, val setpoint: Int?, val label: String) {
             val closed = o["closed_reason"]?.jsonPrimitive?.contentOrNull?.take(200)
             val valid = active && LABEL.matches(label) &&
                 (mode == "off" || (mode in RANGES && setpoint != null && setpoint in RANGES.getValue(mode!!)))
-            (if (valid) AcOverride(mode!!, if (mode == "off") null else setpoint, label) else null) to (if (active) null else closed)
+            (if (valid) AcOverride(mode!!, if (mode == "off") null else setpoint, label, o["solar_only"]?.jsonPrimitive?.booleanOrNull == true) else null) to (if (active) null else closed)
         } catch (_: Exception) { null to null }
 
-        fun command(mode: String, setpoint: Int? = null, now: OffsetDateTime = OffsetDateTime.now()): String {
+        fun command(mode: String, setpoint: Int? = null, now: OffsetDateTime = OffsetDateTime.now(), solarOnly: Boolean = false): String {
             require(mode == "off" || (mode in RANGES && setpoint != null && setpoint in RANGES.getValue(mode)))
             val until = now.plusHours(BUTTON_HOURS).truncatedTo(ChronoUnit.SECONDS)
             return if (mode == "off") """{"mode":"off","until":"$until"}"""
-            else """{"mode":"$mode","setpoint":$setpoint,"until":"$until"}"""
+            else """{"mode":"$mode","setpoint":$setpoint,"until":"$until"${if (solarOnly) ""","solar_only":true""" else ""}}"""
         }
     }
 }

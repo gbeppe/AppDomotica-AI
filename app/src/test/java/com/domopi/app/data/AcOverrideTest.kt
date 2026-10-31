@@ -27,5 +27,9 @@ class AcOverrideTest {
         val now = OffsetDateTime.parse("2026-10-23T16:00:00+02:00")
         assertEquals("""{"mode":"heat","setpoint":20,"until":"2026-10-23T18:00+02:00"}""", AcOverride.command("heat", 20, now))
         assertEquals("""{"mode":"off","until":"2026-10-23T18:00+02:00"}""", AcOverride.command("off", now = now))
+        assertEquals("""{"mode":"heat","setpoint":20,"until":"2026-10-23T18:00+02:00","solar_only":true}""",
+            AcOverride.command("heat", 20, now, solarOnly = true))
+        assertEquals("caldo 20 °C solo sole fino alle 22:00",
+            AcOverride.parse("""{"active":true,"mode":"heat","setpoint":20,"label":"22:00","solar_only":true}""").first!!.text)
     }
 }

@@ -207,9 +207,10 @@ finestra (un giorno con il caminetto acceso si scarta).
 (17 invece di 18); dopo, tutto come prima. Primi 2–3 giorni a mano dall'app, poi una regola automatica.
 
 **Strumenti da preparare prima dell'8/12:**
-1. priorità manuale del condizionatore valida **anche con AI Climate disabilitato** (oggi non ha effetto, vedi
-   `COMANDI_A_TEMPO.md`), con patch e test;
-2. **interruzione** se per 15 minuti il condizionatore preleva dalla batteria o dalla rete (nuvole);
+1. priorità manuale del condizionatore valida **anche con AI Climate disabilitato**: AI-CLIMATE-AC-OVERRIDE.2
+   ([`../../backend/nodered/ai_ac_override2/`](../../backend/nodered/ai_ac_override2/README.md), 31/10);
+2. **interruzione** con l'opzione «solo sole»: più di 100 W da batteria o rete per 15 minuti di fila (stessa patch);
+   pulsante «Caldo 20° FV» nell'app per i giorni a mano;
 3. regola automatica dei giorni di prova (condizionatore e termostato del living, ripristino alle 15:00);
 4. **riepilogo giornaliero** in sola lettura: calore della caldaia (fiamma e modulazione), ore della pompa del
    pavimento, temperature di living, camera, bagno ed esterna (Open-Meteo), energia del condizionatore e da dove
@@ -221,4 +222,5 @@ finestra (un giorno con il caminetto acceso si scarta).
 | Data | Fatto |
 |---|---|
 | 27/10/2026 | Progetto aperto. Audit della logica e dell'accensione delle 08:05 (sezioni 1–3). Nessuna modifica. Risposte dell'utente (sezione 5); deciso lo studio preliminare sui dati (5-bis). Studio sui 3 inverni (sezione 7): il condizionatore usato finora ha dato comfort, non risparmio; scelta la prova sul campo della strategia coordinata. |
+| 31/10/2026 | Strumenti 1 e 2: AI-CLIMATE-AC-OVERRIDE.2 e pulsante «Caldo 20° FV» (decisioni dell'utente). |
 | 30/10/2026 | Protocollo della prova concordato (sezione 8); partenza con la caldaia, accesa l'8/12 salvo freddo improvviso; strumenti da preparare prima. |

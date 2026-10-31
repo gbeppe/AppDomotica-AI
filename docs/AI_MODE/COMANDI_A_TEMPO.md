@@ -79,7 +79,7 @@ Componenti, sullo schema della VMC:
 Prova con l'utente (AI Climate abilitato per la prova, poi di nuovo disabilitato): 13:38 «Caldo 20°» dall'app →
 `MANUALE_CALDO`, `eco20heat`, 24 W (solo ventola) poi 867–1075 W; spento dal telecomando, il vigilante lo ha
 riacceso alle 13:44; «Spegni» alle 13:54 eseguito alle **14:09** (25 minuti dalla riaccensione delle 13:44). Lezioni:
-**con AI Climate disabilitato la priorità manuale non ha effetto** (il blocco sta dentro la parte abilitata); il
+con AI Climate disabilitato la priorità manuale non aveva effetto (corretto da AI-CLIMATE-AC-OVERRIDE.2, 31/10: ora vale anche da disabilitato, e c'è l'opzione «solo sole»); il
 condizionatore è a infrarossi e senza display, e nell'app `MANUALE_CALDO` con «in attesa compressore» faceva
 ripremere «Spegni».
 

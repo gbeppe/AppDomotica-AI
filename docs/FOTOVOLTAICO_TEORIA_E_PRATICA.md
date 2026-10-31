@@ -90,11 +90,11 @@ della Eclipse dopo le 14. Una maschera dell'orizzonte tarata sui dati migliorere
 - **Metodo:** rapporto reale/teorico nelle ore centrali delle giornate limpide, confrontato stagione con stagione e
   anno con anno. Una perdita che cresce più del previsto segnala sporco, guasti o degrado. Il riferimento parte da
   questo autunno (Huawei dal 17/10/2026, teorico fermo dal 29/10 al 30/10 alle 13:34).
+- **Primo riferimento, 31/10/2026, ore 9–12, cielo sereno:** reale/teorico Eclipse 0,88–0,91, Viessmann 1,09–1,12.
 
 ## 7. Punti aperti
 
 - Viessmann a 0,195 supera la targa 0,184. Il reale è confermato dall'app: forse la luce prevista a 15° è bassa.
   Non cambia la previsione, che è tarata sul reale.
-- Primo rapporto reale/teorico su una giornata limpida intera (il 30/10 il teorico mancava fino alle 13:34).
 - Taglio estivo a 3 kW della Viessmann: i dati per falda partono da ottobre, verifica la prossima estate.
 - Destinazione della pinza dell'emonTx.

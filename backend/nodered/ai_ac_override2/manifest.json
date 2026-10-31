@@ -1,0 +1,17 @@
+{
+  "patch": "AI-CLIMATE-AC-OVERRIDE.2",
+  "modified_ids": [
+    "61992c8879c11f66",
+    "badc2655c944f8b1"
+  ],
+  "removed_ids": [],
+  "added_ids": [],
+  "node_sha256_before": {
+    "61992c8879c11f66": "ed85ca2a4763bda49321d2bd687738c6bf3ae7fa330fa4d8cd164579bf957542",
+    "badc2655c944f8b1": "6c0fcc22118c902b9a3ba19fd5162f7de3e556b4f71bb7f30bc8782612e54ae6"
+  },
+  "node_sha256_after": {
+    "61992c8879c11f66": "5574e8f113ae31c838a9e075d6404a88bee6b3743856ae73c9f0e5187fe38c29",
+    "badc2655c944f8b1": "7eb336de529642a448d73f228cc7c0736c5f2fa4cd00f013883ab9bc429bf759"
+  }
+}
